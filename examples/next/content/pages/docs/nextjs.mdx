@@ -1,0 +1,108 @@
+---
+featuredPictureUrl: /covers/placeholder-82.jpeg
+title: 'Next.js'
+metadescription: 'Une route pour toutes les pages, la génération statique, les métadonnées, le sitemap, robots, les flux et les redirections avec l’App Router.'
+order: 7
+---
+
+# Next.js
+
+`@figatellu/next16` traduit les données neutres de figatellu pour l’App Router de Next.js 16 ; `@figatellu/site` les calcule, sans framework. La version majeure de Next est dans le nom du paquet : une nouvelle majeure aura son propre adaptateur.
+
+```sh npm
+npm install @figatellu/next16 @figatellu/site
+```
+
+```sh pnpm
+pnpm add @figatellu/next16 @figatellu/site
+```
+
+```sh yarn
+yarn add @figatellu/next16 @figatellu/site
+```
+
+```sh bun
+bun add @figatellu/next16 @figatellu/site
+```
+
+## Une route pour toutes les pages
+
+Un catch-all facultatif par langue sert chaque entrée, page de dossier et page de terme, toutes prérendues :
+
+```tsx
+// app/[locale]/[[...url]]/page.tsx
+import { findByUrl, mountedUrls, segmentsOf, urlOf } from '#figatellu/urls';
+
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return mountedUrls.map((item) => ({ locale: item.locale, url: segmentsOf(item.url, item.locale) }));
+}
+
+export default async function Page(props: PageProps<'/[locale]/[[...url]]'>) {
+  const { locale, url } = await props.params;
+  const found = await findByUrl(urlOf(locale, url));
+
+  if (found === undefined) notFound();
+  // found.kind : 'entry', 'folder' ou 'term'
+}
+```
+
+Avec `dynamicParams = false`, une URL inconnue est une vraie 404, jamais rendue à la demande.
+
+## Les métadonnées
+
+`metadataOf` lit les champs que la collection a déclarés : titre, description, image, URL canonique, alternatives `hreflang` avec `x-default`, directives robots, Open Graph :
+
+```ts
+import { toNextMetadata } from '@figatellu/next16';
+import { metadataOf } from '@figatellu/site';
+import { metadataFields } from '#figatellu/urls';
+
+export async function generateMetadata(props) {
+  const found = await findByUrl(/* … */);
+
+  return found?.kind === 'entry' ? toNextMetadata(metadataOf(found.entry, metadataFields[found.collection], site)) : {};
+}
+```
+
+`site` contient l’origine et le nom du site : `{ origin: 'https://example.com', name: 'Mon site', defaultLocale: 'fr' }`.
+
+## Sitemap et robots
+
+```ts
+// app/sitemap.ts
+export default function sitemap() {
+  return toNextSitemap(sitemapOf(mountedUrls, site));
+}
+
+// app/robots.ts
+export default function robots() {
+  return toNextRobots(site);
+}
+```
+
+Le sitemap liste chaque page indexable avec ses traductions et sa date de modification ; une page marquée `noindex` en est exclue.
+
+## Données structurées et flux
+
+`structuredDataOf` donne les données schema.org d’une entrée (un `BlogPosting` avec ses auteurs, une `WebPage`), `breadcrumbListOf` son fil d’Ariane ; `jsonLd` les sérialise pour un `<script type="application/ld+json">`. `rssOf` écrit le flux RSS d’une collection, par langue.
+
+## Les redirections
+
+`figatellu migrate` écrit `redirects.json` quand des URL changent. Next les sert en redirections permanentes :
+
+```ts
+// next.config.ts
+export default {
+  redirects: async () => toNextRedirects(JSON.parse(await readFile('redirects.json', 'utf8'))),
+};
+```
+
+## Les liens
+
+Les composants de `@figatellu/ui` lient les pages par le composant de lien de l’application : enveloppez la mise en page dans `LinkProvider` avec `next/link`, et les navigations restent côté client.
+
+## Les messages
+
+next-intl formate les messages côté serveur, précompilés : `withPrecompiledMessages` de `@figatellu/next16/config` lui donne son moteur `format-only`, et les composants clients reçoivent leurs textes déjà formatés. Aucune page n’embarque l’analyseur ICU ni le catalogue des messages ; le détail est dans [Messages](/docs/messages).

@@ -1,0 +1,59 @@
+---
+featuredPictureUrl: /covers/placeholder-64.jpeg
+title: 'Le code généré'
+metadescription: 'Les modules typés que figatellu écrit dans .figatellu/ : getters, index, URL, langues, navigation, messages.'
+order: 5
+---
+
+# Le code généré
+
+`figatellu build` écrit des modules typés dans `.figatellu/`, importés par l’alias `#figatellu/*`. Ils contiennent ce que le build a trouvé : une page qui n’existe pas n’a pas de getter, donc la demander ne compile pas.
+
+## Le module d’une collection
+
+Chaque collection a son module, à son nom. Pour une collection `blog` dont l’entrée est `blogPost` :
+
+```ts
+import { blogIndex, findBlogPost, findBlogPostByUrl, getBlogPost, listBlog } from '#figatellu/blog';
+
+const post = await getBlogPost({ locale: 'en', category: 'news', slug: 'launch' });
+post.data.title; // typé par le schéma de la collection
+```
+
+| Export                     | Donne                                                                                                                            |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `getBlogPost(query)`       | Une entrée dont l’existence est connue : la requête est vérifiée par les types, segment par segment et langue par langue.        |
+| `findBlogPost(query)`      | La même chose pour une requête non vérifiée, ou `undefined`.                                                                     |
+| `findBlogPostByUrl(url)`   | L’entrée à une URL, telle que le build l’a produite.                                                                             |
+| `blogIndex`                | L’index léger : l’URL, la langue, les traductions et les termes de chaque entrée, ses données et son corps chargés à la demande. |
+| `listBlog(filter)`         | Les entrées de l’index d’une langue, d’une catégorie, d’une sous-catégorie.                                                      |
+| `findBlogFolderByUrl(url)` | Une page de dossier, quand la collection déclare `folderPages`.                                                                  |
+
+Les données et les corps sont des modules à part, chargés seulement quand une entrée est lue : lister mille billets ne charge jamais mille corps.
+
+## Les URL
+
+`#figatellu/urls` sert toutes les pages depuis une seule route :
+
+```ts
+import { findByUrl, mountedUrls, segmentsOf, urlOf } from '#figatellu/urls';
+
+const found = await findByUrl(urlOf('en', ['blog', 'news', 'launch']));
+// found.kind : 'entry', 'folder' ou 'term'
+```
+
+`mountedUrls` liste chaque page une fois, entrées, pages de dossier et pages de termes, avec ses traductions : la source des paramètres statiques, du sitemap et de l’index de recherche. `urlOf` et `segmentsOf` écrivent et lisent les URL selon la stratégie du projet.
+
+## Langues, navigation, taxonomies
+
+| Module                  | Donne                                                                                            |
+| ----------------------- | ------------------------------------------------------------------------------------------------ |
+| `#figatellu/locales`    | `locales`, `defaultLocale`, `localeInfo` (libellé, sens d’écriture), le type `Locale`.           |
+| `#figatellu/navigation` | `navigationOf(locale)` : l’arbre de la barre de navigation, tiré du contenu.                     |
+| `#figatellu/taxonomies` | Les termes et les données de chaque taxonomie.                                                   |
+| `#figatellu/terms`      | Les pages de termes (`findAuthorsTermByUrl`, `authorsTermUrl`), avec le contenu de chaque terme. |
+| `#figatellu/messages`   | Le squelette, les types et le chargeur des messages.                                             |
+
+## Jamais commité
+
+Le dossier est régénéré à chaque build, et seuls les fichiers qui changent sont réécrits : un bundler qui le surveille ne recharge que ce qui a changé. Ajoutez `.figatellu/` au `.gitignore`.

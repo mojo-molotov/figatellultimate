@@ -1,0 +1,81 @@
+{
+  "name": "@figatellu/next16",
+  "version": "0.0.0",
+  "description": "Next.js 16 adapter of figatellu: site metadata, sitemap, redirects and the facets URL adapter. The major version of Next is in the name.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "@figatellu/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./facets": {
+      "@figatellu/source": "./src/facets.ts",
+      "types": "./dist/facets.d.ts",
+      "default": "./dist/facets.js"
+    },
+    "./config": {
+      "@figatellu/source": "./src/config.ts",
+      "types": "./dist/config.d.ts",
+      "default": "./dist/config.js"
+    },
+    "./listing-index": {
+      "@figatellu/source": "./src/listing-index.ts",
+      "types": "./dist/listing-index.d.ts",
+      "default": "./dist/listing-index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./facets": {
+        "types": "./dist/facets.d.ts",
+        "default": "./dist/facets.js"
+      },
+      "./config": {
+        "types": "./dist/config.d.ts",
+        "default": "./dist/config.js"
+      },
+      "./listing-index": {
+        "types": "./dist/listing-index.d.ts",
+        "default": "./dist/listing-index.js"
+      },
+      "./package.json": "./package.json"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --config ../../vitest.config.ts --project next16",
+    "lint:package": "publint --strict && attw --pack . --profile esm-only"
+  },
+  "dependencies": {
+    "@figatellu/facets": "workspace:*",
+    "@figatellu/site": "workspace:*"
+  },
+  "figatellu": {
+    "role": "adapter"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/react": "16.3.3",
+    "@types/react": "19.3.0",
+    "happy-dom": "21.0.4",
+    "next": "16.4.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "peerDependencies": {
+    "next": "^16.4.3",
+    "react": "^19.0.0"
+  }
+}

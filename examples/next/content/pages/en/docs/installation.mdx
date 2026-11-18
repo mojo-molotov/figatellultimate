@@ -1,0 +1,111 @@
+---
+title: 'Installation'
+metadescription: 'Add figatellu to a project, wire the generated code and run the first build.'
+featuredPictureUrl: '/covers/first-steps.jpeg'
+order: 2
+---
+
+# Installation
+
+figatellu joins an existing project: it reads your content folders, then generates the code your application imports. Nothing changes in your framework.
+
+## The packages
+
+| Package                                                    | Role                                                                   |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `@figatellu/core`                                          | The pure core: configuration, path grammars, URLs, diagnostics.        |
+| `@figatellu/cli`                                           | The `figatellu` command: build, check, watch, search, migrate.         |
+| `@figatellu/content-collections`                           | The adapter of Content Collections.                                    |
+| `@figatellu/use-intl`                                      | Translators typed by the generated messages, and precompiled messages. |
+| `@figatellu/site`                                          | Metadata, sitemap, feeds, breadcrumbs, structured data.                |
+| `@figatellu/next16`                                        | The Next.js 16 adapter.                                                |
+| `@figatellu/facets`, `@figatellu/facets-react`             | Faceted collections, and their React components.                       |
+| `@figatellu/search`, `@figatellu/search-react`             | Local search over Pagefind, and its React components.                  |
+| `@figatellu/ui`, `@figatellu/effects`, `@figatellu/themes` | A minimal design system, decorative effects, themes.                   |
+
+## Requirements
+
+You need Node 24 or later: figatellu loads its TypeScript config with no build tool, through Node’s type stripping. The project must use ES modules (`"type": "module"` in `package.json`).
+
+Any package manager works.
+
+## Install the packages
+
+Add the CLI, the core and the adapter of your content tool:
+
+```sh npm
+npm install -D @figatellu/cli @figatellu/core
+npm install -D @figatellu/content-collections @content-collections/core
+```
+
+```sh pnpm
+pnpm add -D @figatellu/cli @figatellu/core
+pnpm add -D @figatellu/content-collections @content-collections/core
+```
+
+```sh yarn
+yarn add -D @figatellu/cli @figatellu/core
+yarn add -D @figatellu/content-collections @content-collections/core
+```
+
+```sh bun
+bun add -d @figatellu/cli @figatellu/core
+bun add -d @figatellu/content-collections @content-collections/core
+```
+
+The core reads no file: the adapter hands the frontmatter, its validation and the MDX to Content Collections. Another tool can replace it without touching your content.
+
+## Wire the generated code
+
+figatellu writes its code to `.figatellu/`, at the project’s root. Your application imports it through an alias, declared once in `package.json`:
+
+```json
+{
+  "imports": {
+    "#figatellu/*": "./.figatellu/*/index.js"
+  }
+}
+```
+
+The folder is regenerated on every build: add it to `.gitignore`.
+
+### What you import
+
+Each collection has its module, named after it: `#figatellu/blog` gives `getBlogPost`, `findBlogPostByUrl` and the posts’ light index. `#figatellu/urls` finds any page by its URL, for a single route serving them all.
+
+## First build
+
+Run the CLI at the project’s root:
+
+```sh npm
+npx figatellu build
+```
+
+```sh pnpm
+pnpm figatellu build
+```
+
+```sh yarn
+yarn figatellu build
+```
+
+```sh bun
+bunx figatellu build
+```
+
+It lists your files, infers the structure from their paths, validates every document, then writes the generated code. Every problem comes with its file, its cause and how to fix it.
+
+### Continuously
+
+`figatellu watch` rebuilds on every change and keeps the last valid state: an error in one file never empties the rest.
+
+### Check without writing
+
+`figatellu check` does all the work and writes nothing: the command to run in continuous integration.
+
+## Next steps
+
+1. [Configuration](/en/docs/configuration) and [Writing content](/en/docs/content): what a project declares, and how files become pages.
+2. [Generated code](/en/docs/generated-code) and [Messages](/en/docs/messages): what your application imports, and its translations.
+3. [Next.js](/en/docs/nextjs): one route for every page, metadata, sitemap.
+4. As needed: [Faceted collections](/en/docs/faceted-collections), [Search](/en/docs/search), [Interface](/en/docs/interface), [Command line](/en/docs/cli).

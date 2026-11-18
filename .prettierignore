@@ -1,0 +1,15 @@
+pnpm-lock.yaml
+playground.*
+.tmp/
+dist/
+coverage/
+# Markdown is hand-formatted; not checked by Prettier.
+*.md
+
+# The example app's build and generated outputs
+examples/*/.next/
+examples/*/.figatellu/
+examples/*/.content-collections/
+examples/*/next-env.d.ts
+examples/*/public/pagefind/
+.vitest/

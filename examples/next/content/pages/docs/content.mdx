@@ -1,0 +1,74 @@
+---
+featuredPictureUrl: /covers/placeholder-196.jpeg
+title: 'Écrire le contenu'
+metadescription: 'Dossiers, noms de fichiers, langues, frontmatter, brouillons, et les diagnostics qui gardent le contenu juste.'
+order: 4
+---
+
+# Écrire le contenu
+
+Le contenu, ce sont des fichiers MDX dans des dossiers. Le chemin d’un fichier est sa structure : aucun frontmatter ne dit à quelle catégorie ou à quelle langue il appartient, donc rien ne peut contredire les dossiers.
+
+## Un fichier et son URL
+
+Avec la grammaire `[segment('category'), locale({ optional: true }), slug()]` sous la base `blog` :
+
+| Fichier                           | Langue     | URL                    |
+| --------------------------------- | ---------- | ---------------------- |
+| `content/blog/news/launch.mdx`    | par défaut | `/blog/news/launch`    |
+| `content/blog/news/en/launch.mdx` | `en`       | `/en/blog/news/launch` |
+
+Les deux fichiers sont la même entrée en deux langues : chacun renvoie à l’autre, pour le sélecteur de langue, les alternatives `hreflang` et le sitemap.
+
+### Les noms
+
+Les noms de dossiers et de fichiers s’écrivent en minuscules, chiffres et tirets. `Bad Name.mdx` est une erreur qui propose `bad-name.mdx`. Deux fichiers qui ne diffèrent que par la casse sont aussi une erreur : macOS et Windows n’y voient qu’un seul fichier.
+
+### index.mdx
+
+Un `index.mdx` est la page de son dossier : `content/pages/docs/index.mdx` est `/docs`. Une collection peut l’interdire là où une page de dossier est générée à sa place.
+
+## Les langues
+
+Dans la notation implicite, celle par défaut, un fichier sans dossier de langue est dans la langue par défaut. Dans la notation explicite, chaque langue a son dossier. `figatellu migrate notation explicit` déplace chaque fichier de l’une à l’autre, et écrit les redirections des URL qui changent.
+
+Une traduction manquante n’est pas une erreur : la page existe dans les langues où elle a été écrite, et les types générés savent lesquelles.
+
+## Le frontmatter
+
+Le frontmatter est vérifié par le schéma de la collection, dans l’outil de contenu : n’importe quelle bibliothèque Standard Schema, comme valibot ou zod. Un champ manquant ou invalide est signalé sur son fichier, avec le message du schéma.
+
+```mdx
+---
+title: 'Lancement'
+description: 'Ce qu’apporte la première version.'
+date: 2026-03-01
+tags: [release]
+---
+
+# Lancement
+```
+
+## Brouillons et contenu de test
+
+Une collection qui déclare `draft: 'draft'` lit ce champ booléen : les brouillons sont construits en développement, exclus de la production. `testOnly` fait de même par clé, pour du contenu dont seuls les tests ont besoin.
+
+## Les entrées réservées
+
+`reserved: ['pricing']` sort une entrée de la route commune : une page de l’application la sert, et la lit toujours, typée, par son getter.
+
+## Les références aux taxonomies
+
+Un champ déclaré dans `references` contient des termes d’une taxonomie : `tags: [release]`. Un terme inconnu est une erreur qui propose le plus proche ; un terme répété dans un champ est aussi une erreur.
+
+## Les diagnostics
+
+Chaque problème dit où il est, pourquoi, et comment le corriger, et `figatellu build` les liste tous d’un coup, jamais seulement le premier :
+
+```text
+content/blog/news/Bad Name.mdx
+  ✖ file name "Bad Name" breaks the naming rule (lowercase letters, digits and dashes)
+    → rename it to "bad-name"
+```
+
+Une erreur arrête le build en laissant le dernier code généré valide en place ; un avertissement, comme une réservation qui ne correspond à aucune entrée, ne l’arrête pas.

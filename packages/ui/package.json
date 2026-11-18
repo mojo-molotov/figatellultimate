@@ -1,0 +1,76 @@
+{
+  "name": "@figatellu/ui",
+  "version": "0.0.0",
+  "description": "A minimal design system on top of figatellu: a navbar generated from the content, a locale switcher, and one stylesheet of tokens styling every figatellu component.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "exports": {
+    ".": {
+      "@figatellu/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./scripts": {
+      "@figatellu/source": "./src/scripts.ts",
+      "types": "./dist/scripts.d.ts",
+      "default": "./dist/scripts.js"
+    },
+    "./package.json": "./package.json",
+    "./styles.css": {
+      "@figatellu/source": "./src/styles.css",
+      "default": "./dist/styles.css"
+    }
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./scripts": {
+        "types": "./dist/scripts.d.ts",
+        "default": "./dist/scripts.js"
+      },
+      "./package.json": "./package.json",
+      "./styles.css": {
+        "default": "./dist/styles.css"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown && node -e \"require('node:fs').copyFileSync('src/styles.css','dist/styles.css')\"",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --config ../../vitest.config.ts --project ui",
+    "lint:package": "publint --strict && attw --pack . --profile esm-only --exclude-entrypoints ./styles.css"
+  },
+  "dependencies": {
+    "@figatellu/toc": "workspace:*",
+    "@heroicons/react": "2.2.0",
+    "radix-ui": "1.8.1"
+  },
+  "figatellu": {
+    "role": "adapter"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.8",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "axe-core": "4.14.0",
+    "happy-dom": "21.0.4",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  }
+}

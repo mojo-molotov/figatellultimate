@@ -1,0 +1,93 @@
+---
+featuredPictureUrl: '/covers/secret.jpeg'
+title: 'Messages'
+metadescription: 'Interface texts in one file per language, part of them required by the content itself, every key and argument typed.'
+order: 6
+---
+
+# Messages
+
+The interface’s texts live in message files, one per language. figatellu derives part of them from the content itself: a folder or a tag added requires its translation everywhere.
+
+## The generated skeleton
+
+Every folder declares its fields, such as a `title`, and every taxonomy term its own, such as a `label`. figatellu gathers them into a skeleton: `content.blog.news.$.title`, `taxonomies.tags.release.label`. The `$` separates a folder’s fields from its subfolders.
+
+## The application’s schema
+
+`messages.schema` names a module that spreads the skeleton, then adds your own keys, left empty:
+
+```ts
+import { skeleton, type MessageSchema } from '#figatellu/messages';
+
+const _ = '';
+
+export const schema = {
+  ...skeleton,
+  ui: { toc: { title: _ } },
+} as const satisfies MessageSchema;
+```
+
+The schema is written once; every language derives its type from it.
+
+## One language per file
+
+`messages/fr.ts` and `messages/en.ts` fill that schema, and each must satisfy it exactly. A forgotten key, or an extra one, does not compile, and `figatellu check` names the key and the file to complete.
+
+## ICU messages
+
+Messages follow ICU. figatellu parses every one, requires for each language the plural categories it needs (`few` in Polish, `other` everywhere), and types the arguments: a message with `{count, plural, …}` takes a number, and forgetting it does not compile. Every language must take the same arguments as the default one.
+
+```ts
+folder: { more: '{count, plural, one {See the post} other {See the # posts}}' },
+```
+
+## At runtime
+
+figatellu formats nothing itself. `@figatellu/use-intl` gives translators typed by the generated messages:
+
+```ts
+import { createTranslator } from '@figatellu/use-intl';
+import { loadMessages } from '#figatellu/messages';
+
+const t = createTranslator({ locale: 'en', messages: await loadMessages('en') });
+t('ui.folder.more', { count: 3 });
+```
+
+In a Next.js application, next-intl reads the same messages, typed by the same declarations.
+
+## Precompiled messages
+
+In a Next.js application, every message can be compiled once, at build time: no page then ships the ICU parser, nor the catalog of messages. Keys are typed with `runtime: 'use-intl'` in the config's `messages`.
+
+On the server, `precompileMessages` compiles each language's messages, and next-intl reads them with its `format-only` runtime, which `withPrecompiledMessages` gives it:
+
+```ts
+// i18n/request.ts
+import { precompileMessages } from '@figatellu/use-intl/precompile';
+
+export default getRequestConfig(async ({ locale }) => ({
+  locale,
+  // next-intl types the source messages: it receives their compiled form here.
+  messages: precompileMessages(await loadMessages(locale)) as unknown as Messages,
+}));
+```
+
+```ts
+// next.config.ts
+import { withPrecompiledMessages } from '@figatellu/next16/config';
+
+export default createNextIntlPlugin('./i18n/request.ts')(withPrecompiledMessages(nextConfig));
+```
+
+Client components receive their texts from the server, already formatted. Those that depend on a value only the browser knows, such as a count of results, travel precompiled with their key:
+
+```tsx
+// A server component
+<SearchStatus found={precompiled(tree, 'ui.search.found')} />;
+
+// The client component
+formatPrecompiled(found, locale, { count: results.length });
+```
+
+The key types the arguments: leaving out `count` does not compile. A date shows in the browser's time zone; on the server, a named date style (`{day, date, long}`) is declared in next-intl's `formats`.

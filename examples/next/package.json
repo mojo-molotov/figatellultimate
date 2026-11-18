@@ -1,0 +1,53 @@
+{
+  "name": "figatellu-example-next",
+  "private": true,
+  "description": "Pages, a blog and landing pages, built with figatellu and Next.js 16 by configuration only.",
+  "type": "module",
+  "imports": {
+    "#figatellu/*": "./.figatellu/*/index.js"
+  },
+  "scripts": {
+    "generate": "figatellu build",
+    "dev": "turbo run build --filter=figatellu-example-next^... && figatellu build && next dev",
+    "example:build": "turbo run build --filter=figatellu-example-next^... && figatellu build && next build && figatellu search --site .next/server/app --out public/pagefind --locale-folders",
+    "example:verify": "node scripts/verify.ts",
+    "example:browse": "node scripts/browse.ts",
+    "example:load": "node scripts/load-test.ts"
+  },
+  "dependencies": {
+    "@content-collections/mdx": "0.2.2",
+    "@heroicons/react": "2.2.0",
+    "@figatellu/effects": "workspace:*",
+    "@figatellu/facets": "workspace:*",
+    "@figatellu/facets-react": "workspace:*",
+    "@figatellu/next16": "workspace:*",
+    "@figatellu/search": "workspace:*",
+    "@figatellu/search-react": "workspace:*",
+    "@figatellu/site": "workspace:*",
+    "@figatellu/themes": "workspace:*",
+    "@figatellu/toc": "workspace:*",
+    "@figatellu/ui": "workspace:*",
+    "@figatellu/use-intl": "workspace:*",
+    "@shikijs/rehype": "4.5.0",
+    "icu-minify": "4.15.0",
+    "next": "16.4.6",
+    "next-intl": "4.14.9",
+    "next-themes": "0.4.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "rehype-autolink-headings": "7.1.0",
+    "remark-gfm": "4.0.1"
+  },
+  "devDependencies": {
+    "@content-collections/core": "0.15.3",
+    "@figatellu/cli": "workspace:*",
+    "@figatellu/content-collections": "workspace:*",
+    "@figatellu/core": "workspace:*",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "turbo": "2.11.10",
+    "typescript": "6.0.3",
+    "valibot": "1.5.0"
+  }
+}

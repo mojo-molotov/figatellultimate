@@ -1,0 +1,54 @@
+{
+  "name": "@figatellu/themes",
+  "version": "0.0.0",
+  "description": "Themes for figatellu apps: a shared base and one stylesheet per theme (maquis, paper), over @figatellu/ui and @figatellu/effects, on their tokens and slots.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "exports": {
+    "./base.css": {
+      "@figatellu/source": "./src/base.css",
+      "default": "./dist/base.css"
+    },
+    "./maquis.css": {
+      "@figatellu/source": "./src/maquis.css",
+      "default": "./dist/maquis.css"
+    },
+    "./paper.css": {
+      "@figatellu/source": "./src/paper.css",
+      "default": "./dist/paper.css"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "exports": {
+      "./base.css": {
+        "default": "./dist/base.css"
+      },
+      "./maquis.css": {
+        "default": "./dist/maquis.css"
+      },
+      "./paper.css": {
+        "default": "./dist/paper.css"
+      },
+      "./package.json": "./package.json"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "node -e \"const fs=require('node:fs');fs.mkdirSync('dist',{recursive:true});for(const f of ['base','maquis','paper'])fs.copyFileSync('src/'+f+'.css','dist/'+f+'.css')\"",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --config ../../vitest.config.ts --project themes",
+    "lint:package": "publint --strict"
+  },
+  "figatellu": {
+    "role": "adapter"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2"
+  }
+}

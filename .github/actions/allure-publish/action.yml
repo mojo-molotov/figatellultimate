@@ -1,0 +1,83 @@
+name: Publish an Allure report
+description: >-
+  Renders one test family's Allure report into its own folder of the allure-reports branch, with its own history, and
+  stages the whole branch for GitHub Pages. Each family replaces only its folder, so the CI's report and the weekly
+  ones never overwrite each other. Callers share the `allure-reports` concurrency group: one publication at a time.
+
+inputs:
+  family:
+    description: The report's folder and history name, e.g. ci, browsers, watch-lab
+    required: true
+  title:
+    description: The report's name on the index page
+    required: true
+  results-dir:
+    description: The merged allure-results of the family's jobs
+    default: allure-results
+  extra-dir:
+    description: A folder published inside the report's, as <family>/<extra-name> (e.g. the coverage)
+    default: ''
+  extra-name:
+    description: The extra folder's name
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Check out the reports branch
+      shell: bash
+      run: |
+        rm -rf .allure-reports
+        remote="https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+        if ! git clone -q --depth=1 --branch allure-reports "$remote" .allure-reports 2>/dev/null; then
+          mkdir .allure-reports
+          git -C .allure-reports init -q
+          git -C .allure-reports checkout -q --orphan allure-reports
+          git -C .allure-reports remote add origin "$remote"
+        fi
+        mkdir -p .allure-reports/_history
+
+    - name: Render the report with its own history
+      shell: bash
+      run: |
+        history=".allure-reports/_history/${{ inputs.family }}.jsonl"
+        rm -rf history.jsonl allure-report ".allure-reports/${{ inputs.family }}"
+        if [ -f "$history" ]; then cp "$history" history.jsonl; fi
+        pnpm exec allure generate "${{ inputs.results-dir }}" --output allure-report
+        if [ -f history.jsonl ]; then cp history.jsonl "$history"; fi
+        mv allure-report ".allure-reports/${{ inputs.family }}"
+        if [ -n "${{ inputs.extra-dir }}" ] && [ -d "${{ inputs.extra-dir }}" ]; then
+          cp -R "${{ inputs.extra-dir }}" ".allure-reports/${{ inputs.family }}/${{ inputs.extra-name }}"
+        fi
+        echo "${{ inputs.title }}" > ".allure-reports/_history/${{ inputs.family }}.title"
+
+    - name: Write the index of every report
+      shell: bash
+      run: |
+        cd .allure-reports
+        {
+          echo '<!doctype html><meta charset="utf-8"><title>figatellu test reports</title>'
+          echo '<h1>figatellu test reports</h1><ul>'
+          for title in _history/*.title; do
+            family=$(basename "$title" .title)
+            echo "<li><a href=\"$family/\">$(cat "$title")</a></li>"
+          done
+          echo '</ul>'
+        } > index.html
+        touch .nojekyll
+
+    - name: Save the reports branch
+      shell: bash
+      run: |
+        cd .allure-reports
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add -A
+        git diff --staged --quiet && exit 0
+        git commit -q -m "chore: ${{ inputs.family }} report (run #${{ github.run_number }})"
+        git push -q origin allure-reports
+
+    - name: Stage the site
+      uses: actions/upload-pages-artifact@v4
+      with:
+        path: .allure-reports/

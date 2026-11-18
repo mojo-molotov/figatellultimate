@@ -1,0 +1,82 @@
+---
+featuredPictureUrl: '/covers/post-07.jpeg'
+title: 'Interface'
+metadescription: 'A minimal design system generated from the content, decorative effects, and themes over both.'
+order: 10
+---
+
+# Interface
+
+Three layers, each optional: `@figatellu/ui`, a minimal design system; `@figatellu/effects`, decorative effects; `@figatellu/themes`, themes over both. Their components have no text of their own: every label comes from your messages, in the reader’s language.
+
+```sh npm
+npm install @figatellu/ui @figatellu/effects @figatellu/themes react radix-ui
+```
+
+```sh pnpm
+pnpm add @figatellu/ui @figatellu/effects @figatellu/themes react radix-ui
+```
+
+```sh yarn
+yarn add @figatellu/ui @figatellu/effects @figatellu/themes react radix-ui
+```
+
+```sh bun
+bun add @figatellu/ui @figatellu/effects @figatellu/themes react radix-ui
+```
+
+## The design system
+
+| Component               | Role                                                                                                       |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `Navbar`                | The navigation generated from the content (`navigationOf(locale)`), with menus and a narrow-screen toggle. |
+| `LocaleSwitcher`        | The page in the other languages, never a link to a missing translation.                                    |
+| `ThemeToggle`           | Light and dark, with `themeScript` applied before the first paint.                                         |
+| `Breadcrumb`            | Where the page sits, from the navigation.                                                                  |
+| `TableOfContents`       | The page’s headings, the one being read highlighted, docked in the margin.                                 |
+| `EntryCard`             | A post’s preview: image, title, date, tags, authors.                                                       |
+| `CodeBlock`, `CodeTabs` | A code block with a copy button; variants of one block in tabs.                                            |
+| `ImageZoom`             | An image enlarged in a modal on desktops.                                                                  |
+
+One stylesheet styles them all, through `data-slot` attributes and tokens:
+
+```css
+@import '@figatellu/ui/styles.css';
+
+:root {
+  --fig-accent: #0f766e;
+  --fig-radius: 4px;
+}
+```
+
+Every token has a dark value, under `prefers-color-scheme: dark` and under `data-theme="dark"`. On paper, every page prints in black on white, without the navigation.
+
+## Effects
+
+`Effects` loads a glow under the cursor and sparkles in the margins on desktops only, never on the server nor on a phone; `Collector` lights a card up under the mouse; `Reveal` reveals the footer from under the page. Every look is a token: `--fig-glow-color`, `--fig-sparkles-column`, `--fig-collector-color`.
+
+```tsx
+import '@figatellu/effects/styles.css';
+import { Effects, Reveal } from '@figatellu/effects';
+
+<body>
+  {children}
+  <Reveal>
+    <footer>…</footer>
+  </Reveal>
+  <Effects />
+</body>;
+```
+
+## Themes
+
+`base.css` lays out the site: the text column, the article and its table of contents, the listings, the MDX typography, print. A theme over it sets its looks only. **maquis** lays dark glass over the previews, the code and the tables, and shows the effects in the dark theme. **paper** puts soft ink on a grey paper, the headings in a serif, an ink-blue accent, with no effect at all.
+
+```tsx
+import '@figatellu/ui/styles.css';
+import '@figatellu/effects/styles.css';
+import '@figatellu/themes/base.css';
+import '@figatellu/themes/paper.css';
+```
+
+Several themes can be loaded together: `<html data-site-theme="paper">` picks one. Without that attribute, a theme loaded alone applies. This site loads both, and its footer lets the reader choose.

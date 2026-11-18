@@ -1,0 +1,59 @@
+---
+featuredPictureUrl: '/covers/post-05.jpeg'
+title: 'Generated code'
+metadescription: 'The typed modules figatellu writes to .figatellu/: getters, indexes, URLs, locales, navigation, messages.'
+order: 5
+---
+
+# Generated code
+
+`figatellu build` writes typed modules to `.figatellu/`, imported through the `#figatellu/*` alias. They hold what the build found: a page that does not exist has no getter, so asking for it does not compile.
+
+## A collection’s module
+
+Each collection has its module, named after it. For a collection `blog` with the entry `blogPost`:
+
+```ts
+import { blogIndex, findBlogPost, findBlogPostByUrl, getBlogPost, listBlog } from '#figatellu/blog';
+
+const post = await getBlogPost({ locale: 'en', category: 'news', slug: 'launch' });
+post.data.title; // typed by the collection's schema
+```
+
+| Export                     | Gives                                                                                                     |
+| -------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `getBlogPost(query)`       | An entry known to exist: the query is checked by the types, segment by segment and language by language.  |
+| `findBlogPost(query)`      | The same for an untrusted query, or `undefined`.                                                          |
+| `findBlogPostByUrl(url)`   | The entry at a URL, as the build produced it.                                                             |
+| `blogIndex`                | The light index: every entry’s URL, language, translations and terms, its data and body loaded on demand. |
+| `listBlog(filter)`         | The index entries of a language, a category, a subcategory.                                               |
+| `findBlogFolderByUrl(url)` | A folder page, when the collection declares `folderPages`.                                                |
+
+Data and bodies are separate modules, loaded only when an entry is read: listing a thousand posts never loads a thousand bodies.
+
+## URLs
+
+`#figatellu/urls` serves every page from one route:
+
+```ts
+import { findByUrl, mountedUrls, segmentsOf, urlOf } from '#figatellu/urls';
+
+const found = await findByUrl(urlOf('en', ['blog', 'news', 'launch']));
+// found.kind: 'entry', 'folder' or 'term'
+```
+
+`mountedUrls` lists every page once, entries, folder pages and term pages, with its translations: the source of static params, the sitemap and the search index. `urlOf` and `segmentsOf` write and read URLs with the project’s strategy.
+
+## Locales, navigation, taxonomies
+
+| Module                  | Gives                                                                            |
+| ----------------------- | -------------------------------------------------------------------------------- |
+| `#figatellu/locales`    | `locales`, `defaultLocale`, `localeInfo` (label, direction), the `Locale` type.  |
+| `#figatellu/navigation` | `navigationOf(locale)`: the navbar’s tree, from the content.                     |
+| `#figatellu/taxonomies` | Each taxonomy’s terms and data.                                                  |
+| `#figatellu/terms`      | Term pages (`findAuthorsTermByUrl`, `authorsTermUrl`), with each term’s content. |
+| `#figatellu/messages`   | The messages’ skeleton, types and loader.                                        |
+
+## Never committed
+
+The folder is regenerated on every build, and only the files that change are rewritten: a bundler watching it reloads what changed, nothing else. Add `.figatellu/` to `.gitignore`.

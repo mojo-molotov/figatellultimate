@@ -1,0 +1,106 @@
+---
+featuredPictureUrl: '/covers/post-04.jpeg'
+title: 'Faceted collections'
+metadescription: 'Filters by several facets, sorts and pagination, the whole state in a shareable URL, prerendered.'
+order: 8
+---
+
+# Faceted collections
+
+A faceted collection filters a list by several facets, sorts it and paginates it, with its whole state in the URL: a filtered view is a link anyone can share, and the default view is prerendered.
+
+```sh npm
+npm install @figatellu/facets @figatellu/facets-react react radix-ui cmdk
+```
+
+```sh pnpm
+pnpm add @figatellu/facets @figatellu/facets-react react radix-ui cmdk
+```
+
+```sh yarn
+yarn add @figatellu/facets @figatellu/facets-react react radix-ui cmdk
+```
+
+```sh bun
+bun add @figatellu/facets @figatellu/facets-react react radix-ui cmdk
+```
+
+## The engine
+
+`defineFacetedCollection` declares the items, their facets and sorts, and the page size. The engine is pure: it reads a URL, computes a view, and writes the next URL.
+
+```ts
+import { defineFacetedCollection } from '@figatellu/facets';
+
+const engine = defineFacetedCollection({
+  items: posts,
+  key: (post) => post.url,
+  facets: { tags: { values: (post) => post.tags }, authors: { values: (post) => post.authors, mode: 'all' } },
+  sorts: {
+    'date-desc': (one, other) => other.date.localeCompare(one.date),
+    'title-asc': (one, other) => one.title.localeCompare(other.title),
+  },
+  perPage: 5,
+});
+
+const state = engine.read('?tags=release&sort=title-asc&page=2');
+const { keys, total, pages, counts } = engine.view(state);
+```
+
+| Piece                       | Role                                                                                                             |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `read(search)`              | The state of any URL: an unknown value, a page out of range or a broken link give a valid state, never an error. |
+| `view(state)`               | The visible keys, the total, the pages, and each value’s count.                                                  |
+| `transition(state, action)` | The next state and its URL, for `toggle`, `clear`, `sort` or `page`.                                             |
+| `write(state)`              | The canonical URL of a state.                                                                                    |
+
+A facet in `any` mode keeps an item carrying one of the checked values; in `all` mode, every one. Facets combine with AND.
+
+### Where the page lands
+
+Changing a filter keeps the reader’s place by default (`keepReadingPosition`): the page holding the first post they were looking at. `backToFirstPage` goes back to page 1 instead.
+
+## In React
+
+`useFacetedCollection` binds the engine to the URL; the components are unstyled and accessible:
+
+```tsx
+import { FacetOptions, FacetsReset, Pagination, SortSelect, useFacetedCollection } from '@figatellu/facets-react';
+import { useNextUrl } from '@figatellu/next16/facets';
+
+const binding = useFacetedCollection(engine, useNextUrl());
+
+<FacetOptions binding={binding} facet="tags" labels={labels.tags} locale="en" />
+<SortSelect binding={binding} labels={labels.sort} />
+{binding.view.keys.map((key) => cards[key])}
+<Pagination binding={binding} labels={labels.pagination} locale="en" />
+```
+
+`PageSelect` is a compact pagination, the pages as a select, for a toolbar; the full `Pagination` keeps the links. Each takes `icons` for previous and next, shown alone on a narrow screen.
+
+`useNextUrl` changes the URL through the History API, integrated by Next’s router: no server request per filter. Outside Next, `useHistoryUrl` does the same.
+
+The hook gives keys only: the application renders its cards once, on the server, and shows the ones the view holds.
+
+A listing whose pages are prerendered (`perPage` of `folderPages`) passes its first page’s URL: its default pages then live in the path (`/blog/news/page/2`), reached through the router, each with its slice from the server; a filter or a sort stays in the query (`/blog/news?tags=bot`), computed in the browser over every item, loaded on the first filter or sort as a static JSON index. `usePagedCollection` does the orchestration: the page's slice until then, its default pages reached by the URL alone, a filter chosen early applied once the index is here.
+
+```tsx
+const load = createIndexLoader((json) => v.parse(Index, json));
+const { binding, index, prefetch } = usePagedCollection({
+  engine: postsEngine,
+  items: slice,
+  paged: { page: folder.page, pages: folder.pages, total: folder.entries.length },
+  load: () => load(indexUrl),
+  url: useNextUrl({ first: folder.first }),
+});
+```
+
+The index is one static route per listing, from `listingIndexRoute` of `@figatellu/next16/listing-index`:
+
+```ts
+export const dynamic = 'force-static';
+export const dynamicParams = false;
+export const { GET, generateStaticParams } = listingIndexRoute({ listings, params, build });
+```
+
+Outside Next, `pagedHref` and `pagedSearch` of `@figatellu/facets` map a view to this location and back.

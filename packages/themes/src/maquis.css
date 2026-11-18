@@ -1,0 +1,155 @@
+/*
+ * @figatellu/themes/maquis.css: the maquis theme, on `base.css` (loaded before it) and the design system's tokens.
+ *
+ * Dark glass over the previews, the code and the tables, where the effects show: the cursor glow, and the sparkles on
+ * listing pages, in the dark theme only. Its colors are the design system's own.
+ *
+ * Key design decision: every rule is gated (`:root:where(:not([data-site-theme]), [data-site-theme='maquis'])`): the
+ * theme applies alone, or when `<html data-site-theme="maquis">` picks it among several loaded; `:where` keeps the
+ * specificity of the rules it gates.
+ *
+ * Invariants (`themes.test.ts`, replayed on every theme): every rule gated; the same dark looks from the system's
+ * preference and from `data-theme="dark"`; the effects shown on a screen only, in the dark theme only.
+ */
+/*
+ * Glass in the dark theme (the maquis theme's): every preview (the post, page and category
+ * cards, the code blocks) and every table three quarters opaque over a blur of what lies behind it, the cursor glow.
+ * A table's rows alternate their tints, both glass: never a transparent row, the glow always behind frosted glass.
+ * A code block's glass is thinner (60%, a stronger blur) and catches the light along its top edge.
+ */
+:root:where(:not([data-site-theme]), [data-site-theme='maquis'])[data-theme='dark'] {
+  --glass-bg: color-mix(in srgb, var(--fig-bg) 75%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-site-theme]), [data-site-theme='maquis']):not([data-theme='light']) {
+    --glass-bg: color-mix(in srgb, var(--fig-bg) 75%, transparent);
+  }
+
+  :root:where(:not([data-site-theme]), [data-site-theme='maquis']):not([data-theme='light']) [data-slot='entry-card'] {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+
+  :root:where(:not([data-site-theme]), [data-site-theme='maquis']):not([data-theme='light'])
+    [data-slot='code-block-pre'].shiki {
+    background-color: color-mix(in srgb, var(--shiki-dark-bg) 60%, transparent);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 10%);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+  }
+
+  :root:where(:not([data-site-theme]), [data-site-theme='maquis']):not([data-theme='light'])
+    [data-slot='mdx-table']
+    > table {
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+
+  :root:where(:not([data-site-theme]), [data-site-theme='maquis']):not([data-theme='light']) [data-slot='mdx-tr'] {
+    background: var(--glass-bg);
+  }
+
+  :root:where(:not([data-site-theme]), [data-site-theme='maquis']):not([data-theme='light'])
+    [data-slot='mdx-tr']:nth-child(even) {
+    background: color-mix(in srgb, var(--fig-surface) 75%, transparent);
+  }
+}
+
+:root:where(:not([data-site-theme]), [data-site-theme='maquis'])[data-theme='dark'] [data-slot='entry-card'] {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+:root:where(:not([data-site-theme]), [data-site-theme='maquis'])[data-theme='dark'] [data-slot='code-block-pre'].shiki {
+  background-color: color-mix(in srgb, var(--shiki-dark-bg) 60%, transparent);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 10%);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+:root:where(:not([data-site-theme]), [data-site-theme='maquis'])[data-theme='dark'] [data-slot='mdx-table'] > table {
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+:root:where(:not([data-site-theme]), [data-site-theme='maquis'])[data-theme='dark'] [data-slot='mdx-tr'] {
+  background: var(--glass-bg);
+}
+
+:root:where(:not([data-site-theme]), [data-site-theme='maquis'])[data-theme='dark']
+  [data-slot='mdx-tr']:nth-child(even) {
+  background: color-mix(in srgb, var(--fig-surface) 75%, transparent);
+}
+
+/*
+ * The effects (`@figatellu/effects`, hidden by `base.css`): shown in the dark theme only; the sparkles on listing pages
+ * only (a folder page, an author's page, a section's list of pages), with room for margins.
+ */
+
+@media screen and (min-width: 64rem) {
+  :root:where(:not([data-site-theme]), [data-site-theme='maquis'])[data-theme='dark']
+    body:has(main:is([data-listing], [data-folder]), [data-slot='folder-list'])
+    [data-slot='sparkles'] {
+    display: block;
+  }
+}
+
+@media screen and (min-width: 64rem) and (prefers-color-scheme: dark) {
+  :root:where(:not([data-site-theme]), [data-site-theme='maquis']):not([data-theme='light'])
+    body:has(main:is([data-listing], [data-folder]), [data-slot='folder-list'])
+    [data-slot='sparkles'] {
+    display: block;
+  }
+}
+
+@media screen and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  :root:where(:not([data-site-theme]), [data-site-theme='maquis'])[data-theme='dark'] [data-slot='cursor-glow'] {
+    display: block;
+  }
+}
+
+@media screen and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) and (prefers-color-scheme: dark) {
+  :root:where(:not([data-site-theme]), [data-site-theme='maquis']):not([data-theme='light']) [data-slot='cursor-glow'] {
+    display: block;
+  }
+}
+
+/* Print: the glass stays on screen; the cards, the code and the tables print plain. */
+@media print {
+  :root:where(:not([data-site-theme]), [data-site-theme='maquis']):is([data-theme], :not([data-theme]))
+    [data-slot='entry-card'],
+  :root:where(:not([data-site-theme]), [data-site-theme='maquis']):is([data-theme], :not([data-theme]))
+    [data-slot='code-block-pre'].shiki,
+  :root:where(:not([data-site-theme]), [data-site-theme='maquis']):is([data-theme], :not([data-theme]))
+    [data-slot='mdx-table']
+    > table {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  :root:where(:not([data-site-theme]), [data-site-theme='maquis']):is([data-theme], :not([data-theme]))
+    [data-slot='entry-card'] {
+    background: none;
+  }
+
+  /* The code's own light background, not the dark glass nor its lit edge. */
+  :root:where(:not([data-site-theme]), [data-site-theme='maquis']):is([data-theme], :not([data-theme]))
+    [data-slot='code-block-pre'].shiki {
+    background-color: var(--shiki-light-bg);
+    box-shadow: none;
+  }
+
+  /* A table's rows as on a light screen: plain, every other one tinted. */
+  :root:where(:not([data-site-theme]), [data-site-theme='maquis']):is([data-theme], :not([data-theme]))
+    [data-slot='mdx-tr'] {
+    background: none;
+  }
+
+  :root:where(:not([data-site-theme]), [data-site-theme='maquis']):is([data-theme], :not([data-theme]))
+    [data-slot='mdx-tr']:nth-child(even) {
+    background: var(--fig-surface);
+  }
+}

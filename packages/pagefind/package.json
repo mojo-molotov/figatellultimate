@@ -1,0 +1,46 @@
+{
+  "name": "@figatellu/pagefind",
+  "version": "0.0.0",
+  "description": "Pagefind adapter of figatellu: indexes the built pages, one bundle per locale with its stemming, a collection filter on each page.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=24"
+  },
+  "exports": {
+    ".": {
+      "@figatellu/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./package.json": "./package.json"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --config ../../vitest.config.ts --project pagefind",
+    "lint:package": "publint --strict && attw --pack . --profile esm-only"
+  },
+  "dependencies": {
+    "pagefind": "1.5.2"
+  },
+  "figatellu": {
+    "role": "adapter"
+  },
+  "devDependencies": {
+    "@figatellu/search": "workspace:*"
+  }
+}

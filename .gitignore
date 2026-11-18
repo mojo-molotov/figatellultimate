@@ -1,0 +1,19 @@
+node_modules/
+dist/
+coverage/
+# Allure: raw results, the rendered report, its local history
+allure-results/
+allure-report/
+history.jsonl
+.figatellu/
+*.tsbuildinfo
+.DS_Store
+# Local scratch files (not checked, not committed)
+playground.*
+# Disposable test trees
+.tmp/
+.vitest/
+# Package tarballs (`attw --pack` makes one per package during `pnpm lint:packages`)
+*.tgz
+# Turborepo's local cache
+.turbo/

@@ -1,0 +1,2145 @@
+/*
+ * @figatellu/ui — a minimal design system.
+ *
+ * Tokens first: override any of them on :root (or any ancestor) to restyle everything.
+ * Only `data-slot` selectors: every figatellu component, nothing else of the page (no reset, no element selector).
+ * Dark tokens apply under `prefers-color-scheme: dark` unless `data-theme="light"`, and always under
+ * `data-theme="dark"` (set by `ThemeToggle` or a theme library).
+ * Surfaces stay opaque and minimal: decorative looks (glass, glows) belong to a theme (`@figatellu/themes`) or the
+ * app's own stylesheet, loaded after this one, on the same selectors.
+ *
+ * Invariants (`styles.test.ts`): every rule targets a `data-slot` (or defines tokens); the same dark tokens from the
+ * system's preference and from `data-theme="dark"`; Shiki's code follows them.
+ */
+
+:root {
+  --fig-font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --fig-fg: #1a1a1a;
+  --fig-bg: #ffffff;
+  --fig-surface: #f5f5f5;
+  --fig-muted: #595959;
+  --fig-border: #d4d4d4;
+  --fig-accent: #1d4ed8;
+  --fig-accent-fg: #ffffff;
+  --fig-mark-bg: #fde68a;
+  --fig-mark-fg: #1a1a1a;
+  --fig-radius: 6px;
+  --fig-space: 0.5rem;
+  --fig-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
+  --fig-narrow: 48rem;
+}
+
+/* Dark: the system's preference unless the page forces light (data-theme), or forced dark. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --fig-fg: #ededed;
+    --fig-bg: #121212;
+    --fig-surface: #1c1c1c;
+    --fig-muted: #a3a3a3;
+    --fig-border: #333333;
+    --fig-accent: #7aa2ff;
+    --fig-accent-fg: #0b1020;
+    --fig-mark-bg: #854d0e;
+    --fig-mark-fg: #fef3c7;
+    --fig-shadow: 0 4px 16px rgb(0 0 0 / 0.5);
+  }
+}
+
+:root[data-theme='dark'] {
+  --fig-fg: #ededed;
+  --fig-bg: #121212;
+  --fig-surface: #1c1c1c;
+  --fig-muted: #a3a3a3;
+  --fig-border: #333333;
+  --fig-accent: #7aa2ff;
+  --fig-accent-fg: #0b1020;
+  --fig-mark-bg: #854d0e;
+  --fig-mark-fg: #fef3c7;
+  --fig-shadow: 0 4px 16px rgb(0 0 0 / 0.5);
+}
+
+/* Shared: every figatellu control. */
+[data-slot='navbar'],
+[data-slot='locale-switcher-content'],
+[data-slot='facet-options-content'],
+[data-slot='page-select-content'],
+[data-slot='sort-select-content'],
+[data-slot='search-box-sort-content'],
+[data-slot='pagination'],
+[data-slot='pagination-ellipsis-content'],
+[data-slot='search-box'] {
+  font-family: var(--fig-font);
+  color: var(--fig-fg);
+}
+
+:is(
+  [data-slot='navbar-toggle'],
+  [data-slot='navbar-trigger'],
+  [data-slot='navbar-link'],
+  [data-slot='locale-switcher'],
+  [data-slot='facet-options-trigger'],
+  [data-slot='page-select-trigger'],
+  [data-slot='sort-select-trigger'],
+  [data-slot='search-box-sort'],
+  [data-slot='facets-reset'],
+  [data-slot='pagination-link'],
+  [data-slot='pagination-previous'],
+  [data-slot='pagination-next'],
+  [data-slot='pagination-ellipsis'],
+  [data-slot='search-box-collection'],
+  [data-slot='search-box-more'],
+  [data-slot='theme-toggle'],
+  [data-slot='search-dialog-trigger'],
+  [data-slot='search-dialog-close']
+) {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--fig-space) / 2);
+  min-height: 2.25rem;
+  padding: 0 calc(var(--fig-space) * 1.5);
+  border: 1px solid transparent;
+  border-radius: var(--fig-radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  /* Controls carry the system's font and line height wherever they sit in the page: links would otherwise inherit
+     the page's line height while buttons keep the browser's, and their heights would differ. */
+  font-family: var(--fig-font);
+  line-height: 1.25;
+  /* Buttons are border-box by default, links are not: the same box for both. */
+  box-sizing: border-box;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+:is(
+  [data-slot='navbar-toggle'],
+  [data-slot='navbar-trigger'],
+  [data-slot='navbar-link'],
+  [data-slot='locale-switcher'],
+  [data-slot='facet-options-trigger'],
+  [data-slot='page-select-trigger'],
+  [data-slot='sort-select-trigger'],
+  [data-slot='search-box-sort'],
+  [data-slot='facets-reset'],
+  [data-slot='pagination-link'],
+  [data-slot='pagination-previous'],
+  [data-slot='pagination-next'],
+  [data-slot='pagination-ellipsis'],
+  [data-slot='search-box-collection'],
+  [data-slot='search-box-more'],
+  [data-slot='theme-toggle'],
+  [data-slot='search-dialog-trigger'],
+  [data-slot='search-dialog-close']
+):hover {
+  background: var(--fig-surface);
+}
+
+/* Focus is always visible (WCAG 2.4.7). */
+[data-slot]:focus-visible {
+  outline: 2px solid var(--fig-accent);
+  outline-offset: 2px;
+}
+
+/* Popups: menus, popovers, the select. */
+:is(
+  [data-slot='navbar-content'],
+  [data-slot='locale-switcher-content'],
+  [data-slot='facet-options-content'],
+  [data-slot='page-select-content'],
+  [data-slot='sort-select-content'],
+  [data-slot='search-box-sort-content'],
+  [data-slot='pagination-ellipsis-content']
+) {
+  min-width: 12rem;
+  padding: calc(var(--fig-space) / 2);
+  border: 1px solid var(--fig-border);
+  border-radius: var(--fig-radius);
+  background: var(--fig-bg);
+  color: var(--fig-fg);
+  box-shadow: var(--fig-shadow);
+  z-index: 50;
+}
+
+/* Items of popups: highlighted by Radix (data-highlighted) or cmdk (data-selected="true"). */
+:is(
+  [data-slot='locale-switcher-item'],
+  [data-slot='facet-options-item'],
+  [data-slot='facet-options-clear'],
+  [data-slot='page-select-item'],
+  [data-slot='sort-select-item'],
+  [data-slot='search-box-sort-item'],
+  [data-slot='pagination-ellipsis-item'],
+  [data-slot='search-box-result']
+) {
+  display: flex;
+  align-items: center;
+  gap: var(--fig-space);
+  padding: calc(var(--fig-space) / 1.5) var(--fig-space);
+  border-radius: calc(var(--fig-radius) - 2px);
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  outline: none;
+}
+
+:is(
+  [data-slot='locale-switcher-item'],
+  [data-slot='facet-options-item'],
+  [data-slot='facet-options-clear'],
+  [data-slot='page-select-item'],
+  [data-slot='sort-select-item'],
+  [data-slot='search-box-sort-item'],
+  [data-slot='pagination-ellipsis-item'],
+  [data-slot='search-box-result']
+):is([data-highlighted], [data-selected='true']) {
+  background: var(--fig-accent);
+  color: var(--fig-accent-fg);
+}
+
+/* Theme toggle: a heroicon, drawn with the current color. */
+[data-slot='theme-toggle'] {
+  border-color: var(--fig-border);
+}
+
+/* Its icon is what a click gives: the moon in the light theme, the sun in the dark one, chosen by the page's
+   theme rather than the button's state, so that it is right before hydration too. */
+[data-slot='theme-toggle-sun'],
+[data-slot='theme-toggle-moon'] {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+[data-slot='theme-toggle-sun'] {
+  display: none;
+}
+
+:root[data-theme='dark'] [data-slot='theme-toggle-sun'] {
+  display: block;
+}
+
+:root[data-theme='dark'] [data-slot='theme-toggle-moon'] {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) [data-slot='theme-toggle-sun'] {
+    display: block;
+  }
+
+  :root:not([data-theme='light']) [data-slot='theme-toggle-moon'] {
+    display: none;
+  }
+}
+
+/* The icons stacked in one cell, the button clipping what goes below its horizon. */
+[data-slot='theme-toggle'] {
+  display: inline-grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+[data-slot='theme-toggle-sun'],
+[data-slot='theme-toggle-moon'] {
+  grid-area: 1 / 1;
+}
+
+/* A click swaps them along an orbit around a point below the button: the leaving icon sets to the right, the other
+   rises from the left (`data-switching`, while it plays): on a desktop only (a mouse or a trackpad), never with
+   reduced motion. */
+@media screen and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  [data-slot='theme-toggle'][data-switching] :is([data-slot='theme-toggle-sun'], [data-slot='theme-toggle-moon']) {
+    display: block;
+    transform-origin: 50% 190%;
+    /* Longhands: a shorthand without a name is rewritten by CSS minifiers (Next's) into a zero duration. */
+    animation-duration: 600ms;
+    animation-timing-function: ease-in-out;
+    animation-fill-mode: both;
+  }
+
+  /* The light theme: the moon (what a click gives now) rises, the sun sets. */
+  [data-slot='theme-toggle'][data-switching] [data-slot='theme-toggle-moon'] {
+    animation-name: fig-theme-rise;
+  }
+
+  [data-slot='theme-toggle'][data-switching] [data-slot='theme-toggle-sun'] {
+    animation-name: fig-theme-set;
+  }
+
+  :root[data-theme='dark'] [data-slot='theme-toggle'][data-switching] [data-slot='theme-toggle-sun'] {
+    animation-name: fig-theme-rise;
+  }
+
+  :root[data-theme='dark'] [data-slot='theme-toggle'][data-switching] [data-slot='theme-toggle-moon'] {
+    animation-name: fig-theme-set;
+  }
+}
+
+@media screen and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) and (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) [data-slot='theme-toggle'][data-switching] [data-slot='theme-toggle-sun'] {
+    animation-name: fig-theme-rise;
+  }
+
+  :root:not([data-theme='light']) [data-slot='theme-toggle'][data-switching] [data-slot='theme-toggle-moon'] {
+    animation-name: fig-theme-set;
+  }
+}
+
+/*
+ * The whole page follows the toggle as a sunset or a sunrise (a view transition): the new theme shows behind a mask
+ * whose edge is a wide arc, as the horizon seen from afar, fast while far and slowing as it nears, the light always
+ * coming from the top (the night falling, the day breaking), a band of sky following the edge, while the old page warms and dims
+ * (dusk) or warms and brightens (dawn) beneath it; on a desktop only, never with reduced motion. `data-theme-switch` on
+ * the root, set by
+ * `ThemeToggle` while it plays, tells the way. Longhands only (see the toggle's orbit).
+ */
+@media screen and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  /* The page holds still while it plays: no scrolling (wheel, keys, the scrollbar), its gutter kept, so that the
+     two captured pages and the page after them keep one width. */
+  :root[data-theme-switch] {
+    overflow: hidden;
+    scrollbar-gutter: stable;
+  }
+
+  :root[data-theme-switch]::view-transition-old(root),
+  :root[data-theme-switch]::view-transition-new(root) {
+    animation-duration: 1600ms;
+    animation-timing-function: cubic-bezier(0.35, 0.1, 0.25, 1);
+    animation-fill-mode: both;
+    mix-blend-mode: normal;
+  }
+
+  /* The toggle that was pressed stays live above the sweep, its orbit seen from start to end: captured on its own
+     (its new state only, never a frozen image of the old one). Only the pressed one: two elements cannot share a
+     transition's name. */
+  [data-slot='theme-toggle'][data-switching] {
+    view-transition-name: fig-theme-toggle;
+    /* Opaque, in the new theme's colors: captured on its own, a transparent button would show the old page through. */
+    background: var(--fig-bg);
+  }
+
+  :root[data-theme-switch]::view-transition-old(fig-theme-toggle) {
+    display: none;
+  }
+
+  :root[data-theme-switch]::view-transition-new(fig-theme-toggle) {
+    animation-name: none;
+  }
+
+  :root[data-theme-switch]::view-transition-group(fig-theme-toggle) {
+    animation-name: none;
+  }
+
+  /* Towards dark: the night falls from the top, its edge a wide arc, over a day turning to dusk. */
+  :root[data-theme-switch='to-dark']::view-transition-new(root) {
+    -webkit-mask-image: radial-gradient(
+      ellipse var(--fig-horizon-x) var(--fig-horizon-y) at 50% -20%,
+      #000 calc(var(--fig-horizon) - 12%),
+      transparent var(--fig-horizon)
+    );
+    mask-image: radial-gradient(
+      ellipse var(--fig-horizon-x) var(--fig-horizon-y) at 50% -20%,
+      #000 calc(var(--fig-horizon) - 12%),
+      transparent var(--fig-horizon)
+    );
+    animation-name: fig-horizon;
+  }
+
+  :root[data-theme-switch='to-dark']::view-transition-old(root) {
+    animation-name: fig-dusk;
+  }
+
+  /* Towards light: the day comes from the top too, the same arc over a night turning to dawn. */
+  :root[data-theme-switch='to-light']::view-transition-new(root) {
+    -webkit-mask-image: radial-gradient(
+      ellipse var(--fig-horizon-x) var(--fig-horizon-y) at 50% -20%,
+      #000 calc(var(--fig-horizon) - 12%),
+      transparent var(--fig-horizon)
+    );
+    mask-image: radial-gradient(
+      ellipse var(--fig-horizon-x) var(--fig-horizon-y) at 50% -20%,
+      #000 calc(var(--fig-horizon) - 12%),
+      transparent var(--fig-horizon)
+    );
+    animation-name: fig-horizon;
+  }
+
+  :root[data-theme-switch='to-light']::view-transition-old(root) {
+    animation-name: fig-dawn;
+  }
+
+  /*
+   * The sky along the horizon (`ThemeToggle` adds this layer while the page switches): the same arc, a band of light
+   * following its edge, violet on the night's side, pink, then orange on the day's, as at dusk and dawn. Above the
+   * pages (its own name), live (its new state only).
+   */
+  [data-slot='theme-horizon'] {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483647;
+    pointer-events: none;
+    view-transition-name: fig-theme-horizon;
+    /* The band fades out over the last stretch: gone before the layer is, never cut at the end. */
+    animation-name: fig-horizon, fig-horizon-fade;
+    animation-duration: 1600ms;
+    animation-timing-function: cubic-bezier(0.35, 0.1, 0.25, 1);
+    animation-fill-mode: both;
+  }
+
+  :root[data-theme-switch='to-dark'] [data-slot='theme-horizon'] {
+    background: radial-gradient(
+      ellipse var(--fig-horizon-x) var(--fig-horizon-y) at 50% -20%,
+      transparent calc(var(--fig-horizon) - var(--fig-horizon-band)),
+      rgb(96 62 160 / 0.32) calc(var(--fig-horizon) - var(--fig-horizon-band) * 0.6),
+      rgb(226 112 140 / 0.34) calc(var(--fig-horizon) - var(--fig-horizon-band) * 0.27),
+      rgb(255 168 92 / 0.4) var(--fig-horizon),
+      transparent calc(var(--fig-horizon) + var(--fig-horizon-band) * 0.35)
+    );
+  }
+
+  :root[data-theme-switch='to-light'] [data-slot='theme-horizon'] {
+    background: radial-gradient(
+      ellipse var(--fig-horizon-x) var(--fig-horizon-y) at 50% -20%,
+      transparent calc(var(--fig-horizon) - var(--fig-horizon-band)),
+      rgb(255 168 92 / 0.4) calc(var(--fig-horizon) - var(--fig-horizon-band) * 0.6),
+      rgb(226 112 140 / 0.34) calc(var(--fig-horizon) - var(--fig-horizon-band) * 0.27),
+      rgb(96 62 160 / 0.32) var(--fig-horizon),
+      transparent calc(var(--fig-horizon) + var(--fig-horizon-band) * 0.35)
+    );
+  }
+
+  :root[data-theme-switch]::view-transition-group(fig-theme-horizon),
+  :root[data-theme-switch]::view-transition-new(fig-theme-horizon) {
+    animation-name: none;
+  }
+}
+
+/* The horizon, animated: registered, so that each interpolates (an unregistered one would jump). Its radius; */
+@property --fig-horizon {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
+/* its shape, wide and flat or round; */
+@property --fig-horizon-x {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 150%;
+}
+
+@property --fig-horizon-y {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 120%;
+}
+
+/* and the thickness of its band of sky. */
+@property --fig-horizon-band {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 22%;
+}
+
+/*
+ * Easing in, then slowing as it nears, unhurried (1.6 s); the light stretching as it spreads, as along a real
+ * horizon: a round glow at first, flattening into a wide arc, its band of sky widening.
+ */
+@keyframes fig-horizon {
+  from {
+    --fig-horizon: 0%;
+    --fig-horizon-x: 70%;
+    --fig-horizon-y: 140%;
+    --fig-horizon-band: 8%;
+  }
+
+  to {
+    --fig-horizon: 150%;
+    --fig-horizon-x: 230%;
+    --fig-horizon-y: 95%;
+    --fig-horizon-band: 30%;
+  }
+}
+
+@keyframes fig-horizon-fade {
+  0%,
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes fig-dusk {
+  to {
+    filter: sepia(0.5) saturate(1.6) hue-rotate(-20deg) brightness(0.75);
+  }
+}
+
+@keyframes fig-dawn {
+  to {
+    filter: sepia(0.6) saturate(1.8) hue-rotate(-25deg) brightness(1.2);
+  }
+}
+
+@keyframes fig-theme-rise {
+  from {
+    opacity: 0;
+    transform: rotate(-90deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes fig-theme-set {
+  from {
+    opacity: 1;
+    transform: rotate(0deg);
+  }
+
+  to {
+    opacity: 0;
+    transform: rotate(90deg);
+  }
+}
+
+/* Entry card */
+[data-slot='entry-card'] {
+  display: grid;
+  grid-template-columns: 12rem 1fr;
+  gap: calc(var(--fig-space) * 2);
+  padding: calc(var(--fig-space) * 1.5);
+  border: 1px solid var(--fig-border);
+  border-radius: var(--fig-radius);
+  background: var(--fig-bg);
+  color: var(--fig-fg);
+  font-family: var(--fig-font);
+}
+
+[data-slot='entry-card']:has([data-slot='entry-card-link']:hover) {
+  border-color: var(--fig-accent);
+}
+
+[data-slot='entry-card-media'] {
+  display: block;
+  /* The image fills the card's whole height beside the text (and keeps its ratio when stacked). */
+  position: relative;
+  align-self: stretch;
+  min-height: 8rem;
+  overflow: hidden;
+  border-radius: calc(var(--fig-radius) - 2px);
+  background: var(--fig-surface);
+}
+
+[data-slot='entry-card-image'] {
+  /* Out of the flow: the card's text sets its height, never the image's own size. */
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Above the generic `[data-slot]` color transitions below, which would otherwise replace it. */
+  [data-slot='entry-card'] [data-slot='entry-card-image'] {
+    transition: transform 400ms ease;
+  }
+}
+
+/* The image zooms in while hovered, and while the card's title link has the keyboard's focus; the frame clips it. */
+[data-slot='entry-card-media']:hover [data-slot='entry-card-image'],
+[data-slot='entry-card']:has([data-slot='entry-card-link']:focus-visible) [data-slot='entry-card-image'] {
+  transform: scale(1.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot='entry-card-media']:hover [data-slot='entry-card-image'],
+  [data-slot='entry-card']:has([data-slot='entry-card-link']:focus-visible) [data-slot='entry-card-image'] {
+    transform: none;
+  }
+}
+
+[data-slot='entry-card-body'] {
+  display: grid;
+  align-content: start;
+  gap: calc(var(--fig-space) / 2);
+  min-width: 0;
+}
+
+/* Every card of a listing has the same height, whatever its text: the title, the description and the tags each
+   reserve their room (`--entry-card-title-lines`, `--entry-card-description-lines`), clamped to it. A listing then
+   keeps its height from one page to the next, and the page never shifts under the pagination. */
+[data-slot='entry-card-title'] {
+  --entry-card-title-lines: 2;
+  display: -webkit-box;
+  min-block-size: calc(var(--entry-card-title-lines) * 1lh);
+  margin: 0;
+  overflow: hidden;
+  font-size: 1.1rem;
+  line-height: 1.3;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--entry-card-title-lines);
+  line-clamp: var(--entry-card-title-lines);
+}
+
+[data-slot='entry-card-link'] {
+  color: inherit;
+  text-decoration: none;
+}
+
+[data-slot='entry-card-link']:hover {
+  color: var(--fig-accent);
+  text-decoration: underline;
+}
+
+[data-slot='entry-card-date'] {
+  color: var(--fig-muted);
+  font-size: 0.85rem;
+}
+
+[data-slot='entry-card-description'] {
+  --entry-card-description-lines: 3;
+  display: -webkit-box;
+  min-block-size: calc(var(--entry-card-description-lines) * 1lh);
+  margin: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--entry-card-description-lines);
+  line-clamp: var(--entry-card-description-lines);
+}
+
+[data-slot='entry-card-tags'],
+[data-slot='entry-card-authors'] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--fig-space) / 2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* In a card, the tags on one row: those that do not fit fade out at its end (every tag is on the entry's own page,
+   whose footer lists them all). */
+[data-slot='entry-card'] [data-slot='entry-card-tags'] {
+  flex-wrap: nowrap;
+  overflow: hidden;
+  mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
+}
+
+:dir(rtl) [data-slot='entry-card'] [data-slot='entry-card-tags'],
+[dir='rtl'] [data-slot='entry-card'] [data-slot='entry-card-tags'] {
+  mask-image: linear-gradient(to left, #000 calc(100% - 2rem), transparent);
+}
+
+[data-slot='entry-card-tag'] {
+  flex: none;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--fig-surface);
+  color: var(--fig-muted);
+  font-size: 0.8rem;
+}
+
+[data-slot='entry-card-authors'] {
+  gap: var(--fig-space);
+  /* Apart from the tags above: the people, then what they wrote about. */
+  margin-block-start: calc(var(--fig-space) * 1.25);
+}
+
+/* A pill, as the tags: room around the name, the avatar inside its start. */
+[data-slot='entry-card-author'] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-block: 0.2rem;
+  padding-inline: 0.2rem 0.75rem;
+  border-radius: 999px;
+  background: var(--fig-surface);
+  color: inherit;
+  font-size: 0.9rem;
+  text-decoration: none;
+  cursor: default;
+}
+
+a[data-slot='entry-card-author'] {
+  cursor: pointer;
+}
+
+a[data-slot='entry-card-author']:hover {
+  background: var(--fig-border);
+}
+
+[data-slot='entry-card-avatar'],
+[data-slot='entry-card-author-avatar'] {
+  border-radius: 50%;
+}
+
+[data-slot='entry-card-author-card'] {
+  display: flex;
+  gap: var(--fig-space);
+  max-width: 18rem;
+  padding: var(--fig-space);
+  border: 1px solid var(--fig-border);
+  border-radius: var(--fig-radius);
+  background: var(--fig-bg);
+  color: var(--fig-fg);
+  font-family: var(--fig-font);
+  box-shadow: var(--fig-shadow);
+  z-index: 50;
+}
+
+[data-slot='entry-card-author-name'] {
+  margin: 0;
+  font-weight: 600;
+}
+
+[data-slot='entry-card-author-bio'] {
+  margin: 0;
+  color: var(--fig-muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 36rem) {
+  [data-slot='entry-card'] {
+    grid-template-columns: 1fr;
+  }
+
+  /* Stacked, the text has the card's whole width but less of it per line. */
+  [data-slot='entry-card-title'] {
+    --entry-card-title-lines: 3;
+  }
+
+  [data-slot='entry-card-media'] {
+    aspect-ratio: 1200 / 630;
+  }
+}
+
+/* Breadcrumb */
+[data-slot='breadcrumb'] {
+  font-family: var(--fig-font);
+  font-size: 0.9rem;
+}
+
+[data-slot='breadcrumb-list'] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--fig-muted);
+}
+
+[data-slot='breadcrumb-item'] + [data-slot='breadcrumb-item']::before {
+  /* Silent for assistive technologies: the list already says where each step is. */
+  content: '/' / '';
+  margin-inline-end: 0.4rem;
+  color: var(--fig-border);
+}
+
+[data-slot='breadcrumb-link'] {
+  color: var(--fig-accent);
+  text-decoration: none;
+}
+
+[data-slot='breadcrumb-link']:hover {
+  text-decoration: underline;
+}
+
+[data-slot='breadcrumb-link'][aria-current='page'] {
+  color: var(--fig-fg);
+}
+
+/* Navbar */
+[data-slot='navbar'] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--fig-space);
+  padding: var(--fig-space) calc(var(--fig-space) * 2);
+  border-bottom: 1px solid var(--fig-border);
+  background: var(--fig-bg);
+}
+
+[data-slot='navbar-menu'] {
+  flex: 1;
+}
+
+/* A section's content opens under its own item (Radix renders it inside the item, without a viewport). */
+[data-slot='navbar-item'] {
+  position: relative;
+  /* Links and buttons share one vertical center, whatever their baselines. */
+  display: flex;
+  align-items: center;
+}
+
+[data-slot='navbar-list'] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--fig-space) / 2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The current page's link, and the section holding it: its menu's trigger, or its link when it has no menu. */
+[data-slot='navbar-link'][aria-current='page'],
+[data-slot='navbar-item'][data-active] > [data-slot='navbar-trigger'],
+[data-slot='navbar-item'][data-active] > [data-slot='navbar-link'] {
+  color: var(--fig-accent);
+  font-weight: 600;
+}
+
+[data-slot='navbar-trigger']::after,
+[data-slot='locale-switcher-icon']::after,
+[data-slot='page-select-icon']::after,
+[data-slot='sort-select-icon']::after,
+[data-slot='search-box-sort-icon']::after {
+  content: '';
+  display: inline-block;
+  /* Room between the label and its chevron. */
+  margin-inline-start: 0.3rem;
+  width: 0.4em;
+  height: 0.4em;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-25%) rotate(45deg);
+}
+
+/* An open menu turns its chevron over (Radix sets data-state="open" on the trigger). */
+[data-slot='navbar-trigger'][data-state='open']::after,
+[data-slot='locale-switcher'][data-state='open'] [data-slot='locale-switcher-icon']::after,
+[data-slot='page-select-trigger'][data-state='open'] [data-slot='page-select-icon']::after,
+[data-slot='sort-select-trigger'][data-state='open'] [data-slot='sort-select-icon']::after,
+[data-slot='search-box-sort'][data-state='open'] [data-slot='search-box-sort-icon']::after {
+  transform: translateY(25%) rotate(-135deg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-slot='navbar-trigger']::after,
+  [data-slot='locale-switcher-icon']::after,
+  [data-slot='page-select-icon']::after,
+  [data-slot='sort-select-icon']::after,
+  [data-slot='search-box-sort-icon']::after {
+    transition: transform 160ms ease;
+  }
+}
+
+[data-slot='navbar-content'] {
+  position: absolute;
+  top: calc(100% + var(--fig-space) / 2);
+  inset-inline-start: 0;
+}
+
+[data-slot='navbar-section'] {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+[data-slot='navbar-section'] [data-slot='navbar-link'] {
+  width: 100%;
+}
+
+[data-slot='navbar-toggle'] {
+  display: none;
+}
+
+[data-slot='navbar-toggle-icon'],
+[data-slot='navbar-toggle-icon']::before,
+[data-slot='navbar-toggle-icon']::after {
+  display: block;
+  width: 1.1rem;
+  height: 2px;
+  background: currentColor;
+}
+
+[data-slot='navbar-toggle-icon'] {
+  position: relative;
+}
+
+[data-slot='navbar-toggle-icon']::before,
+[data-slot='navbar-toggle-icon']::after {
+  content: '';
+  position: absolute;
+}
+
+[data-slot='navbar-toggle-icon']::before {
+  top: -6px;
+}
+
+[data-slot='navbar-toggle-icon']::after {
+  top: 6px;
+}
+
+[data-slot='navbar-extras'] {
+  display: flex;
+  align-items: center;
+  gap: var(--fig-space);
+}
+
+@media (max-width: 48rem) {
+  [data-slot='navbar-toggle'] {
+    display: inline-flex;
+  }
+
+  [data-slot='navbar'][data-state='closed'] [data-slot='navbar-list'] {
+    display: none;
+  }
+
+  [data-slot='navbar-menu'] {
+    flex-basis: 100%;
+    order: 3;
+  }
+
+  [data-slot='navbar-list'] {
+    flex-direction: column;
+  }
+
+  /* A section's menu opens below its trigger, in the flow, never beside it. */
+  [data-slot='navbar-item'] {
+    flex-direction: column;
+  }
+
+  [data-slot='navbar-content'] {
+    position: static;
+    margin-block-start: calc(var(--fig-space) / 2);
+    box-shadow: none;
+  }
+}
+
+/* Locale switcher */
+[data-slot='locale-switcher'] {
+  border-color: var(--fig-border);
+}
+
+[data-slot='locale-switcher-item'][data-current] {
+  font-weight: 600;
+}
+
+/* Facet options */
+[data-slot='facet-options-trigger'],
+[data-slot='page-select-trigger'],
+[data-slot='sort-select-trigger'] {
+  border-color: var(--fig-border);
+}
+
+[data-slot='facet-options-trigger']:not([data-count='0']) {
+  border-color: var(--fig-accent);
+  color: var(--fig-accent);
+}
+
+[data-slot='facet-options-input'] {
+  width: 100%;
+  min-height: 2.25rem;
+  margin-bottom: calc(var(--fig-space) / 2);
+  padding: 0 var(--fig-space);
+  border: 1px solid var(--fig-border);
+  border-radius: calc(var(--fig-radius) - 2px);
+  background: var(--fig-bg);
+  color: inherit;
+  font: inherit;
+}
+
+[data-slot='facet-options-list'] {
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+[data-slot='facet-options-indicator'] {
+  width: 1rem;
+  height: 1rem;
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+  flex: none;
+}
+
+/* A check mark drawn with the current color: readable on the item's own background, highlighted or not. */
+[data-slot='facet-options-indicator'] {
+  display: grid;
+  place-items: center;
+}
+
+[data-slot='facet-options-indicator'][data-state='checked']::after {
+  content: '';
+  width: 0.3rem;
+  height: 0.55rem;
+  margin-block-start: -0.12rem;
+  border: solid currentColor;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+[data-slot='facet-options-term'] {
+  flex: 1;
+}
+
+[data-slot='facet-options-count'] {
+  color: var(--fig-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+:is([data-highlighted], [data-selected='true']) > [data-slot='facet-options-count'] {
+  color: inherit;
+}
+
+[data-slot='facet-options-empty'] {
+  padding: var(--fig-space);
+  color: var(--fig-muted);
+}
+
+/* Page select: a compact pagination, its options scrolling past a few pages. */
+[data-slot='page-select-trigger'] {
+  font-variant-numeric: tabular-nums;
+}
+
+[data-slot='page-select-content'] {
+  /* As wide as its trigger, under it: never past the column's end, where the trigger sits. */
+  width: var(--radix-select-trigger-width);
+  min-width: 0;
+  box-sizing: border-box;
+  max-height: min(16rem, var(--radix-select-content-available-height));
+  font-variant-numeric: tabular-nums;
+}
+
+/* Sort and page selects */
+[data-slot='page-select-item'],
+[data-slot='sort-select-item'] {
+  justify-content: space-between;
+}
+
+[data-slot='page-select-indicator']::after,
+[data-slot='sort-select-indicator']::after {
+  content: '';
+  width: 0.35em;
+  height: 0.7em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  display: block;
+}
+
+/* Pagination */
+[data-slot='pagination-content'] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--fig-space) / 2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Every page number is a visible box, the current one filled: the space beside "previous" and "next" then reads
+   the same on both sides, from a box's edge to the text, whichever page is current. */
+[data-slot='pagination-link'] {
+  justify-content: center;
+  min-width: 2.25rem;
+  border-color: var(--fig-border);
+}
+
+[data-slot='pagination-link'][data-current] {
+  border-color: var(--fig-accent);
+  background: var(--fig-accent);
+  color: var(--fig-accent-fg);
+}
+
+/* The current page changes at once, without the generic `[data-slot]` color transitions below (scoped to the
+   pagination, so that it outranks them): a fill fading out of one box and into the next reads as a flicker. Digits
+   keep one width, so no box resizes as the numbers change. */
+[data-slot='pagination'] [data-slot='pagination-link'] {
+  font-variant-numeric: tabular-nums;
+  transition: none;
+}
+
+/* Previous and next: their label on a wide screen; on a narrow one, their icon alone (when the app gives one) in a
+   wide bordered button, the label kept for assistive technologies. An arrow points the reading's way. */
+[data-slot='pagination-step-icon'] {
+  display: none;
+}
+
+[data-slot='pagination-step-icon'] > svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+:dir(rtl) [data-slot='pagination-step-icon'] > svg,
+[dir='rtl'] [data-slot='pagination-step-icon'] > svg {
+  transform: scaleX(-1);
+}
+
+@media (max-width: 36rem) {
+  :is([data-slot='pagination-previous'], [data-slot='pagination-next']):has([data-slot='pagination-step-icon']) {
+    justify-content: center;
+    min-width: 3.25rem;
+    border-color: var(--fig-border);
+  }
+
+  [data-slot='pagination-step-icon'] {
+    display: inline-flex;
+  }
+
+  [data-slot='pagination-step-icon'] + [data-slot='pagination-step-label'] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+:is([data-slot='pagination-previous'], [data-slot='pagination-next'])[data-disabled] {
+  color: var(--fig-muted);
+  cursor: default;
+}
+
+/* Search box */
+[data-slot='search-box'] {
+  display: grid;
+  gap: var(--fig-space);
+}
+
+/* The field's row: the input and the sort select as one box, the select a compact control at its end. */
+[data-slot='search-box-field'] {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--fig-space) / 2);
+  padding-inline-end: calc(var(--fig-space) / 2);
+  border: 1px solid var(--fig-border);
+  border-radius: var(--fig-radius);
+  background: var(--fig-bg);
+}
+
+/* Focus stays visible (WCAG 2.4.7): the box's outline while its input has it; the select keeps its own. */
+[data-slot='search-box-field']:has([data-slot='search-box-input']:focus-visible) {
+  outline: 2px solid var(--fig-accent);
+  outline-offset: 2px;
+}
+
+[data-slot='search-box-input'] {
+  flex: 1;
+  min-width: 0;
+  min-height: 2.5rem;
+  padding: 0 calc(var(--fig-space) * 1.5);
+  border: 0;
+  border-radius: var(--fig-radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+[data-slot='search-box-input']:focus-visible {
+  outline: none;
+}
+
+[data-slot='search-box-sort'] {
+  flex: none;
+  min-height: 1.75rem;
+  padding-inline: var(--fig-space);
+  color: var(--fig-muted);
+  font-size: 0.875em;
+}
+
+[data-slot='search-box-sort-item'] {
+  justify-content: space-between;
+}
+
+/*
+ * While the box searches: a spinner at the end of the field, and the results it keeps dimmed, both after a
+ * short delay so that a fast answer never flashes. Still, without spinning, with reduced motion.
+ */
+[data-slot='search-box-spinner'] {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--fig-border);
+  border-top-color: var(--fig-accent);
+  border-radius: 50%;
+  opacity: 0;
+  visibility: hidden;
+}
+
+[data-slot='search-box'][data-status='searching'] [data-slot='search-box-spinner'] {
+  visibility: visible;
+  animation:
+    fig-search-spin 700ms linear infinite,
+    fig-search-appear 1ms linear 150ms forwards;
+}
+
+[data-slot='search-box'][data-status='searching'] [data-slot='search-box-results'] {
+  animation: fig-search-dim 1ms linear 150ms forwards;
+}
+
+@keyframes fig-search-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@keyframes fig-search-appear {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fig-search-dim {
+  to {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot='search-box'][data-status='searching'] [data-slot='search-box-spinner'] {
+    animation: fig-search-appear 1ms linear 150ms forwards;
+  }
+}
+
+/* Above the search dialog (z-index 60 and 61) that holds it. */
+[data-slot='search-box-sort-content'] {
+  z-index: 70;
+}
+
+[data-slot='search-box-collections'] {
+  display: flex;
+  gap: calc(var(--fig-space) / 2);
+}
+
+[data-slot='search-box-collection'] {
+  border-color: var(--fig-border);
+}
+
+[data-slot='search-box-collection'][data-state='on'] {
+  background: var(--fig-accent);
+  border-color: var(--fig-accent);
+  color: var(--fig-accent-fg);
+}
+
+[data-slot='search-box-status'] {
+  color: var(--fig-muted);
+  font-size: 0.9em;
+}
+
+[data-slot='search-box-results'] {
+  display: grid;
+  gap: 2px;
+}
+
+[data-slot='search-box-result'] {
+  display: grid;
+  gap: 2px;
+}
+
+[data-slot='search-box-result-title'] {
+  font-weight: 600;
+}
+
+/* Where a result sits: its collection, or the trail the app gives (its breadcrumb). */
+[data-slot='search-box-result-collection'],
+[data-slot='search-box-result-trail'],
+[data-slot='search-box-result-date'] {
+  color: var(--fig-muted);
+  font-size: 0.85em;
+}
+
+/* Where a result sits, then its date, on one line, wrapping on a narrow screen. */
+[data-slot='search-box-result-line'] {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 0.4em;
+}
+
+[data-slot='search-box-result-line'] > [data-slot='search-box-result-date']::before {
+  content: '·' / '';
+  margin-inline-end: 0.4em;
+}
+
+[data-slot='search-box-result-excerpt'] mark {
+  background: var(--fig-mark-bg);
+  color: var(--fig-mark-fg);
+  border-radius: 2px;
+}
+
+/* The page being read: still a result, dimmed, its highlight too while it is the active one. */
+[data-slot='search-box-result'][data-current] {
+  opacity: 0.55;
+}
+
+[data-slot='search-box-result'][data-selected='true'] [data-slot='search-box-result-collection'],
+[data-slot='search-box-result'][data-selected='true'] [data-slot='search-box-result-trail'],
+[data-slot='search-box-result'][data-selected='true'] [data-slot='search-box-result-date'] {
+  color: inherit;
+}
+
+[data-slot='search-box-more'] {
+  justify-self: start;
+  border-color: var(--fig-border);
+}
+
+/* Search dialog */
+[data-slot='search-dialog-trigger'] {
+  border-color: var(--fig-border);
+  color: var(--fig-muted);
+}
+
+[data-slot='search-dialog-icon'] {
+  position: relative;
+  flex: none;
+  /* Room for the handle drawn outside the circle. */
+  margin-inline-end: 0.3rem;
+  width: 0.7rem;
+  height: 0.7rem;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+}
+
+[data-slot='search-dialog-icon']::after {
+  content: '';
+  position: absolute;
+  right: -0.3rem;
+  bottom: -0.3rem;
+  width: 0.35rem;
+  height: 1.5px;
+  background: currentColor;
+  transform: rotate(45deg);
+}
+
+[data-slot='search-dialog-overlay'] {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.45);
+  z-index: 60;
+}
+
+[data-slot='search-dialog-content'] {
+  position: fixed;
+  top: 10vh;
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: var(--fig-space);
+  width: min(40rem, calc(100vw - 2rem));
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: calc(var(--fig-space) * 2);
+  border: 1px solid var(--fig-border);
+  border-radius: var(--fig-radius);
+  background: var(--fig-bg);
+  color: var(--fig-fg);
+  font-family: var(--fig-font);
+  box-shadow: var(--fig-shadow);
+  z-index: 61;
+}
+
+[data-slot='search-dialog-close-icon'],
+[data-slot='search-dialog-close-icon']::after {
+  display: block;
+  width: 0.9rem;
+  height: 1.5px;
+  background: currentColor;
+  transform: rotate(45deg);
+}
+
+[data-slot='search-dialog-close-icon']::after {
+  content: '';
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-slot] {
+    transition:
+      background-color 120ms ease,
+      color 120ms ease,
+      border-color 120ms ease;
+  }
+}
+
+/*
+ * Table of contents: a sidebar drawer docked against a screen edge, full height, sliding out
+ * toward it; its handle stays at the edge. Wide screens: in the margin, open by default. Narrow: over the content.
+ */
+[data-slot='toc'] {
+  --toc-width: 16rem;
+  --toc-out: -100%;
+  position: fixed;
+  z-index: 40;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: min(var(--toc-width), calc(100vw - 3rem));
+  font-size: 0.9rem;
+  transform: translateX(0);
+}
+
+[data-slot='toc'][data-side='end'] {
+  --toc-out: 100%;
+  inset-inline-start: auto;
+  inset-inline-end: 0;
+}
+
+:dir(rtl) [data-slot='toc'],
+[dir='rtl'] [data-slot='toc'] {
+  --toc-out: 100%;
+}
+
+:dir(rtl) [data-slot='toc'][data-side='end'],
+[dir='rtl'] [data-slot='toc'][data-side='end'] {
+  --toc-out: -100%;
+}
+
+/* Closed: slid out toward its edge, its content out of reach; before hydration, closed on narrow screens. */
+[data-slot='toc'][data-open='false'],
+[data-slot='toc']:not([data-open]) {
+  transform: translateX(var(--toc-out));
+}
+
+[data-slot='toc'][data-open='false'] [data-slot='toc-panel'],
+[data-slot='toc']:not([data-open]) [data-slot='toc-panel'] {
+  visibility: hidden;
+}
+
+[data-slot='toc-panel'] {
+  box-sizing: border-box;
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: calc(var(--fig-space) * 2);
+  border-inline-end: 1px solid var(--fig-border);
+  background: var(--fig-bg);
+  box-shadow: 0 0 2rem rgb(0 0 0 / 0.15);
+}
+
+[data-slot='toc'][data-side='end'] [data-slot='toc-panel'] {
+  border-inline-end: 0;
+  border-inline-start: 1px solid var(--fig-border);
+}
+
+[data-slot='toc-title'] {
+  margin: 0 0 var(--fig-space);
+  color: var(--fig-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* The handle: a tab on the panel's inner edge, visible when the panel is out. */
+[data-slot='toc-toggle'] {
+  position: absolute;
+  /* Narrow screens: where the app wants it (e.g. right under its navbar), staying there while scrolling. */
+  inset-block-start: var(--toc-handle-top, calc(var(--fig-space) * 2));
+  inset-inline-start: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 1px solid var(--fig-border);
+  border-inline-start: 0;
+  border-start-end-radius: var(--fig-radius);
+  border-end-end-radius: var(--fig-radius);
+  background: var(--fig-bg);
+  color: var(--fig-fg);
+  cursor: pointer;
+}
+
+[data-slot='toc'][data-side='end'] [data-slot='toc-toggle'] {
+  inset-inline-start: auto;
+  inset-inline-end: 100%;
+  border-inline-start: 1px solid var(--fig-border);
+  border-inline-end: 0;
+  border-radius: var(--fig-radius) 0 0 var(--fig-radius);
+}
+
+/* Past 200px of scrolling, the collapsed drawer's handle (the one that brings it back) fades out of the reader's
+   way, on every screen; back on hover or focus. The open drawer's handle stays as it is. */
+[data-slot='toc'][data-scrolled][data-open='false'] [data-slot='toc-toggle']:not(:hover, :focus-visible) {
+  opacity: 0.5;
+}
+
+/* Its chevron points where the panel will go: out when open, in when closed. */
+[data-slot='toc-toggle']::after {
+  content: '';
+  width: 0.45rem;
+  height: 0.45rem;
+  border: solid currentColor;
+  border-width: 0 0 1.5px 1.5px;
+  transform: translateX(15%) rotate(45deg);
+}
+
+[data-slot='toc'][data-open='false'] [data-slot='toc-toggle']::after,
+[data-slot='toc']:not([data-open]) [data-slot='toc-toggle']::after {
+  transform: translateX(-15%) rotate(-135deg);
+}
+
+[data-slot='toc'][data-side='end'] [data-slot='toc-toggle']::after {
+  transform: translateX(-15%) rotate(-135deg);
+}
+
+[data-slot='toc'][data-side='end'][data-open='false'] [data-slot='toc-toggle']::after,
+[data-slot='toc'][data-side='end']:not([data-open]) [data-slot='toc-toggle']::after {
+  transform: translateX(15%) rotate(45deg);
+}
+
+:dir(rtl) [data-slot='toc-toggle']::after,
+[dir='rtl'] [data-slot='toc-toggle']::after {
+  scale: -1 1;
+}
+
+[data-slot='toc-list'] {
+  position: relative;
+  padding-inline-start: 2px;
+}
+
+[data-slot='toc-items'],
+[data-slot='toc-items'] ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The track, and the line sliding and stretching along the sections on screen. */
+[data-slot='toc-list']::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 2px;
+  background: var(--fig-border);
+}
+
+/* Quiet: it shows the range on screen; the accent belongs to the heading being read. */
+[data-slot='toc-indicator'] {
+  position: absolute;
+  inset-inline-start: 0;
+  z-index: 1;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--fig-muted);
+}
+
+/* Indented by its nesting level (`data-level`, set by the component), spanning the list: its bar sits on the track. */
+[data-slot='toc-link'] {
+  position: relative;
+  display: block;
+  padding-block: 0.25rem;
+  padding-inline: calc(var(--fig-space) * (1 + 1.5 * var(--toc-level, 0))) var(--fig-space);
+  color: var(--fig-muted);
+  text-decoration: none;
+}
+/* `data-level` (set by the component) as a number the indentation can compute with. */
+[data-slot='toc-link'][data-level='1'] {
+  --toc-level: 1;
+}
+[data-slot='toc-link'][data-level='2'] {
+  --toc-level: 2;
+}
+[data-slot='toc-link'][data-level='3'] {
+  --toc-level: 3;
+}
+[data-slot='toc-link'][data-level='4'] {
+  --toc-level: 4;
+}
+[data-slot='toc-link'][data-level='5'] {
+  --toc-level: 5;
+}
+
+[data-slot='toc-link']:hover,
+[data-slot='toc-link'][data-visible] {
+  color: var(--fig-fg);
+}
+
+[data-slot='toc-link'][aria-current='location'] {
+  color: var(--fig-accent);
+  font-weight: 600;
+}
+
+/* The heading being read: its own accent bar on the track, above the range's line. */
+[data-slot='toc-link'][aria-current='location']::before {
+  content: '';
+  position: absolute;
+  inset-block: 0.2rem;
+  inset-inline-start: -2px;
+  z-index: 2;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--fig-accent);
+}
+
+/* Wide screens: docked in the page's margin, under the site's header once scrolled; open by default, no shadow. */
+@media (min-width: 80rem) {
+  /* Sticky from where the page puts it (e.g. right under the navbar) to the top: never pulled up by a bottom edge. A
+     sticky element stops at its container's end; the negative margin lets it stay docked past it, as when the page
+     ends before the screen (a footer revealed from under it), without changing the layout. */
+  [data-slot='toc'] {
+    position: sticky;
+    inset-block: auto;
+    top: 0;
+    height: 100vh;
+    margin-block-end: -100vh;
+  }
+
+  [data-slot='toc']:not([data-open]) {
+    transform: translateX(0);
+  }
+
+  [data-slot='toc']:not([data-open]) [data-slot='toc-panel'] {
+    visibility: visible;
+  }
+
+  [data-slot='toc']:not([data-open]) [data-slot='toc-toggle']::after {
+    transform: translateX(15%) rotate(45deg);
+  }
+
+  /* Closed by the visitor (`tocScript`, before the first paint): closed from the prerendered page, never sliding shut. */
+  :root[data-toc='closed'] [data-slot='toc']:not([data-open]) {
+    transform: translateX(var(--toc-out));
+  }
+
+  :root[data-toc='closed'] [data-slot='toc']:not([data-open]) [data-slot='toc-panel'] {
+    visibility: hidden;
+  }
+
+  :root[data-toc='closed'] [data-slot='toc']:not([data-open]) [data-slot='toc-toggle']::after {
+    transform: translateX(-15%) rotate(-135deg);
+  }
+
+  :root[data-toc='closed'] [data-slot='toc'][data-side='end']:not([data-open]) [data-slot='toc-toggle']::after {
+    transform: translateX(15%) rotate(45deg);
+  }
+
+  [data-slot='toc-panel'] {
+    box-shadow: none;
+  }
+
+  [data-slot='toc-toggle'] {
+    inset-block-start: calc(var(--fig-space) * 2);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-slot='toc'] {
+    transition: transform 220ms ease;
+  }
+
+  [data-slot='toc-toggle'] {
+    transition: opacity 200ms ease;
+  }
+
+  [data-slot='toc-panel'] {
+    transition: visibility 0s linear 0s;
+  }
+
+  [data-slot='toc'][data-open='false'] [data-slot='toc-panel'] {
+    transition: visibility 0s linear 220ms;
+  }
+
+  [data-slot='toc-indicator'] {
+    transition:
+      top 180ms ease,
+      height 180ms ease;
+  }
+
+  [data-slot='toc-link'] {
+    transition: color 120ms ease;
+  }
+}
+
+/* Code block: Shiki's output, a copy button over its corner, an announcement. */
+[data-slot='code-block'] {
+  position: relative;
+  margin-block: calc(var(--fig-space) * 2);
+}
+
+[data-slot='code-block-pre'] {
+  margin: 0;
+  padding: calc(var(--fig-space) * 2);
+  /* Room for the button: the first line never runs under it. */
+  padding-inline-end: 3rem;
+  overflow-x: auto;
+  border: 1px solid var(--fig-border);
+  border-radius: var(--fig-radius);
+  background: var(--fig-surface);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+/*
+ * Shiki's two themes: light by default, dark under the same rules as the tokens. The block
+ * carries the background, its tokens only their color (an app may make the block translucent).
+ */
+[data-slot='code-block-pre'].shiki {
+  color: var(--shiki-light);
+  background-color: var(--shiki-light-bg);
+}
+
+[data-slot='code-block-pre'].shiki span {
+  color: var(--shiki-light);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) [data-slot='code-block-pre'].shiki {
+    color: var(--shiki-dark);
+    background-color: var(--shiki-dark-bg);
+  }
+
+  :root:not([data-theme='light']) [data-slot='code-block-pre'].shiki span {
+    color: var(--shiki-dark);
+  }
+}
+
+:root[data-theme='dark'] [data-slot='code-block-pre'].shiki {
+  color: var(--shiki-dark);
+  background-color: var(--shiki-dark-bg);
+}
+
+:root[data-theme='dark'] [data-slot='code-block-pre'].shiki span {
+  color: var(--shiki-dark);
+}
+
+/* Shown while the block is hovered, on keyboard focus and once copied; always on touch screens. */
+[data-slot='code-block-copy'] {
+  position: absolute;
+  inset-block-start: var(--fig-space);
+  inset-inline-end: var(--fig-space);
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid var(--fig-border);
+  border-radius: var(--fig-radius);
+  background: var(--fig-bg);
+  color: var(--fig-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+/* Shown while the block is hovered, on keyboard focus, and while it confirms a copy. Letting go (`done`), it keeps
+   its check while it fades: a mouse gone meanwhile never sees the clipboard come back first. */
+[data-slot='code-block']:hover [data-slot='code-block-copy'],
+[data-slot='code-block-copy']:focus-visible,
+[data-slot='code-block-copy'][data-state='copied'] {
+  opacity: 1;
+}
+
+[data-slot='code-block-copy']:hover,
+[data-slot='code-block-copy']:focus-visible {
+  color: var(--fig-accent);
+}
+
+@media (hover: none) {
+  [data-slot='code-block-copy'] {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot='code-block-copy'] {
+    transition: none;
+  }
+}
+
+/* The icon, drawn with the current color: a clipboard, a check once copied. */
+[data-slot='code-block-copy']::before {
+  content: '';
+  position: absolute;
+  inset: 0.4rem;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='8' y='2' width='8' height='4' rx='1'/%3E%3Cpath d='M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+[data-slot='code-block-copy']:is([data-state='copied'], [data-state='done']) {
+  color: var(--fig-accent);
+}
+
+[data-slot='code-block-copy']:is([data-state='copied'], [data-state='done'])::before {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+}
+
+/* Announced, never shown: the icon says it to sighted readers. */
+[data-slot='code-block-status'] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Pager: the previous page at the start, the next at the end, each a box with its word and its title. */
+[data-slot='pager'] {
+  display: flex;
+  justify-content: space-between;
+  gap: calc(var(--fig-space) * 2);
+  margin-block-start: calc(var(--fig-space) * 4);
+}
+
+[data-slot='pager-link'] {
+  display: grid;
+  gap: calc(var(--fig-space) * 0.5);
+  min-width: 0;
+  padding: calc(var(--fig-space) * 1.5) calc(var(--fig-space) * 2);
+  border: 1px solid var(--fig-border);
+  border-radius: var(--fig-radius);
+  color: var(--fig-fg);
+  text-decoration: none;
+}
+
+[data-slot='pager-link']:hover {
+  border-color: var(--fig-accent);
+}
+
+[data-slot='pager-link'][data-direction='next'] {
+  margin-inline-start: auto;
+  text-align: end;
+}
+
+[data-slot='pager-label'] {
+  color: var(--fig-muted);
+  font-size: 0.8rem;
+}
+
+[data-slot='pager-title'] {
+  color: var(--fig-accent);
+  font-weight: 600;
+}
+
+/* Code tabs: the variants of a code block, a tab each; the hidden ones prerendered, never shown or printed. */
+[data-slot='code-tabs'] {
+  margin-block: calc(var(--fig-space) * 2);
+}
+
+[data-slot='code-tabs-list'] {
+  display: flex;
+  gap: calc(var(--fig-space) * 0.5);
+  border-block-end: 1px solid var(--fig-border);
+}
+
+[data-slot='code-tabs-trigger'] {
+  margin-block-end: -1px;
+  padding: calc(var(--fig-space) * 0.75) calc(var(--fig-space) * 1.5);
+  border: 0;
+  border-block-end: 2px solid transparent;
+  background: none;
+  color: var(--fig-muted);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+[data-slot='code-tabs-trigger']:hover {
+  color: var(--fig-fg);
+}
+
+[data-slot='code-tabs-trigger'][data-state='active'] {
+  border-block-end-color: var(--fig-accent);
+  color: var(--fig-fg);
+}
+
+[data-slot='code-tabs-content'][data-state='inactive'] {
+  display: none;
+}
+
+/* The block right under its tabs. */
+[data-slot='code-tabs-content'] [data-slot='code-block'] {
+  margin-block-start: var(--fig-space);
+}
+
+/* Image zoom: the image a button on desktops, enlarged in an animated modal. */
+/* A block spanning the content's width, as the image it replaces: the app's image rules (`width: 100%`) still size
+   the image against the content, not against the button. */
+[data-slot='image-zoom-trigger'] {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--fig-radius);
+  background: none;
+  color: inherit;
+  cursor: zoom-in;
+}
+
+[data-slot='image-zoom-trigger'] [data-slot='image-zoom-image'] {
+  display: block;
+  max-width: 100%;
+}
+
+/* The backdrop fades in with a blur; the image comes in 3D on a spring and leaves tilted, shrinking. */
+[data-slot='image-zoom-overlay'] {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgb(0 0 0 / 0.5);
+  backdrop-filter: blur(10px);
+}
+
+[data-slot='image-zoom-overlay'][data-state='open'] {
+  animation: fig-zoom-backdrop-in 250ms ease-out;
+}
+
+[data-slot='image-zoom-overlay'][data-state='closed'] {
+  animation: fig-zoom-backdrop-out 200ms ease-in forwards;
+}
+
+[data-slot='image-zoom-content'] {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 50;
+  translate: -50% -50%;
+  outline: none;
+}
+
+[data-slot='image-zoom-content'][data-state='open'] {
+  /* The reference's spring (stiffness 260, damping 15), sampled: it overshoots, then settles. */
+  animation: fig-zoom-in 700ms
+    linear(
+      0,
+      0.038,
+      0.137,
+      0.275,
+      0.433,
+      0.595,
+      0.749,
+      0.884,
+      0.996,
+      1.082,
+      1.142,
+      1.177,
+      1.191,
+      1.188,
+      1.172,
+      1.148,
+      1.118,
+      1.087,
+      1.057,
+      1.03,
+      1.007,
+      0.989,
+      0.976,
+      0.968,
+      0.964,
+      0.963,
+      0.966,
+      0.97,
+      0.976,
+      0.982,
+      0.987,
+      0.993,
+      0.998,
+      1.001,
+      1.004,
+      1.006,
+      1.007,
+      1.007,
+      1.007,
+      1.006,
+      1
+    );
+}
+
+[data-slot='image-zoom-content'][data-state='closed'] {
+  animation: fig-zoom-out 200ms ease-in forwards;
+}
+
+/* The frame clips the image while it is zoomed; the close button stays outside it. */
+[data-slot='image-zoom-frame'] {
+  overflow: hidden;
+  border-radius: calc(var(--fig-radius) * 2);
+  box-shadow: var(--fig-shadow);
+  cursor: zoom-in;
+  touch-action: none;
+}
+
+[data-slot='image-zoom-full'] {
+  display: block;
+  /* The screen at most, never beyond the image's natural size. */
+  max-width: 90vw;
+  max-height: 90vh;
+  user-select: none;
+}
+
+/* Held: ×2.5 around the pressed point, which follows the mouse (`transform-origin`, set by the component). */
+[data-slot='image-zoom-full'][data-zoomed] {
+  transform: scale(2.5);
+  cursor: zoom-out;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Back to the whole image from where it was zoomed: slower, decelerating, the point kept by the component. */
+  [data-slot='image-zoom-frame'] [data-slot='image-zoom-full'] {
+    transition: transform 450ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  [data-slot='image-zoom-frame'] [data-slot='image-zoom-full'][data-zoomed] {
+    transition: transform 200ms ease;
+  }
+}
+
+[data-slot='image-zoom-close'] {
+  position: absolute;
+  inset-block-start: -0.75rem;
+  inset-inline-end: -0.75rem;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #000000;
+  color: #ffffff;
+  cursor: pointer;
+  transition: transform 200ms ease;
+}
+
+[data-slot='image-zoom-close']::before {
+  content: '';
+  position: absolute;
+  inset: 0.45rem;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+[data-slot='image-zoom-close']:hover,
+[data-slot='image-zoom-close']:focus-visible {
+  color: #ffffff;
+  transform: scale(1.1) rotate(3deg);
+}
+
+@keyframes fig-zoom-backdrop-in {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+}
+
+@keyframes fig-zoom-backdrop-out {
+  to {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+}
+
+@keyframes fig-zoom-in {
+  from {
+    opacity: 0;
+    transform: perspective(800px) rotateX(40deg) scale(0.5) translateY(40px);
+  }
+}
+
+@keyframes fig-zoom-out {
+  to {
+    opacity: 0;
+    transform: perspective(800px) rotateX(10deg) scale(0.8);
+  }
+}
+
+@keyframes fig-zoom-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes fig-zoom-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* Reduced motion: fades only. */
+@media (prefers-reduced-motion: reduce) {
+  [data-slot='image-zoom-content'][data-state='open'] {
+    animation: fig-zoom-fade 150ms ease-out;
+  }
+
+  [data-slot='image-zoom-content'][data-state='closed'] {
+    animation: fig-zoom-fade-out 150ms ease-in forwards;
+  }
+
+  [data-slot='image-zoom-close'] {
+    transition: none;
+  }
+
+  [data-slot='image-zoom-close']:hover,
+  [data-slot='image-zoom-close']:focus-visible {
+    transform: none;
+  }
+}
+
+/*
+ * Print: the content alone, in black on white whatever the theme, with ink only where the text needs it. The light
+ * tokens (`:root:is([data-theme], :not([data-theme]))` outranks the dark rules, being as specific and later), the
+ * light code, no shadow; the controls that only make sense on a screen are hidden (the navbar, the table of contents,
+ * the search, the locale switcher, the theme toggle, a code block's copy button, the listings' pagination, filters
+ * and sort). The breadcrumb stays: on paper too, it says where the page comes from.
+ */
+@media print {
+  /* The page's margins are the root's background: white, even when a theme library sets the dark color scheme
+     inline on <html> (hence `!important`, the only way past an inline style). */
+  :root:is([data-theme], :not([data-theme])) {
+    color-scheme: light !important;
+    background: #ffffff;
+    --fig-fg: #1a1a1a;
+    --fig-bg: #ffffff;
+    --fig-surface: #f5f5f5;
+    --fig-muted: #595959;
+    --fig-border: #d4d4d4;
+    --fig-accent: #1d4ed8;
+    --fig-accent-fg: #ffffff;
+    --fig-mark-bg: #fde68a;
+    --fig-mark-fg: #1a1a1a;
+    --fig-shadow: none;
+  }
+
+  :root:is([data-theme], :not([data-theme])) [data-slot='code-block-pre'].shiki {
+    color: var(--shiki-light);
+    background-color: var(--shiki-light-bg);
+  }
+
+  :root:is([data-theme], :not([data-theme])) [data-slot='code-block-pre'].shiki span {
+    color: var(--shiki-light);
+  }
+
+  [data-slot='navbar'],
+  [data-slot='toc'],
+  [data-slot='search-dialog-trigger'],
+  [data-slot='search-box'],
+  [data-slot='locale-switcher'],
+  [data-slot='theme-toggle'],
+  [data-slot='code-block-copy'],
+  [data-slot='pagination'],
+  [data-slot='pager'],
+  [data-slot='facet-options-trigger'],
+  [data-slot='facets-reset'],
+  [data-slot='page-select-trigger'],
+  [data-slot='sort-select-trigger'] {
+    display: none;
+  }
+
+  /* A long line wraps instead of being cut at the page's edge; a block is never split across two pages. */
+  [data-slot='code-block-pre'] {
+    overflow: visible;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  [data-slot='code-block'],
+  [data-slot='entry-card'],
+  [data-slot='image-zoom-trigger'],
+  [data-slot='image-zoom-image'] {
+    break-inside: avoid;
+  }
+}

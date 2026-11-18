@@ -1,0 +1,738 @@
+/*
+ * @figatellu/themes/base.css: what every theme shares, loaded after `@figatellu/ui/styles.css` and
+ * `@figatellu/effects/styles.css`, before a theme (`maquis.css`, `papier.css`).
+ *
+ * The page (body, the content column, the article layout with its table of contents), the listing and blog slots,
+ * the MDX typography (`[data-slot='mdx-*']`) and print: layout and rhythm only, every color and font a token, so that a
+ * theme sets its looks without repeating the layout. The effects stay hidden unless a theme shows them.
+ *
+ * Tokens of its own, for a theme to set:
+ *     --fig-heading-font   the headings' font (default: the text's)
+ *
+ * Invariants (`themes.test.ts`): no theme gate, no color of its own; the effects hidden; the MDX slots styled; the
+ * article printed alone, with its title and address in the margins.
+ */
+body {
+  margin: 0;
+  font-family: var(--fig-font);
+  background: var(--fig-bg);
+  color: var(--fig-fg);
+  line-height: 1.5;
+  /* A column at least a screen tall: the page's content takes the room, the footer stays at the bottom. */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+body > main,
+body > [data-layout] {
+  flex: 1 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/*
+ * The site's footer: one line of links, then its signature; opaque, revealed from under the page by `Reveal`.
+ * The line between the page and the footer is the page's edge: on the reveal's slot, which scrolls with the page,
+ * never on the footer sliding under it.
+ */
+[data-slot='reveal']:has([data-slot='site-footer']) {
+  border-block-start: 1px solid var(--fig-border);
+}
+
+[data-slot='site-footer'] {
+  padding: calc(var(--fig-space) * 3) calc(var(--fig-space) * 2);
+  background: var(--fig-surface);
+  color: var(--fig-muted);
+  font-size: 0.875rem;
+}
+
+/* The footer's links, on one line, centered above the signature. */
+[data-slot='site-footer-links'] {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: calc(var(--fig-space) * 3);
+  margin: 0 0 calc(var(--fig-space) * 1.5);
+  padding: 0;
+  list-style: none;
+}
+
+[data-slot='site-footer'] a {
+  color: var(--fig-fg);
+  text-decoration: none;
+}
+
+[data-slot='site-footer'] a:hover,
+[data-slot='site-footer'] a:focus-visible {
+  color: var(--fig-accent);
+  text-decoration: underline;
+}
+
+/* The site's theme picker (an app's own slot): its options as quiet pills, the chosen one in the accent. */
+[data-slot='site-theme'] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--fig-space);
+  margin: 0 0 calc(var(--fig-space) * 1.5);
+}
+
+[data-slot='site-theme-option'] {
+  padding: 0.15rem 0.75rem;
+  border: 1px solid var(--fig-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fig-fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+[data-slot='site-theme-option'][aria-pressed='true'] {
+  border-color: var(--fig-accent);
+  color: var(--fig-accent);
+}
+
+/*
+ * A change of the site's theme (the app's picker sets `<html data-site-theme-switch>` while its view transition
+ * plays): the page loses its focus as a lens does (a soft blur, a slight zoom in, a glow), changes theme while out of
+ * focus, then comes back into focus; nothing else moves. On a desktop
+ * only (a mouse or a trackpad), never with reduced motion. Longhands
+ * only: CSS minifiers rewrite an animation shorthand without a name into a zero duration.
+ */
+@media screen and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  /* The page holds still while it plays: no scrolling (wheel, keys, the scrollbar), its gutter kept, so that the
+     two captured pages and the page after them keep one width. */
+  :root[data-site-theme-switch] {
+    overflow: hidden;
+    scrollbar-gutter: stable;
+  }
+
+  :root[data-site-theme-switch]::view-transition-old(root),
+  :root[data-site-theme-switch]::view-transition-new(root) {
+    mix-blend-mode: normal;
+    animation-duration: 1800ms;
+    animation-timing-function: ease-in-out;
+    animation-fill-mode: both;
+  }
+
+  :root[data-site-theme-switch]::view-transition-old(root) {
+    animation-name: fig-blur-away;
+  }
+
+  :root[data-site-theme-switch]::view-transition-new(root) {
+    animation-name: fig-blur-back;
+  }
+}
+
+/* The old page loses its focus as a lens does: a soft blur, a slight zoom in, a glow; it gives way at the deepest. */
+@keyframes fig-blur-away {
+  0% {
+    opacity: 1;
+    filter: blur(0) brightness(1) saturate(1);
+    transform: scale(1);
+  }
+
+  45% {
+    opacity: 1;
+    filter: blur(10px) brightness(1.15) saturate(1.3);
+    transform: scale(1.03);
+  }
+
+  60%,
+  100% {
+    opacity: 0;
+    filter: blur(10px) brightness(1.15) saturate(1.3);
+    transform: scale(1.03);
+  }
+}
+
+/* The new page shows out of focus, glowing, then comes into focus as it settles to its size. */
+@keyframes fig-blur-back {
+  0%,
+  40% {
+    opacity: 0;
+    filter: blur(10px) brightness(1.15) saturate(1.3);
+    transform: scale(1.03);
+  }
+
+  55% {
+    opacity: 1;
+    filter: blur(10px) brightness(1.15) saturate(1.3);
+    transform: scale(1.03);
+  }
+
+  100% {
+    opacity: 1;
+    filter: blur(0) brightness(1) saturate(1);
+    transform: scale(1);
+  }
+}
+
+[data-slot='site-footer-signature'] {
+  margin: 0;
+  text-align: center;
+}
+
+main {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: calc(var(--fig-space) * 3) calc(var(--fig-space) * 2);
+}
+
+/* Where a followed heading lands, and the top dead zone the table of contents measures: the navbar. */
+main :is(h2, h3)[id] {
+  scroll-margin-top: 4rem;
+}
+
+/*
+ * An article, a post or a page with sections: the navbar on top; below it, on wide screens, the table of contents docked in the left margin
+ * against the screen's edge and sticky (the layout is at least one screen tall, so it always has room to stick), the
+ * text staying where every other page has it (centered, 46rem); collapsed, it leaves the margin empty.
+ */
+[data-layout='article'] > main > [data-slot='breadcrumb'] {
+  margin-block-end: calc(var(--fig-space) * 3);
+}
+
+/* Narrow screens: the drawer's handle sits right under the navbar, and stays there while scrolling. */
+[data-layout='article'] > [data-slot='toc'] {
+  --toc-handle-top: 4rem;
+}
+
+@media (min-width: 80rem) {
+  [data-layout='article'] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 46rem) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    column-gap: calc(var(--fig-space) * 6);
+    min-height: 100vh;
+  }
+
+  [data-layout='article'] > header {
+    grid-column: 1 / -1;
+  }
+
+  [data-layout='article'] > [data-slot='toc'] {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: start;
+    align-self: start;
+  }
+
+  [data-layout='article'] > main {
+    grid-column: 2;
+    grid-row: 2;
+    width: 100%;
+    max-width: none;
+    padding-inline: 0;
+  }
+}
+
+header > [data-slot='search-box'] {
+  max-width: 48rem;
+  margin: calc(var(--fig-space) * 2) auto 0;
+  padding: 0 calc(var(--fig-space) * 2);
+}
+
+a {
+  color: var(--fig-accent);
+}
+
+/* A list's pages replace each other in place (a page of posts, of sections): the screen stays still under the
+   pagination. The browser's scroll anchoring would otherwise pick an element of the new page and scroll to keep it
+   where the old one was, shifting the page under the mouse (checked by the example's `scripts/browse.ts`). */
+main:is([data-listing], [data-folder]) {
+  overflow-anchor: none;
+}
+
+[data-slot='listing-toolbar'] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--fig-space);
+  margin-bottom: calc(var(--fig-space) * 2);
+}
+
+/* The compact pagination at the toolbar's other end, apart from the filters and the sort. */
+[data-slot='listing-toolbar'] > [data-slot='page-select-trigger'] {
+  margin-inline-start: auto;
+}
+
+[data-slot='listing-cards'] {
+  display: grid;
+  gap: calc(var(--fig-space) * 2);
+  margin: 0 0 calc(var(--fig-space) * 2);
+  padding: 0;
+  list-style: none;
+}
+
+header > [data-slot='breadcrumb'] {
+  max-width: 48rem;
+  margin: calc(var(--fig-space) * 2) auto 0;
+  padding: 0 calc(var(--fig-space) * 2);
+}
+
+/* The blog's own page: its categories, each a link and a description. */
+[data-slot='folder-list'] {
+  display: grid;
+  gap: calc(var(--fig-space) * 2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The blog's and a category's pages: a heading (the blog's title, a category's first section) and the pagination on
+   one line, the pagination at its end; when they do not fit, and always on a narrow screen, it wraps below the
+   heading, still at the end of the line. */
+[data-slot='folder-heading'] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fig-space) calc(var(--fig-space) * 2);
+  margin-block-end: calc(var(--fig-space) * 2);
+}
+
+[data-slot='folder-heading'] > :is(h1, h2) {
+  margin: 0;
+}
+
+[data-slot='folder-heading'] > [data-slot='pagination'] {
+  margin-inline-start: auto;
+}
+
+/* On a section's heading: the heading's own space around it (an `h2`'s margins), as the other sections have. */
+[data-slot='folder-section'] > [data-slot='folder-heading'] {
+  margin-block: 0.83em;
+  font-size: 1.5em;
+}
+
+[data-slot='folder-section'] > [data-slot='folder-heading'] > h2 {
+  font-size: 1em;
+}
+
+[data-slot='folder-section'] > [data-slot='folder-heading'] > [data-slot='pagination'] {
+  font-size: 1rem;
+}
+
+/* On a narrow screen, always below the title, at the end of the line. */
+@media (max-width: 36rem) {
+  [data-slot='folder-heading'] > [data-slot='pagination'] {
+    flex-basis: 100%;
+  }
+
+  [data-slot='folder-heading'] > [data-slot='pagination'] [data-slot='pagination-content'] {
+    justify-content: flex-end;
+  }
+}
+
+/* A category's previews, compact: a narrower image, one line of title and of description, the tags and the authors
+   side by side. A subcategory's own list keeps its tall cards. */
+main[data-folder='category'] [data-slot='entry-card'] {
+  grid-template-columns: 8rem 1fr;
+  gap: calc(var(--fig-space) * 1.5);
+  padding: var(--fig-space);
+}
+
+main[data-folder='category'] [data-slot='entry-card-media'] {
+  min-height: 5rem;
+  aspect-ratio: auto;
+}
+
+main[data-folder='category'] [data-slot='entry-card-body'] {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: calc(var(--fig-space) / 2) var(--fig-space);
+}
+
+main[data-folder='category']
+  :is([data-slot='entry-card-title'], [data-slot='entry-card-date'], [data-slot='entry-card-description']) {
+  grid-column: 1 / -1;
+}
+
+main[data-folder='category'] [data-slot='entry-card-title'] {
+  --entry-card-title-lines: 1;
+}
+
+main[data-folder='category'] [data-slot='entry-card-description'] {
+  --entry-card-description-lines: 1;
+}
+
+main[data-folder='category'] [data-slot='listing-cards'] {
+  gap: var(--fig-space);
+}
+
+/* On a narrow screen, still side by side: a smaller image leaves the text its room. */
+@media (max-width: 36rem) {
+  main[data-folder='category'] [data-slot='entry-card'] {
+    grid-template-columns: 5.5rem 1fr;
+  }
+}
+
+/* A section's list of pages, after its page's text: apart from it. */
+[data-pagefind-body] + [data-slot='folder-list'] {
+  margin-block-start: calc(var(--fig-space) * 4);
+}
+
+[data-slot='folder-section'] {
+  margin-bottom: calc(var(--fig-space) * 4);
+}
+
+[data-slot='folder-section'] h2 a {
+  color: inherit;
+}
+
+[data-slot='folder-more'] {
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* An author's page: their avatar beside their name and short bio, their long bio, then their posts. */
+[data-slot='author-bio'] {
+  margin-block: calc(var(--fig-space) * 3);
+}
+
+[data-slot='author-header'] {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--fig-space) * 3);
+  margin-block-end: calc(var(--fig-space) * 4);
+}
+
+[data-slot='author-header'] img {
+  flex: none;
+  border-radius: 50%;
+}
+
+[data-slot='author-header'] h1 {
+  margin: 0;
+}
+
+[data-slot='author-header'] p {
+  margin: var(--fig-space) 0 0;
+  color: var(--fig-muted);
+}
+
+/* How many posts the filters give: under the toolbar, quiet. */
+[data-slot='listing-total'] {
+  margin: 0 0 var(--fig-space);
+  color: var(--fig-muted);
+  font-size: 0.9rem;
+}
+
+/* The end of a post: its tags at the start, its signature (authors, then date) at the end of the line, as a letter. */
+[data-slot='post-footer'] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: calc(var(--fig-space) * 2);
+  margin-block-start: calc(var(--fig-space) * 5);
+  padding-block-start: calc(var(--fig-space) * 3);
+  border-block-start: 1px solid var(--fig-border);
+}
+
+[data-slot='post-signature'] {
+  display: grid;
+  justify-items: end;
+  gap: calc(var(--fig-space) / 2);
+  margin-inline-start: auto;
+  text-align: end;
+}
+
+[data-slot='post-footer'] [data-slot='entry-card-authors'] {
+  justify-content: flex-end;
+  margin-block-start: 0;
+}
+
+/* The effects (`@figatellu/effects`): hidden, unless a theme shows them. */
+[data-slot='sparkles'],
+[data-slot='cursor-glow'] {
+  display: none;
+}
+
+/*
+ * An entry's body: every primitive of the MDX registry (the app's MDX components, one `data-slot` per element) by its `data-slot`, with the
+ * design system's tokens, as shadcn's typography for MDX. `CodeBlock` and `ImageZoom` are styled by
+ * `@figatellu/ui/styles.css`; only their place in the text is set here.
+ */
+[data-slot='mdx'] {
+  overflow-wrap: break-word;
+}
+
+[data-slot='mdx-h1'],
+[data-slot='mdx-h2'],
+[data-slot='mdx-h3'],
+[data-slot='mdx-h4'],
+[data-slot='mdx-h5'],
+[data-slot='mdx-h6'] {
+  margin: calc(var(--fig-space) * 4) 0 0;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+[data-slot='mdx-h1'] {
+  margin-block-start: var(--fig-space);
+  font-size: 2.25rem;
+  font-weight: 700;
+}
+
+[data-slot='mdx-h2'] {
+  margin-block-start: calc(var(--fig-space) * 5);
+  padding-block-end: calc(var(--fig-space) / 2);
+  border-block-end: 1px solid var(--fig-border);
+  font-size: 1.75rem;
+}
+
+[data-slot='mdx-h2']:first-child {
+  margin-block-start: 0;
+}
+
+[data-slot='mdx-h3'] {
+  font-size: 1.4rem;
+}
+
+[data-slot='mdx-h4'] {
+  font-size: 1.2rem;
+}
+
+[data-slot='mdx-h5'] {
+  font-size: 1.05rem;
+}
+
+[data-slot='mdx-h6'] {
+  font-size: 1rem;
+}
+
+/* Each heading links to itself (rehype-autolink-headings): the heading's color, a quiet "#" on hover. */
+:is([data-slot='mdx-h2'], [data-slot='mdx-h3'], [data-slot='mdx-h4']) > [data-slot='mdx-a'] {
+  color: inherit;
+  font-weight: inherit;
+  text-decoration: none;
+}
+
+:is([data-slot='mdx-h2'], [data-slot='mdx-h3'], [data-slot='mdx-h4']) > [data-slot='mdx-a']:hover::after,
+:is([data-slot='mdx-h2'], [data-slot='mdx-h3'], [data-slot='mdx-h4']) > [data-slot='mdx-a']:focus-visible::after {
+  content: '#' / '';
+  margin-inline-start: 0.4rem;
+  color: var(--fig-muted);
+}
+
+[data-slot='mdx-p'] {
+  margin: 0;
+  line-height: 1.75;
+}
+
+[data-slot='mdx-p']:not(:first-child) {
+  margin-block-start: calc(var(--fig-space) * 3);
+}
+
+[data-slot='mdx-a'] {
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+[data-slot='mdx-ul'],
+[data-slot='mdx-ol'] {
+  margin: calc(var(--fig-space) * 3) 0;
+  padding-inline-start: calc(var(--fig-space) * 3);
+}
+
+[data-slot='mdx-ul'] {
+  list-style: disc;
+}
+
+[data-slot='mdx-ol'] {
+  list-style: decimal;
+}
+
+[data-slot='mdx-li'] {
+  line-height: 1.75;
+}
+
+[data-slot='mdx-li'] + [data-slot='mdx-li'] {
+  margin-block-start: var(--fig-space);
+}
+
+[data-slot='mdx-blockquote'] {
+  margin: calc(var(--fig-space) * 3) 0 0;
+  padding-inline-start: calc(var(--fig-space) * 3);
+  border-inline-start: 2px solid var(--fig-border);
+  color: var(--fig-muted);
+  font-style: italic;
+}
+
+[data-slot='mdx-table'] {
+  width: 100%;
+  margin: calc(var(--fig-space) * 3) 0;
+  overflow-x: auto;
+}
+
+[data-slot='mdx-table'] > table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+[data-slot='mdx-tr'] {
+  border-block-start: 1px solid var(--fig-border);
+}
+
+[data-slot='mdx-tr']:nth-child(even) {
+  background: var(--fig-surface);
+}
+
+[data-slot='mdx-th'],
+[data-slot='mdx-td'] {
+  padding: var(--fig-space) calc(var(--fig-space) * 2);
+  border: 1px solid var(--fig-border);
+  text-align: start;
+}
+
+[data-slot='mdx-th'] {
+  font-weight: 700;
+}
+
+:is([data-slot='mdx-th'], [data-slot='mdx-td'])[align='center'] {
+  text-align: center;
+}
+
+:is([data-slot='mdx-th'], [data-slot='mdx-td'])[align='right'] {
+  text-align: end;
+}
+
+[data-slot='mdx-hr'] {
+  margin: calc(var(--fig-space) * 4) 0;
+  border: 0;
+  border-block-start: 1px solid var(--fig-border);
+}
+
+/* Inline code only: a block's code is Shiki's, inside `CodeBlock`. */
+:not(pre) > [data-slot='mdx-code'] {
+  padding: 0.15em 0.35em;
+  border-radius: calc(var(--fig-radius) / 1.5);
+  background: var(--fig-surface);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.875em;
+}
+
+/* Images span the text, at a reasonable height; the zoom shows them whole. */
+[data-slot='mdx'] [data-slot='image-zoom-image'] {
+  display: block;
+  width: 100%;
+  max-height: 22rem;
+  object-fit: cover;
+  border-radius: var(--fig-radius);
+}
+
+[data-slot='mdx'] [data-slot='code-block'] {
+  margin-block: calc(var(--fig-space) * 3);
+}
+
+/* A group of blocks in tabs: spaced as one block, each right under its tabs. */
+[data-slot='mdx'] [data-slot='code-tabs'] {
+  margin-block: calc(var(--fig-space) * 3);
+}
+
+[data-slot='mdx'] [data-slot='code-tabs-content'] [data-slot='code-block'] {
+  margin-block: var(--fig-space) 0;
+}
+
+/* The headings' font: a theme's own (`--fig-heading-font`), the text's by default. */
+main :is(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--fig-heading-font, inherit);
+}
+
+/*
+ * Print: the article alone, one column, black on white (the design system's print tokens): no footer, no listing
+ * controls (a theme prints its own looks plain); the address of each external link after its text, since paper cannot follow it; headings kept
+ * with what follows them, and no paragraph leaving a single line behind.
+ */
+/* Top and bottom margins on every page; the sides are the body's padding (below), kept even when the print dialog
+   asks for no margins: a code block's frame never reaches the paper's edge. The margins carry the page's title (top
+   right), its address (bottom left) and its number (bottom right), from the custom properties the app sets on the
+   root (`--fig-print-title`, `--fig-print-url`): they replace the browser's own header and footer. */
+@page {
+  margin: 2cm 0;
+
+  @top-right {
+    content: var(--fig-print-title, '');
+    margin-inline-end: 1.8cm;
+    color: #595959;
+    font: 9pt var(--fig-font);
+  }
+
+  @bottom-left {
+    content: var(--fig-print-url, '');
+    margin-inline-start: 1.8cm;
+    color: #595959;
+    font: 9pt var(--fig-font);
+  }
+
+  @bottom-right {
+    content: counter(page) ' / ' counter(pages);
+    margin-inline-end: 1.8cm;
+    color: #595959;
+    font: 9pt var(--fig-font);
+  }
+}
+
+@media print {
+  /* Paper shows the final colors at once: a transition running when printing starts would print in between. */
+  *,
+  ::before,
+  ::after {
+    transition: none !important;
+  }
+
+  body {
+    display: block;
+    min-height: 0;
+    padding-inline: 1.8cm;
+    font-size: 11pt;
+  }
+
+  main,
+  [data-layout='article'] > main {
+    max-width: none;
+    padding: 0;
+  }
+
+  [data-layout='article'] {
+    display: block;
+    min-height: 0;
+  }
+
+  [data-slot='reveal']:has([data-slot='site-footer']),
+  [data-slot='listing-toolbar'],
+  [data-slot='listing-total'] {
+    display: none;
+  }
+
+  [data-slot='mdx'] a[href^='http']::after {
+    content: ' (' attr(href) ')';
+    color: var(--fig-muted);
+    font-size: 0.85em;
+    overflow-wrap: anywhere;
+  }
+
+  [data-slot^='mdx-h'] {
+    break-after: avoid;
+  }
+
+  [data-slot='mdx-p'],
+  [data-slot='mdx-li'] {
+    orphans: 3;
+    widows: 3;
+  }
+
+  [data-slot='mdx-table'] {
+    overflow: visible;
+  }
+
+  [data-slot='mdx-table'],
+  [data-slot='mdx-blockquote'] {
+    break-inside: avoid;
+  }
+}

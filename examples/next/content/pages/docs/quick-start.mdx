@@ -1,0 +1,184 @@
+---
+title: 'Démarrage rapide'
+metadescription: 'Un site Next.js dont les pages sont des fichiers MDX, typés et vérifiés, en sept étapes.'
+featuredPictureUrl: /covers/placeholder-69.jpeg
+order: 1
+---
+
+# Démarrage rapide
+
+En quelques minutes : un site Next.js dont les pages sont des fichiers MDX dans un dossier, chaque page vérifiée au build et servie par une seule route.
+
+## 1. Créer le projet
+
+```sh npm
+npx create-next-app mon-site
+cd mon-site
+```
+
+```sh pnpm
+pnpm create next-app mon-site
+cd mon-site
+```
+
+```sh yarn
+yarn create next-app mon-site
+cd mon-site
+```
+
+```sh bun
+bun create next-app mon-site
+cd mon-site
+```
+
+## 2. Installer figatellu
+
+La CLI, le cœur et l’adaptateur de Content Collections, qui lit le frontmatter et compile le MDX :
+
+```sh npm
+npm install -D @figatellu/cli @figatellu/core @figatellu/content-collections @content-collections/core
+npm install @content-collections/mdx valibot
+```
+
+```sh pnpm
+pnpm add -D @figatellu/cli @figatellu/core @figatellu/content-collections @content-collections/core
+pnpm add @content-collections/mdx valibot
+```
+
+```sh yarn
+yarn add -D @figatellu/cli @figatellu/core @figatellu/content-collections @content-collections/core
+yarn add @content-collections/mdx valibot
+```
+
+```sh bun
+bun add -d @figatellu/cli @figatellu/core @figatellu/content-collections @content-collections/core
+bun add @content-collections/mdx valibot
+```
+
+## 3. Décrire le contenu
+
+Content Collections lit et valide les fichiers :
+
+```ts
+// content-collections.ts
+import { defineCollection, defineConfig } from '@content-collections/core';
+import { compileMDX } from '@content-collections/mdx';
+import { withFigatellu } from '@figatellu/content-collections/config';
+import * as v from 'valibot';
+
+const pages = withFigatellu(
+  defineCollection({
+    name: 'pages',
+    directory: 'content/pages',
+    include: '**/*.mdx',
+    schema: v.object({ title: v.string(), content: v.string() }),
+    transform: async (document, context) => ({ ...document, mdx: await compileMDX(context, document) }),
+  }),
+);
+
+export default defineConfig({ content: [pages] });
+```
+
+figatellu dit ce que signifient les dossiers :
+
+```ts
+// figatellu.config.ts
+import { join } from 'node:path';
+
+import { createContentCollectionsSource } from '@figatellu/content-collections';
+import { defineCollection, defineConfig, defineLocales, locale, rest, slug } from '@figatellu/core';
+
+export default defineConfig({
+  locales: defineLocales({ list: ['en'], default: 'en' }),
+  collections: {
+    pages: defineCollection({
+      entry: 'page',
+      base: '',
+      grammar: [locale({ optional: true }), rest('path'), slug()],
+      metadata: { title: 'title' },
+    }),
+  },
+  source: createContentCollectionsSource({
+    configPath: join(import.meta.dirname, 'content-collections.ts'),
+    projectRoot: import.meta.dirname,
+  }),
+});
+```
+
+## 4. Écrire une page
+
+`content/pages/index.mdx` est la page d’accueil, `content/pages/guide/setup.mdx` serait `/guide/setup` :
+
+```mdx
+---
+title: 'Bonjour'
+---
+
+# Bonjour
+
+Ma première page, écrite en MDX.
+```
+
+## 5. Importer le code généré
+
+Dans `package.json`, l’alias du code généré ; ajoutez `.figatellu/` au `.gitignore` :
+
+```json
+{
+  "type": "module",
+  "imports": { "#figatellu/*": "./.figatellu/*/index.js" }
+}
+```
+
+## 6. Une route pour toutes les pages
+
+```tsx
+// app/[[...url]]/page.tsx
+import { MDXContent } from '@content-collections/mdx/react';
+import { notFound } from 'next/navigation';
+
+import { findByUrl, mountedUrls, segmentsOf, urlOf } from '#figatellu/urls';
+
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return mountedUrls.map((item) => ({ url: segmentsOf(item.url, item.locale) }));
+}
+
+export default async function Page(props: PageProps<'/[[...url]]'>) {
+  const { url } = await props.params;
+  const found = await findByUrl(urlOf('en', url));
+
+  if (found?.kind !== 'entry') notFound();
+
+  return <MDXContent code={found.entry.data.mdx} />;
+}
+```
+
+## 7. Construire et lancer
+
+```sh npm
+npx figatellu build
+npx next dev
+```
+
+```sh pnpm
+pnpm figatellu build
+pnpm next dev
+```
+
+```sh yarn
+yarn figatellu build
+yarn next dev
+```
+
+```sh bun
+bunx figatellu build
+bunx next dev
+```
+
+`figatellu build` vérifie chaque fichier et écrit `.figatellu/` ; demander une page qui n’existe pas ne compile pas. Pour reconstruire à chaque changement, lancez `figatellu watch` à côté du serveur de développement.
+
+## Ensuite
+
+Traduire le site, organiser le contenu, générer les métadonnées : [Installation](/docs/installation) détaille chaque étape, [Configuration](/docs/configuration) tout ce que déclare un projet.

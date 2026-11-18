@@ -1,0 +1,121 @@
+---
+featuredPictureUrl: '/covers/post-02.jpeg'
+title: 'Configuration'
+metadescription: 'Locales, collections and their grammar, taxonomies and navigation, declared once in figatellu.config.ts.'
+order: 3
+---
+
+# Configuration
+
+Everything is declared once, in `figatellu.config.ts`: the locales, the collections and their path grammar, the taxonomies, the navigation and the content source. The configuration is data: every `define…` function validates its part where it is written, and an invalid declaration fails at once, saying what to fix.
+
+```ts
+import { createContentCollectionsSource } from '@figatellu/content-collections';
+import { defineCollection, defineConfig, defineLocales, locale, rest, slug } from '@figatellu/core';
+
+export default defineConfig({
+  locales: defineLocales({ list: { fr: { label: 'Français' }, en: { label: 'English' } }, default: 'fr' }),
+  collections: {
+    pages: defineCollection({ entry: 'page', base: '', grammar: [locale({ optional: true }), rest('path'), slug()] }),
+  },
+  source: createContentCollectionsSource({ configPath: 'content-collections.ts', projectRoot: import.meta.dirname }),
+});
+```
+
+## Locales
+
+`defineLocales` lists the site’s languages, with their label and, when needed, their writing direction, and names the default one. Adding a language is one more line here, then following the diagnostics: every missing translation is reported.
+
+### URLs
+
+`urls` sets the URL strategy, used everywhere: the default language unprefixed (`implicit`, the default) or prefixed like the others (`explicit`), and trailing slashes.
+
+```ts
+defineConfig({ /* … */ urls: { defaultLocale: 'explicit', trailingSlash: false } });
+```
+
+## Collections
+
+A collection gathers documents sharing a path shape. Its `entry` names the generated API (`blogPost` gives `getBlogPost`), its `base` prefixes its URLs, and its grammar says what each folder means:
+
+```ts
+const blog = defineCollection({
+  entry: 'blogPost',
+  base: 'blog',
+  grammar: [segment('category'), segment('subcategory'), locale({ optional: true }), slug()],
+});
+```
+
+From `news/releases/first.mdx`, figatellu infers the category, the subcategory, the language and the URL `/blog/news/releases/first`. One folder too many, an invalid name or two files at one URL are errors naming the file at fault.
+
+### The grammar
+
+| Part                            | Meaning                                                          |
+| ------------------------------- | ---------------------------------------------------------------- |
+| `segment('name')`               | One folder, its value named.                                     |
+| `rest('name')`                  | Any depth of folders, for free-form trees such as documentation. |
+| `locale({ optional: true })`    | The language folder; optional: the default language may omit it. |
+| `slug()`                        | The file name, always last.                                      |
+| `join('-', 'category', 'slug')` | In `route`: two parts joined into one URL segment.               |
+
+### Options
+
+| Option                                        | Effect                                                                                    |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `route`                                       | How the URL is composed from the grammar’s parts.                                         |
+| `reserved`                                    | Keys served by a dedicated route instead of the shared one: still typed and readable.     |
+| `indexForbiddenUnder`, `indexForbiddenAtRoot` | Where an `index.mdx` is not allowed.                                                      |
+| `draft`                                       | The boolean field marking drafts, left out of production builds.                          |
+| `testOnly`                                    | Keys of test content, left out of production builds.                                      |
+| `references`                                  | Frontmatter fields referencing a taxonomy.                                                |
+| `metadata`                                    | The fields holding the title, description, image, dates, robots, canonical URL and order. |
+| `searchable`                                  | Whether the local search indexes the collection (default `true`).                         |
+| `folderPages`                                 | Folders with a page of their own (below).                                                 |
+| `mounted`                                     | `false`: no page at all, read through its getters only (a taxonomy’s content).            |
+| `messages`                                    | Fields each folder must have in every language’s messages.                                |
+
+### Metadata
+
+The collection names its frontmatter fields: metadata, sitemap, feeds and sorts read them with no code of the collection’s own. `order` places a page among its siblings, lower first, in the navigation, its section’s list and the previous and next links; pages without one come after, by title.
+
+```ts
+metadata: { title: 'title', description: 'description', image: 'cover', publishedTime: 'date', modifiedTime: 'updated' },
+```
+
+### Folder pages
+
+`folderPages` gives the folders of some levels a page, mounted like an entry: a blog lists its categories, a category its subcategories with their latest posts, with no hand-written route.
+
+```ts
+folderPages: { root: true, levels: ['category', 'subcategory'], preview: 2, images: { news: '/covers/news.jpeg' } },
+```
+
+`perPage` splits a level's folder pages, or the root's, into pages of that many items: subfolders, or entries for a level with no subfolder. Each further page is a page of its own, at `…/page/N`, prerendered with its slice, in the sitemap and translated; a locale with fewer entries has fewer pages.
+
+```ts
+folderPages: { root: true, levels: ['category', 'subcategory'], perPage: { root: 6, subcategory: 5 } },
+```
+
+## Taxonomies
+
+Tags and authors are closed lists, declared once with `defineTaxonomy`. The frontmatter references them by key, and an unknown key is an error suggesting the closest one. A term may carry pure data (an avatar), require message fields (a name, a bio), have a page listing its entries, and a long text of its own:
+
+```ts
+authors: defineTaxonomy(
+  { ada: { avatar: '/authors/ada.svg' } },
+  { messages: ['name', 'bio'], pages: { base: 'authors' }, content: 'authorBios' },
+),
+```
+
+`content` names an unmounted collection whose entries are keyed by term: `content/authors/ada.mdx` is Ada’s long bio, shown on her page. It is optional, per term and per language.
+
+## Navigation
+
+`navigation` says which collections appear in the navbar, in which order and how many levels deep. A folder added to the content appears by itself, in every language.
+
+```ts
+navigation: [
+  { collection: 'pages', depth: 1, menus: false },
+  { collection: 'blog', depth: 2, label: 'nav.blog' },
+],
+```

@@ -1,0 +1,121 @@
+---
+featuredPictureUrl: /covers/placeholder-154.jpeg
+title: 'Configuration'
+metadescription: 'Les langues, les collections et leur grammaire, les taxonomies et la navigation, déclarées une fois dans figatellu.config.ts.'
+order: 3
+---
+
+# Configuration
+
+Tout se déclare une fois, dans `figatellu.config.ts` : les langues, les collections et leur grammaire de chemins, les taxonomies, la navigation et la source du contenu. La configuration est une donnée : chaque fonction `define…` valide sa partie là où elle est écrite, et une déclaration invalide échoue aussitôt, en disant quoi corriger.
+
+```ts
+import { createContentCollectionsSource } from '@figatellu/content-collections';
+import { defineCollection, defineConfig, defineLocales, locale, rest, slug } from '@figatellu/core';
+
+export default defineConfig({
+  locales: defineLocales({ list: { fr: { label: 'Français' }, en: { label: 'English' } }, default: 'fr' }),
+  collections: {
+    pages: defineCollection({ entry: 'page', base: '', grammar: [locale({ optional: true }), rest('path'), slug()] }),
+  },
+  source: createContentCollectionsSource({ configPath: 'content-collections.ts', projectRoot: import.meta.dirname }),
+});
+```
+
+## Les langues
+
+`defineLocales` liste les langues du site, avec leur libellé et, au besoin, leur sens d’écriture, et désigne la langue par défaut. Ajouter une langue, c’est une ligne de plus ici, puis suivre les diagnostics : chaque traduction manquante est signalée.
+
+### Les URL
+
+`urls` fixe la stratégie d’URL, utilisée partout : la langue par défaut sans préfixe (`implicit`, par défaut) ou préfixée comme les autres (`explicit`), et la barre oblique finale.
+
+```ts
+defineConfig({ /* … */ urls: { defaultLocale: 'explicit', trailingSlash: false } });
+```
+
+## Les collections
+
+Une collection regroupe des documents qui partagent une forme de chemin. Son `entry` nomme l’API générée (`blogPost` donne `getBlogPost`), sa `base` préfixe ses URL, et sa grammaire dit ce que signifie chaque dossier :
+
+```ts
+const blog = defineCollection({
+  entry: 'blogPost',
+  base: 'blog',
+  grammar: [segment('category'), segment('subcategory'), locale({ optional: true }), slug()],
+});
+```
+
+De `news/releases/first.mdx`, figatellu déduit la catégorie, la sous-catégorie, la langue et l’URL `/blog/news/releases/first`. Un dossier de trop, un nom invalide ou deux fichiers à la même URL sont des erreurs qui nomment le fichier fautif.
+
+### La grammaire
+
+| Partie                          | Sens                                                                              |
+| ------------------------------- | --------------------------------------------------------------------------------- |
+| `segment('name')`               | Un dossier, sa valeur nommée.                                                     |
+| `rest('name')`                  | Une profondeur libre de dossiers, pour des arbres libres comme une documentation. |
+| `locale({ optional: true })`    | Le dossier de langue ; facultatif : la langue par défaut peut s’en passer.        |
+| `slug()`                        | Le nom du fichier, toujours en dernier.                                           |
+| `join('-', 'category', 'slug')` | Dans `route` : deux parties réunies en un segment d’URL.                          |
+
+### Les options
+
+| Option                                        | Effet                                                                                                                   |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `route`                                       | Comment l’URL se compose des parties de la grammaire.                                                                   |
+| `reserved`                                    | Des clés servies par une route dédiée plutôt que la route commune : toujours typées et lisibles.                        |
+| `indexForbiddenUnder`, `indexForbiddenAtRoot` | Où un `index.mdx` est interdit.                                                                                         |
+| `draft`                                       | Le champ booléen des brouillons, exclus des builds de production.                                                       |
+| `testOnly`                                    | Les clés du contenu de test, exclu des builds de production.                                                            |
+| `references`                                  | Les champs du frontmatter qui référencent une taxonomie.                                                                |
+| `metadata`                                    | Les champs du titre, de la description, de l’image, des dates, des directives robots, de l’URL canonique et de l’ordre. |
+| `searchable`                                  | Si la recherche locale indexe la collection (`true` par défaut).                                                        |
+| `folderPages`                                 | Des dossiers qui ont leur propre page (ci-dessous).                                                                     |
+| `mounted`                                     | `false` : aucune page, lue par ses getters seulement (le contenu d’une taxonomie).                                      |
+| `messages`                                    | Les champs que chaque dossier doit avoir dans les messages de chaque langue.                                            |
+
+### Les métadonnées
+
+La collection nomme ses champs de frontmatter : métadonnées, sitemap, flux et tris les lisent sans code propre à la collection. `order` place une page parmi ses voisines, la plus petite valeur d’abord, dans la navigation, la liste de sa section et les liens précédent et suivant ; les pages sans ordre viennent après, par titre.
+
+```ts
+metadata: { title: 'title', description: 'description', image: 'cover', publishedTime: 'date', modifiedTime: 'updated' },
+```
+
+### Les pages de dossier
+
+`folderPages` donne une page aux dossiers de certains niveaux, montée comme une entrée : un blog liste ses catégories, une catégorie ses sous-catégories avec leurs derniers billets, sans route écrite à la main.
+
+```ts
+folderPages: { root: true, levels: ['category', 'subcategory'], preview: 2, images: { news: '/covers/news.jpeg' } },
+```
+
+`perPage` découpe les pages de dossier d’un niveau, ou celle de la racine, en pages de ce nombre d’éléments : les sous-dossiers, ou les entrées pour un niveau sans sous-dossier. Chaque page suivante est une page à part entière, à `…/page/N`, prérendue avec sa tranche, dans le plan du site et traduite ; une langue qui a moins d’entrées a moins de pages.
+
+```ts
+folderPages: { root: true, levels: ['category', 'subcategory'], perPage: { root: 6, subcategory: 5 } },
+```
+
+## Les taxonomies
+
+Les tags et les auteurs sont des listes fermées, déclarées une fois avec `defineTaxonomy`. Le frontmatter les référence par leur clé, et une clé inconnue est une erreur qui propose la plus proche. Un terme peut porter des données pures (un avatar), exiger des champs de messages (un nom, une bio), avoir une page qui liste ses entrées, et un long texte à lui :
+
+```ts
+authors: defineTaxonomy(
+  { ada: { avatar: '/authors/ada.svg' } },
+  { messages: ['name', 'bio'], pages: { base: 'authors' }, content: 'authorBios' },
+),
+```
+
+`content` nomme une collection non montée dont les entrées portent le nom d’un terme : `content/authors/ada.mdx` est la longue bio d’Ada, affichée sur sa page. Elle est facultative, par terme et par langue.
+
+## La navigation
+
+`navigation` dit quelles collections apparaissent dans la barre de navigation, dans quel ordre et sur combien de niveaux. Un dossier ajouté au contenu y apparaît de lui-même, dans chaque langue.
+
+```ts
+navigation: [
+  { collection: 'pages', depth: 1, menus: false },
+  { collection: 'blog', depth: 2, label: 'nav.blog' },
+],
+```

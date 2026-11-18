@@ -1,0 +1,98 @@
+/*
+ * @figatellu/themes/paper.css: the paper theme, on `base.css` (loaded before it) and the design system's tokens.
+ *
+ * Editorial and quiet: soft ink on a recycled grey paper, serif headings, a vivid ink-blue accent that stands apart
+ * from the text, hairlines and no effect;
+ * a slate night in the dark theme. Only tokens: the layout is `base.css`'s, the components the design system's.
+ *
+ * Key design decision: every rule is gated (`:root:where(:not([data-site-theme]), [data-site-theme='paper'])`): the
+ * theme applies alone, or when `<html data-site-theme="paper">` picks it among several loaded; `:where` keeps the
+ * specificity of the rules it gates, so its tokens win over the design system's, loaded before.
+ *
+ * Invariants (`themes.test.ts`, replayed on every theme): every rule gated; the same dark looks from the system's
+ * preference and from `data-theme="dark"`; no effect shown; ink on white on paper.
+ */
+:root:where(:not([data-site-theme]), [data-site-theme='paper']) {
+  --fig-heading-font: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+  --fig-fg: #232323;
+  --fig-bg: #f5f5f3;
+  --fig-surface: #ebebe8;
+  --fig-muted: #62625f;
+  --fig-border: #dedede;
+  --fig-accent: #1a63c4;
+  --fig-accent-fg: #ffffff;
+  --fig-mark-bg: #cfe0ee;
+  --fig-mark-fg: #232323;
+  --fig-radius: 2px;
+  --fig-shadow: 0 2px 8px rgb(0 0 0 / 0.08);
+}
+
+/* The slate night: the system's preference unless the page forces light, or forced dark. */
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-site-theme]), [data-site-theme='paper']):not([data-theme='light']) {
+    --fig-fg: #d9dadc;
+    --fig-bg: #1c1d1f;
+    --fig-surface: #25272a;
+    --fig-muted: #9b9da1;
+    --fig-border: #313337;
+    --fig-accent: #5ea2ee;
+    --fig-accent-fg: #1c1d1f;
+    --fig-mark-bg: #2f4a63;
+    --fig-mark-fg: #e8eef4;
+    --fig-shadow: 0 4px 16px rgb(0 0 0 / 0.45);
+  }
+}
+
+:root:where(:not([data-site-theme]), [data-site-theme='paper'])[data-theme='dark'] {
+  --fig-fg: #d9dadc;
+  --fig-bg: #1c1d1f;
+  --fig-surface: #25272a;
+  --fig-muted: #9b9da1;
+  --fig-border: #313337;
+  --fig-accent: #5ea2ee;
+  --fig-accent-fg: #1c1d1f;
+  --fig-mark-bg: #2f4a63;
+  --fig-mark-fg: #e8eef4;
+  --fig-shadow: 0 4px 16px rgb(0 0 0 / 0.45);
+}
+
+/* Hairlines: the cards and the code as printed matter, flat. */
+:root:where(:not([data-site-theme]), [data-site-theme='paper']) [data-slot='entry-card'] {
+  border-color: var(--fig-border);
+  box-shadow: none;
+}
+
+:root:where(:not([data-site-theme]), [data-site-theme='paper']) [data-slot='entry-card-title'] {
+  font-family: var(--fig-heading-font);
+  font-weight: 600;
+}
+
+/* The code on the page's own tint, not its highlighter's white or blue-grey: the paper's in both lights. */
+:root:where(:not([data-site-theme]), [data-site-theme='paper']) [data-slot='code-block-pre'].shiki {
+  background-color: var(--fig-surface);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-site-theme]), [data-site-theme='paper']):not([data-theme='light'])
+    [data-slot='code-block-pre'].shiki {
+    background-color: var(--fig-surface);
+  }
+}
+
+:root:where(:not([data-site-theme]), [data-site-theme='paper'])[data-theme='dark'] [data-slot='code-block-pre'].shiki {
+  background-color: var(--fig-surface);
+}
+
+/* Print: ink on white, whatever the screen's theme (the design system's print tokens, the paper's accent). */
+@media print {
+  :root:where(:not([data-site-theme]), [data-site-theme='paper']):is([data-theme], :not([data-theme])) {
+    --fig-fg: #232323;
+    --fig-bg: #ffffff;
+    --fig-surface: #f2f2f0;
+    --fig-muted: #595959;
+    --fig-border: #d4d4d4;
+    --fig-accent: #1a63c4;
+    --fig-accent-fg: #ffffff;
+    --fig-shadow: none;
+  }
+}

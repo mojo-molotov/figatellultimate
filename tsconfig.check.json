@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.json",
+  // Local scratch files are never checked: they are not committed and may import a stale build.
+  "exclude": ["tooling/boundaries/__tests__/fixtures/**", "playground.*"]
+}

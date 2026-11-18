@@ -1,0 +1,280 @@
+/*
+ * @figatellu/effects/styles.css: the mechanics of the decorative effects, every look a token. Load it after
+ * `@figatellu/ui/styles.css`; a theme (or the app) then decides where each effect shows, and its colors.
+ *
+ *     --fig-glow-color, --fig-glow-size, --fig-glow-opacity    the cursor glow (default: the accent)
+ *     --fig-collector-color                                    the collector's rim and tint (default: the accent)
+ *     --fig-sparkles-color, --fig-sparkles-column              the sparkles, and the text column they stay out of
+ *     --fig-hearts-fade                                        how long a heart takes to fade into the next
+ *     --fig-reveal-layer                                       the revealed content's layer (default 45)
+ *
+ * Every effect is decorative: never catching a click, behind the content, still or absent with
+ * `prefers-reduced-motion`. The glow shows only with a mouse; the sparkles and the glow show wherever they are
+ * mounted unless a theme hides them (e.g. in the light theme).
+ *
+ * Invariants (`styles.test.ts`): every rule targets an effect's `data-slot` (or defines tokens); no effect ever
+ * catches a pointer.
+ */
+
+:root {
+  --fig-glow-color: var(--fig-accent);
+  --fig-glow-size: 450px;
+  --fig-glow-opacity: 0.2;
+  --fig-collector-color: var(--fig-accent);
+  --fig-sparkles-color: var(--fig-fg);
+  --fig-sparkles-column: 48rem;
+  --fig-hearts-fade: 700ms;
+  /* Above panels docked over the page (the table of contents, 40), below popups (50) and dialogs (60). */
+  --fig-reveal-layer: 45;
+}
+
+/*
+ * Collector: a preview standing out while hovered, fully while its link is hovered or focused: its rim lights up,
+ * brighter under the mouse (`--collector-x`, `--collector-y`, set by the component), and it takes a tint.
+ */
+[data-slot='collector'] {
+  position: relative;
+  border-radius: var(--fig-radius);
+}
+
+[data-slot='collector']::before,
+[data-slot='collector']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+}
+
+/* The tint: a faint diagonal of the color over the card. */
+[data-slot='collector']::before {
+  background: linear-gradient(
+    to bottom right,
+    color-mix(in srgb, var(--fig-collector-color) 4%, transparent),
+    color-mix(in srgb, var(--fig-collector-color) 12%, transparent)
+  );
+}
+
+/* The rim: the color around the card only (a ring masked out of the box), brightest under the mouse. */
+[data-slot='collector']::after {
+  padding: 1.5px;
+  background: radial-gradient(
+    300px circle at var(--collector-x, 50%) var(--collector-y, 50%),
+    var(--fig-collector-color),
+    color-mix(in srgb, var(--fig-collector-color) 25%, transparent) 70%
+  );
+  -webkit-mask:
+    linear-gradient(#000000 0 0) content-box,
+    linear-gradient(#000000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000000 0 0) content-box exclude,
+    linear-gradient(#000000 0 0);
+}
+
+/* Hovered anywhere: half lit; its card's link (title or image) hovered or focused: fully lit. */
+[data-slot='collector']:hover::before,
+[data-slot='collector']:hover::after {
+  opacity: 0.5;
+}
+
+[data-slot='collector']:has(
+    [data-slot='entry-card-link']:hover,
+    [data-slot='entry-card-media']:hover,
+    [data-slot='entry-card-link']:focus-visible
+  )::before,
+[data-slot='collector']:has(
+    [data-slot='entry-card-link']:hover,
+    [data-slot='entry-card-media']:hover,
+    [data-slot='entry-card-link']:focus-visible
+  )::after {
+  opacity: 1;
+}
+
+/* Reduced motion: the whole rim lit at once, following nothing. */
+@media (prefers-reduced-motion: reduce) {
+  [data-slot='collector']::before,
+  [data-slot='collector']::after {
+    transition: none;
+  }
+
+  [data-slot='collector']::after {
+    background: var(--fig-collector-color);
+  }
+}
+
+/*
+ * Sparkles: a fixed canvas behind the page, its middle masked so that nothing twinkles behind the text column
+ * (`--fig-sparkles-column`), the margins fading in from the column's edge.
+ */
+[data-slot='sparkles'] {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  color: var(--fig-sparkles-color);
+  -webkit-mask-image: linear-gradient(
+    to right,
+    #000 0,
+    #000 calc(50% - var(--fig-sparkles-column) / 2 - 6rem),
+    transparent calc(50% - var(--fig-sparkles-column) / 2 - 1rem),
+    transparent calc(50% + var(--fig-sparkles-column) / 2 + 1rem),
+    #000 calc(50% + var(--fig-sparkles-column) / 2 + 6rem),
+    #000 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    #000 0,
+    #000 calc(50% - var(--fig-sparkles-column) / 2 - 6rem),
+    transparent calc(50% - var(--fig-sparkles-column) / 2 - 1rem),
+    transparent calc(50% + var(--fig-sparkles-column) / 2 + 1rem),
+    #000 calc(50% + var(--fig-sparkles-column) / 2 + 6rem),
+    #000 100%
+  );
+}
+
+/*
+ * Cursor glow: a radial glow following the mouse (dense at its center, fading to nothing at its edge) behind the
+ * content, with a mouse and motion allowed; placed by the component (`--glow-x`, `--glow-y`), shown from its first
+ * move.
+ */
+[data-slot='cursor-glow'] {
+  display: none;
+}
+
+/* On a screen only: paper never shows it, whatever a print preview's pointer queries say. */
+@media screen and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  [data-slot='cursor-glow'] {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    width: var(--fig-glow-size);
+    height: var(--fig-glow-size);
+    border-radius: 50%;
+    /* Dense at the center, fading out as (1 - r)^2.2 to nothing at the edge: no mask, no blur. */
+    background: radial-gradient(
+      circle closest-side,
+      color-mix(in oklab, var(--fig-glow-color) 100%, transparent) 0%,
+      color-mix(in oklab, var(--fig-glow-color) 79%, transparent) 10%,
+      color-mix(in oklab, var(--fig-glow-color) 61%, transparent) 20%,
+      color-mix(in oklab, var(--fig-glow-color) 46%, transparent) 30%,
+      color-mix(in oklab, var(--fig-glow-color) 33%, transparent) 40%,
+      color-mix(in oklab, var(--fig-glow-color) 22%, transparent) 50%,
+      color-mix(in oklab, var(--fig-glow-color) 13%, transparent) 60%,
+      color-mix(in oklab, var(--fig-glow-color) 7%, transparent) 70%,
+      color-mix(in oklab, var(--fig-glow-color) 3%, transparent) 80%,
+      color-mix(in oklab, var(--fig-glow-color) 1%, transparent) 90%,
+      transparent 100%
+    );
+    opacity: 0;
+    pointer-events: none;
+    translate: calc(var(--glow-x, -100vw) - var(--fig-glow-size) / 2)
+      calc(var(--glow-y, -100vh) - var(--fig-glow-size) / 2);
+    transition: opacity 1000ms ease-in-out;
+  }
+
+  /* Once shown, it trails the mouse a little (120ms of smoothing). */
+  [data-slot='cursor-glow'][data-visible] {
+    opacity: var(--fig-glow-opacity);
+    transition:
+      opacity 1000ms ease-in-out,
+      translate 120ms ease-out;
+  }
+}
+
+/*
+ * Hearts: two hearts stacked in one grid cell, as wide as the wider one; the shown one fades in as the other fades
+ * out. The label is for screen readers only.
+ */
+[data-slot='hearts'] {
+  display: inline-grid;
+  vertical-align: bottom;
+}
+
+[data-slot='heart'] {
+  grid-area: 1 / 1;
+  transition: opacity var(--fig-hearts-fade) ease-in-out;
+}
+
+[data-slot='heart'][data-state='hidden'] {
+  opacity: 0;
+}
+
+[data-slot='hearts-label'] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot='heart'] {
+    transition: none;
+  }
+}
+
+/*
+ * Reveal: the content slides up from under the page as its slot enters the screen, its bottom on the screen's
+ * bottom (a scroll-driven animation over the slot's view timeline); in place once the slot is in full.
+ */
+[data-slot='reveal'] {
+  position: relative;
+  z-index: var(--fig-reveal-layer);
+  overflow: clip;
+  view-timeline: --fig-reveal block;
+  /* Never the browser's scroll anchor: its content moves with the scroll, and anchoring on it, when the page above
+     changes (a list's next page), would scroll the page to keep it in place. */
+  overflow-anchor: none;
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* Only with the room for it (`reveal.tsx`): elsewhere the footer stays in its place. */
+    [data-slot='reveal'][data-revealing] > [data-slot='reveal-content'] {
+      animation: fig-reveal linear both;
+      animation-timeline: --fig-reveal;
+      animation-range: entry 0% entry 100%;
+    }
+  }
+}
+
+@keyframes fig-reveal {
+  from {
+    translate: 0 -100%;
+  }
+
+  to {
+    translate: 0 0;
+  }
+}
+
+/* Print: nothing decorative on paper; a revealed footer is printed in its place, if the app prints it at all. */
+@media print {
+  [data-slot='cursor-glow'],
+  [data-slot='sparkles'] {
+    display: none;
+  }
+
+  [data-slot='collector']::before,
+  [data-slot='collector']::after {
+    display: none;
+  }
+
+  [data-slot='reveal'] {
+    position: static;
+    overflow: visible;
+  }
+
+  [data-slot='reveal-content'] {
+    animation: none;
+    translate: none;
+  }
+}

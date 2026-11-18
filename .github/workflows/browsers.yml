@@ -1,0 +1,69 @@
+name: Browsers
+
+# The component tests replayed in Chromium, Firefox and WebKit: real layout, focus and keyboard.
+# Weekly and on demand, never on each pull request (happy-dom runs the same files there).
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browsers:
+    name: Browsers (Chromium, Firefox, WebKit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium-headless-shell firefox webkit
+      - run: pnpm test:browser
+      - name: Upload the Allure results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-results-browsers
+          path: allure-results/
+          retention-days: 1
+
+  # This workflow's Allure report, published under /browsers/ next to the others (see the allure-publish action).
+  report:
+    name: Publish the report
+    needs: browsers
+    if: always() && github.repository_visibility != 'private'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: allure-reports
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: allure-results-browsers
+          path: allure-results
+          merge-multiple: true
+      - uses: ./.github/actions/allure-publish
+        with:
+          family: browsers
+          title: Real browsers (weekly)
+      - id: deployment
+        uses: actions/deploy-pages@v5

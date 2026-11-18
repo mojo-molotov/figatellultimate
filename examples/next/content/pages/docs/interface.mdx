@@ -1,0 +1,82 @@
+---
+featuredPictureUrl: /covers/placeholder-101.jpeg
+title: 'Interface'
+metadescription: 'Un design system minimal généré depuis le contenu, des effets décoratifs, et des thèmes par-dessus.'
+order: 10
+---
+
+# Interface
+
+Trois couches, chacune facultative : `@figatellu/ui`, un design system minimal ; `@figatellu/effects`, des effets décoratifs ; `@figatellu/themes`, des thèmes par-dessus les deux. Leurs composants n’ont aucun texte à eux : chaque libellé vient de vos messages, dans la langue du lecteur.
+
+```sh npm
+npm install @figatellu/ui @figatellu/effects @figatellu/themes react radix-ui
+```
+
+```sh pnpm
+pnpm add @figatellu/ui @figatellu/effects @figatellu/themes react radix-ui
+```
+
+```sh yarn
+yarn add @figatellu/ui @figatellu/effects @figatellu/themes react radix-ui
+```
+
+```sh bun
+bun add @figatellu/ui @figatellu/effects @figatellu/themes react radix-ui
+```
+
+## Le design system
+
+| Composant               | Rôle                                                                                                                   |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `Navbar`                | La navigation générée depuis le contenu (`navigationOf(locale)`), avec ses menus et un bouton pour les écrans étroits. |
+| `LocaleSwitcher`        | La page dans les autres langues, jamais un lien vers une traduction manquante.                                         |
+| `ThemeToggle`           | Clair et sombre, avec `themeScript` appliqué avant le premier affichage.                                               |
+| `Breadcrumb`            | Où se situe la page, d’après la navigation.                                                                            |
+| `TableOfContents`       | Les titres de la page, celui qu’on lit en surbrillance, ancrée dans la marge.                                          |
+| `EntryCard`             | L’aperçu d’un billet : image, titre, date, tags, auteurs.                                                              |
+| `CodeBlock`, `CodeTabs` | Un bloc de code avec son bouton de copie ; les variantes d’un même bloc en onglets.                                    |
+| `ImageZoom`             | Une image agrandie dans une fenêtre sur ordinateur.                                                                    |
+
+Une seule feuille de styles les met tous en forme, par des attributs `data-slot` et des tokens :
+
+```css
+@import '@figatellu/ui/styles.css';
+
+:root {
+  --fig-accent: #0f766e;
+  --fig-radius: 4px;
+}
+```
+
+Chaque token a une valeur sombre, sous `prefers-color-scheme: dark` et sous `data-theme="dark"`. Sur papier, chaque page s’imprime en noir sur blanc, sans la navigation.
+
+## Les effets
+
+`Effects` charge une lueur sous le curseur et des particules dans les marges, sur ordinateur seulement, jamais côté serveur ni sur téléphone ; `Collector` éclaire une carte sous la souris ; `Reveal` dévoile le pied de page sous la page. Chaque apparence est un token : `--fig-glow-color`, `--fig-sparkles-column`, `--fig-collector-color`.
+
+```tsx
+import '@figatellu/effects/styles.css';
+import { Effects, Reveal } from '@figatellu/effects';
+
+<body>
+  {children}
+  <Reveal>
+    <footer>…</footer>
+  </Reveal>
+  <Effects />
+</body>;
+```
+
+## Les thèmes
+
+`base.css` met en page le site : la colonne du texte, l’article et son sommaire, les listes, la typographie du MDX, l’impression. Un thème par-dessus ne règle que son apparence. **maquis** pose du verre sombre sur les aperçus, le code et les tableaux, et montre les effets en thème sombre. **paper** met une encre douce sur un papier gris, les titres en serif, un accent bleu d’encre, sans aucun effet.
+
+```tsx
+import '@figatellu/ui/styles.css';
+import '@figatellu/effects/styles.css';
+import '@figatellu/themes/base.css';
+import '@figatellu/themes/paper.css';
+```
+
+Plusieurs thèmes peuvent être chargés ensemble : `<html data-site-theme="paper">` en choisit un. Sans cet attribut, un thème chargé seul s’applique. Ce site charge les deux, et son pied de page laisse le lecteur choisir.

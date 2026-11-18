@@ -1,0 +1,61 @@
+{
+  "name": "@figatellu/cli",
+  "version": "0.0.0",
+  "description": "figatellu command line: build, check and watch a figatellu project.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=24"
+  },
+  "bin": {
+    "figatellu": "./dist/bin.js"
+  },
+  "exports": {
+    ".": {
+      "@figatellu/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./package.json": "./package.json"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --config ../../vitest.config.ts --project cli",
+    "test:cli": "vitest run --config ../../vitest.cli.config.ts",
+    "lint:package": "publint --strict && attw --pack . --profile esm-only"
+  },
+  "dependencies": {
+    "@clack/prompts": "1.9.0",
+    "@figatellu/codegen": "workspace:*",
+    "@figatellu/core": "workspace:*",
+    "@figatellu/fs-node": "workspace:*",
+    "@figatellu/messages": "workspace:*",
+    "@figatellu/pagefind": "workspace:*",
+    "ts-morph": "28.0.0"
+  },
+  "figatellu": {
+    "role": "tooling"
+  },
+  "devDependencies": {
+    "@content-collections/core": "0.15.3",
+    "@figatellu/content-collections": "workspace:*",
+    "@figatellu/use-intl": "workspace:*",
+    "cli-testing-library": "4.0.0",
+    "use-intl": "4.14.9",
+    "valibot": "1.5.0"
+  }
+}

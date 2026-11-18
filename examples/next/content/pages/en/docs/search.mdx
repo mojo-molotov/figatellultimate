@@ -1,0 +1,67 @@
+---
+featuredPictureUrl: '/covers/post-01.jpeg'
+title: 'Search'
+metadescription: 'A local search over the built site with Pagefind: one index per language, stemming, filters and sorts.'
+order: 9
+---
+
+# Search
+
+The search runs in the reader’s browser, over an index built from your site’s HTML with Pagefind: no server, no external service. Each language has its own index, with its own stemming.
+
+## Indexing
+
+After the framework’s build, `figatellu search` indexes the built HTML of every mounted, searchable entry:
+
+```sh npm
+npx figatellu search --site .next/server/app --out public/pagefind --locale-folders
+```
+
+```sh pnpm
+pnpm figatellu search --site .next/server/app --out public/pagefind --locale-folders
+```
+
+```sh yarn
+yarn figatellu search --site .next/server/app --out public/pagefind --locale-folders
+```
+
+```sh bun
+bunx figatellu search --site .next/server/app --out public/pagefind --locale-folders
+```
+
+`--locale-folders` is for builds that write every language in its own folder, the default one included, as next-intl does. A collection declaring `searchable: false` is left out. The indexed text is the element marked `data-pagefind-body`: the navigation, the footer and the lists of pages stay out of the results.
+
+## The client
+
+`createSearch` queries the index of one language, lazily: nothing loads before the first query.
+
+```ts
+import { createSearch } from '@figatellu/search';
+
+const search = createSearch({ locale: 'en', collections: ['pages', 'blog'] });
+const page = await search.query('locale', { sort: 'date-desc' });
+
+if (page?.status === 'done') console.log(page.results, await page.more?.());
+```
+
+Results arrive by batches (`more`), each with its URL, title, excerpt, collection and date. A query shorter than the minimum length answers `too-short`, without loading anything.
+
+### Sorts
+
+`relevance` (the default), `title-asc`, `title-desc`, `date-desc` and `date-asc`; undated pages come after dated ones, both ways.
+
+## The search box
+
+`@figatellu/search-react` gives a search box and a search dialog, unstyled and accessible, opened from the navbar or with ⌘K / Ctrl+K:
+
+```tsx
+import { SearchDialog } from '@figatellu/search-react';
+
+<SearchDialog
+  search={search}
+  labels={labels}
+  boxLabels={boxLabels}
+  locale="en"
+  onNavigate={(url) => router.push(url)}
+/>;
+```

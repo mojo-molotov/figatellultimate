@@ -1,0 +1,37 @@
+{
+  "name": "@figatellu/core",
+  "version": "0.0.0",
+  "description": "Pure core of figatellu: content model, diagnostics, results. No I/O.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "@figatellu/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --config ../../vitest.config.ts --project core",
+    "lint:package": "publint --strict && attw --pack . --profile esm-only"
+  },
+  "figatellu": {
+    "role": "core"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./package.json": "./package.json"
+    }
+  }
+}

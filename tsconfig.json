@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "isolatedDeclarations": false,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true
+  },
+  // Read by the editor: includes local scratch files (playground.*) so they get Node types.
+  // `pnpm typecheck` uses tsconfig.check.json, which excludes them.
+  "include": ["*.ts", "tooling/**/*.ts"],
+  "exclude": ["tooling/boundaries/__tests__/fixtures/**"]
+}

@@ -1,0 +1,131 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Checks (lint, boundaries, dead code, packages)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      # Typed linting builds a TypeScript program per package (about 2.7 GB): above V8's default heap on runners.
+      - run: pnpm lint
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
+      - run: pnpm depcruise
+      - run: pnpm knip
+      - run: pnpm typecheck
+      - run: pnpm build
+      - name: No generated artifact is committed
+        run: git diff --exit-code
+      - run: pnpm lint:packages
+      - name: Changesets
+        if: github.event_name == 'pull_request'
+        run: pnpm changeset status --since=origin/${{ github.base_ref }}
+      - name: Conventional commits
+        if: github.event_name == 'pull_request'
+        run: pnpm exec commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
+  test:
+    name: Test (${{ matrix.os }}, Node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [24, 26]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      # Coverage once (a report, no threshold); the same tests elsewhere.
+      - if: matrix.os == 'ubuntu-latest' && matrix.node == 26
+        run: pnpm test:coverage
+      - if: matrix.os != 'ubuntu-latest' || matrix.node != 26
+        run: pnpm test
+      - run: pnpm build
+      # The command line's surface: the built binary in real processes.
+      - run: pnpm test:cli
+      - name: Upload the Allure results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-results-${{ matrix.os }}-${{ matrix.node }}
+          path: allure-results/
+          retention-days: 1
+      - name: Upload the coverage
+        if: matrix.os == 'ubuntu-latest' && matrix.node == 26
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 1
+
+  # The CI's Allure report (and the coverage), published under /ci/ next to the weekly reports; on main only.
+  report:
+    name: Publish the report
+    needs: test
+    if: always() && github.event_name != 'pull_request' && github.repository_visibility != 'private'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    # Shared by every workflow that publishes a report: one publication at a time, none cancelled.
+    concurrency:
+      group: allure-reports
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: allure-results-*
+          path: allure-results
+          merge-multiple: true
+      - uses: actions/download-artifact@v8
+        with:
+          name: coverage
+          path: coverage
+        continue-on-error: true
+      - uses: ./.github/actions/allure-publish
+        with:
+          family: ci
+          title: CI (every pull request and push to main)
+          extra-dir: coverage
+          extra-name: coverage
+      - id: deployment
+        uses: actions/deploy-pages@v5

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "globalDependencies": [
+    "tsconfig.base.json",
+    "vitest.config.ts",
+    "vitest.cli.config.ts",
+    "tooling/allure.ts",
+    "tooling/fast-check.setup.ts"
+  ],
+  "tasks": {
+    "transit": {
+      "dependsOn": ["^transit"]
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "typecheck": {
+      "dependsOn": ["transit"]
+    },
+    "test": {
+      "dependsOn": ["transit"]
+    },
+    "test:cli": {
+      "dependsOn": ["build", "^build"]
+    },
+    "//#test:tooling": {
+      "inputs": [
+        "tooling/**",
+        "packages/*/package.json",
+        "packages/*/src/**",
+        "examples/next/content/**",
+        "examples/next/messages/**"
+      ]
+    },
+    "lint:package": {
+      "dependsOn": ["build"]
+    }
+  }
+}

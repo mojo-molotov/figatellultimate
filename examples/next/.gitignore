@@ -1,0 +1,5 @@
+.next/
+.figatellu/
+.content-collections/
+next-env.d.ts
+public/pagefind/

@@ -1,0 +1,35 @@
+name: Example app
+
+# The example app's real `next build`: every route and its metadata, by configuration only.
+# Weekly and on demand, on every OS, never on each pull request.
+on:
+  schedule:
+    - cron: '0 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  example:
+    name: Example app (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # The example consumes the packages as a user would: built.
+      # Builds the packages it uses first, then the app.
+      - run: pnpm --filter figatellu-example-next example:build
+      - run: pnpm --filter figatellu-example-next example:verify
+      # What only a browser and Next's router show: the screen still on a list's next page, filters applied.
+      - run: pnpm --filter figatellu-example-next exec playwright install --with-deps chromium-headless-shell
+      - run: pnpm --filter figatellu-example-next example:browse

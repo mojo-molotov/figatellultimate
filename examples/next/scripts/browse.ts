@@ -1,0 +1,145 @@
+// Behavior on the real `next build`, in a real browser: what only Chromium and Next's router show, never the static
+// HTML (`verify.ts`) nor the packages' own tests. Each check states the bug it guards against.
+// Run after `pnpm example:build`: `pnpm example:browse [--port N]` (plain Node, Chromium).
+import { spawn } from 'node:child_process';
+import { join } from 'node:path';
+import { parseArgs } from 'node:util';
+
+import { chromium, type Page } from 'playwright';
+
+import { blogIndex, findBlogFolderByUrl } from '#figatellu/blog';
+
+const { values } = parseArgs({ options: { port: { type: 'string', default: '3198' } } });
+const base = `http://localhost:${values.port}`;
+const problems: string[] = [];
+const check = (condition: boolean, problem: string): void => {
+  if (!condition) problems.push(problem);
+};
+const LISTING = '/blog/maquis/corsicamon';
+const perPage = findBlogFolderByUrl(LISTING)?.perPage ?? 0;
+
+/** Where the page is scrolled, and where a slot's element sits on the screen. */
+const placeOf = (page: Page, slot: string) =>
+  page.evaluate((name) => {
+    const element = document.querySelector(`[data-slot="${name}"]`);
+
+    return { scroll: Math.round(window.scrollY), top: Math.round(element?.getBoundingClientRect().top ?? NaN) };
+  }, slot);
+
+const server = spawn(join(import.meta.dirname, '..', 'node_modules/.bin/next'), ['start', '-p', values.port], {
+  cwd: join(import.meta.dirname, '..'),
+  stdio: 'ignore',
+  shell: process.platform === 'win32',
+});
+
+try {
+  for (let i = 0; i < 60; i++) {
+    const up = await fetch(`${base}/`).then(
+      (response) => response.ok,
+      () => false,
+    );
+
+    if (up) break;
+
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+
+  const browser = await chromium.launch();
+  const open = async (url: string): Promise<Page> => {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+
+    await page.goto(`${base}${url}`, { waitUntil: 'networkidle' });
+
+    return page;
+  };
+
+  // Previous and next keep the screen still, the button under the mouse: the browser's scroll anchoring once picked
+  // an element of the new page (or the revealed footer) and scrolled to keep it in place.
+  for (const [url, slot, fromBottom] of [
+    [LISTING, 'pagination-next', 150],
+    [LISTING, 'pagination-next', 50],
+    [`${LISTING}/page/3`, 'pagination-previous', 120],
+    ['/blog/maquis', 'pagination-next', 120],
+  ] as const) {
+    const page = await open(url);
+
+    await page.evaluate((offset) => {
+      window.scrollTo(0, document.documentElement.scrollHeight - window.innerHeight - offset);
+    }, fromBottom);
+    await page.waitForTimeout(300);
+    const before = await placeOf(page, slot);
+    const button = await page.locator(`[data-slot="${slot}"]`).first().boundingBox();
+
+    // Precondition: the button is on the screen, clicked where it stands (no scroll into view).
+    check(button !== null && button.y + button.height <= 900, `${url}: ${slot} is not on the screen`);
+
+    if (button !== null) {
+      await page.mouse.click(button.x + button.width / 2, button.y + button.height / 2);
+      await page.waitForURL((next) => next.pathname !== new URL(`${base}${url}`).pathname);
+      await page.waitForTimeout(800);
+      const after = await placeOf(page, slot);
+
+      check(
+        after.scroll === before.scroll && after.top === before.top,
+        `${url}: ${slot} ${String(fromBottom)}px from the bottom moved the screen (${JSON.stringify(before)} → ${JSON.stringify(after)})`,
+      );
+    }
+
+    await page.close();
+  }
+
+  // A filter in the URL, of a term the page's own posts lack: read before the index, which then loads; the
+  // unfiltered list's pages never show. The engine, holding the slice alone, once dropped the term.
+  const harp = blogIndex.filter(
+    (item) => item.locale === 'fr' && item.url.startsWith(`${LISTING}/`) && item.terms.tags.includes('harp'),
+  ).length;
+  const filtered = await open(`${LISTING}?tags=harp`);
+
+  // Precondition: a few posts carry the term, fewer than a page.
+  check(harp > 0 && harp <= perPage, `${LISTING}: ${String(harp)} posts with harp, the check needs 1 to a page`);
+  await filtered.waitForTimeout(500);
+  check(
+    (await filtered.locator('[data-slot="listing-cards"] [data-key]').count()) === harp,
+    `${LISTING}?tags=harp: not the ${String(harp)} posts with harp`,
+  );
+  check(
+    (await filtered.locator('[data-slot="pagination"]').count()) === 0,
+    `${LISTING}?tags=harp: the unfiltered list's pagination`,
+  );
+  await filtered.close();
+
+  // A filter chosen before the index arrives is applied once it is here, never lost.
+  const early = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+
+  await early.route('**/listing/**', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    await route.continue();
+  });
+  await early.goto(`${base}${LISTING}`, { waitUntil: 'networkidle' });
+  await early.getByRole('button', { name: /^Tags/ }).click();
+  await early.getByRole('option').first().click();
+  await early.waitForURL(/tags=/, { timeout: 5000 }).catch(() => undefined);
+  check(new URL(early.url()).searchParams.has('tags'), `${LISTING}: a filter chosen before the index was lost`);
+  await early.close();
+
+  // The compact pagination reaches a prerendered page.
+  const select = await open(LISTING);
+
+  await select.getByRole('combobox', { name: 'Aller à la page' }).click();
+  await select.getByRole('option', { name: '4', exact: true }).click();
+  await select.waitForURL('**/page/4', { timeout: 5000 }).catch(() => undefined);
+  check(new URL(select.url()).pathname === `${LISTING}/page/4`, `${LISTING}: the page select did not reach page 4`);
+  await select.close();
+  await browser.close();
+} finally {
+  server.kill();
+}
+
+if (problems.length > 0) {
+  console.error(`✖ ${String(problems.length)} problem(s):\n${problems.map((p) => `  - ${p}`).join('\n')}`);
+  process.exitCode = 1;
+} else {
+  console.log(
+    '✓ previous and next keep the screen still; a filter in the URL, or chosen early, is applied; the page select reaches its page.',
+  );
+}
