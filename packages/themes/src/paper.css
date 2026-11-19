@@ -12,6 +12,15 @@
  * Invariants (`themes.test.ts`, replayed on every theme): every rule gated; the same dark looks from the system's
  * preference and from `data-theme="dark"`; no effect shown; ink on white on paper.
  */
+
+/*
+ * The site's theme picker: this theme's option shown as chosen from the first paint, read from `<html data-site-theme>`
+ * (set before it by the app's script), never once the page is hydrated: the choice never fades in on load.
+ */
+:root:where(:not([data-site-theme]), [data-site-theme='paper']) [data-slot='site-theme-option'][value='paper'] {
+  border-color: var(--fig-accent);
+  color: var(--fig-accent);
+}
 :root:where(:not([data-site-theme]), [data-site-theme='paper']) {
   --fig-heading-font: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
   --fig-fg: #232323;

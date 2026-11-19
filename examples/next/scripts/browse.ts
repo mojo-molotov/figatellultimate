@@ -141,6 +141,32 @@ try {
   check(new URL(select.url()).pathname === `${LISTING}/page/4`, `${LISTING}: the page select did not reach page 4`);
   await select.close();
 
+  // The site's theme picker shows its chosen option from the first paint, before any script: without JavaScript, the
+  // default theme's option already has the accent, so that it never fades in once the page is hydrated.
+  {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const still = await context.newPage();
+
+    await still.goto(`${base}${LISTING}`, { waitUntil: 'load' });
+    const [chosen, other, accent] = await still.evaluate(() => {
+      const color = (selector: string): string =>
+        getComputedStyle(document.querySelector(selector) ?? document.body).color;
+      const probe = document.createElement('span');
+
+      probe.style.color = 'var(--fig-accent)';
+      document.body.append(probe);
+
+      return [
+        color('[data-slot="site-theme-option"][value="maquis"]'),
+        color('[data-slot="site-theme-option"][value="paper"]'),
+        getComputedStyle(probe).color,
+      ];
+    });
+
+    check(chosen === accent && other !== accent, `${LISTING}: the chosen theme is not shown before hydration`);
+    await context.close();
+  }
+
   // The footer revealed from under the page on a desktop only: on a phone, it scrolls in as any content.
   for (const [device, options, revealed] of [
     ['a desktop', { viewport: { width: 1280, height: 900 } }, true],
@@ -149,6 +175,29 @@ try {
     const phone = await browser.newPage(options);
 
     await phone.goto(`${base}${LISTING}`, { waitUntil: 'networkidle' });
+
+    // On a phone, the navbar's toggle at the line's start and its extras at its end: never all packed at the start.
+    if (!revealed) {
+      const edges = await phone.evaluate(() => {
+        const box = (slot: string): DOMRect | undefined =>
+          document.querySelector(`[data-slot="${slot}"]`)?.getBoundingClientRect();
+        const navbar = document.querySelector('[data-slot="navbar"]');
+        const padding = navbar === null ? 0 : Number.parseFloat(getComputedStyle(navbar).paddingInlineEnd);
+
+        return { toggle: box('navbar-toggle'), extras: box('navbar-extras'), navbar: box('navbar'), padding };
+      });
+      const { toggle, extras, navbar } = edges;
+
+      check(
+        toggle !== undefined &&
+          navbar !== undefined &&
+          extras !== undefined &&
+          Math.abs(navbar.right - edges.padding - extras.right) < 1 &&
+          toggle.left < extras.left,
+        `${LISTING} on ${device}: the navbar's extras are not at the end of its line`,
+      );
+    }
+
     const animation = await phone
       .locator('[data-slot="reveal-content"]')
       .evaluate((element) => getComputedStyle(element).animationName);
@@ -197,6 +246,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the button under the mouse, the page taller or shorter; a filter in the URL, or chosen early, is applied; the page select reaches its page; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
+    '✓ previous and next keep the button under the mouse, the page taller or shorter; a filter in the URL, or chosen early, is applied; the page select reaches its page; the chosen theme shown before hydration; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
   );
 }

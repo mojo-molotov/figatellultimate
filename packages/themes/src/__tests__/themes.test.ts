@@ -56,6 +56,12 @@ describe.each([
   const rules = rulesOf(source).map((rule) => ({ ...rule, selector: rule.selector.replace(/^@media[^{]*$/, '') }));
   const gate = gateOf(theme);
 
+  it("shows its own option of the site's theme picker as chosen from the first paint, before any script runs", () => {
+    const own = rules.find(({ selector }) => selector === `${gate} [data-slot='site-theme-option'][value='${theme}']`);
+
+    expect(own?.body).toBe('border-color: var(--fig-accent); color: var(--fig-accent);');
+  });
+
   it('gates every rule: it applies alone, or when data-site-theme names it', () => {
     // Precondition: the theme has rules.
     expect(rules.length).toBeGreaterThan(3);

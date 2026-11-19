@@ -4,6 +4,10 @@
  * The footer's theme picker: one button per theme, the chosen one pressed, the choice remembered. The page
  * blurs, changes theme, then comes back sharp (a view transition, `<html data-site-theme-switch>` while it plays; the motion is
  * `@figatellultimate/themes/base.css`'s), at once on a touch screen, without view transitions or with reduced motion.
+ *
+ * The chosen option is shown from the first paint, before hydration: each button carries its theme (`value`), and
+ * each theme's stylesheet marks its own option, read from `<html data-site-theme>`, which the `<head>`'s script sets
+ * before the page shows. `aria-pressed`, known once mounted, then changes nothing on screen: no transition on load.
  */
 import { useEffect, useState, type ReactNode } from 'react';
 
@@ -85,6 +89,7 @@ export function SiteThemePicker({
           key={theme}
           type="button"
           data-slot="site-theme-option"
+          value={theme}
           aria-pressed={current === undefined ? undefined : current === theme}
           onClick={() => {
             choose(theme);
