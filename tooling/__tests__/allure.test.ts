@@ -193,6 +193,11 @@ describe('labelRun', () => {
 });
 
 describe('allurerc.mjs', () => {
+  it('keeps a bounded history: a CI run weighs megabytes, and GitHub refuses a file over 100 MB', () => {
+    expect(allurerc.historyLimit).toBeGreaterThan(0);
+    expect(allurerc.historyLimit).toBeLessThanOrEqual(50);
+  });
+
   it('draws the testing pyramid with the layers of the labels, base first', () => {
     const pyramid = allurerc.plugins.awesome.options.charts.find((chart) => chart.type === 'testingPyramid');
 

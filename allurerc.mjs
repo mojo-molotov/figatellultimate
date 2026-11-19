@@ -5,6 +5,9 @@
 //
 // - `historyPath`: one JSONL file appended on every generation; CI keeps one per test family on the
 //   `allure-reports` branch (`.github/actions/allure-publish`), so trends span builds without mixing families.
+// - `historyLimit`: the last 5 runs only, enough for a trend. A CI run merges six environments, about 12 MB of
+//   history each: kept forever, the file passed GitHub's 100 MB limit after a dozen runs. Stored compressed (about
+//   1 MB a run).
 // - `environments`: one per OS and Node version of the CI matrix, matched by the `os` and `node` labels the
 //   reporter gives every result in CI (`tooling/allure.ts`); a local run has neither, and one environment.
 // - `variables`: the run the report comes from (commit, branch, trigger, its page), from GitHub Actions' variables.
@@ -53,6 +56,7 @@ export default {
   name: 'figatellultimate',
   output: 'allure-report',
   historyPath: './history.jsonl',
+  historyLimit: 5,
   environments,
   variables: run,
   plugins: {

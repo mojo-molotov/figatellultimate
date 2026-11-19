@@ -57,4 +57,14 @@ describe('GitHub Actions', () => {
       expect(readFileSync(file, 'utf8'), relative(ROOT, file)).not.toMatch(/cancel-in-progress: true/);
     }
   });
+
+  it("keeps the reports branch under GitHub's file limit, and from growing: compressed histories, a size guard, one commit", () => {
+    const publish = readFileSync(join(ROOT, '.github', 'actions', 'allure-publish', 'action.yml'), 'utf8');
+
+    expect(publish).toMatch(/gunzip -c "\$history" > history\.jsonl/);
+    expect(publish).toMatch(/gzip -9 -c history\.jsonl > "\$history"/);
+    expect(publish).toMatch(/-size \+90M/);
+    expect(publish).toContain('--orphan allure-reports');
+    expect(publish).toContain('git push -q --force');
+  });
 });

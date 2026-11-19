@@ -10,6 +10,8 @@ interface ReportLabel {
 }
 
 interface AllureConfig {
+  /** How many runs each history keeps. */
+  readonly historyLimit: number;
   readonly environments: Readonly<
     Record<string, { readonly name: string; matcher(payload: { readonly labels: readonly ReportLabel[] }): boolean }>
   >;
