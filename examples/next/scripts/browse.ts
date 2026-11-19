@@ -360,6 +360,29 @@ try {
       await phone.goto(`${base}${LISTING}`, { waitUntil: 'networkidle' });
     }
 
+    // On a phone, the menu's toggle: two lines, crossed while the menu is open.
+    if (!revealed) {
+      const lineAngle = () =>
+        phone.evaluate(() => {
+          const icon = document.querySelector('[data-slot="navbar-toggle-icon"]');
+          const matrix = icon === null ? 'none' : getComputedStyle(icon, '::before').transform;
+          const [a = 1, b = 0] = matrix === 'none' ? [] : matrix.slice(7, -1).split(',').map(Number);
+
+          return Math.round((Math.atan2(b, a) * 180) / Math.PI);
+        });
+      const closed = await lineAngle();
+
+      await phone.locator('[data-slot="navbar-toggle"]').tap();
+      await phone.waitForTimeout(400);
+      const open = await lineAngle();
+
+      await phone.locator('[data-slot="navbar-toggle"]').tap();
+      check(
+        closed === 0 && open === 45,
+        `${LISTING} on ${device}: the toggle's lines at ${String(closed)}° closed, ${String(open)}° open`,
+      );
+    }
+
     // On a phone, the closed navbar as much room above its controls as below: no empty line for its closed menu.
     if (!revealed) {
       const [above, below] = await phone.evaluate(() => {
@@ -445,6 +468,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the button under the mouse, the page taller or shorter; a filter in the URL, or chosen early, is applied; the page select reaches its page; a right-to-left layout mirrored; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
+    '✓ previous and next keep the button under the mouse, the page taller or shorter; a filter in the URL, or chosen early, is applied; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
   );
 }

@@ -236,6 +236,21 @@ describe('styles.css', () => {
     expect(propertiesOf("[data-slot='code-block']")['direction']).toBe('ltr');
   });
 
+  it("turns the navbar's two-line toggle into a cross while its menu is open, still with reduced motion", () => {
+    // Two lines, the icon's own box drawing none.
+    expect(propertiesOf("[data-slot='navbar-toggle-icon']")['background']).toBe('none');
+    expect(CSS).toMatch(
+      /\[data-slot='navbar-toggle'\]\[aria-expanded='true'\] \[data-slot='navbar-toggle-icon'\]::before \{\s*transform: translateY\(0\) rotate\(45deg\);/,
+    );
+    expect(CSS).toMatch(
+      /\[data-slot='navbar-toggle'\]\[aria-expanded='true'\] \[data-slot='navbar-toggle-icon'\]::after \{\s*transform: translateY\(0\) rotate\(-45deg\);/,
+    );
+    // The motion only where it is welcome: the cross itself shows either way.
+    expect(CSS).toMatch(
+      /@media \(prefers-reduced-motion: no-preference\) \{\s*\[data-slot='navbar-toggle-icon'\]::before,\s*\[data-slot='navbar-toggle-icon'\]::after \{\s*transition: transform 150ms ease;/,
+    );
+  });
+
   it("sets the navbar's extras at the end of the toggle's line on a narrow screen, the toggle at its start", () => {
     const narrow = CSS.slice(CSS.indexOf('@media (max-width: 48rem)', CSS.indexOf("[data-slot='navbar-extras']")));
 
