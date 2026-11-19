@@ -59,7 +59,7 @@ describe('GitHub Actions', () => {
   });
 
   it("keeps the reports branch under GitHub's file limit, and from growing: compressed histories, a size guard, one commit", () => {
-    const publish = readFileSync(join(ROOT, '.github', 'actions', 'allure-publish', 'action.yml'), 'utf8');
+    const publish = readFileSync(join(ROOT, '.github', 'actions', 'reports-publish', 'action.yml'), 'utf8');
 
     expect(publish).toMatch(/gunzip -c "\$history" > history\.jsonl/);
     expect(publish).toMatch(/gzip -9 -c history\.jsonl > "\$history"/);

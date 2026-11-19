@@ -79,7 +79,7 @@ Test what matters, from the outside, the way a user meets it: the public contrac
 - **Inputs differ from expected outputs**, so a no-op cannot pass; random data is seeded, and a test asserts its own precondition when a degenerate case is possible.
 - **Generous timeouts**: five minutes for every test and hook, thirty seconds for every wait on the page (`waitFor`, `findBy…`), set once (`tooling/timeouts.ts`, in every vitest configuration, the waits through `tooling/async-timeout.setup.ts`). A timeout stops a hang, never judges speed (the load test has the budgets): a slow CI runner must not fail a right test. Never set on a single test, hook or wait, which would cut it short again; a fixed pause before reading a change is a `waitFor`. Checked by `tooling/__tests__/timeouts.test.ts`.
 - **Coverage** (`pnpm test:coverage`): branches included, on the pure code only; adapters and components are covered by the other families. A report, never a threshold.
-- **Reports**: Allure, one per family on GitHub Pages, each with its own history (`.github/actions/allure-publish`); `pnpm allure` locally.
+- **Reports**: Allure, one per family on GitHub Pages, each with its own history (`.github/actions/reports-publish`); `pnpm allure` locally.
 - **No network in unit tests.** Slow or environment-heavy suites run weekly and on demand, never on each pull request: real browsers (`browsers.yml`), the watch lab (`watch-lab.yml`), the example's real `next build` and its navigation in Chromium (`example.yml`) and the load test with its budgets (`load.yml`).
 
 ## Language

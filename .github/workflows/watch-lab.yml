@@ -34,7 +34,7 @@ jobs:
           path: allure-results/
           retention-days: 1
 
-  # This workflow's Allure report, published under /watch-lab/ next to the others (see the allure-publish action).
+  # This workflow's Allure report, published under /watch-lab/ next to the others (see the reports-publish action).
   report:
     name: Publish the report
     needs: lab
@@ -63,7 +63,7 @@ jobs:
           pattern: allure-results-lab-*
           path: allure-results
           merge-multiple: true
-      - uses: ./.github/actions/allure-publish
+      - uses: ./.github/actions/reports-publish
         with:
           family: watch-lab
           title: Watch lab (weekly)

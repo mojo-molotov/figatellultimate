@@ -132,7 +132,7 @@ jobs:
           name: coverage
           path: coverage
         continue-on-error: true
-      - uses: ./.github/actions/allure-publish
+      - uses: ./.github/actions/reports-publish
         with:
           family: ci
           title: CI (every pull request and push to main)

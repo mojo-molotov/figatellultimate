@@ -39,3 +39,42 @@ jobs:
           path: .tmp/load-*/load-report.md
           # The report lives under a hidden folder, which upload-artifact leaves out by default.
           include-hidden-files: true
+
+  # The load report, published under /load/ next to the test reports, as a page (see the reports-publish action).
+  report:
+    name: Publish the report
+    needs: load
+    if: always() && github.repository_visibility != 'private'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    # Shared by every workflow that publishes a report: one publication at a time, none cancelled.
+    concurrency:
+      group: allure-reports
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+      # The page and the index are written by plain Node: no install.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+      - uses: actions/download-artifact@v8
+        with:
+          name: load-report
+          path: load-report
+      - id: report
+        run: echo "path=$(find load-report -name load-report.md | head -1)" >> "$GITHUB_OUTPUT"
+      - if: steps.report.outputs.path != ''
+        uses: ./.github/actions/reports-publish
+        with:
+          family: load
+          title: Load test (weekly)
+          markdown: ${{ steps.report.outputs.path }}
+      - if: steps.report.outputs.path != ''
+        id: deployment
+        uses: actions/deploy-pages@v5

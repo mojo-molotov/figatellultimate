@@ -1,7 +1,8 @@
-name: Publish an Allure report
+name: Publish a test report
 description: >-
-  Renders one test family's Allure report into its own folder of the allure-reports branch, with its own history, and
-  stages the whole branch for GitHub Pages. Each family replaces only its folder, so the CI's report and the weekly
+  Renders one test family's report (an Allure report from its results, or a Markdown report as a page) into its own
+  folder of the allure-reports branch, with its own history and metadata, writes the index of every report
+  (tooling/reports-index.ts), and stages the whole branch for GitHub Pages. Each family replaces only its folder, so the CI's report and the weekly
   ones never overwrite each other. Callers share the `allure-reports` concurrency group: one publication at a time.
   The branch stays under GitHub's 100 MB file limit and never grows: each history is compressed and holds its last
   runs (allurerc.mjs's historyLimit), a file near the limit fails the publication with a clear message, and the
@@ -15,8 +16,11 @@ inputs:
     description: The report's name on the index page
     required: true
   results-dir:
-    description: The merged allure-results of the family's jobs
+    description: The merged allure-results of the family's jobs (an Allure report)
     default: allure-results
+  markdown:
+    description: A Markdown report published as the family's page instead of an Allure report (the load test's)
+    default: ''
   extra-dir:
     description: A folder published inside the report's, as <family>/<extra-name> (e.g. the coverage)
     default: ''
@@ -42,34 +46,42 @@ runs:
         # Uncompressed histories are an older format, dropped: each family's history restarts compressed.
         rm -f .allure-reports/_history/*.jsonl
 
-    - name: Render the report with its own history
+    - name: Render the Allure report with its own history
+      if: inputs.markdown == ''
       shell: bash
       run: |
-        history=".allure-reports/_history/${{ inputs.family }}.jsonl.gz"
-        rm -rf history.jsonl allure-report ".allure-reports/${{ inputs.family }}"
+        family="${{ inputs.family }}"
+        history=".allure-reports/_history/$family.jsonl.gz"
+        rm -rf history.jsonl allure-report ".allure-reports/$family"
         if [ -f "$history" ]; then gunzip -c "$history" > history.jsonl; fi
         pnpm exec allure generate "${{ inputs.results-dir }}" --output allure-report
-        if [ -f history.jsonl ]; then gzip -9 -c history.jsonl > "$history"; fi
-        mv allure-report ".allure-reports/${{ inputs.family }}"
+        mv allure-report ".allure-reports/$family"
+        extra=()
         if [ -n "${{ inputs.extra-dir }}" ] && [ -d "${{ inputs.extra-dir }}" ]; then
-          cp -R "${{ inputs.extra-dir }}" ".allure-reports/${{ inputs.family }}/${{ inputs.extra-name }}"
+          cp -R "${{ inputs.extra-dir }}" ".allure-reports/$family/${{ inputs.extra-name }}"
+          if [ -f "${{ inputs.extra-dir }}/coverage-summary.json" ]; then extra=(--coverage "${{ inputs.extra-dir }}/coverage-summary.json"); fi
         fi
-        echo "${{ inputs.title }}" > ".allure-reports/_history/${{ inputs.family }}.title"
+        limit=$(node -e "import('./allurerc.mjs').then((m) => console.log(m.default.historyLimit))")
+        node tooling/reports-index.ts meta --site .allure-reports --family "$family" --title "${{ inputs.title }}" \
+          --report ".allure-reports/$family" --history history.jsonl --limit "$limit" "${extra[@]}"
+        if [ -f history.jsonl ]; then gzip -9 -c history.jsonl > "$history"; fi
+
+    - name: Render the Markdown report as a page
+      if: inputs.markdown != ''
+      shell: bash
+      run: |
+        family="${{ inputs.family }}"
+        rm -rf ".allure-reports/$family"
+        node tooling/reports-index.ts page --markdown "${{ inputs.markdown }}" --title "${{ inputs.title }}" \
+          --out ".allure-reports/$family/index.html"
+        node tooling/reports-index.ts meta --site .allure-reports --family "$family" --title "${{ inputs.title }}" \
+          --markdown "${{ inputs.markdown }}"
 
     - name: Write the index of every report
       shell: bash
       run: |
-        cd .allure-reports
-        {
-          echo '<!doctype html><meta charset="utf-8"><title>figatellultimate test reports</title>'
-          echo '<h1>figatellultimate test reports</h1><ul>'
-          for title in _history/*.title; do
-            family=$(basename "$title" .title)
-            echo "<li><a href=\"$family/\">$(cat "$title")</a></li>"
-          done
-          echo '</ul>'
-        } > index.html
-        touch .nojekyll
+        node tooling/reports-index.ts index --site .allure-reports
+        touch .allure-reports/.nojekyll
 
     - name: Stay under GitHub's file size limit
       shell: bash

@@ -22,7 +22,7 @@
  *       and under load slow a test past its timeout.
  *     - CI publishes one report per family on GitHub Pages (`/ci/`, `/browsers/`, `/watch-lab/`), each in its own
  *       folder of the `allure-reports` branch with its own history: a weekly run never overwrites the CI's report
- *       (`.github/actions/allure-publish`).
+ *       (`.github/actions/reports-publish`).
  *
  * Invariants (`__tests__/allure.test.ts`): every test of a run gets its labels, added to what it already reported;
  * the environments of `allurerc.mjs` cover the CI matrix.
