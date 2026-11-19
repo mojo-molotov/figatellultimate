@@ -233,6 +233,11 @@ export function explainMessage(diagnostic: MessageDiagnostic): Explanation {
             ? 'remove it (no such folder or term)'
             : 'add it to the default locale first, or remove it'),
       };
+    case 'unused-message':
+      return {
+        message: `${key} is not used by the app`,
+        hint: 'remove it from the schema and every locale, or keep it: // figatellultimate-keep: <why>, above it in the schema',
+      };
     case 'invalid-message-syntax':
       return { message: `${key} is not valid ICU (${d.data.problem} at character ${String(d.data.offset)})` };
     case 'message-arguments-mismatch':

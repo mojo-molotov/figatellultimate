@@ -34,6 +34,21 @@ Le schéma s’écrit une fois ; chaque langue en tire son type.
 
 `messages/fr.ts` et `messages/en.ts` remplissent ce schéma, et chacun doit le satisfaire exactement. Une clé oubliée, ou une clé de trop, ne compile pas, et `figatellultimate check` nomme la clé et le fichier à compléter.
 
+## Les clés inutilisées
+
+`figatellultimate build` et `check` signalent chaque clé de votre schéma qu’aucun code n’utilise plus, pour qu’un texte mort cesse d’être traduit dans chaque langue. Une clé compte comme utilisée là où vous l’écrivez, en littéral ou en gabarit, à un endroit typé comme clé de message : `t('ui.toc.title')`, ``t(`ui.sort.${sort}`)``, un traducteur restreint à un sous-arbre, ou votre propre fonction typée. Les clés du contenu ne sont jamais signalées : elles suivent les dossiers.
+
+Pour garder une clé que rien ne lit dans l’application, dites pourquoi au-dessus d’elle dans le schéma ; le commentaire garde aussi un groupe entier :
+
+```ts
+ui: {
+  // figatellultimate-keep: lu par les modèles d’e-mail
+  legacy: { title: _ },
+},
+```
+
+`check` lit les types de l’application : il lui faut un `.figatellultimate/` à jour, sinon il indique qu’il n’a pas vérifié (lancez `figatellultimate build`). Les deux ont besoin d’un `tsconfig.json` à côté de la configuration.
+
 ## Les messages ICU
 
 Les messages suivent ICU. figatellultimate les analyse tous, exige pour chaque langue les catégories de pluriel dont elle a besoin (`few` en polonais, `other` partout), et type les arguments : un message avec `{count, plural, …}` prend un nombre, et l’oublier ne compile pas. Chaque langue doit prendre les mêmes arguments que la langue par défaut.

@@ -85,6 +85,13 @@ export type UnknownNavigationLabelDiagnostic = MessageDiagnosticOf<
   { readonly collection: string }
 >;
 
+/** A message of the app that no code uses (warned by `check` and `build`, from the types of the app's calls). */
+export type UnusedMessageDiagnostic = MessageDiagnosticOf<
+  'unused-message',
+  'warning',
+  /** The default locale, whose module holds the reference. */
+  { readonly locale: string }
+>;
 /** Every message diagnostic, discriminated by `code`. */
 export type MessageDiagnostic =
   | MissingMessageModuleDiagnostic
@@ -97,4 +104,5 @@ export type MessageDiagnostic =
   | MessageArgumentsMismatchDiagnostic
   | MissingPluralOtherDiagnostic
   | MissingPluralCategoryDiagnostic
-  | UnknownNavigationLabelDiagnostic;
+  | UnknownNavigationLabelDiagnostic
+  | UnusedMessageDiagnostic;

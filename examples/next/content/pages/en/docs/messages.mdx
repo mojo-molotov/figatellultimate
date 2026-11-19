@@ -34,6 +34,21 @@ The schema is written once; every language derives its type from it.
 
 `messages/fr.ts` and `messages/en.ts` fill that schema, and each must satisfy it exactly. A forgotten key, or an extra one, does not compile, and `figatellultimate check` names the key and the file to complete.
 
+## Unused keys
+
+`figatellultimate build` and `check` warn each key of your schema that no code uses any more, so that a dead text stops being translated in every language. A key counts as used where you write it, a literal or a template, in a place typed as message keys: `t('ui.toc.title')`, ``t(`ui.sort.${sort}`)``, a scoped translator, or your own typed helper. The content’s keys are never warned: they follow the folders.
+
+To keep a key nothing in the application reads, say why above it in the schema; the comment keeps a whole group too:
+
+```ts
+ui: {
+  // figatellultimate-keep: read by the e-mail templates
+  legacy: { title: _ },
+},
+```
+
+`check` reads the application’s types, so it needs `.figatellultimate/` up to date; otherwise it says it skipped the check (run `figatellultimate build`). Both need a `tsconfig.json` beside the config.
+
 ## ICU messages
 
 Messages follow ICU. figatellultimate parses every one, requires for each language the plural categories it needs (`few` in Polish, `other` everywhere), and types the arguments: a message with `{count, plural, …}` takes a number, and forgetting it does not compile. Every language must take the same arguments as the default one.

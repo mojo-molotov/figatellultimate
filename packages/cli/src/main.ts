@@ -23,8 +23,8 @@
  *
  * Invariants: the surface a user meets (help, usage errors, exit codes, each command's output, `watch` stopped by a
  * signal) against the built binary in real processes (`surface.cli.test.ts`); the generated output, the messages,
- * the search and the migrations in process (`e2e.test.ts`, `messages-e2e.test.ts`, `search-e2e.test.ts`,
- * `migrate-e2e.test.ts`, disposable projects); the watch against a build from scratch after bursts of changes, on
+ * the search, the migrations and the unused messages in process (`e2e.test.ts`, `messages-e2e.test.ts`,
+ * `search-e2e.test.ts`, `migrate-e2e.test.ts`, `unused-e2e.test.ts`, disposable projects); the watch against a build from scratch after bursts of changes, on
  * every OS (`watch.lab.test.ts`, run weekly).
  */
 import { watch as watchFile } from 'node:fs';
@@ -87,6 +87,8 @@ async function runAndReport(ui: Ui, loaded: LoadedConfig, command: Command, sign
     mode: command.mode,
     write,
     signal,
+    // The app's unused messages compile the app: build and check, never each run of watch.
+    unused: command.name !== 'watch',
   });
   const { assembly } = result;
   const counts = countDiagnostics(assembly.diagnostics, result.messageDiagnostics);
@@ -104,6 +106,11 @@ async function runAndReport(ui: Ui, loaded: LoadedConfig, command: Command, sign
 
     ui.block(title, reportLines(assembly.diagnostics, result.directories, ui.style, messages));
   }
+
+  if (result.unused === 'stale')
+    ui.info('Unused messages not checked: .figatellultimate/ is older than the messages (run figatellultimate build).');
+
+  if (result.unused === 'no-tsconfig') ui.info('Unused messages not checked: no tsconfig.json beside the config.');
 
   if (write && result.hasErrors)
     ui.warn('Nothing written: .figatellultimate/ keeps its last valid state (fix the errors above).');

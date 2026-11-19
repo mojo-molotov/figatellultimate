@@ -1,9 +1,13 @@
 /**
  * One run: the content (paths listed, structure analyzed, documents joined), the messages, then the code generation
- * and the atomic writes when everything is valid.
+ * and the atomic writes when everything is valid; with `unused`, the app's messages no code uses, as warnings.
+ *
+ * Key design decision: the unused messages are read from the app's types, which import `.figatellultimate/`: `build`
+ * reads them once it has written; `check`, which writes nothing, only when the output on disk is what this run would
+ * write, and otherwise says it skipped (stale types would report keys the app does use).
  *
  * Invariants (`e2e.test.ts`): a run with errors or an aborted run writes nothing; a second run with no change
- * rewrites nothing; no absolute path in the output.
+ * rewrites nothing; no absolute path in the output. The unused messages (`unused-e2e.test.ts`).
  */
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -20,6 +24,8 @@ import {
 import {
   analyzeMessages,
   checkNavigationLabels,
+  findUnusedMessages,
+  referenceKeys,
   type MessageDiagnostic,
   type MessagesModel,
 } from '@figatellultimate/messages';
@@ -27,6 +33,7 @@ import { createNodeFileWriter, createNodePathLister, type CommitStats } from '@f
 
 import type { Mode } from '../input/args.js';
 import { loadMessageModules } from '../input/load-messages.js';
+import { scanKeyUsage } from './usage.js';
 
 /**
  * What one run needs: the config, its folder, the mode, whether to write, and an abort signal.
@@ -41,6 +48,8 @@ export interface RunInput {
   readonly write: boolean;
   /** Watch mode: a newer change aborts this run; an aborted run never writes. */
   readonly signal?: AbortSignal | undefined;
+  /** Whether to warn the app's messages no code uses (`build` and `check`; never `watch`: it compiles the app). */
+  readonly unused?: boolean | undefined;
 }
 
 /**
@@ -59,6 +68,11 @@ export interface RunResult {
   /** Whether the app's package.json maps `#figatellultimate/*`. */
   readonly importsMapped: boolean;
   readonly durations: { readonly content: number; readonly write: number };
+  /**
+   * Whether the unused messages were checked: `checked`, or why not (`stale`: `.figatellultimate/` is not what this
+   * run would write; `no-tsconfig`: the app cannot be typed). `undefined` when not asked, or without messages.
+   */
+  readonly unused?: RunResultUnused | undefined;
 }
 
 /** The `imports` mapping an app needs: Node runs the JavaScript, TypeScript reads the sibling `index.d.ts`. */
@@ -110,6 +124,48 @@ async function analyzeMessagesOf(
   return { model: analysis.model, diagnostics };
 }
 
+type RunResultUnused = 'checked' | 'stale' | 'no-tsconfig';
+
+/** Whether every file of the output is on disk with exactly these contents. */
+async function isWritten(
+  outputDirectory: string,
+  files: Iterable<{ path: string; contents: string }>,
+): Promise<boolean> {
+  for (const file of files) {
+    const onDisk = await readFile(join(outputDirectory, ...file.path.split('/')), 'utf8').catch(() => undefined);
+
+    if (onDisk !== file.contents) return false;
+  }
+
+  return true;
+}
+
+/** The app's unused messages, read from its types once `.figatellultimate/` is written. */
+function unusedMessagesOf(
+  config: FigatellultimateConfig,
+  directory: string,
+  outputDirectory: string,
+  model: MessagesModel,
+): { check: RunResultUnused; diagnostics: readonly MessageDiagnostic[] } {
+  const messages = config.messages;
+  const folder = join(directory, ...(messages?.directory ?? 'messages').split('/'));
+  const markers = messages?.schema === undefined ? [] : [join(folder, ...messages.schema.split('/'))];
+  const usage = scanKeyUsage({ directory, keys: referenceKeys(model), skip: [outputDirectory, folder], markers });
+
+  if (usage === undefined) return { check: 'no-tsconfig', diagnostics: [] };
+
+  return {
+    check: 'checked',
+    diagnostics: findUnusedMessages({
+      model,
+      defaultLocale: config.locales.default,
+      used: usage.used,
+      kept: usage.kept,
+      navigation: config.navigation ?? [],
+    }),
+  };
+}
+
 /**
  * One run: content (structure + delegated documents), then codegen and atomic writes when everything is valid.
  *
@@ -136,33 +192,45 @@ export async function runOnce(input: RunInput): Promise<RunResult> {
   const messageDiagnostics = messages?.diagnostics ?? [];
   const hasErrors = [...assembly.diagnostics, ...messageDiagnostics].some((d) => d.severity === 'error');
   const importsMapped = await hasImportsMapping(directory);
+  const outputDirectory = join(directory, ...(config.output ?? '.figatellultimate').split('/'));
+  const checksUnused = input.unused === true && messages !== undefined && !hasErrors;
 
   if (!write || hasErrors) {
+    // Nothing written: the app's types are the output on disk, read only when it is what this run would write.
+    const unused = checksUnused
+      ? (await isWritten(outputDirectory, emit({ config, assembly, outputDirectory, messages: messages.model })))
+        ? unusedMessagesOf(config, directory, outputDirectory, messages.model)
+        : { check: 'stale' as const, diagnostics: [] }
+      : undefined;
+
     return {
       assembly,
       directories,
-      messageDiagnostics,
+      messageDiagnostics: [...messageDiagnostics, ...(unused?.diagnostics ?? [])],
       hasErrors,
       importsMapped,
       durations: { content: contentDone - started, write: 0 },
+      unused: unused?.check,
     };
   }
 
   // Last checkpoint: a superseded run must not overwrite the output with a stale generation.
   signal?.throwIfAborted();
-  const outputDirectory = join(directory, ...(config.output ?? '.figatellultimate').split('/'));
   const committed = await createNodeFileWriter(outputDirectory).commit(
     emit({ config, assembly, outputDirectory, messages: messages?.model }),
   );
+  const unused =
+    checksUnused && committed.ok ? unusedMessagesOf(config, directory, outputDirectory, messages.model) : undefined;
 
   return {
     assembly,
     directories,
-    messageDiagnostics,
+    messageDiagnostics: [...messageDiagnostics, ...(unused?.diagnostics ?? [])],
     hasErrors,
     importsMapped,
     stats: committed.ok ? committed.value : undefined,
     writeError: committed.ok ? undefined : committed.errors[0].reason,
     durations: { content: contentDone - started, write: performance.now() - contentDone },
+    unused: unused?.check,
   };
 }
