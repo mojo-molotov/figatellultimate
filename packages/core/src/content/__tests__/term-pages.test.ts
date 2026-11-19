@@ -59,8 +59,29 @@ describe('termPagesOf', () => {
       locale: 'fr',
       route: '/authors/arnaud',
       url: '/authors/arnaud',
+      page: 1,
+      pages: 1,
+      first: '/authors/arnaud',
     });
     expect(Object.isFrozen(found)).toBe(true);
+  });
+
+  it('mounts a term page once per slice of its entries, by its page size, its first page at its own URL', () => {
+    const paged = {
+      authors: defineTaxonomy(['gustave', 'arnaud', 'nadia'], { pages: { base: 'authors', perPage: 1 } }),
+      tags,
+    };
+    const found = termPagesOf({ locales, collections, taxonomies: paged, entries: kept() });
+
+    // Two entries for each author in French (an entry naming both counts once for each), one for gustave in English.
+    expect(found.map((page) => `${page.url} ${String(page.page)}/${String(page.pages)} ${page.first}`)).toEqual([
+      '/authors/arnaud 1/2 /authors/arnaud',
+      '/authors/arnaud/page/2 2/2 /authors/arnaud',
+      '/authors/gustave 1/2 /authors/gustave',
+      '/authors/gustave/page/2 2/2 /authors/gustave',
+      '/en/authors/gustave 1/1 /en/authors/gustave',
+    ]);
+    expect(found[1]?.route).toBe('/authors/arnaud/page/2');
   });
 
   it('never mounts a term without an entry, nor through a reserved one, nor a taxonomy without pages', () => {
@@ -112,10 +133,20 @@ describe('defineTaxonomy: pages', () => {
     expect(tags.pages).toBeNull();
   });
 
+  it('keeps the page size, when declared', () => {
+    expect(defineTaxonomy(['gustave'], { pages: { base: 'authors', perPage: 10 } }).pages).toEqual({
+      base: 'authors',
+      perPage: 10,
+    });
+  });
+
   it.each<[string, unknown, readonly string[]]>([
     ['an invalid base', { base: 'Authors' }, ['gustave']],
     ['an empty base', { base: '' }, ['gustave']],
     ['a term that is not a URL segment', { base: 'authors' }, ['Gustave Eiffel']],
+    ['a page size of 0', { base: 'authors', perPage: 0 }, ['gustave']],
+    ['a fractional page size', { base: 'authors', perPage: 1.5 }, ['gustave']],
+    ['a page size that is not a number', { base: 'authors', perPage: '3' }, ['gustave']],
   ])('throws InvalidTaxonomyError on %s', (_, pagesOption, terms) => {
     expect(() =>
       // @ts-expect-error -- an untyped (JS or JSON) caller: validated at runtime.

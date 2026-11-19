@@ -312,6 +312,9 @@ const KB = 1024;
 // A subcategory's index: every post's item and card, the JSON its listing fetches on a filter or a sort.
 const indexFile = join(app, 'fr', 'listing', `${SUBCATEGORIES[0] ?? ''}.body`);
 const indexGzip = existsSync(indexFile) ? gzipSync(readFileSync(indexFile)).length : Infinity;
+// An author's index, the same for their posts.
+const authorIndexFile = join(app, 'fr', 'author-listing', 'igor.body');
+const authorIndexGzip = existsSync(authorIndexFile) ? gzipSync(readFileSync(authorIndexFile)).length : Infinity;
 const budgets: [string, number, number][] = [
   // [what, measured, at most]
   ['typecheck (s)', timings['typecheck (tsc)'] ?? Infinity, 10],
@@ -328,9 +331,10 @@ const budgets: [string, number, number][] = [
   ...(posts > 0
     ? [[`HTML gzip of a post (kB)`, (sizes.get(firstPost)?.htmlGzip ?? Infinity) / KB, 25] as [string, number, number]]
     : []),
-  // A subcategory's page carries its slice alone: its size holds whatever the count of posts. Its index, fetched on
-  // a filter or a sort, and an author's page (not paged: its own posts) grow by under a hundred bytes per post, never
-  // the whole blog. An author's base adds the long bio, and its facets span every subcategory (all the tags).
+  // A subcategory's page and an author's carry their slice alone: their size holds whatever the count of posts (an
+  // author's page once listed every post of theirs, megabytes of HTML). Their indexes, fetched on a filter or a sort,
+  // grow by under a hundred and twenty bytes per post, never the whole blog. An author's page adds the long bio, and
+  // its facets span every subcategory (all the tags).
   ...(posts === 0
     ? []
     : ([
@@ -344,10 +348,11 @@ const budgets: [string, number, number][] = [
           indexGzip / Math.max(1, listed(`/blog/${SUBCATEGORIES[0] ?? ''}`)),
           120,
         ],
+        ['HTML gzip of /authors/igor (kB)', (sizes.get('/authors/igor')?.htmlGzip ?? Infinity) / KB, 16],
         [
-          'HTML gzip per listed post on /authors/igor (bytes)',
-          ((sizes.get('/authors/igor')?.htmlGzip ?? Infinity) - 14 * KB) / Math.max(1, listed('/authors/igor')),
-          100,
+          'index gzip per listed post on /authors/igor (bytes)',
+          authorIndexGzip / Math.max(1, listed('/authors/igor')),
+          120,
         ],
       ] satisfies [string, number, number][])),
   // The post's page, its images and its own JavaScript: the cover alone weighs most of it.

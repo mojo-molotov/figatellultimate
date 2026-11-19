@@ -318,16 +318,17 @@ function folderItems(folders: readonly FolderPage[], seo: ReadonlyMap<string, Pa
   }));
 }
 
-/** Term pages as mounted URLs: their translations, their taxonomy's name, and the term as their key. */
+/** Term pages as mounted URLs, further pages included: their translations, their taxonomy's name, and the term as their key. */
 function termItems(terms: readonly TermPage[], seo: ReadonlyMap<string, PageSeo>): unknown[] {
   return terms.map((page) => ({
     kind: 'term',
     collection: page.taxonomy,
     url: page.url,
     locale: page.locale,
+    // The same page of the same term elsewhere: a further page's translations are that page.
     alternates: Object.fromEntries(
       terms
-        .filter((other) => other.taxonomy === page.taxonomy && other.term === page.term)
+        .filter((other) => other.taxonomy === page.taxonomy && other.route === page.route)
         .map((other) => [other.locale, other.url]),
     ),
     searchable: false,

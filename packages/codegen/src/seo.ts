@@ -82,7 +82,11 @@ export function pageSeo(
       term.entries.map((entry) => byUrl.get(entry.url)).flatMap((seo) => (seo?.indexed === true ? [seo.modified] : [])),
     );
 
-    if (modified !== undefined) pages.set(term.url, { modified, indexed: true });
+    if (modified === undefined) continue;
+
+    // Its further pages list the same entries: the same date.
+    for (const page of [term.url, ...term.slices.map((slice) => slice.url)])
+      pages.set(page, { modified, indexed: true });
   }
 
   return pages;

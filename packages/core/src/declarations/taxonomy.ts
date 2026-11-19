@@ -31,10 +31,15 @@ export interface Taxonomy<T extends string = string, D = unknown> {
   readonly content: string | null;
 }
 
-/** Where a taxonomy's term pages live. */
+/** Where a taxonomy's term pages live, and how many entries each page lists. */
 export interface TermPages {
   /** The URL segment before the term, e.g. `authors`. */
   readonly base: string;
+  /**
+   * Entries per page: a term with more is mounted once per slice, its first page at its own URL, the next ones at
+   * `…/page/2`, each prerendered with its slice only. Every entry on one page without it.
+   */
+  readonly perPage?: number;
 }
 
 function validate(terms: readonly string[]): void {
@@ -69,7 +74,7 @@ function frozenCopy(value: unknown): unknown {
 export interface TaxonomyOptions {
   /** Fields every term must have in every locale's messages. */
   readonly messages?: readonly string[];
-  /** A page per term: `{ base: 'authors' }` mounts `/authors/<term>`. */
+  /** A page per term: `{ base: 'authors' }` mounts `/authors/<term>`; `perPage` slices a term's entries. */
   readonly pages?: TermPages;
   /**
    * The unmounted collection (`mounted: false`) holding each term's content, its entries keyed by term: an
@@ -96,7 +101,15 @@ function validatePages(pages: unknown, terms: readonly string[]): TermPages | nu
     throw new InvalidTaxonomyError(`Taxonomy pages: every term must be a lowercase URL segment (${fixes}).`);
   }
 
-  return Object.freeze({ base });
+  const perPage: unknown = typeof pages === 'object' && pages !== null ? Reflect.get(pages, 'perPage') : undefined;
+
+  if (perPage === undefined) return Object.freeze({ base });
+
+  if (typeof perPage !== 'number' || !Number.isInteger(perPage) || perPage < 1) {
+    throw new InvalidTaxonomyError('Taxonomy pages: `perPage` must be a whole number, 1 or more, e.g. 10.');
+  }
+
+  return Object.freeze({ base, perPage });
 }
 
 /** The list form of a taxonomy: `Array.isArray` does not narrow a readonly array out of the union, a guard does. */
@@ -111,8 +124,8 @@ const isTermList = (input: readonly string[] | Readonly<Record<string, unknown>>
  *   collection holding each term's content (`content`).
  * @returns The frozen declaration; the caller's data is deep-copied, never frozen in place.
  * @throws {InvalidTaxonomyError} On an invalid declaration: no term, an empty term, a duplicate, invalid message
- *   fields, or, when the taxonomy has pages, an invalid base or a term that is not a valid URL segment; `content`
- *   without pages, or not a collection's name.
+ *   fields, or, when the taxonomy has pages, an invalid base, a term that is not a valid URL segment or a page size
+ *   that is not a whole number of 1 or more; `content` without pages, or not a collection's name.
  *
  * @example
  * defineTaxonomy(['guide', 'release'], { messages: ['label'] });

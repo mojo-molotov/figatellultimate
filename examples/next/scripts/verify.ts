@@ -14,10 +14,9 @@ import { navigationOf } from '#figatellultimate/navigation';
 
 import { blogIndex } from '#figatellultimate/blog';
 import { taxonomies } from '#figatellultimate/taxonomies';
+import { findAuthorsTermByUrl } from '#figatellultimate/terms';
 import { mountedUrls } from '#figatellultimate/urls';
 import { findBlogFolderByUrl } from '#figatellultimate/blog';
-
-import { PER_PAGE } from '../blog/facets.ts';
 
 const ORIGIN = 'https://example.com';
 const app = join(import.meta.dirname, '..', '.next', 'server', 'app');
@@ -418,43 +417,58 @@ for (const item of mountedUrls.filter(
   );
 }
 
-// Authors' pages: one per author in every locale where they wrote a post, and nowhere else;
-// the default view lists their newest posts; every card's author links their page in the card's locale.
+// Authors' pages: one per author in every locale where they wrote a post, and nowhere else, a page per slice of
+// their posts (`perPage`), each prerendered with its slice only (an author's page once held every post, megabytes);
+// every card's author links their page in the card's locale.
 const authorPages = mountedUrls.filter((item) => item.kind === 'term' && item.collection === 'authors');
 
 for (const author of taxonomies.authors.terms) {
   for (const locale of locales) {
-    const posts = blogIndex
-      .filter((item) => item.locale === locale && !item.reserved && item.terms.authors.includes(author))
-      .sort((a, b) => (a.url < b.url ? -1 : 1));
-    const page = authorPages.find((item) => item.key === author && item.locale === locale);
-
-    check((page !== undefined) === posts.length > 0, `${locale} ${author}: an author page iff they wrote a post`);
-
-    if (page === undefined) continue;
-
-    const html = htmlOf(page.url) ?? '';
-
-    check(html !== '', `${page.url}: not prerendered`);
-    // On their own page, the author is a plain name on the cards: no link to the page itself, no preview.
-    check(
-      !hrefsOf(html, 'entry-card-author').includes(page.url) &&
-        /<span data-slot="entry-card-author"(?![^>]*tabindex)/.test(html),
-      `${page.url}: the author is still a link or a preview on their own page`,
+    const posts = blogIndex.filter(
+      (item) => item.locale === locale && !item.reserved && item.terms.authors.includes(author),
     );
-    // The listing says how many posts it holds (not the selected tags' count): all of them in the default view.
-    const total = html.match(/data-slot="listing-total"[^>]*>([^<]+)</)?.[1] ?? '';
+    const pages = authorPages
+      .filter((item) => item.key === author && item.locale === locale)
+      .flatMap((item) => findAuthorsTermByUrl(item.url) ?? [])
+      .sort((a, b) => a.page - b.page);
+    const perPage = pages[0]?.perPage ?? posts.length;
+
+    check(pages.length > 0 === posts.length > 0, `${locale} ${author}: an author page iff they wrote a post`);
+
+    if (pages.length === 0) continue;
 
     check(
-      total.startsWith(`${String(posts.length)} `),
-      `${page.url}: the listing says "${total}", not ${String(posts.length)} posts`,
+      pages.length === Math.ceil(posts.length / perPage) && pages.every((page, index) => page.page === index + 1),
+      `${locale} ${author}: ${String(pages.length)} pages for ${String(posts.length)} posts, ${String(perPage)} a page`,
     );
-    const listed = hrefsOf(html, 'entry-card-link');
+    check(pages[0]?.url === pages[0]?.first, `${locale} ${author}: the first page is not at the author's URL`);
 
-    check(
-      listed.length === Math.min(PER_PAGE, posts.length) && listed.every((url) => posts.some((p) => p.url === url)),
-      `${page.url}: lists [${listed.join()}], not the author's posts`,
-    );
+    for (const page of pages) {
+      const html = htmlOf(page.url) ?? '';
+
+      check(html !== '', `${page.url}: not prerendered`);
+      // On their own page, the author is a plain name on the cards: no link to the page itself, no preview.
+      check(
+        !hrefsOf(html, 'entry-card-author').includes(page.first) &&
+          /<span data-slot="entry-card-author"(?![^>]*tabindex)/.test(html),
+        `${page.url}: the author is still a link or a preview on their own page`,
+      );
+      // The listing says how many posts it holds, every page of it, not its slice's.
+      const total = html.match(/data-slot="listing-total"[^>]*>([^<]+)</)?.[1] ?? '';
+
+      check(
+        total.startsWith(`${String(posts.length)} `),
+        `${page.url}: the listing says "${total}", not ${String(posts.length)} posts`,
+      );
+      // Its slice only: the posts of this page, never the others.
+      const slice = page.entries.slice((page.page - 1) * perPage, page.page * perPage).map((entry) => entry.item.url);
+      const listed = hrefsOf(html, 'entry-card-link');
+
+      check(
+        listed.length === slice.length && listed.every((url) => slice.includes(url)),
+        `${page.url}: lists [${listed.join()}], not its slice of the author's posts`,
+      );
+    }
   }
 }
 

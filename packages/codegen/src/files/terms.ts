@@ -3,6 +3,10 @@
  * indexes, and each term's own content when its taxonomy declares one (`content`: an entry of an unmounted
  * collection, keyed by term, in the page's locale). A module of its own: `#figatellultimate/taxonomies` stays pure data for
  * the client.
+ *
+ * Key design decision: a term's data is written once, on its first page; its further pages (`…/page/N`, by its
+ * taxonomy's `perPage`) are listed with their own URLs and translations, and found as the term with their number,
+ * every entry listed, the app slicing them: as a folder's. A page's translations are the same page elsewhere.
  */
 import type { Entry, FigatellultimateConfig, TermPage } from '@figatellultimate/core';
 import { VariableDeclarationKind, type Project } from 'ts-morph';
@@ -11,7 +15,7 @@ import { compareText, literal, pascal, type CollectionModel } from '../model.js'
 import { render, type GeneratedFile } from '../render.js';
 import { property, union } from './type-builders.js';
 
-/** One term page's data: its entries by collection and URL, newest first, resolved from the light indexes. */
+/** One term's data, on its first page: its entries by collection and URL, newest first, and its further pages. */
 export interface TermData {
   readonly url: string;
   readonly locale: string;
@@ -19,6 +23,16 @@ export interface TermData {
   readonly term: string;
   readonly alternates: Readonly<Record<string, string>>;
   readonly entries: readonly { readonly collection: string; readonly url: string }[];
+  /** How many pages the term has (1 without a page size). */
+  readonly pages: number;
+  /** Its taxonomy's page size, when it has one. */
+  readonly perPage?: number;
+  /** Its pages after the first: each one's URL, number and translations (a locale may have fewer pages). */
+  readonly slices: readonly {
+    readonly url: string;
+    readonly page: number;
+    readonly alternates: Readonly<Record<string, string>>;
+  }[];
 }
 
 /**
@@ -29,7 +43,7 @@ export interface TermData {
  * @param entries - The kept entries.
  * @param pages - The term pages (core's `termPagesOf`).
  * @param url - An entry's URL, by the project's strategy.
- * @returns Each term page with its translations and its entries, in order.
+ * @returns Each term's first page with its translations, its entries in order and its further pages.
  */
 export function termData(
   config: FigatellultimateConfig,
@@ -52,26 +66,43 @@ export function termData(
       ([field, name]) => name === taxonomy && (entry.terms[field] ?? []).includes(term),
     );
 
-  return pages.map((page) => ({
-    url: page.url,
-    locale: page.locale,
-    taxonomy: page.taxonomy,
-    term: page.term,
-    alternates: Object.fromEntries(
+  // A page's translations: the same page (route) of the same term elsewhere.
+  const alternatesOf = (page: TermPage): Readonly<Record<string, string>> =>
+    Object.fromEntries(
       pages
-        .filter((other) => other.taxonomy === page.taxonomy && other.term === page.term)
+        .filter((other) => other.taxonomy === page.taxonomy && other.route === page.route)
         .map((other) => [other.locale, other.url]),
-    ),
-    entries: entries
-      .filter(
-        (entry) =>
-          entry.descriptor.locale === page.locale &&
-          !entry.descriptor.reserved &&
-          references(entry, page.taxonomy, page.term),
-      )
-      .sort(newestFirst)
-      .map((entry) => ({ collection: entry.descriptor.collection, url: url(entry) })),
-  }));
+    );
+
+  return pages.flatMap((page): TermData[] => {
+    if (page.page > 1) return [];
+
+    const perPage = config.taxonomies?.[page.taxonomy]?.pages?.perPage;
+
+    return [
+      {
+        url: page.url,
+        locale: page.locale,
+        taxonomy: page.taxonomy,
+        term: page.term,
+        alternates: alternatesOf(page),
+        pages: page.pages,
+        ...(perPage === undefined ? {} : { perPage }),
+        slices: pages
+          .filter((slice) => slice.first === page.url && slice.page > 1)
+          .map((slice) => ({ url: slice.url, page: slice.page, alternates: alternatesOf(slice) })),
+        entries: entries
+          .filter(
+            (entry) =>
+              entry.descriptor.locale === page.locale &&
+              !entry.descriptor.reserved &&
+              references(entry, page.taxonomy, page.term),
+          )
+          .sort(newestFirst)
+          .map((entry) => ({ collection: entry.descriptor.collection, url: url(entry) })),
+      },
+    ];
+  });
 }
 
 /**
@@ -192,6 +223,10 @@ export function termsFile(
           property('term', `${prefix}Term`),
           property('alternates', 'Readonly<Partial<Record<Locale, string>>>'),
           property('entries', `readonly ${prefix}TermEntry[]`),
+          property('page', 'number'),
+          property('pages', 'number'),
+          property('first', 'string'),
+          property('perPage', 'number', true),
           ...(content === undefined
             ? []
             : [
@@ -204,7 +239,8 @@ export function termsFile(
               ]),
         ],
       });
-      const raw = `{ readonly url: string; readonly locale: Locale; readonly taxonomy: ${literal(name)}; readonly term: ${prefix}Term; readonly alternates: Readonly<Partial<Record<Locale, string>>>; readonly entries: readonly { readonly collection: ${mine.map((model) => literal(model.name)).join(' | ') || 'never'}; readonly url: string }[] }`;
+      const raw = `{ readonly url: string; readonly locale: Locale; readonly taxonomy: ${literal(name)}; readonly term: ${prefix}Term; readonly alternates: Readonly<Partial<Record<Locale, string>>>; readonly entries: readonly { readonly collection: ${mine.map((model) => literal(model.name)).join(' | ') || 'never'}; readonly url: string }[]; readonly pages: number; readonly perPage?: number }`;
+      const mineData = data.filter((page) => page.taxonomy === name);
 
       file.addVariableStatement({
         declarationKind: VariableDeclarationKind.Const,
@@ -212,7 +248,30 @@ export function termsFile(
           {
             name: `${name}TermData`,
             type: `ReadonlyMap<string, ${raw}>`,
-            initializer: `new Map(${literal(data.filter((page) => page.taxonomy === name).map((page) => [page.url, page]))})`,
+            // Each term's data once, its further pages in the slices.
+            initializer: `new Map(${literal(
+              mineData.map((page) => [
+                page.url,
+                Object.fromEntries(Object.entries(page).filter(([field]) => field !== 'slices')),
+              ]),
+            )})`,
+          },
+        ],
+      });
+      file.addVariableStatement({
+        declarationKind: VariableDeclarationKind.Const,
+        declarations: [
+          {
+            name: `${name}TermSlices`,
+            type: 'ReadonlyMap<string, { readonly first: string; readonly page: number; readonly alternates: Readonly<Partial<Record<Locale, string>>> }>',
+            initializer: `new Map(${literal(
+              mineData.flatMap((page) =>
+                page.slices.map((slice) => [
+                  slice.url,
+                  { first: page.url, page: slice.page, alternates: slice.alternates },
+                ]),
+              ),
+            )})`,
           },
         ],
       });
@@ -222,11 +281,7 @@ export function termsFile(
           {
             name: `${name}TermUrls`,
             type: 'ReadonlyMap<string, string>',
-            initializer: `new Map(${literal(
-              data
-                .filter((page) => page.taxonomy === name)
-                .map((page) => [`${page.locale}\u0000${page.term}`, page.url]),
-            )})`,
+            initializer: `new Map(${literal(mineData.map((page) => [`${page.locale}\u0000${page.term}`, page.url]))})`,
           },
         ],
       });
@@ -246,12 +301,18 @@ export function termsFile(
       file.addFunction({
         name: `find${prefix}TermByUrl`,
         isExported: true,
-        docs: [`The ${name} term page at a URL, as the build produced it, or \`undefined\`.`],
+        docs: [
+          `The ${name} term page at a URL, as the build produced it, or \`undefined\`: a further page (\`…/page/N\`) is its term with its own URL, number and translations, every entry listed (the app shows its slice).`,
+        ],
         parameters: [{ name: 'url', type: 'string' }],
         returnType: `${prefix}TermPage | undefined`,
         statements: (writer) => {
-          writer.writeLine(`const data = ${name}TermData.get(url);`);
+          writer.writeLine(`const slice = ${name}TermSlices.get(url);`);
+          writer.writeLine(`const data = ${name}TermData.get(slice?.first ?? url);`);
           writer.writeLine('if (data === undefined) return undefined;');
+          writer.writeLine(
+            'const page = slice === undefined ? { url: data.url, page: 1, first: data.url, alternates: data.alternates } : { url, page: slice.page, first: slice.first, alternates: slice.alternates };',
+          );
           writer.writeLine(`// Entry URLs come from this build's indexes: each one is found.`);
           writer.writeLine(`const entries = data.entries.flatMap((entry): ${prefix}TermEntry[] => {`);
           writer.writeLine('  switch (entry.collection) {');
@@ -269,10 +330,10 @@ export function termsFile(
 
           writer.writeLine('});');
 
-          if (content === undefined) writer.writeLine('return { ...data, entries };');
+          if (content === undefined) writer.writeLine('return { ...data, ...page, entries };');
           else
             writer.writeLine(
-              `return { ...data, entries, content: ${content.name}ByTerm.get(\`\${data.locale}\\u0000\${data.term}\`) };`,
+              `return { ...data, ...page, entries, content: ${content.name}ByTerm.get(\`\${data.locale}\\u0000\${data.term}\`) };`,
             );
         },
       });

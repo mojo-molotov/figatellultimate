@@ -58,7 +58,8 @@ const config = defineConfig({
   taxonomies: {
     authors: defineTaxonomy(
       { gustave: { avatar: '/g.svg' }, arnaud: { avatar: '/a.svg' } },
-      { pages: { base: 'authors' }, content: 'authorBios' },
+      // One post a page: gustave and arnaud have two pages in French.
+      { pages: { base: 'authors', perPage: 1 }, content: 'authorBios' },
     ),
     tags: defineTaxonomy(['bot']),
   },
@@ -88,6 +89,10 @@ const Found = v.optional(
         term: v.string(),
         alternates: v.record(v.string(), v.string()),
         entries: v.array(v.looseObject({ collection: v.string(), item: Item })),
+        page: v.number(),
+        pages: v.number(),
+        first: v.string(),
+        perPage: v.optional(v.number()),
         content: v.optional(v.looseObject({ key: v.string(), locale: v.string() })),
       }),
     ),
@@ -155,7 +160,9 @@ describe('generated term pages, run', () => {
 
     expect(terms.map((item) => item.url).sort()).toEqual([
       '/authors/arnaud',
+      '/authors/arnaud/page/2',
       '/authors/gustave',
+      '/authors/gustave/page/2',
       '/en/authors/gustave',
     ]);
     expect(terms.find((item) => item.url === '/authors/gustave')).toEqual({
@@ -186,6 +193,27 @@ describe('generated term pages, run', () => {
     expect(gustave?.term?.entries.map((entry) => entry.item.url)).toEqual(['/en/blog/news/a']);
     expect(await urls.findByUrl('/authors/nobody')).toBeUndefined();
     expect(await urls.findByUrl('/en/authors/arnaud')).toBeUndefined();
+  });
+
+  it("finds a term's further page: the term with its page's number and URL, every entry listed (the app slices)", async () => {
+    const second = await urls.findByUrl('/authors/gustave/page/2');
+
+    expect(second?.term).toMatchObject({
+      url: '/authors/gustave/page/2',
+      term: 'gustave',
+      page: 2,
+      pages: 2,
+      first: '/authors/gustave',
+      perPage: 1,
+      // A page's translations are the same page elsewhere: English has one page only.
+      alternates: { fr: '/authors/gustave/page/2' },
+    });
+    expect(second?.term?.entries.map((entry) => entry.item.url)).toEqual(['/blog/news/b', '/blog/news/a']);
+    expect((await urls.findByUrl('/authors/gustave'))?.term).toMatchObject({ page: 1, pages: 2 });
+    expect(await urls.findByUrl('/authors/gustave/page/3')).toBeUndefined();
+    expect(urls.mountedUrls.find((item) => item.url === '/authors/gustave/page/2')?.alternates).toEqual({
+      fr: '/authors/gustave/page/2',
+    });
   });
 
   it("gives a term's page its own content in its locale, nothing where it has none, and never mounts it", async () => {

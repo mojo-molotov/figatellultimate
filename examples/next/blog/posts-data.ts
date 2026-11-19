@@ -74,3 +74,7 @@ export const itemsOf = (posts: readonly BlogPost[]): PostItem[] =>
 /** The URL of a listing's index: every post's item and card, fetched on the first filter or sort. */
 export const indexUrlOf = (folder: BlogFolder): string =>
   urlOf(folder.locale, ['listing', ...Object.values(folder.segments)]);
+
+/** The URL of an author's index: every post of theirs, as a subcategory's (`app/[locale]/author-listing`). */
+export const authorIndexUrlOf = (page: { readonly locale: Locale; readonly term: string }): string =>
+  urlOf(page.locale, ['author-listing', page.term]);

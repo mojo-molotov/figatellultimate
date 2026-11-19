@@ -8,7 +8,7 @@ import type { AuthorsTermPage } from '#figatellultimate/terms';
 import { Body } from '../components/mdx';
 import { SiteHeader } from '../components/site-header';
 import { cardsOf } from './folder-page';
-import { itemsOf, postsOf } from './posts-data';
+import { authorIndexUrlOf, itemsOf, postsOf } from './posts-data';
 import { Listing } from './listing';
 import { listingLabels } from './listing-labels';
 
@@ -21,14 +21,19 @@ export async function authorName(page: AuthorsTermPage): Promise<string> {
 
 /**
  * An author's page, rendered from figatellultimate's neutral data: their avatar (taxonomy data), name and short bio
- * (messages), their long bio when written in this locale (MDX, the term's `content`), then every post they wrote in this locale with the subcategory page's listing (tags, sorts, pagination,
- * the state in the URL); the authors facet left out, the author being the page's.
+ * (messages), their long bio when written in this locale (MDX, the term's `content`), then the posts they wrote in
+ * this locale with the subcategory page's listing (tags, sorts, the state in the URL), one page at a time: each page
+ * (`/authors/igor/page/N`) prerendered with its slice only, a filter or a sort fetching the author's index. The
+ * authors facet left out, the author being the page's.
  */
 export async function AuthorPage({ page }: { readonly page: AuthorsTermPage }): Promise<ReactNode> {
   const { locale, term } = page;
   const t = await getTranslations({ locale });
   const name = await authorName(page);
-  const posts = await postsOf(page.entries.map((entry) => entry.item));
+  const perPage = page.perPage ?? page.entries.length;
+  // The page's posts only: the others are their own pages, or the index for a filter.
+  const slice = page.entries.slice((page.page - 1) * perPage, page.page * perPage);
+  const posts = await postsOf(slice.map((entry) => entry.item));
   const items = itemsOf(posts);
   const cards = await cardsOf(posts, locale, term);
   const bio = await page.content?.load();
@@ -49,7 +54,21 @@ export async function AuthorPage({ page }: { readonly page: AuthorsTermPage }): 
             <Body code={bio.data.mdx} />
           </section>
         )}
-        <Listing labels={await listingLabels(locale)} items={items} locale={locale} cards={cards} facets={['tags']} />
+        <Listing
+          labels={await listingLabels(locale)}
+          items={items}
+          locale={locale}
+          cards={cards}
+          facets={['tags']}
+          paged={{
+            page: page.page,
+            pages: page.pages,
+            total: page.entries.length,
+            perPage,
+            first: page.first,
+            index: authorIndexUrlOf(page),
+          }}
+        />
       </main>
     </>
   );

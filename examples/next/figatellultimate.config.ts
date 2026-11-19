@@ -122,10 +122,11 @@ export default defineConfig({
       { messages: ['label'] },
     ),
     // Authors carry data (pure data, never components) and a name and a short bio per locale; each has a page listing
-    // their posts, in every locale where they wrote one, with their long bio when it is written (`authorBios`).
+    // their posts, in every locale where they wrote one, with their long bio when it is written (`authorBios`),
+    // ten posts a page (`/authors/igor/page/2`), each page prerendered with its slice only.
     authors: defineTaxonomy(
       { igor: { avatar: '/authors/igor.jpeg' }, napoleon: { avatar: '/authors/napoleon.jpeg' } },
-      { messages: ['name', 'bio'], pages: { base: 'authors' }, content: 'authorBios' },
+      { messages: ['name', 'bio'], pages: { base: 'authors', perPage: 10 }, content: 'authorBios' },
     ),
   },
   // The navbar, generated from the content: pages and one level of folders, then the blog's categories and
