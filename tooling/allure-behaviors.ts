@@ -18,11 +18,19 @@
  *       `e2e` (the built command line in real processes, the watch lab). A package's own layer applies to its scenario
  *       tests; a type test is always `unit`, a `.tsx` test always `component`, and the families running real
  *       processes or browsers set theirs.
+ *     - The pyramid is the product's, read across every package: with ports and adapters, a package sits in one layer
+ *       (the core is pure, an adapter drives its tool), so a package alone would be one level; the mix of packages is
+ *       the shape. Each package's own tests stay a filter away (its feature). Rejected: a layer per test, which only
+ *       the test could tell (an annotation in each, or a file-name convention).
+ *     - The repository's own checks (typography of every content file, workspace and boundary rules, documentation)
+ *       are `checks`, outside the pyramid: they test the repository, not the product, and one per content file once
+ *       doubled the integration layer.
  *     - Severity per package: `critical` for the pipeline every site depends on (core, codegen, the command line),
  *       `normal` otherwise. Rejected: a severity on each test, which nothing could deduce.
  *
- * Invariants (`__tests__/allure.test.ts`): the table covers every workspace package and names no other; the layer,
- * story, severity and tags of each kind of test.
+ * Invariants (`__tests__/allure.test.ts`): the table covers every workspace package and names no other; every package
+ * is in a layer of the pyramid, the repository's checks alone outside it; the layer, story, severity and tags of each
+ * kind of test.
  *
  * Limitation: no tag tells a fast-check property from an example test of the same file: only the test's code knows.
  */
@@ -39,8 +47,8 @@ export interface Behavior {
   readonly epic: string;
   /** Allure's severities used here. */
   readonly severity: 'critical' | 'normal';
-  /** A layer of the testing pyramid. */
-  readonly layer: (typeof LAYERS)[number];
+  /** A layer of the testing pyramid, or `checks`: the repository's own, which the pyramid does not draw. */
+  readonly layer: (typeof LAYERS)[number] | 'checks';
 }
 
 const CONTENT = 'Content model';
@@ -72,7 +80,7 @@ export const BEHAVIORS = {
   ui: { epic: DESIGN, severity: 'normal', layer: 'component' },
   effects: { epic: DESIGN, severity: 'normal', layer: 'component' },
   themes: { epic: DESIGN, severity: 'normal', layer: 'integration' },
-  tooling: { epic: 'Repository checks', severity: 'normal', layer: 'integration' },
+  tooling: { epic: 'Repository checks', severity: 'normal', layer: 'checks' },
 } as const satisfies Readonly<Record<string, Behavior>>;
 
 /** An Allure label. */

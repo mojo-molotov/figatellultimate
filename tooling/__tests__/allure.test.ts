@@ -25,6 +25,14 @@ describe('the behaviors table', () => {
     expect(Object.keys(BEHAVIORS).sort()).toEqual([...folders, 'tooling'].sort());
   });
 
+  it("puts every package in a layer of the pyramid, and only the repository's own checks outside it", () => {
+    const outside = Object.entries(BEHAVIORS)
+      .filter(([, behavior]) => !LAYERS.some((layer) => layer === behavior.layer))
+      .map(([folder]) => folder);
+
+    expect(outside).toEqual(['tooling']);
+  });
+
   it('names each feature after its package: every npm name is the scope and the folder', () => {
     for (const pkg of discoverPackages(ROOT)) expect(pkg.name).toBe(`@figatellultimate/${pkg.dir.split('/')[1] ?? ''}`);
   });
@@ -122,7 +130,7 @@ describe('labelsOf', () => {
       { family: 'scenarios', file: 'tooling/__tests__/docs.test.ts', describe: 'module headers' },
       {
         epic: 'Repository checks',
-        layer: 'integration',
+        layer: 'checks',
         severity: 'normal',
         story: 'module headers',
         tags: ['scenarios'],
