@@ -521,8 +521,11 @@
   font-family: var(--fig-font);
 }
 
-[data-slot='entry-card']:has([data-slot='entry-card-link']:hover) {
-  border-color: var(--fig-accent);
+/* Hover effects with a mouse or a trackpad only: a touch screen's tap would leave them stuck on the card it opened. */
+@media (hover: hover) and (pointer: fine) {
+  [data-slot='entry-card']:has([data-slot='entry-card-link']:hover) {
+    border-color: var(--fig-accent);
+  }
 }
 
 [data-slot='entry-card-media'] {
@@ -553,10 +556,16 @@
   }
 }
 
-/* The image zooms in while hovered, and while the card's title link has the keyboard's focus; the frame clips it. */
-[data-slot='entry-card-media']:hover [data-slot='entry-card-image'],
+/* The image zooms in while hovered (with a mouse or a trackpad), and while the card's title link has the keyboard's
+   focus; the frame clips it. */
 [data-slot='entry-card']:has([data-slot='entry-card-link']:focus-visible) [data-slot='entry-card-image'] {
   transform: scale(1.08);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-slot='entry-card-media']:hover [data-slot='entry-card-image'] {
+    transform: scale(1.08);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -594,9 +603,11 @@
   text-decoration: none;
 }
 
-[data-slot='entry-card-link']:hover {
-  color: var(--fig-accent);
-  text-decoration: underline;
+@media (hover: hover) and (pointer: fine) {
+  [data-slot='entry-card-link']:hover {
+    color: var(--fig-accent);
+    text-decoration: underline;
+  }
 }
 
 [data-slot='entry-card-date'] {
@@ -730,8 +741,10 @@ a[data-slot='entry-card-author'] {
   cursor: pointer;
 }
 
-a[data-slot='entry-card-author']:hover {
-  background: var(--fig-border);
+@media (hover: hover) and (pointer: fine) {
+  a[data-slot='entry-card-author']:hover {
+    background: var(--fig-border);
+  }
 }
 
 [data-slot='entry-card-avatar'],

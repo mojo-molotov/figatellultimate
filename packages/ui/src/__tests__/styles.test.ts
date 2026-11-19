@@ -4,6 +4,12 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+/** The stylesheet, comments removed (a selector named in a comment is no rule). */
+const SOURCE_NO_COMMENTS = readFileSync(join(import.meta.dirname, '..', 'styles.css'), 'utf8').replace(
+  /\/\*[\s\S]*?\*\//g,
+  '',
+);
+
 const CSS = readFileSync(join(import.meta.dirname, '..', 'styles.css'), 'utf8');
 
 /** The tokens declared in the rule whose selector is `selector`. */
@@ -157,11 +163,13 @@ describe('styles.css', () => {
     expect(motion.slice(0, motion.indexOf('@keyframes fig-theme-rise'))).not.toMatch(/animation: /);
   });
 
-  it("zooms a card's image on hover and on its title's keyboard focus, never with reduced motion", () => {
-    const zoom =
-      /\[data-slot='entry-card-media'\]:hover \[data-slot='entry-card-image'\],\s*\[data-slot='entry-card'\]:has\(\[data-slot='entry-card-link'\]:focus-visible\) \[data-slot='entry-card-image'\] \{\s*transform: scale\(1\.08\);/;
-
-    expect(CSS).toMatch(zoom);
+  it("zooms a card's image on its title's keyboard focus, and on hover with a mouse only, never with reduced motion", () => {
+    expect(CSS).toMatch(
+      /\[data-slot='entry-card'\]:has\(\[data-slot='entry-card-link'\]:focus-visible\) \[data-slot='entry-card-image'\] \{\s*transform: scale\(1\.08\);/,
+    );
+    expect(CSS).toMatch(
+      /@media \(hover: hover\) and \(pointer: fine\) \{\s*\[data-slot='entry-card-media'\]:hover \[data-slot='entry-card-image'\] \{\s*transform: scale\(1\.08\);/,
+    );
     const reduced = CSS.slice(
       CSS.indexOf('@media (prefers-reduced-motion: reduce)', CSS.indexOf("[data-slot='entry-card-image']")),
     );
@@ -179,6 +187,21 @@ describe('styles.css', () => {
     expect(propertiesOf("[data-slot='toc-panel']")['background']).toBeUndefined();
     // Precondition: the panel is the one that scrolls.
     expect(propertiesOf("[data-slot='toc-panel']")['overflow-y']).toBe('auto');
+  });
+
+  it("keeps a card's hover effects to a mouse or a trackpad: a touch screen's tap would leave them stuck", () => {
+    // Outside the fine pointers' blocks (and the reduced motion's, which only cancels the zoom), no card hovered.
+    const rest = SOURCE_NO_COMMENTS.replace(
+      /@media \((?:hover: hover\) and \(pointer: fine|prefers-reduced-motion: reduce)\) \{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g,
+      '',
+    );
+    const hovered = [...rest.matchAll(/([^{}]+)\{/g)]
+      .map(([, selector]) => (selector ?? '').trim())
+      .filter((selector) => selector.includes(':hover') && /entry-card|collector/.test(selector));
+
+    // Precondition: the stylesheet does have card hover effects, in their block.
+    expect(SOURCE_NO_COMMENTS).toMatch(/@media \(hover: hover\) and \(pointer: fine\) \{[^@]*:hover/);
+    expect(hovered).toEqual([]);
   });
 
   it("sets the navbar's extras at the end of the toggle's line on a narrow screen, the toggle at its start", () => {

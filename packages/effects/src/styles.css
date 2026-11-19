@@ -117,23 +117,23 @@
     linear-gradient(#000000 0 0);
 }
 
-/* Hovered anywhere: half lit; its card's link (title or image) hovered or focused: fully lit. */
-[data-slot='collector']:hover::before,
-[data-slot='collector']:hover::after {
-  opacity: 0.5;
+/* Its card's link focused from the keyboard: fully lit. With a mouse or a trackpad only, hovered anywhere: half lit,
+   its card's link (title or image) hovered: fully lit; a touch screen's tap would leave the light stuck. */
+[data-slot='collector']:has([data-slot='entry-card-link']:focus-visible)::before,
+[data-slot='collector']:has([data-slot='entry-card-link']:focus-visible)::after {
+  opacity: 1;
 }
 
-[data-slot='collector']:has(
-    [data-slot='entry-card-link']:hover,
-    [data-slot='entry-card-media']:hover,
-    [data-slot='entry-card-link']:focus-visible
-  )::before,
-[data-slot='collector']:has(
-    [data-slot='entry-card-link']:hover,
-    [data-slot='entry-card-media']:hover,
-    [data-slot='entry-card-link']:focus-visible
-  )::after {
-  opacity: 1;
+@media (hover: hover) and (pointer: fine) {
+  [data-slot='collector']:hover::before,
+  [data-slot='collector']:hover::after {
+    opacity: 0.5;
+  }
+
+  [data-slot='collector']:has([data-slot='entry-card-link']:hover, [data-slot='entry-card-media']:hover)::before,
+  [data-slot='collector']:has([data-slot='entry-card-link']:hover, [data-slot='entry-card-media']:hover)::after {
+    opacity: 1;
+  }
 }
 
 /* Reduced motion: the whole rim lit at once, following nothing. */

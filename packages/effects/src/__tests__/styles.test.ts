@@ -4,6 +4,12 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+/** The stylesheet, comments removed (a selector named in a comment is no rule). */
+const SOURCE_NO_COMMENTS = readFileSync(join(import.meta.dirname, '..', 'styles.css'), 'utf8').replace(
+  /\/\*[\s\S]*?\*\//g,
+  '',
+);
+
 const CSS = readFileSync(join(import.meta.dirname, '..', 'styles.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 
 /** Every rule's selector and body, whitespace collapsed. */
@@ -47,6 +53,21 @@ describe('styles.css', () => {
 
     for (const { selector, body } of layers) expect(body, selector).toContain('pointer-events: none');
   });
+  it("keeps a card's hover effects to a mouse or a trackpad: a touch screen's tap would leave them stuck", () => {
+    // Outside the fine pointers' blocks (and the reduced motion's, which only cancels the zoom), no card hovered.
+    const rest = SOURCE_NO_COMMENTS.replace(
+      /@media \((?:hover: hover\) and \(pointer: fine|prefers-reduced-motion: reduce)\) \{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g,
+      '',
+    );
+    const hovered = [...rest.matchAll(/([^{}]+)\{/g)]
+      .map(([, selector]) => (selector ?? '').trim())
+      .filter((selector) => selector.includes(':hover') && /entry-card|collector/.test(selector));
+
+    // Precondition: the stylesheet does have card hover effects, in their block.
+    expect(SOURCE_NO_COMMENTS).toMatch(/@media \(hover: hover\) and \(pointer: fine\) \{[^@]*:hover/);
+    expect(hovered).toEqual([]);
+  });
+
   it('fades the backdrop in only for those who accept motion', () => {
     const animated = rules.filter(
       ({ selector, body }) => selector.includes("[data-slot='backdrop-image']") && body.includes('animation:'),

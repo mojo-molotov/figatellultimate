@@ -176,6 +176,21 @@ try {
 
     await phone.goto(`${base}${LISTING}`, { waitUntil: 'networkidle' });
 
+    // A card's hover effects with a mouse only: on a phone, a tap (a hover) zooms no image and lights no rim.
+    await phone.goto(`${base}/blog`, { waitUntil: 'networkidle' });
+    await phone.locator('[data-slot="entry-card-media"]').first().hover();
+    await phone.waitForTimeout(500);
+    const [zoom, rim] = await phone.evaluate(() => [
+      getComputedStyle(document.querySelector('[data-slot="entry-card-image"]') ?? document.body).transform,
+      getComputedStyle(document.querySelector('[data-slot="collector"]') ?? document.body, '::after').opacity,
+    ]);
+
+    check(
+      (zoom !== 'none') === revealed && (rim !== '0') === revealed,
+      `/blog on ${device}: a hovered card's zoom is ${zoom}, its rim's opacity ${rim}`,
+    );
+    await phone.goto(`${base}${LISTING}`, { waitUntil: 'networkidle' });
+
     // On a phone, an author's many pages fit one line (no sibling around the current page), and an ellipsis's menu
     // lists the siblings hidden beside it: `1 … 10 … 21`, the first menu reaching 9.
     if (!revealed) {
@@ -282,6 +297,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the button under the mouse, the page taller or shorter; a filter in the URL, or chosen early, is applied; the page select reaches its page; the chosen theme shown before hydration; the pagination on one line on a phone; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
+    '✓ previous and next keep the button under the mouse, the page taller or shorter; a filter in the URL, or chosen early, is applied; the page select reaches its page; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
   );
 }
