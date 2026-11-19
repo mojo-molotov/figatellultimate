@@ -14,7 +14,7 @@ export const schema = {
     toc: { title: _ },
     code: { copy: _, copied: _, tabs: _ },
     image: { open: _, close: _ },
-    card: { tags: _, authors: _ },
+    card: { tags: _, authors: _, more: _ },
     navbar: { nav: _, menu: _ },
     locales: { language: _ },
     theme: { dark: _, site: _, maquis: _, paper: _ },

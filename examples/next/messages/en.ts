@@ -215,7 +215,7 @@ const ui = {
   toc: { title: 'On this page' },
   code: { copy: 'Copy the code', copied: 'Code copied', tabs: 'Package manager' },
   image: { open: 'Enlarge the image: {alt}', close: 'Close the image' },
-  card: { tags: 'Tags', authors: 'Authors' },
+  card: { tags: 'Tags', authors: 'Authors', more: 'More tags' },
   navbar: { nav: 'Main navigation', menu: 'Menu' },
   locales: { language: 'Language:' },
   theme: { dark: 'Dark theme', site: 'Site theme', maquis: 'Maquis', paper: 'Paper' },

@@ -123,7 +123,7 @@ export async function BlogFolderPage({ folder }: { readonly folder: BlogFolder }
                     {...(description === undefined ? {} : { description: t(description) })}
                     {...(subfolder.image === undefined ? {} : { image: subfolder.image })}
                     locale={locale}
-                    labels={{ tags: t('ui.card.tags'), authors: t('ui.card.authors') }}
+                    labels={{ tags: t('ui.card.tags'), authors: t('ui.card.authors'), more: t('ui.card.more') }}
                   />
                 </Collector>
               </li>

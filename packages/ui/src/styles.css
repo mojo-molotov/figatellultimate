@@ -625,17 +625,75 @@
   list-style: none;
 }
 
-/* In a card, the tags on one row: those that do not fit fade out at its end (every tag is on the entry's own page,
-   whose footer lists them all). */
+/* In a card, the tags on one row: before it is measured (prerendered), those that do not fit fade out at its end. */
 [data-slot='entry-card'] [data-slot='entry-card-tags'] {
   flex-wrap: nowrap;
   overflow: hidden;
   mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
 }
 
-:dir(rtl) [data-slot='entry-card'] [data-slot='entry-card-tags'],
-[dir='rtl'] [data-slot='entry-card'] [data-slot='entry-card-tags'] {
+:dir(rtl) [data-slot='entry-card'] [data-slot='entry-card-tags']:not([data-measured]),
+[dir='rtl'] [data-slot='entry-card'] [data-slot='entry-card-tags']:not([data-measured]) {
   mask-image: linear-gradient(to left, #000 calc(100% - 2rem), transparent);
+}
+
+/* Measured (`EntryCardTags`): the tags that fit whole, then the « +N » pill; no fade, no tag cut. Past the room, a
+   tag moves after the pill, invisible, so that its width is still measured. */
+[data-slot='entry-card'] [data-slot='entry-card-tags'][data-measured] {
+  mask-image: none;
+}
+
+[data-slot='entry-card'] [data-slot='entry-card-tags'] > [data-slot='entry-card-tag'][data-hidden] {
+  order: 2;
+  visibility: hidden;
+}
+
+[data-slot='entry-card-tags-more'] {
+  flex: none;
+  order: 1;
+}
+
+[data-slot='entry-card-tags-more'][data-hidden] {
+  visibility: hidden;
+}
+
+[data-slot='entry-card-tags-more-trigger'],
+[data-slot='entry-card-tags-more'] > span {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--fig-surface);
+  color: var(--fig-muted);
+  font: inherit;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+[data-slot='entry-card-tags-more-trigger'] {
+  cursor: pointer;
+}
+
+/* The hidden tags, in a popover above the page, as pills. */
+[data-slot='entry-card-tags-more-content'] {
+  z-index: 50;
+  max-width: 16rem;
+  padding: var(--fig-space);
+  border: 1px solid var(--fig-border);
+  border-radius: var(--fig-radius);
+  background: var(--fig-bg);
+  color: var(--fig-fg);
+  font-family: var(--fig-font);
+  box-shadow: var(--fig-shadow);
+}
+
+[data-slot='entry-card-tags-more-list'] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--fig-space) / 2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 [data-slot='entry-card-tag'] {

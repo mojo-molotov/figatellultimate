@@ -25,7 +25,7 @@ export async function cardDataOf(
   currentAuthor?: string,
 ): Promise<Record<string, CardData>> {
   const t = await getTranslations({ locale });
-  const labels = { tags: t('ui.card.tags'), authors: t('ui.card.authors') };
+  const labels = { tags: t('ui.card.tags'), authors: t('ui.card.authors'), more: t('ui.card.more') };
 
   return Object.fromEntries(
     posts.map((post): [string, CardData] => {

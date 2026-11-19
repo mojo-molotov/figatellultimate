@@ -20,7 +20,7 @@ function renderAll(provided: boolean): void {
         title="«Un billet»"
         image="/covers/post.jpeg"
         locale="fr"
-        labels={{ tags: '«Tags»', authors: '«Auteurs»' }}
+        labels={{ tags: '«Tags»', authors: '«Auteurs»', more: '«Autres tags»' }}
       />
       <EntryCardAuthor author={{ key: 'gustave', name: '«Gustave»', avatar: '/authors/gustave.jpeg' }} />
       <ImageZoom

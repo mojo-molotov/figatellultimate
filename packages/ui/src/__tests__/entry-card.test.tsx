@@ -23,7 +23,7 @@ function renderCard(locale = 'fr') {
           { key: 'gustave', name: '«Gustave»', avatar: '/authors/gustave.svg', bio: '«Écrit le bot.»' },
           { key: 'arnaud', name: '«Arnaud»' },
         ]}
-        labels={{ tags: '«Tags»', authors: '«Auteurs»' }}
+        labels={{ tags: '«Tags»', authors: '«Auteurs»', more: '«Autres tags»' }}
       />
     </main>,
   );
@@ -87,7 +87,7 @@ describe('EntryCard', () => {
             { key: 'gustave', name: '«Gustave»', bio: '«Écrit le bot.»', href: '/authors/gustave' },
             { key: 'arnaud', name: '«Arnaud»', href: '/authors/arnaud' },
           ]}
-          labels={{ tags: '«Tags»', authors: '«Auteurs»' }}
+          labels={{ tags: '«Tags»', authors: '«Auteurs»', more: '«Autres tags»' }}
         />
       </main>,
     );
@@ -114,7 +114,9 @@ describe('EntryCard', () => {
       if (text !== '') texts.push(text);
     }
 
-    // Every text is the app's data, or the date the locale formats.
-    expect(texts.filter((text) => !/^«[^«»]*»$/.test(text) && text !== '12 novembre 2026')).toEqual([]);
+    // Every text is the app's data, or what the locale formats: the date, and the tags pill's count (`+2`).
+    expect(
+      texts.filter((text) => !/^«[^«»]*»$/.test(text) && text !== '12 novembre 2026' && !/^\+\d+$/.test(text)),
+    ).toEqual([]);
   });
 });

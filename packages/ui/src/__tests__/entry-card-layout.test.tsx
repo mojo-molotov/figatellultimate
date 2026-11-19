@@ -2,7 +2,8 @@
 // The stylesheet's cascade: only a real browser computes it (`pnpm test:browser`).
 import '../styles.css';
 
-import { cleanup, render } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { userEvent } from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { EntryCard } from '../index.js';
@@ -16,6 +17,58 @@ afterEach(() => {
 });
 
 describe('EntryCard, styled', () => {
+  const TAGS = ['Kalimba', 'Violoncelle', 'Balalaïka', 'Clarinette', 'Hautbois'].map((label) => ({
+    key: label.toLowerCase(),
+    label,
+  }));
+  const tagsCard = (width: string) => (
+    <div style={{ width }}>
+      <EntryCard
+        href="/blog/a"
+        title="«Un article»"
+        image={IMAGE}
+        locale="fr"
+        tags={TAGS}
+        labels={{ tags: '«Tags»', authors: '«Auteurs»', more: '«Autres tags»' }}
+      />
+    </div>
+  );
+
+  it.skipIf(!inBrowser)('shows the tags that fit whole, then a « +N » pill opening the others', async () => {
+    render(tagsCard('520px'));
+    const row = screen.getByRole('list', { name: '«Tags»' });
+    const pill = await screen.findByRole('button', { name: '«Autres tags»' });
+    const room = row.getBoundingClientRect();
+    const shown = [...row.querySelectorAll(':scope > [data-slot="entry-card-tag"]:not([data-hidden])')];
+
+    // Precondition: some tags fit, some do not, so both sides are checked.
+    expect(shown.length).toBeGreaterThan(0);
+    expect(shown.length).toBeLessThan(TAGS.length);
+
+    for (const tag of [...shown, pill]) expect(tag.getBoundingClientRect().right).toBeLessThanOrEqual(room.right + 0.5);
+
+    expect(pill.textContent).toBe(`+${String(TAGS.length - shown.length)}`);
+    await userEvent.setup().click(pill);
+    const popover = await screen.findByRole('dialog', { name: '«Autres tags»' });
+
+    expect(popover.textContent).toBe(
+      TAGS.slice(shown.length)
+        .map((tag) => tag.label)
+        .join(''),
+    );
+  });
+
+  it.skipIf(!inBrowser)('shows every tag, and no pill, when they all fit', async () => {
+    render(tagsCard('1200px'));
+    const row = screen.getByRole('list', { name: '«Tags»' });
+
+    await waitFor(() => {
+      expect(row.hasAttribute('data-measured')).toBe(true);
+    });
+    expect(row.querySelectorAll('[data-hidden]').length).toBe(1);
+    expect(screen.queryByRole('button', { name: '«Autres tags»' })).toBeNull();
+  });
+
   it.skipIf(!inBrowser)("animates its image's zoom: no generic transition replaces it", () => {
     render(
       <EntryCard
@@ -23,7 +76,7 @@ describe('EntryCard, styled', () => {
         title="«Un article»"
         image={IMAGE}
         locale="fr"
-        labels={{ tags: '«Tags»', authors: '«Auteurs»' }}
+        labels={{ tags: '«Tags»', authors: '«Auteurs»', more: '«Autres tags»' }}
       />,
     );
     const image = document.querySelector('[data-slot="entry-card-image"]');
@@ -62,7 +115,7 @@ describe('EntryCard, styled', () => {
               tags={card.tags}
               image={IMAGE}
               locale="fr"
-              labels={{ tags: '«Tags»', authors: '«Auteurs»' }}
+              labels={{ tags: '«Tags»', authors: '«Auteurs»', more: '«Autres tags»' }}
             />
           ))}
         </div>,

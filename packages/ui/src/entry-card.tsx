@@ -1,6 +1,7 @@
 /**
  * The entry card: a preview of any entry, generic over collections (no blog-specific field). A server component:
- * only its author preview (`EntryCardAuthor`) ships to the browser.
+ * only its author preview (`EntryCardAuthor`) and its tags' row (`EntryCardTags`, which measures what fits) ship
+ * to the browser.
  *
  * Invariants (`entry-card.test.tsx` and `entry-card-layout.test.tsx` in real browsers): the title links the entry,
  * the date in the locale, the lists named by the labels, the author preview on hover and focus, axe.
@@ -9,18 +10,17 @@ import type { ComponentProps, ReactNode } from 'react';
 
 import { EntryCardAuthor, type EntryAuthor } from './entry-card-author.js';
 import { Image } from './image.js';
+import { EntryCardTags, type EntryTag } from './entry-card-tags.js';
 import { Link } from './link.js';
 
-/** A tag: a taxonomy term and its translated label. */
-export interface EntryTag {
-  readonly key: string;
-  readonly label: string;
-}
+export type { EntryTag } from './entry-card-tags.js';
 
-/** The card's own texts: the lists' accessible names. */
+/** The card's own texts: the lists' accessible names, and the pill's gathering the tags that do not fit. */
 export interface EntryCardLabels {
   readonly tags: string;
   readonly authors: string;
+  /** The « +N » pill's name, and its popover's: e.g. `'More tags'`. */
+  readonly more: string;
 }
 
 /** The card's props: an `<article>`'s, plus the entry's fields, the locale and the labels. */
@@ -57,7 +57,7 @@ function dateOf(value: string): Date | undefined {
  * @example
  * <EntryCard href={post.url} title={post.title} image={post.cover} date={post.date} locale="fr"
  *   tags={[{ key: 'release', label: 'Version' }]} authors={[{ key: 'gustave', name: 'Gustave', href: '/authors/gustave' }]}
- *   labels={{ tags: 'Tags', authors: 'Auteurs' }} />
+ *   labels={{ tags: 'Tags', authors: 'Auteurs', more: 'Autres tags' }} />
  */
 export function EntryCard({
   href,
@@ -105,15 +105,7 @@ export function EntryCard({
           </time>
         )}
         {description === undefined ? null : <p data-slot="entry-card-description">{description}</p>}
-        {tags.length === 0 ? null : (
-          <ul data-slot="entry-card-tags" aria-label={labels.tags}>
-            {tags.map((tag) => (
-              <li key={tag.key} data-slot="entry-card-tag" data-tag={tag.key}>
-                {tag.label}
-              </li>
-            ))}
-          </ul>
-        )}
+        {tags.length === 0 ? null : <EntryCardTags tags={tags} labels={labels} locale={locale} />}
         {authors.length === 0 ? null : (
           <ul data-slot="entry-card-authors" aria-label={labels.authors}>
             {authors.map((author) => (

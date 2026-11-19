@@ -372,10 +372,27 @@ main[data-folder='category'] [data-slot='listing-cards'] {
   gap: var(--fig-space);
 }
 
-/* On a narrow screen, still side by side: a smaller image leaves the text its room. */
+/* On a narrow screen, still side by side: a smaller image leaves the text its room. An author with an avatar shows
+   it alone, their name kept for screen readers and in their hover card: the tags get the room, the rest behind the
+   « +N » pill. */
 @media (max-width: 36rem) {
   main[data-folder='category'] [data-slot='entry-card'] {
     grid-template-columns: 5.5rem 1fr;
+  }
+
+  main[data-folder='category'] [data-slot='entry-card-author']:has([data-slot='entry-card-avatar']) {
+    padding-inline: 0.2rem;
+  }
+
+  main[data-folder='category']
+    [data-slot='entry-card-author']:has([data-slot='entry-card-avatar'])
+    [data-slot='entry-card-author-label'] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }
 

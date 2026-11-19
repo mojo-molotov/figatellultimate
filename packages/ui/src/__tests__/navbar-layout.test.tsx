@@ -131,7 +131,7 @@ describe('Navbar layout with styles.css', () => {
           description="Une description."
           image="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='630'/%3E"
           locale="fr"
-          labels={{ tags: 'Tags', authors: 'Auteurs' }}
+          labels={{ tags: 'Tags', authors: 'Auteurs', more: 'Autres tags' }}
         />,
       );
       const media = document.querySelector('[data-slot="entry-card-media"]')?.getBoundingClientRect();
@@ -157,7 +157,7 @@ describe('Navbar layout with styles.css', () => {
           locale="fr"
           tags={[{ key: 'a', label: 'A' }]}
           authors={[{ key: 'g', name: 'Gustave' }]}
-          labels={{ tags: 'Tags', authors: 'Auteurs' }}
+          labels={{ tags: 'Tags', authors: 'Auteurs', more: 'Autres tags' }}
         />
       </div>,
     );

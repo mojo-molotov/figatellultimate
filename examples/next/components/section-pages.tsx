@@ -32,7 +32,7 @@ export async function SectionPages({
   const pages = await Promise.all(
     section.children.map(async (node) => (node.kind === 'entry' ? findPageByUrl(node.url) : undefined)),
   );
-  const labels = { tags: t('ui.card.tags'), authors: t('ui.card.authors') };
+  const labels = { tags: t('ui.card.tags'), authors: t('ui.card.authors'), more: t('ui.card.more') };
 
   return (
     <ul data-slot="folder-list">

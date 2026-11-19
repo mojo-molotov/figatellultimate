@@ -42,7 +42,7 @@ function renderAll(provided: boolean) {
         image="/cover.svg"
         locale="fr"
         authors={[{ key: 'gustave', name: '«Gustave»', href: '/authors/gustave' }]}
-        labels={{ tags: '«Tags»', authors: '«Auteurs»' }}
+        labels={{ tags: '«Tags»', authors: '«Auteurs»', more: '«Autres tags»' }}
       />
       <LocaleSwitcher
         links={[

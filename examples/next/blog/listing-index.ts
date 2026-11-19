@@ -26,7 +26,7 @@ const Card = v.object({
   locale: v.string(),
   tags: v.array(Term),
   authors: v.array(Author),
-  labels: v.object({ tags: v.string(), authors: v.string() }),
+  labels: v.object({ tags: v.string(), authors: v.string(), more: v.string() }),
 });
 const Index = v.object({
   items: v.array(

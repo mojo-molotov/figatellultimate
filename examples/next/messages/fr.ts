@@ -205,7 +205,7 @@ const ui = {
   toc: { title: 'Sur cette page' },
   code: { copy: 'Copier le code', copied: 'Code copié', tabs: 'Gestionnaire de paquets' },
   image: { open: 'Agrandir l’image : {alt}', close: 'Fermer l’image' },
-  card: { tags: 'Tags', authors: 'Auteurs' },
+  card: { tags: 'Tags', authors: 'Auteurs', more: 'Autres tags' },
   navbar: { nav: 'Navigation principale', menu: 'Menu' },
   locales: { language: 'Langue :' },
   theme: { dark: 'Thème sombre', site: 'Thème du site', maquis: 'Maquis', paper: 'Papier' },

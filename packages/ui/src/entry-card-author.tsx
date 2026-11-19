@@ -43,12 +43,12 @@ export function EntryCardAuthor({ author }: { readonly author: EntryAuthor }): R
     author.href === undefined ? (
       <span data-slot="entry-card-author" {...(author.bio === undefined ? {} : { tabIndex: 0 })}>
         {avatar}
-        {author.name}
+        <span data-slot="entry-card-author-label">{author.name}</span>
       </span>
     ) : (
       <Link href={author.href} data-slot="entry-card-author">
         {avatar}
-        {author.name}
+        <span data-slot="entry-card-author-label">{author.name}</span>
       </Link>
     );
 
