@@ -190,6 +190,20 @@ try {
       });
 
       check(lines === 1, `/authors/igor/page/10 on ${device}: its pagination wraps onto ${String(lines)} lines`);
+      // At the end of the line: its last item on the list's own end.
+      const [listEnd, lastEnd] = await pagination.evaluate((nav) => {
+        const content = nav.querySelector('[data-slot="pagination-content"]');
+        const shown = [...nav.querySelectorAll('[data-slot="pagination-item"]')].filter(
+          (item) => getComputedStyle(item).display !== 'none',
+        );
+
+        return [content?.getBoundingClientRect().right ?? 0, shown.at(-1)?.getBoundingClientRect().right ?? -1];
+      });
+
+      check(
+        Math.abs(listEnd - lastEnd) < 1,
+        `/authors/igor/page/10 on ${device}: its pagination is not at the line's end`,
+      );
       await pagination.getByRole('button').first().tap();
       check(
         (await phone.getByRole('menuitem', { name: 'Page 9' }).count()) === 1,

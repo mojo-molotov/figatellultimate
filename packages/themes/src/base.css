@@ -276,6 +276,14 @@ main:is([data-listing], [data-folder]) {
   list-style: none;
 }
 
+/* A listing's pagination, below its cards (an author's page, a subcategory): on a narrow screen, at the end of the
+   line, under the thumb, as a folder's beside its heading. */
+@media (max-width: 36rem) {
+  [data-slot='listing-cards'] ~ [data-slot='pagination'] [data-slot='pagination-content'] {
+    justify-content: flex-end;
+  }
+}
+
 header > [data-slot='breadcrumb'] {
   max-width: 48rem;
   margin: calc(var(--fig-space) * 2) auto 0;

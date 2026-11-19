@@ -131,6 +131,17 @@ describe('base.css', () => {
     expect(motion.slice(0, motion.indexOf('@keyframes fig-blur-away'))).not.toMatch(/animation: /);
   });
 
+  it("sets a listing's pagination, below its cards, at the end of the line on a narrow screen", () => {
+    const narrow = mediaOf(source)
+      .filter(({ condition }) => condition === '(max-width: 36rem)')
+      .map(({ body }) => body.replace(/\s+/g, ' '))
+      .join(' ');
+
+    expect(narrow).toContain(
+      "[data-slot='listing-cards'] ~ [data-slot='pagination'] [data-slot='pagination-content'] { justify-content: flex-end; }",
+    );
+  });
+
   it('reveals the footer on a desktop only: on a touch screen, it scrolls in as any content', () => {
     const touch = mediaOf(source).find(({ condition }) => condition === '(hover: none), (pointer: coarse)');
 
