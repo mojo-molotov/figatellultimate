@@ -164,7 +164,7 @@ describe('content-derived messages, end to end', () => {
     expect(code).toBe(EXIT.ok);
     expect(await project.exists('.figatellultimate/messages/index.js')).toBe(true);
     expect(typecheck()).toEqual([]);
-  }, 60_000);
+  });
 
   it('adding a folder makes check report it in every locale, and the typecheck fail once rebuilt', async () => {
     await project.create('content/blog/tutorials/getting-started/first.mdx', '---\ntitle: First\n---\nFirst.\n');
@@ -178,7 +178,7 @@ describe('content-derived messages, end to end', () => {
     // The build keeps the last valid state; the types still describe the previous content.
     expect((await run('build')).code).toBe(EXIT.content);
     expect(typecheck()).toEqual([]);
-  }, 60_000);
+  });
 
   it('translating it in every locale makes the build and the typecheck pass again', async () => {
     const categories = { 'patch-notes': ['bot'], tutorials: ['getting-started'] };
@@ -190,7 +190,7 @@ describe('content-derived messages, end to end', () => {
     expect(code).toBe(EXIT.ok);
     expect(await project.contents('.figatellultimate/messages/types.d.ts')).toContain('"tutorials"');
     expect(typecheck()).toEqual([]);
-  }, 60_000);
+  });
 
   it('a translation missing in one locale fails the typecheck of that locale only', async () => {
     // English forgets the new category: check reports it, and the English module no longer satisfies Messages.
@@ -200,7 +200,7 @@ describe('content-derived messages, end to end', () => {
     expect(checked.output).toContain('messages/en.ts');
     expect(checked.output).not.toContain('messages/fr.ts');
     expect(typecheck().join('\n')).toMatch(/en\.ts.*"tutorials"' is missing/);
-  }, 60_000);
+  });
 
   it('translates through the use-intl adapter at runtime, with the generated messages', async () => {
     const { createTranslator } = await import('@figatellultimate/use-intl');
@@ -241,5 +241,5 @@ console.log(JSON.stringify({ url: post.url, title: post.data.title, label: local
       label: 'Français',
       posts: '2 posts',
     });
-  }, 60_000);
+  });
 });

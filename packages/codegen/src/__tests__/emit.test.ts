@@ -303,5 +303,5 @@ export async function app(): Promise<void> {
       .map((d) => ts.flattenDiagnosticMessageText(d.compilerObject.messageText, ' '));
 
     expect(diagnostics).toEqual([]);
-  }, 120_000);
+  });
 });

@@ -119,7 +119,7 @@ describe('figatellultimate migrate, end to end', () => {
     expect(output).toContain('--write');
     expect(await tree()).toEqual(before);
     expect(output).not.toContain(project.basePath);
-  }, 60_000);
+  });
 
   it('--write moves everything, edits the config, writes redirects.json; back again gives the same tree', async () => {
     const original = await tree();
@@ -158,7 +158,7 @@ describe('figatellultimate migrate, end to end', () => {
     expect(table).toContainEqual({ from: '/fr/docs/setup', to: '/docs/setup' });
     expect(table).not.toContainEqual(expect.objectContaining({ from: '/docs/setup' }));
     expect(table).not.toContainEqual(expect.objectContaining({ from: '/about' }));
-  }, 120_000);
+  });
 
   it('implicit → explicit → implicit gives the same tree, with no redirect', async () => {
     const original = await tree();
@@ -177,7 +177,7 @@ describe('figatellultimate migrate, end to end', () => {
       FIGATELLULTIMATE_CONFIG.replace("default: 'fr'", "default: 'fr', notation: 'implicit'"),
     );
     expect(withoutConfig(restored)).toEqual(withoutConfig(original));
-  }, 120_000);
+  });
 
   it('points out the app’s route folders named after a locale, without touching them', async () => {
     await project.create('app/en/page.tsx', 'export default function Page() { return null; }\n');
@@ -187,7 +187,7 @@ describe('figatellultimate migrate, end to end', () => {
     expect(output).toContain('app/en');
     expect(output).toContain('assume which locale is unprefixed');
     await project.remove('app');
-  }, 60_000);
+  });
 
   it('refuses a redirects.json that is not a list of { from, to }, writing nothing', async () => {
     await project.create('redirects.json', '{"not": "a list"}');
@@ -198,7 +198,7 @@ describe('figatellultimate migrate, end to end', () => {
     expect(output).toContain('redirects.json is not a list');
     expect(await tree()).toEqual(before);
     await project.remove('redirects.json');
-  }, 60_000);
+  });
 
   it('refuses content with errors, and an undeclared locale, without touching anything', async () => {
     const before = await tree();
@@ -213,5 +213,5 @@ describe('figatellultimate migrate, end to end', () => {
     expect(broken.output).toContain('nothing moved');
     await project.remove('content/pages/Bad.mdx');
     expect(await tree()).toEqual(before);
-  }, 60_000);
+  });
 });

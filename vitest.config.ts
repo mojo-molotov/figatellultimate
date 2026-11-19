@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { defineConfig, type TestProjectConfiguration, type ViteUserConfig } from 'vitest/config';
 
 import { allureReporter } from './tooling/allure.ts';
+import { TEST_TIMEOUTS } from './tooling/timeouts.ts';
 
 /** The repository's root: every path below resolves from here, wherever vitest runs (the root, or a package). */
 const ROOT = import.meta.dirname;
@@ -30,6 +31,7 @@ const config: ViteUserConfig = defineConfig({
   ssr: { resolve: { conditions: ['@figatellultimate/source', 'node'] } },
   test: {
     reporters: ['default', allureReporter('scenarios')],
+    ...TEST_TIMEOUTS,
     setupFiles: [join(ROOT, 'tooling', 'fast-check.setup.ts')],
     include: ['**/*.test.{ts,tsx}'],
     // `*.lab.test.ts`: the watch lab, run by `pnpm test:lab` only; `*.cli.test.ts`: the built CLI, `pnpm test:cli`.

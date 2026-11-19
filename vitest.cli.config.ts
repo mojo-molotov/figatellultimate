@@ -1,6 +1,7 @@
 import { defineConfig, type ViteUserConfig } from 'vitest/config';
 
 import { allureReporter } from './tooling/allure.ts';
+import { TEST_TIMEOUTS } from './tooling/timeouts.ts';
 
 // The command line's surface: the built binary in real processes (`*.cli.test.ts`), run by `pnpm test:cli` after
 // `pnpm build`, and in CI right after the build.
@@ -11,8 +12,7 @@ const config: ViteUserConfig = defineConfig({
     reporters: ['default', allureReporter('cli')],
     include: ['packages/*/src/**/__tests__/**/*.cli.test.ts'],
     exclude: ['**/node_modules/**', '**/dist/**', '**/.tmp/**'],
-    testTimeout: 60_000,
-    hookTimeout: 60_000,
+    ...TEST_TIMEOUTS,
   },
 });
 

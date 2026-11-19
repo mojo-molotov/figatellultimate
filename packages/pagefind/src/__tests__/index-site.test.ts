@@ -54,7 +54,7 @@ describe('indexSite, with the real Pagefind', () => {
       .filter((path) => path.includes('filter'));
 
     expect(filters.length).toBeGreaterThan(0);
-  }, 60_000);
+  });
 
   it('every bundle is complete once it returns, the last locale too: Pagefind, closed once done, never cuts a write short', async () => {
     // Pagefind once answered before its last files reached the disk, and closing it then left them empty
@@ -88,7 +88,7 @@ describe('indexSite, with the real Pagefind', () => {
         expect(entry).toHaveProperty(['languages', locale]);
       }
     }
-  }, 120_000);
+  });
 
   it('reports a page without data-pagefind-body instead of indexing its navigation (the safety net of static generation)', async () => {
     const result = await indexSite({
@@ -105,7 +105,7 @@ describe('indexSite, with the real Pagefind', () => {
       ['empty-search-content', '/empty'],
     ]);
     expect(result.locales['fr']?.pages).toBe(1);
-  }, 60_000);
+  });
 });
 
 describe('indexableText', () => {

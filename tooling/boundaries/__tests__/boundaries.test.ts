@@ -65,7 +65,7 @@ function eslintRuleIds(file: string): string[] {
 
 beforeAll(async () => {
   [eslintRules, cruiseResult] = await Promise.all([lintFixtures(), cruiseFixtures()]);
-}, 60_000);
+});
 
 describe('boundary rules (negative fixtures)', () => {
   it('reports nothing on the control fixture', () => {

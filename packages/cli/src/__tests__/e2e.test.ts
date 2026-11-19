@@ -115,7 +115,7 @@ describe('figatellultimate build, end to end', () => {
     expect(await project.exists('.figatellultimate/pages/entries/en/lp/sign-up.js')).toBe(true);
     // Entry modules have no declaration: an app's typecheck never reaches them.
     expect(await project.exists('.figatellultimate/pages/entries/en/lp/sign-up.d.ts')).toBe(false);
-  }, 60_000);
+  });
 
   it('generates precise getters, typed with the user’s schema', () => {
     const app = `
@@ -138,7 +138,7 @@ export async function rejected(): Promise<void> {
 `;
 
     expect(typecheck(app)).toEqual([]);
-  }, 60_000);
+  });
 
   it('an aborted run never writes: a stale generation cannot overwrite a newer one (watch)', async () => {
     await project.create('content/pages/new-page.mdx', '---\ntitle: New\n---\nNew.\n');
@@ -164,7 +164,7 @@ export async function rejected(): Promise<void> {
     } finally {
       await project.remove('content/pages/new-page.mdx');
     }
-  }, 60_000);
+  });
 
   it('a build removes a header-marked generated file it does not produce', async () => {
     // A module carrying the generated header, at a path the build does not produce (it emits `.js`).
@@ -177,7 +177,7 @@ export async function rejected(): Promise<void> {
     expect(code).toBe(EXIT.ok);
     expect(await project.exists('.figatellultimate/pages/index.ts')).toBe(false);
     expect(await project.exists('.figatellultimate/pages/index.js')).toBe(true);
-  }, 60_000);
+  });
 
   it('never writes an absolute path into the generated modules', async () => {
     const generated = await project.readDir('.figatellultimate');

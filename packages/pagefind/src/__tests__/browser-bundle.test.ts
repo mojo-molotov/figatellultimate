@@ -53,7 +53,7 @@ beforeAll(async () => {
   });
 
   expect(result.problems).toEqual([]);
-}, 60_000);
+});
 afterAll(async () => {
   globalThis.fetch = realFetch;
   await folder.cleanup();
@@ -110,7 +110,7 @@ describe('sorted results', () => {
     });
 
     expect(result.problems).toEqual([]);
-  }, 60_000);
+  });
   afterAll(() => sorted.cleanup());
 
   it('by title, case and accents aside: Écrire between abaque and Zèbre', async () => {

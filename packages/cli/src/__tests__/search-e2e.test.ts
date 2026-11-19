@@ -127,7 +127,7 @@ describe('figatellultimate search, end to end', () => {
     expect(await entryOf('en')).toHaveProperty(['languages', 'en']);
     expect(await entryOf('en')).not.toHaveProperty(['languages', 'fr']);
     expect((await readdir(join(project.basePath, 'public', 'pagefind'))).sort()).toEqual(['en', 'fr']);
-  }, 60_000);
+  });
 
   it('--locale-folders reads every locale from its own folder, the default one included (next-intl)', async () => {
     const LOCALIZED: Readonly<Record<string, string>> = {
@@ -155,7 +155,7 @@ describe('figatellultimate search, end to end', () => {
 
     expect(plain.code).toBe(EXIT.content);
     expect(plain.output).toContain('/docs/guide (localized/docs/guide.html) missing-built-page');
-  }, 60_000);
+  });
 
   it('fails when a mounted entry was not built statically, without an absolute path', async () => {
     await project.remove(`site/${builtFileOf('/en/docs/guide')}`);
@@ -166,7 +166,7 @@ describe('figatellultimate search, end to end', () => {
     expect(output).toContain('build the site statically first');
     expect(output).not.toContain(project.basePath);
     expect(output).not.toContain(encodeURIComponent(project.basePath));
-  }, 60_000);
+  });
 
   it('fails when an entry has no data-pagefind-body element, with advice', async () => {
     await project.create(
@@ -178,5 +178,5 @@ describe('figatellultimate search, end to end', () => {
     expect(code).toBe(EXIT.content);
     expect(output).toContain('/docs/guide (site/docs/guide.html) empty-search-content');
     expect(output).toContain('data-pagefind-body');
-  }, 60_000);
+  });
 });

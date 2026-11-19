@@ -214,7 +214,7 @@ describe('createContentCollectionsSource: watch', () => {
       await watcher?.stop();
       await project.remove('content/blog/cat/sub/new.mdx');
     }
-  }, 20_000);
+  });
 });
 
 describe('withFigatellultimate', () => {
