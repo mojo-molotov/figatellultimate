@@ -41,12 +41,14 @@ const config: ViteUserConfig = defineConfig({
       include: ['**/*.test-d.{ts,tsx}'],
     },
     // `pnpm test:coverage`: branches included, on the pure code only. Adapters and components are covered by
-    // other families (the CLI's surface, real browsers, the example's build), types and ports have no runtime logic.
+    // other families (the CLI's surface, real browsers, the example's build), ports have no runtime logic. Entry
+    // points are measured: some hold a whole package (`toc`, `search`), and one that only re-exports has nothing to
+    // measure (checked by `tooling/__tests__/coverage-config.test.ts`).
     // A report, never a threshold: a number to read, not a target to game.
     coverage: {
       provider: 'v8',
       include: ['packages/{core,facets,site,toc,messages,codegen,search}/src/**'],
-      exclude: ['**/__tests__/**', '**/index.ts', '**/ports.ts'],
+      exclude: ['**/__tests__/**', '**/ports.ts'],
       // `json-summary`: read by `tooling/coverage-summary.ts` for the CI job's summary.
       reporter: ['text-summary', 'html', 'lcov', 'json-summary'],
     },
