@@ -16,9 +16,11 @@ import { blogIndex } from '#figatellultimate/blog';
 import { taxonomies } from '#figatellultimate/taxonomies';
 import { findAuthorsTermByUrl } from '#figatellultimate/terms';
 import { mountedUrls } from '#figatellultimate/urls';
+
+import { site } from '../site.ts';
 import { findBlogFolderByUrl } from '#figatellultimate/blog';
 
-const ORIGIN = 'https://example.com';
+const ORIGIN = site.origin;
 const app = join(import.meta.dirname, '..', '.next', 'server', 'app');
 const problems: string[] = [];
 const check = (condition: boolean, problem: string): void => {
@@ -163,7 +165,10 @@ check(
   keysOf(second).every((key) => !keysOf(french).includes(key)),
   '/blog/empire/decrees/page/2: a card of the first page',
 );
-check(/<title>Décrets impériaux</.test(second), "/blog/empire/decrees/page/2: not its folder's title alone");
+check(
+  second.includes(`<title>Décrets impériaux · ${site.name ?? ''}</title>`),
+  "/blog/empire/decrees/page/2: not its folder's title, then the site's name",
+);
 check(
   second.includes(`aria-label="Page 2 sur ${String(last)}, page actuelle"`),
   '/blog/empire/decrees/page/2: not marked as page 2',

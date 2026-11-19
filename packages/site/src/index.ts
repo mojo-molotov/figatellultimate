@@ -19,10 +19,16 @@
  *     - `x-default` is the default locale's URL, and only when that translation exists; alternates list existing
  *       translations only (never `x-default` looked up in the current locale).
  *     - Frontmatter fields are read through the names a collection declares, never hard-coded per collection.
+ *     - The title carries the site's name (`Blog · Site`, `Site.titleTemplate`), so that a tab, a bookmark or a
+ *       search result says where it comes from; the home page of each locale is the name alone, which its own title
+ *       would only repeat, and so is an untitled page. Open Graph keeps the page's own title: the name is its
+ *       `site_name`. Rejected: leaving it to each framework's template (Next's `title.template`), which every app
+ *       would rewrite and which misses the other frameworks.
  *
  * Invariants:
  *     - Frozen results, nothing mutated, the same input gives equal output (`site.test.ts`).
  *     - `x-default` and alternates as above (`site.test.ts`).
+ *     - The title as above (`site.test.ts`).
  *     - Each URL gives one params object (`site.test.ts`).
  *     - The locale switcher never links a URL that is not mounted (`locale-links.test.ts`).
  *     - Breadcrumbs and sections as documented on each function (`breadcrumb.test.ts`, `section.test.ts`).
@@ -30,6 +36,8 @@
  *
  * Limitations:
  *     - Open Graph `locale` is the declared locale code (`en`), not a region form (`en_US`).
+ *     - A home page is recognized by its URL, `/` or `/<locale>`: a site mounting its home elsewhere gets the
+ *       ordinary `title · name`.
  */
 import type {
   EntryMetadata,
@@ -59,13 +67,25 @@ export type {
 
 type Mutable<T> = { -readonly [K in keyof T]: T[K] };
 
+/** The page's title with the site's name: the name alone on a locale's home page or an untitled page. */
+function titleOf(title: string | undefined, entry: SiteEntry, site: Site): string | undefined {
+  const { name } = site;
+
+  if (name === undefined) return title;
+
+  if (title === undefined || entry.url === '/' || entry.url === `/${entry.locale}`) return name;
+
+  return (site.titleTemplate ?? `%s · ${name}`).replaceAll('%s', title);
+}
+
 /**
  * The metadata of an entry, framework-free: canonical, translations, `x-default`, robots and Open Graph.
  *
  * @param entry - A generated entry: its URL, locale, translations and frontmatter data.
  * @param fields - The frontmatter fields its collection declares (generated `metadataFields[collection]`).
  * @param site - The site's origin, name and default locale.
- * @returns Frozen metadata with absolute URLs: the canonical (the declared one when the entry has one, else its own
+ * @returns Frozen metadata with absolute URLs: the title followed by the site's name (the name alone on a locale's
+ *   home page), the canonical (the declared one when the entry has one, else its own
  *   URL, unprefixed for the default locale), the existing translations, `x-default` only when the default locale's
  *   translation exists, and Open Graph (an article's dates and tags when the collection's type is `article`).
  *
@@ -116,7 +136,9 @@ export function metadataOf(entry: SiteEntryWithData, fields: MetadataFields, sit
     openGraph: Object.freeze(openGraph),
   };
 
-  if (title !== undefined) metadata.title = title;
+  const titled = titleOf(title, entry, site);
+
+  if (titled !== undefined) metadata.title = titled;
 
   if (description !== undefined) metadata.description = description;
 

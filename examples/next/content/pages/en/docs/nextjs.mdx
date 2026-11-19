@@ -66,7 +66,7 @@ export async function generateMetadata(props) {
 }
 ```
 
-`site` holds the origin and the name of the site: `{ origin: 'https://example.com', name: 'My site', defaultLocale: 'en' }`.
+`site` holds the origin and the name of the site: `{ origin: 'https://example.com', name: 'My site', defaultLocale: 'en' }`. The name follows every page's title (`Blog · My site`), and each locale's home page bears the name alone; `titleTemplate` changes its form, `%s` standing for the title (`'%s | My site'`).
 
 ## Sitemap and robots
 

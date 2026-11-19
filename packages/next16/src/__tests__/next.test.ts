@@ -20,7 +20,7 @@ describe('toNextMetadata (Next 16.4)', () => {
 
     expectTypeOf(metadata).toEqualTypeOf<Metadata>();
     expect(metadata).toEqual({
-      title: 'The bot speaks',
+      title: 'The bot speaks · RTM',
       alternates: {
         canonical: 'https://example.com/en/blog/patch-notes/bot/post-02',
         languages: {

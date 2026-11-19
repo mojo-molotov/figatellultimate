@@ -10,8 +10,13 @@
 export interface Site {
   /** E.g. `'https://example.com'`, without a trailing slash (one is tolerated). */
   readonly origin: string;
-  /** Open Graph `site_name`. */
+  /** Open Graph `site_name`, and what follows every page's title (see `titleTemplate`). */
   readonly name?: string | undefined;
+  /**
+   * How a page's title carries the site's name, `%s` standing for the page's title: `'%s · <name>'` by default.
+   * Without a name, a page's title stays alone.
+   */
+  readonly titleTemplate?: string | undefined;
   readonly defaultLocale: string;
 }
 

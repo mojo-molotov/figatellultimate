@@ -29,7 +29,7 @@ const english: SiteEntryWithData = {
 describe('metadataOf', () => {
   it('builds canonical, alternates, x-default and Open Graph from the declared fields, as absolute URLs', () => {
     expect(metadataOf(english, fields, site)).toEqual({
-      title: 'The bot speaks',
+      title: 'The bot speaks · RTM',
       description: 'What changed',
       canonical: 'https://example.com/en/blog/patch-notes/bot/post-02',
       alternates: {
@@ -90,6 +90,8 @@ describe('metadataOf', () => {
     };
 
     expect(metadataOf(page, { image: 'featuredPictureUrl' }, site)).toEqual({
+      // Untitled: the site's name alone.
+      title: 'RTM',
       canonical: 'https://example.com/about',
       alternates: { fr: 'https://example.com/about' },
       xDefault: 'https://example.com/about',
@@ -102,6 +104,36 @@ describe('metadataOf', () => {
         images: ['https://cdn.example.com/a.png'],
       },
     });
+  });
+});
+
+describe('metadataOf: the title carries the site’s name', () => {
+  it('follows the page’s title with the site’s name; Open Graph keeps the page’s own, the name being site_name', () => {
+    const result = metadataOf(english, fields, site);
+
+    expect(result.title).toBe('The bot speaks · RTM');
+    expect(result.openGraph.title).toBe('The bot speaks');
+  });
+
+  it.each([
+    ['the default locale', '/', 'fr'],
+    ['another locale', '/en', 'en'],
+  ])('titles the home page of %s with the site’s name alone', (_, url, locale) => {
+    const home = { url, locale, alternates: { [locale]: url }, data: { title: 'Home' } };
+
+    expect(metadataOf(home, fields, site).title).toBe('RTM');
+  });
+
+  it('applies the site’s own template, `%s` standing for the page’s title', () => {
+    const titled = metadataOf(english, fields, { ...site, titleTemplate: '%s | RTM, the bot' });
+
+    expect(titled.title).toBe('The bot speaks | RTM, the bot');
+  });
+
+  it('keeps the page’s title alone when the site has no name', () => {
+    const nameless: Site = { origin: site.origin, defaultLocale: site.defaultLocale };
+
+    expect(metadataOf(english, fields, nameless).title).toBe('The bot speaks');
   });
 });
 
@@ -156,7 +188,7 @@ describe('pageMetadataOf', () => {
       ),
     );
     // Precondition: the fields made it, so that the comparison means something.
-    expect(metadata.title).toBe('News');
+    expect(metadata.title).toBe('News · RTM');
     expect(metadata.openGraph.images).toEqual(['https://example.com/covers/news.jpeg']);
   });
 
