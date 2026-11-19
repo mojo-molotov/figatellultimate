@@ -159,9 +159,6 @@ function typecheck(modules: { fr?: Module; en?: Module; app?: string }): string[
     );
 }
 
-/** A whole TypeScript program compiled in memory: seconds on CI runners, far above vitest's default limit. */
-const TYPECHECK_TIMEOUT = 30_000;
-
 describe('emit: messages', () => {
   it('emits the message types and loader, and locale metadata', () => {
     const generated = generate();
@@ -177,10 +174,8 @@ describe('emit: messages', () => {
     expect(file(generated, 'messages/index.d.ts')).toMatchSnapshot();
   });
 
-  it(
-    'valid message modules and an app using them typecheck',
-    () => {
-      const app = `
+  it('valid message modules and an app using them typecheck', () => {
+    const app = `
 import { loadMessages, type MessageKey, type Messages, type MessageTable } from './.figatellultimate/messages/index.js';
 import { localeInfo } from './.figatellultimate/locales/index.js';
 
@@ -203,29 +198,23 @@ const extra: MessageTable['home.title'] = { name: 'x' };
 void [key, taxonomy, posts, greeting, open, dir, typo, wrong, none, extra];
 `;
 
-      expect(typecheck({ app })).toEqual([]);
-    },
-    TYPECHECK_TIMEOUT,
-  );
+    expect(typecheck({ app })).toEqual([]);
+  });
 
-  it(
-    'a locale missing a key, or with an extra one, fails its own typecheck',
-    () => {
-      const missing = variant(EN, (m) => delete home(m)['title']);
-      const extra = variant(EN, (m) => (home(m)['titel'] = 'typo'));
-      const missingContent = variant(EN, (m) => delete patchNotes(m)['bot']);
+  it('a locale missing a key, or with an extra one, fails its own typecheck', () => {
+    const missing = variant(EN, (m) => delete home(m)['title']);
+    const extra = variant(EN, (m) => (home(m)['titel'] = 'typo'));
+    const missingContent = variant(EN, (m) => delete patchNotes(m)['bot']);
 
-      expect(typecheck({ en: missing }).join('\n')).toMatch(/en\.ts.*"title"' is missing/);
-      expect(typecheck({ en: extra }).join('\n')).toMatch(/en\.ts.*titel/);
-      expect(typecheck({ en: missingContent }).join('\n')).toMatch(/en\.ts.*"bot"' is missing/);
-      // The reference is free outside the content, but not inside it.
-      expect(typecheck({ fr: variant(FR, (m) => (home(m)['extra'] = 'ok')) })).toEqual([]);
-      expect(typecheck({ fr: variant(FR, (m) => delete patchNotes(m)['bot']) }).join('\n')).toMatch(
-        /fr\.ts.*"bot"' is missing/,
-      );
-    },
-    TYPECHECK_TIMEOUT,
-  );
+    expect(typecheck({ en: missing }).join('\n')).toMatch(/en\.ts.*"title"' is missing/);
+    expect(typecheck({ en: extra }).join('\n')).toMatch(/en\.ts.*titel/);
+    expect(typecheck({ en: missingContent }).join('\n')).toMatch(/en\.ts.*"bot"' is missing/);
+    // The reference is free outside the content, but not inside it.
+    expect(typecheck({ fr: variant(FR, (m) => (home(m)['extra'] = 'ok')) })).toEqual([]);
+    expect(typecheck({ fr: variant(FR, (m) => delete patchNotes(m)['bot']) }).join('\n')).toMatch(
+      /fr\.ts.*"bot"' is missing/,
+    );
+  });
 });
 
 describe('emit: the message skeleton', () => {
@@ -280,37 +269,25 @@ export type AppMessages = MessagesOf<typeof schema>;
     expect(file(generated, 'messages/index.d.ts')).toContain('export declare const skeleton: ContentSkeleton;');
   });
 
-  it(
-    'every locale, the default one included, satisfies the schema composed from it',
-    () => {
-      expect(typecheckSchema(SCHEMA, {})).toEqual([]);
-    },
-    TYPECHECK_TIMEOUT,
-  );
+  it('every locale, the default one included, satisfies the schema composed from it', () => {
+    expect(typecheckSchema(SCHEMA, {})).toEqual([]);
+  });
 
-  it(
-    'a key missing in any locale, its content part included, does not compile',
-    () => {
-      expect(typecheckSchema(SCHEMA, { fr: variant(FR, (m) => delete patchNotes(m)['bot']) }).join('\n')).toMatch(
-        /fr\.ts.*"bot"' is missing/,
-      );
-      expect(typecheckSchema(SCHEMA, { en: variant(EN, (m) => delete home(m)['title']) }).join('\n')).toMatch(
-        /en\.ts.*'title' is missing/,
-      );
-      expect(typecheckSchema(SCHEMA, { fr: variant(FR, (m) => (home(m)['titel'] = 'typo')) }).join('\n')).toMatch(
-        /fr\.ts.*titel/,
-      );
-    },
-    TYPECHECK_TIMEOUT,
-  );
+  it('a key missing in any locale, its content part included, does not compile', () => {
+    expect(typecheckSchema(SCHEMA, { fr: variant(FR, (m) => delete patchNotes(m)['bot']) }).join('\n')).toMatch(
+      /fr\.ts.*"bot"' is missing/,
+    );
+    expect(typecheckSchema(SCHEMA, { en: variant(EN, (m) => delete home(m)['title']) }).join('\n')).toMatch(
+      /en\.ts.*'title' is missing/,
+    );
+    expect(typecheckSchema(SCHEMA, { fr: variant(FR, (m) => (home(m)['titel'] = 'typo')) }).join('\n')).toMatch(
+      /fr\.ts.*titel/,
+    );
+  });
 
-  it(
-    'a schema without the skeleton does not compile: the content part cannot be forgotten',
-    () => {
-      expect(typecheckSchema(SCHEMA.replace('  ...skeleton,\n', ''), {}).join('\n')).toMatch(/schema\.ts.*content/);
-    },
-    TYPECHECK_TIMEOUT,
-  );
+  it('a schema without the skeleton does not compile: the content part cannot be forgotten', () => {
+    expect(typecheckSchema(SCHEMA.replace('  ...skeleton,\n', ''), {}).join('\n')).toMatch(/schema\.ts.*content/);
+  });
 });
 
 describe('emit: messages for the use-intl adapter', () => {
@@ -319,55 +296,53 @@ describe('emit: messages for the use-intl adapter', () => {
     messages: { directory: 'messages', runtime: 'use-intl' },
   });
 
-  it(
-    'registers the table, the namespaces, the shape and the locales with the adapter',
-    () => {
-      const analysis = analyze({ locales: config.locales, collections: config.collections, sources: SOURCES });
-      const tree = contentMessageTree({
-        collections: config.collections,
-        taxonomies: config.taxonomies ?? {},
-        entries: analysis.entries,
-      });
-      const model = analyzeMessages({ locales: config.locales, tree, modules: { 'fr.ts': FR, 'en.ts': EN } }).model;
-      const assembly = assemble({
-        analysis,
-        documents: SOURCES.map((s) => ({ ...s, data: {}, body: '' })),
-        sourceDiagnostics: [],
-        collections: config.collections,
-        taxonomies: config.taxonomies ?? {},
-        environment: { drafts: 'include', testContent: 'include' },
-      });
-      const generated = [...emit({ config: withRuntime, assembly, outputDirectory: OUTPUT, messages: model })];
-      const project = new Project({
-        useInMemoryFileSystem: true,
-        compilerOptions: {
-          strict: true,
-          noEmit: true,
-          module: ts.ModuleKind.NodeNext,
-          moduleResolution: ts.ModuleResolutionKind.NodeNext,
-        },
-      });
+  it('registers the table, the namespaces, the shape and the locales with the adapter', () => {
+    const analysis = analyze({ locales: config.locales, collections: config.collections, sources: SOURCES });
+    const tree = contentMessageTree({
+      collections: config.collections,
+      taxonomies: config.taxonomies ?? {},
+      entries: analysis.entries,
+    });
+    const model = analyzeMessages({ locales: config.locales, tree, modules: { 'fr.ts': FR, 'en.ts': EN } }).model;
+    const assembly = assemble({
+      analysis,
+      documents: SOURCES.map((s) => ({ ...s, data: {}, body: '' })),
+      sourceDiagnostics: [],
+      collections: config.collections,
+      taxonomies: config.taxonomies ?? {},
+      environment: { drafts: 'include', testContent: 'include' },
+    });
+    const generated = [...emit({ config: withRuntime, assembly, outputDirectory: OUTPUT, messages: model })];
+    const project = new Project({
+      useInMemoryFileSystem: true,
+      compilerOptions: {
+        strict: true,
+        noEmit: true,
+        module: ts.ModuleKind.NodeNext,
+        moduleResolution: ts.ModuleResolutionKind.NodeNext,
+      },
+    });
 
-      project.createSourceFile('/project/package.json', JSON.stringify({ type: 'module' }));
-      // A minimal stand-in for the adapter: only its `Register` interface matters here.
-      project.createSourceFile(
-        '/project/node_modules/@figatellultimate/use-intl/package.json',
-        JSON.stringify({ name: '@figatellultimate/use-intl', type: 'module', types: 'index.d.ts' }),
-      );
-      project.createSourceFile(
-        '/project/node_modules/@figatellultimate/use-intl/index.d.ts',
-        'export interface Register {}\nexport type Registered<K extends string> = Register extends Record<K, infer T> ? T : never;\n',
-      );
+    project.createSourceFile('/project/package.json', JSON.stringify({ type: 'module' }));
+    // A minimal stand-in for the adapter: only its `Register` interface matters here.
+    project.createSourceFile(
+      '/project/node_modules/@figatellultimate/use-intl/package.json',
+      JSON.stringify({ name: '@figatellultimate/use-intl', type: 'module', types: 'index.d.ts' }),
+    );
+    project.createSourceFile(
+      '/project/node_modules/@figatellultimate/use-intl/index.d.ts',
+      'export interface Register {}\nexport type Registered<K extends string> = Register extends Record<K, infer T> ? T : never;\n',
+    );
 
-      for (const file of generated.filter((f) => f.path.endsWith('.d.ts'))) {
-        project.createSourceFile(`${OUTPUT}/${file.path}`, file.contents);
-      }
+    for (const file of generated.filter((f) => f.path.endsWith('.d.ts'))) {
+      project.createSourceFile(`${OUTPUT}/${file.path}`, file.contents);
+    }
 
-      project.createSourceFile('/project/messages/fr.ts', moduleSource(FR, 'ReferenceMessages'));
-      project.createSourceFile('/project/messages/en.ts', moduleSource(EN, 'Messages'));
-      project.createSourceFile(
-        '/project/app.ts',
-        `import type { Registered } from '@figatellultimate/use-intl';
+    project.createSourceFile('/project/messages/fr.ts', moduleSource(FR, 'ReferenceMessages'));
+    project.createSourceFile('/project/messages/en.ts', moduleSource(EN, 'Messages'));
+    project.createSourceFile(
+      '/project/app.ts',
+      `import type { Registered } from '@figatellultimate/use-intl';
 import type { MessageTable } from './.figatellultimate/messages/index.js';
 const args: Registered<'table'>['home.posts'] = { count: 1 };
 const scope: Registered<'namespace'> = 'content.blog.patch-notes';
@@ -377,19 +352,17 @@ const leaf: Registered<'namespace'> = 'home.posts';
 export const same: Registered<'table'> extends MessageTable ? true : false = true;
 void [args, scope, locale, leaf];
 `,
+    );
+    const errors = project
+      .getPreEmitDiagnostics()
+      .map(
+        (d) =>
+          `${d.getSourceFile()?.getBaseName() ?? '?'}: ${ts.flattenDiagnosticMessageText(d.compilerObject.messageText, ' ')}`,
       );
-      const errors = project
-        .getPreEmitDiagnostics()
-        .map(
-          (d) =>
-            `${d.getSourceFile()?.getBaseName() ?? '?'}: ${ts.flattenDiagnosticMessageText(d.compilerObject.messageText, ' ')}`,
-        );
 
-      expect(errors).toEqual([]);
-      expect(generated.find((f) => f.path === 'messages/types.d.ts')?.contents).toContain(
-        'declare module "@figatellultimate/use-intl"',
-      );
-    },
-    TYPECHECK_TIMEOUT,
-  );
+    expect(errors).toEqual([]);
+    expect(generated.find((f) => f.path === 'messages/types.d.ts')?.contents).toContain(
+      'declare module "@figatellultimate/use-intl"',
+    );
+  });
 });

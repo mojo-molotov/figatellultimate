@@ -224,6 +224,5 @@ describe('figatellultimate: commands', () => {
       expect(exit).toBe(0);
       expect(watch.getStdallStr()).toContain('Stopped watching');
     },
-    120_000,
   );
 });

@@ -119,9 +119,6 @@ function typecheck(app: string): string[] {
     );
 }
 
-/** A whole TypeScript program compiled in memory: seconds on CI runners, far above vitest's default limit. */
-const TYPECHECK_TIMEOUT = 30_000;
-
 describe('emit', () => {
   it('emits locales, then per collection an index (.js + .d.ts), types (.d.ts) and one data module per entry (.js)', () => {
     expect(generate().map((f) => f.path)).toEqual([
@@ -182,26 +179,16 @@ describe('emit', () => {
 });
 
 describe('generated getters (types)', () => {
-  it(
-    'control: the in-memory compiler does report errors (so a clean result is meaningful)',
-    () => {
-      expect(typecheck("export const wrong: number = 'a';")).toHaveLength(1);
-    },
-    TYPECHECK_TIMEOUT,
-  );
+  it('control: the in-memory compiler does report errors (so a clean result is meaningful)', () => {
+    expect(typecheck("export const wrong: number = 'a';")).toHaveLength(1);
+  });
 
-  it(
-    'compile cleanly on their own',
-    () => {
-      expect(typecheck('export {};')).toEqual([]);
-    },
-    TYPECHECK_TIMEOUT,
-  );
+  it('compile cleanly on their own', () => {
+    expect(typecheck('export {};')).toEqual([]);
+  });
 
-  it(
-    'accept existing tuples only, with dependent narrowing, and require every locale for a union',
-    () => {
-      const app = `
+  it('accept existing tuples only, with dependent narrowing, and require every locale for a union', () => {
+    const app = `
 import { getBlogPost, findBlogPost, listBlog, isBlogPostQuery, type BlogPost } from './.figatellultimate/blog/index.js';
 import { getPage, findPage } from './.figatellultimate/pages/index.js';
 import type { Locale } from './.figatellultimate/locales/index.js';
@@ -236,10 +223,8 @@ export async function rejected(): Promise<void> {
 }
 `;
 
-      expect(typecheck(app)).toEqual([]);
-    },
-    TYPECHECK_TIMEOUT,
-  );
+    expect(typecheck(app)).toEqual([]);
+  });
 });
 
 describe('generated getters at scale', () => {
