@@ -7,12 +7,24 @@ const ROOT = join(import.meta.dirname, '..', '..');
 
 const CONFIGS = readdirSync(ROOT).filter((name) => /^vitest(\.[a-z]+)?\.config\.ts$/.test(name));
 
+/**
+ * The files under a folder, never entering hidden folders, `node_modules` nor `dist`: the end-to-end tests create
+ * and remove their projects under `.tmp/` while this test reads, and a folder gone mid-walk once failed it.
+ */
+function walk(folder: string): string[] {
+  return readdirSync(folder, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(folder, entry.name);
+
+    if (!entry.isDirectory()) return [path];
+
+    return entry.name.startsWith('.') || entry.name === 'node_modules' || entry.name === 'dist' ? [] : walk(path);
+  });
+}
+
 /** Every test file of the packages and of the tooling. */
 const TESTS = ['packages', 'tooling']
-  .flatMap((folder) =>
-    readdirSync(join(ROOT, folder), { recursive: true, encoding: 'utf8' }).map((path) => join(ROOT, folder, path)),
-  )
-  .filter((path) => !path.includes('node_modules') && /\.test(-d)?\.tsx?$/.test(path));
+  .flatMap((folder) => walk(join(ROOT, folder)))
+  .filter((path) => /\.test(-d)?\.tsx?$/.test(path));
 
 describe('test timeouts', () => {
   it('are the shared ones in every vitest configuration', () => {
