@@ -223,6 +223,15 @@ describe('styles.css', () => {
     expect(block).toMatch(/\[data-slot='search-box-field'\] \{\s*margin-inline-end:/);
   });
 
+  it("takes a closed navbar's menu out of the layout on a narrow screen: no empty line under the toggle", () => {
+    const narrow = CSS.slice(CSS.indexOf('@media (max-width: 48rem)', CSS.indexOf("[data-slot='navbar-extras']")));
+    const block = narrow.slice(0, narrow.indexOf('\n}\n'));
+
+    expect(block).toMatch(
+      /\[data-slot='navbar'\]\[data-state='closed'\] \[data-slot='navbar-menu'\] \{\s*display: none;/,
+    );
+  });
+
   it("sets the navbar's extras at the end of the toggle's line on a narrow screen, the toggle at its start", () => {
     const narrow = CSS.slice(CSS.indexOf('@media (max-width: 48rem)', CSS.indexOf("[data-slot='navbar-extras']")));
 

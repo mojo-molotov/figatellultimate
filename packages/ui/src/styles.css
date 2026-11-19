@@ -974,7 +974,9 @@ a[data-slot='entry-card-author'] {
     margin-inline-start: auto;
   }
 
-  [data-slot='navbar'][data-state='closed'] [data-slot='navbar-list'] {
+  /* Closed, the whole menu out of the layout, not only its list: an empty menu would still take a line of its own,
+     and the bar's row gap under the toggle (the bar taller below its controls than above). */
+  [data-slot='navbar'][data-state='closed'] [data-slot='navbar-menu'] {
     display: none;
   }
 

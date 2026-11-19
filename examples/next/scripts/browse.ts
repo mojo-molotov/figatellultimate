@@ -311,6 +311,21 @@ try {
       await phone.goto(`${base}${LISTING}`, { waitUntil: 'networkidle' });
     }
 
+    // On a phone, the closed navbar as much room above its controls as below: no empty line for its closed menu.
+    if (!revealed) {
+      const [above, below] = await phone.evaluate(() => {
+        const bar = document.querySelector('[data-slot="navbar"]')?.getBoundingClientRect();
+        const toggle = document.querySelector('[data-slot="navbar-toggle"]')?.getBoundingClientRect();
+
+        return [(toggle?.top ?? 0) - (bar?.top ?? 0), (bar?.bottom ?? 0) - (toggle?.bottom ?? 0)];
+      });
+
+      check(
+        Math.abs(above - below) < 2,
+        `${LISTING} on ${device}: the navbar's padding is ${String(above)} above, ${String(below)} below`,
+      );
+    }
+
     // On a phone, the navbar's toggle at the line's start and its extras at its end: never all packed at the start.
     if (!revealed) {
       const edges = await phone.evaluate(() => {
