@@ -6,8 +6,9 @@ const config: KnipConfig = {
   ignoreWorkspaces: ['examples/*'],
   workspaces: {
     '.': {
-      // `allurerc.mjs` is read by the Allure CLI (`allure generate`), never imported.
-      entry: ['tooling/**/*.test.ts', 'allurerc.mjs'],
+      // `allurerc.mjs` is read by the Allure CLI (`allure generate`); its types, `allurerc.d.mts`, are found by
+      // TypeScript beside it, never imported by name.
+      entry: ['tooling/**/*.test.ts', 'allurerc.mjs', 'allurerc.d.mts'],
     },
     'packages/*': {},
     'packages/content-collections': {
