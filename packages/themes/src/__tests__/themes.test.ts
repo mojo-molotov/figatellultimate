@@ -142,6 +142,13 @@ describe('base.css', () => {
     ).toContain('align-items: center;');
   });
 
+  it('keeps inline code left to right, isolated from a right-to-left sentence around it', () => {
+    const body = rules.find((rule) => rule.selector === ":not(pre) > [data-slot='mdx-code']")?.body ?? '';
+
+    expect(body).toContain('direction: ltr;');
+    expect(body).toContain('unicode-bidi: isolate;');
+  });
+
   it("sets a listing's pagination, below its cards, at the end of the line on a narrow screen", () => {
     const narrow = mediaOf(source)
       .filter(({ condition }) => condition === '(max-width: 36rem)')

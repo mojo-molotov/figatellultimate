@@ -9,10 +9,18 @@ import { CodeTabs } from '../index.js';
 const LABELS = { list: '«gestionnaire»' };
 
 /** A block of variants, one per label. */
-function Block({ name, labels }: { readonly name: string; readonly labels: readonly string[] }) {
+function Block({
+  name,
+  labels,
+  dir,
+}: {
+  readonly name: string;
+  readonly labels: readonly string[];
+  readonly dir?: 'ltr' | 'rtl';
+}) {
   return (
-    <section aria-label={name}>
-      <CodeTabs labels={LABELS}>
+    <section aria-label={name} {...(dir === undefined ? {} : { dir })}>
+      <CodeTabs labels={LABELS} {...(dir === undefined ? {} : { dir })}>
         {labels.map((label) => (
           <div key={label} data-label={label}>
             <pre>{`${label} install`}</pre>
@@ -74,6 +82,19 @@ describe('CodeTabs', () => {
     render(<Block name="later" labels={['npm', 'pnpm']} />);
 
     expect(selected('later')).toBe('pnpm');
+  });
+
+  it('moves through the tabs the reading way: in a right-to-left page, ← goes to the next one', async () => {
+    const user = userEvent.setup();
+
+    // Three tabs: left to right, ← from the first would loop to the last (Yarn), never to the second.
+    render(<Block name="a" labels={['npm', 'pnpm', 'Yarn']} dir="rtl" />);
+    await user.tab();
+    // Precondition: the first tab has the focus, so that a move shows.
+    expect(document.activeElement?.textContent).toBe('npm');
+    await user.keyboard('{ArrowLeft}');
+
+    expect(document.activeElement?.textContent).toBe('pnpm');
   });
 
   it('moves through the tabs with the arrows, and passes axe', async () => {

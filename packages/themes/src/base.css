@@ -651,6 +651,9 @@ main[data-folder='category'] [data-slot='listing-cards'] {
 
 /* Inline code only: a block's code is Shiki's, inside `CodeBlock`. */
 :not(pre) > [data-slot='mdx-code'] {
+  /* Left to right in a right-to-left sentence too, isolated, so that neither reorders the other. */
+  direction: ltr;
+  unicode-bidi: isolate;
   padding: 0.15em 0.35em;
   border-radius: calc(var(--fig-radius) / 1.5);
   background: var(--fig-surface);

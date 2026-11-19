@@ -141,6 +141,35 @@ try {
   check(new URL(select.url()).pathname === `${LISTING}/page/4`, `${LISTING}: the page select did not reach page 4`);
   await select.close();
 
+  // Right to left (both locales of the example read left to right: the page's direction forced): the layout
+  // mirrors, its table of contents on the right, the navbar's extras before its menu, and code still reads left to
+  // right; nothing overflows sideways.
+  {
+    const mirrored = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+
+    await mirrored.goto(`${base}/docs/installation`, { waitUntil: 'networkidle' });
+    await mirrored.evaluate(() => {
+      document.documentElement.dir = 'rtl';
+    });
+    const layout = await mirrored.evaluate(() => {
+      const box = (slot: string): DOMRect | undefined =>
+        document.querySelector(`[data-slot="${slot}"]`)?.getBoundingClientRect();
+      const code = document.querySelector('[data-slot="code-block"]');
+
+      return {
+        tocOnTheRight: (box('toc')?.left ?? 0) > window.innerWidth / 2,
+        extrasFirst: (box('navbar-extras')?.right ?? Infinity) <= (box('navbar-menu')?.left ?? -Infinity),
+        codeLeftToRight: code !== null && getComputedStyle(code).direction === 'ltr',
+        noSideScroll: document.documentElement.scrollWidth <= window.innerWidth,
+      };
+    });
+
+    for (const [property, holds] of Object.entries(layout))
+      check(holds, `/docs/installation right to left: ${property} does not hold`);
+
+    await mirrored.close();
+  }
+
   // A content image's zoom preloads its enlarged image as the mouse comes over it: the dialog opens on a loaded
   // image, its entrance seen, and no second fetch.
   {
@@ -416,6 +445,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the button under the mouse, the page taller or shorter; a filter in the URL, or chosen early, is applied; the page select reaches its page; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
+    '✓ previous and next keep the button under the mouse, the page taller or shorter; a filter in the URL, or chosen early, is applied; the page select reaches its page; a right-to-left layout mirrored; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
   );
 }

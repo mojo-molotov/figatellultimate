@@ -85,8 +85,9 @@ function panelsOf(children: ReactNode): Panel[] {
 /**
  * Variants of a code block, one tab each, the choice shared by every block of the site.
  *
- * @param props - The tab list's label, and the variants: children carrying `data-label` (the tab's name), e.g. a
- *   `<div data-label="pnpm">` around a code block.
+ * @param props - The tab list's label, the reading direction (the arrows move the reading way: `→` to the next tab
+ *   left to right, `←` right to left; Radix reads no page direction), and the variants: children carrying
+ *   `data-label` (the tab's name), e.g. a `<div data-label="pnpm">` around a code block.
  * @returns The tabs, every panel prerendered; children without a label are left out.
  *
  * @example
@@ -97,9 +98,11 @@ function panelsOf(children: ReactNode): Panel[] {
  */
 export function CodeTabs({
   labels,
+  dir,
   children,
 }: {
   readonly labels: CodeTabsLabels;
+  readonly dir?: 'ltr' | 'rtl' | undefined;
   readonly children: ReactNode;
 }): ReactNode {
   const panels = panelsOf(children);
@@ -108,7 +111,7 @@ export function CodeTabs({
   const value = panels.some((panel) => panel.label === chosen) ? (chosen ?? first) : first;
 
   return (
-    <Tabs.Root data-slot="code-tabs" value={value} onValueChange={choose}>
+    <Tabs.Root data-slot="code-tabs" value={value} onValueChange={choose} {...(dir === undefined ? {} : { dir })}>
       <Tabs.List data-slot="code-tabs-list" aria-label={labels.list}>
         {panels.map((panel) => (
           <Tabs.Trigger key={panel.label} data-slot="code-tabs-trigger" value={panel.label}>

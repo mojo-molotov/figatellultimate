@@ -232,6 +232,10 @@ describe('styles.css', () => {
     );
   });
 
+  it('keeps a code block left to right, its copy button included, whatever the page reads', () => {
+    expect(propertiesOf("[data-slot='code-block']")['direction']).toBe('ltr');
+  });
+
   it("sets the navbar's extras at the end of the toggle's line on a narrow screen, the toggle at its start", () => {
     const narrow = CSS.slice(CSS.indexOf('@media (max-width: 48rem)', CSS.indexOf("[data-slot='navbar-extras']")));
 

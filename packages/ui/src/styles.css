@@ -1798,6 +1798,8 @@ a[data-slot='entry-card-author'] {
 
 /* Code block: Shiki's output, a copy button over its corner, an announcement. */
 [data-slot='code-block'] {
+  /* Code reads left to right whatever the page's language: its lines, its punctuation, its copy button at its end. */
+  direction: ltr;
   position: relative;
   margin-block: calc(var(--fig-space) * 2);
 }
