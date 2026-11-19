@@ -39,6 +39,7 @@ describe('coverageMarkdown', () => {
       '| **Total** | **62.50% (25/40)** | **62.50% (25/40)** | **62.50% (25/40)** | **62.50% (25/40)** |',
     ]);
     expect(result.value).toContain('[The full report](https://example.org/ci/coverage/)');
+    expect(result.value).toContain('Measured on the pure packages only.');
   });
 
   it('writes an empty metric as a dash, never as a percentage of nothing', () => {

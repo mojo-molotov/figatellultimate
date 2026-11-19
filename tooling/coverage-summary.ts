@@ -115,7 +115,7 @@ export function coverageMarkdown(summary: unknown, root: string, reportUrl?: str
       ...rows,
       row('**Total**', total, true),
       '',
-      'The pure code only: adapters and components are covered by the other test families.',
+      "Measured on the pure packages only. Adapters and React components are tested in real browsers, real processes and the example's build, which measure no coverage.",
       ...(reportUrl === undefined ? [] : ['', `[The full report](${reportUrl})`]),
       '',
     ].join('\n'),
