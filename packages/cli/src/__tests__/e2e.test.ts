@@ -78,6 +78,8 @@ function typecheck(app: string): string[] {
       target: ts.ScriptTarget.ESNext,
       module: ts.ModuleKind.NodeNext,
       moduleResolution: ts.ModuleResolutionKind.NodeNext,
+      // Workspace packages resolve through their sources, so the check never depends on a prior build.
+      customConditions: ['@figatellu/source'],
     },
   });
 
