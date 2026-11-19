@@ -56,8 +56,8 @@ runs:
       run: |
         cd .allure-reports
         {
-          echo '<!doctype html><meta charset="utf-8"><title>figatellu test reports</title>'
-          echo '<h1>figatellu test reports</h1><ul>'
+          echo '<!doctype html><meta charset="utf-8"><title>figatellultimate test reports</title>'
+          echo '<h1>figatellultimate test reports</h1><ul>'
           for title in _history/*.title; do
             family=$(basename "$title" .title)
             echo "<li><a href=\"$family/\">$(cat "$title")</a></li>"

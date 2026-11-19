@@ -5,7 +5,7 @@ coverage/
 allure-results/
 allure-report/
 history.jsonl
-.figatellu/
+.figatellultimate/
 *.tsbuildinfo
 .DS_Store
 # Local scratch files (not checked, not committed)

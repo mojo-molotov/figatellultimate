@@ -1,13 +1,13 @@
 {
-  "name": "@figatellu/core",
+  "name": "@figatellultimate/core",
   "version": "0.0.0",
-  "description": "Pure core of figatellu: content model, diagnostics, results. No I/O.",
+  "description": "Pure core of figatellultimate: content model, diagnostics, results. No I/O.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
   "exports": {
     ".": {
-      "@figatellu/source": "./src/index.ts",
+      "@figatellultimate/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
@@ -22,7 +22,7 @@
     "test": "vitest run --config ../../vitest.config.ts --project core",
     "lint:package": "publint --strict && attw --pack . --profile esm-only"
   },
-  "figatellu": {
+  "figatellultimate": {
     "role": "core"
   },
   "publishConfig": {

@@ -1,9 +1,9 @@
 /**
- * `@figatellu/use-intl/precompile` (server): the messages precompiled, every ICU message parsed once at build time.
+ * `@figatellultimate/use-intl/precompile` (server): the messages precompiled, every ICU message parsed once at build time.
  *
- *     messages (figatellu, validated) ──> precompileMessages ──┬─> next-intl's `format-only` runtime (the server's
- *                                                               │   translator: `withPrecompiledMessages` in next16)
- *                                                               └─> precompiled(tree, key) ──> a client component's props
+ *     messages (figatellultimate, validated) ──> precompileMessages ──┬─> next-intl's `format-only` runtime (the server's
+ *                                                                      │   translator: `withPrecompiledMessages` in next16)
+ *                                                                      └─> precompiled(tree, key) ──> a client component's props
  *
  * Key design decisions:
  *     - The compiler is next-intl's (`icu-minify`, a peer dependency: the app's and next-intl's must be one version,
@@ -48,7 +48,7 @@ function compiledOf(text: string): CompiledMessage {
 /**
  * A locale's messages, every ICU message compiled.
  *
- * @param messages - Its messages, as figatellu validated them (`loadMessages(locale)`).
+ * @param messages - Its messages, as figatellultimate validated them (`loadMessages(locale)`).
  * @returns The same tree, each message compiled, plain data.
  *
  * @example

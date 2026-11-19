@@ -1,4 +1,4 @@
-import type { Heading } from '@figatellu/toc';
+import type { Heading } from '@figatellultimate/toc';
 import type { ReactNode } from 'react';
 import { describe, expectTypeOf, it } from 'vitest';
 

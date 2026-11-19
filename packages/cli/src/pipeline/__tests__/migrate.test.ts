@@ -86,7 +86,7 @@ function memoryFs(files: Readonly<Record<string, string>>, failOn?: (from: strin
 }
 
 describe('editLocalesConfig', () => {
-  const CONFIG = `import { defineConfig, defineLocales } from '@figatellu/core';
+  const CONFIG = `import { defineConfig, defineLocales } from '@figatellultimate/core';
 
 // The project's locales.
 export default defineConfig({

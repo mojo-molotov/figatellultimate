@@ -2,7 +2,7 @@
  * `<collection>/index`: the light index, the getters (`getX`, `findX`, `findXByUrl`, `listX`, `isXQuery`), the
  * facet indexes keyed by entry URL, and the folder pages.
  */
-import type { Entry, UrlBuilder } from '@figatellu/core';
+import type { Entry, UrlBuilder } from '@figatellultimate/core';
 import { VariableDeclarationKind, Writers, type CodeBlockWriter, type Project, type SourceFile } from 'ts-morph';
 
 import { entryModule, literal, parameterValues, pascal, type CollectionModel } from '../model.js';
@@ -199,7 +199,7 @@ function addGetters(file: SourceFile, model: CollectionModel): void {
     returnType: `Promise<${type}>`,
     statements: [
       'const item = byQuery.get(lookupKey(query));',
-      `if (item === undefined) throw new Error(\`No ${type} for \${JSON.stringify(query)}: the generated code is out of date (run figatellu build).\`);`,
+      `if (item === undefined) throw new Error(\`No ${type} for \${JSON.stringify(query)}: the generated code is out of date (run figatellultimate build).\`);`,
       'return entryOf(item);',
     ],
   });

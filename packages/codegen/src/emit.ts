@@ -2,8 +2,14 @@
  * The list of generated files: one model per collection, then every module derived from the models, the folder and
  * term pages, and the analyzed messages.
  */
-import { createUrlBuilder, folderPagesOf, termPagesOf, type Assembly, type FigatelluConfig } from '@figatellu/core';
-import type { MessagesModel } from '@figatellu/messages';
+import {
+  createUrlBuilder,
+  folderPagesOf,
+  termPagesOf,
+  type Assembly,
+  type FigatellultimateConfig,
+} from '@figatellultimate/core';
+import type { MessagesModel } from '@figatellultimate/messages';
 
 import { entryFile } from './files/entry.js';
 import { folderData } from './folders.js';
@@ -24,7 +30,7 @@ import { typesFile } from './files/types.js';
  *
  */
 export interface EmitInput {
-  readonly config: FigatelluConfig;
+  readonly config: FigatellultimateConfig;
   readonly assembly: Assembly;
   /** Absolute output folder: only used to let the content source compute relative type imports; never emitted. */
   readonly outputDirectory: string;
@@ -33,12 +39,12 @@ export interface EmitInput {
 }
 
 /**
- * Pure codegen: the files of `.figatellu/`, built as ts-morph declarations in memory, sorted by path and
+ * Pure codegen: the files of `.figatellultimate/`, built as ts-morph declarations in memory, sorted by path and
  * byte-identical for the same input.
  *
  * @param input - The config, the assembly (`loadContent`), the absolute output folder (only to compute relative
  *   type imports, never emitted), and the analyzed messages when the config declares them.
- * @returns Every file of `.figatellu/`, sorted by path and byte-identical for the same input; pass them to a
+ * @returns Every file of `.figatellultimate/`, sorted by path and byte-identical for the same input; pass them to a
  *   writer.
  *
  * @example

@@ -4,7 +4,7 @@
  *
  * Invariants: ids unique per document, an existing id kept, empty headings out, document order (`headings.test.ts`).
  */
-import type { Heading } from '@figatellu/toc';
+import type { Heading } from '@figatellultimate/toc';
 import GithubSlugger from 'github-slugger';
 
 /** The part of a hast node this plugin reads and writes: structural, so that no hast types are required. */

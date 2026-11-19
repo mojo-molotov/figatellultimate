@@ -4,7 +4,7 @@
  */
 import { posix } from 'node:path';
 
-import type { FigatelluConfig } from '@figatellu/core';
+import type { FigatellultimateConfig } from '@figatellultimate/core';
 import { Writers, type Project } from 'ts-morph';
 
 import { literal, lookupTree, type CollectionModel } from '../model.js';
@@ -23,7 +23,7 @@ import { property, treeProperties } from './type-builders.js';
 export function typesFile(
   project: Project,
   model: CollectionModel,
-  config: FigatelluConfig,
+  config: FigatellultimateConfig,
   outputDirectory: string,
 ): GeneratedFile[] {
   const { name, type, parameters, levels } = model;

@@ -10,19 +10,19 @@ order: 8
 A faceted collection filters a list by several facets, sorts it and paginates it, with its whole state in the URL: a filtered view is a link anyone can share, and the default view is prerendered.
 
 ```sh npm
-npm install @figatellu/facets @figatellu/facets-react react radix-ui cmdk
+npm install @figatellultimate/facets @figatellultimate/facets-react react radix-ui cmdk
 ```
 
 ```sh pnpm
-pnpm add @figatellu/facets @figatellu/facets-react react radix-ui cmdk
+pnpm add @figatellultimate/facets @figatellultimate/facets-react react radix-ui cmdk
 ```
 
 ```sh yarn
-yarn add @figatellu/facets @figatellu/facets-react react radix-ui cmdk
+yarn add @figatellultimate/facets @figatellultimate/facets-react react radix-ui cmdk
 ```
 
 ```sh bun
-bun add @figatellu/facets @figatellu/facets-react react radix-ui cmdk
+bun add @figatellultimate/facets @figatellultimate/facets-react react radix-ui cmdk
 ```
 
 ## The engine
@@ -30,7 +30,7 @@ bun add @figatellu/facets @figatellu/facets-react react radix-ui cmdk
 `defineFacetedCollection` declares the items, their facets and sorts, and the page size. The engine is pure: it reads a URL, computes a view, and writes the next URL.
 
 ```ts
-import { defineFacetedCollection } from '@figatellu/facets';
+import { defineFacetedCollection } from '@figatellultimate/facets';
 
 const engine = defineFacetedCollection({
   items: posts,
@@ -65,8 +65,8 @@ Changing a filter keeps the reader’s place by default (`keepReadingPosition`):
 `useFacetedCollection` binds the engine to the URL; the components are unstyled and accessible:
 
 ```tsx
-import { FacetOptions, FacetsReset, Pagination, SortSelect, useFacetedCollection } from '@figatellu/facets-react';
-import { useNextUrl } from '@figatellu/next16/facets';
+import { FacetOptions, FacetsReset, Pagination, SortSelect, useFacetedCollection } from '@figatellultimate/facets-react';
+import { useNextUrl } from '@figatellultimate/next16/facets';
 
 const binding = useFacetedCollection(engine, useNextUrl());
 
@@ -95,7 +95,7 @@ const { binding, index, prefetch } = usePagedCollection({
 });
 ```
 
-The index is one static route per listing, from `listingIndexRoute` of `@figatellu/next16/listing-index`:
+The index is one static route per listing, from `listingIndexRoute` of `@figatellultimate/next16/listing-index`:
 
 ```ts
 export const dynamic = 'force-static';
@@ -103,4 +103,4 @@ export const dynamicParams = false;
 export const { GET, generateStaticParams } = listingIndexRoute({ listings, params, build });
 ```
 
-Outside Next, `pagedHref` and `pagedSearch` of `@figatellu/facets` map a view to this location and back.
+Outside Next, `pagedHref` and `pagedSearch` of `@figatellultimate/facets` map a view to this location and back.

@@ -2,8 +2,8 @@
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 
-import { taxonomies } from '#figatellu/taxonomies';
-import type { AuthorsTermPage } from '#figatellu/terms';
+import { taxonomies } from '#figatellultimate/taxonomies';
+import type { AuthorsTermPage } from '#figatellultimate/terms';
 
 import { Body } from '../components/mdx';
 import { SiteHeader } from '../components/site-header';
@@ -20,7 +20,7 @@ export async function authorName(page: AuthorsTermPage): Promise<string> {
 }
 
 /**
- * An author's page, rendered from figatellu's neutral data: their avatar (taxonomy data), name and short bio
+ * An author's page, rendered from figatellultimate's neutral data: their avatar (taxonomy data), name and short bio
  * (messages), their long bio when written in this locale (MDX, the term's `content`), then every post they wrote in this locale with the subcategory page's listing (tags, sorts, pagination,
  * the state in the URL); the authors facet left out, the author being the page's.
  */

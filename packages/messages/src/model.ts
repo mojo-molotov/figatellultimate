@@ -2,7 +2,7 @@
  * What the code generator reads of the analyzed messages: the reference's exact shape and argument types, the
  * content-required tree, and each locale's file.
  */
-import type { MessageTree } from '@figatellu/core';
+import type { MessageTree } from '@figatellultimate/core';
 
 /** The type of an ICU argument, as the generated types expose it. */
 export type ArgumentType =

@@ -5,12 +5,12 @@
 //   `allure-reports` branch (`.github/actions/allure-publish`), so trends span builds without mixing families.
 // - `categories`: failures sorted by kind, the way they are read.
 export default {
-  name: 'figatellu',
+  name: 'figatellultimate',
   output: 'allure-report',
   historyPath: './history.jsonl',
   plugins: {
     awesome: {
-      options: { reportName: 'figatellu' },
+      options: { reportName: 'figatellultimate' },
     },
   },
   categories: {

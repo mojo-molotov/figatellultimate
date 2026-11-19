@@ -7,18 +7,18 @@ order: 6
 
 # Messages
 
-Les textes de l’interface vivent dans des fichiers de messages, un par langue. figatellu en déduit une partie du contenu lui-même : un dossier ou un tag ajouté exige sa traduction partout.
+Les textes de l’interface vivent dans des fichiers de messages, un par langue. figatellultimate en déduit une partie du contenu lui-même : un dossier ou un tag ajouté exige sa traduction partout.
 
 ## Le squelette généré
 
-Chaque dossier déclare ses champs, comme un `title`, et chaque terme de taxonomie les siens, comme un `label`. figatellu les rassemble en un squelette : `content.blog.news.$.title`, `taxonomies.tags.release.label`. Le `$` sépare les champs d’un dossier de ses sous-dossiers.
+Chaque dossier déclare ses champs, comme un `title`, et chaque terme de taxonomie les siens, comme un `label`. figatellultimate les rassemble en un squelette : `content.blog.news.$.title`, `taxonomies.tags.release.label`. Le `$` sépare les champs d’un dossier de ses sous-dossiers.
 
 ## Le schéma de l’application
 
 `messages.schema` nomme un module qui étale le squelette, puis ajoute vos propres clés, laissées vides :
 
 ```ts
-import { skeleton, type MessageSchema } from '#figatellu/messages';
+import { skeleton, type MessageSchema } from '#figatellultimate/messages';
 
 const _ = '';
 
@@ -32,11 +32,11 @@ Le schéma s’écrit une fois ; chaque langue en tire son type.
 
 ## Une langue par fichier
 
-`messages/fr.ts` et `messages/en.ts` remplissent ce schéma, et chacun doit le satisfaire exactement. Une clé oubliée, ou une clé de trop, ne compile pas, et `figatellu check` nomme la clé et le fichier à compléter.
+`messages/fr.ts` et `messages/en.ts` remplissent ce schéma, et chacun doit le satisfaire exactement. Une clé oubliée, ou une clé de trop, ne compile pas, et `figatellultimate check` nomme la clé et le fichier à compléter.
 
 ## Les messages ICU
 
-Les messages suivent ICU. figatellu les analyse tous, exige pour chaque langue les catégories de pluriel dont elle a besoin (`few` en polonais, `other` partout), et type les arguments : un message avec `{count, plural, …}` prend un nombre, et l’oublier ne compile pas. Chaque langue doit prendre les mêmes arguments que la langue par défaut.
+Les messages suivent ICU. figatellultimate les analyse tous, exige pour chaque langue les catégories de pluriel dont elle a besoin (`few` en polonais, `other` partout), et type les arguments : un message avec `{count, plural, …}` prend un nombre, et l’oublier ne compile pas. Chaque langue doit prendre les mêmes arguments que la langue par défaut.
 
 ```ts
 folder: { more: '{count, plural, one {Voir le billet} other {Voir les # billets}}' },
@@ -44,11 +44,11 @@ folder: { more: '{count, plural, one {Voir le billet} other {Voir les # billets}
 
 ## À l’exécution
 
-figatellu ne formate rien lui-même. `@figatellu/use-intl` donne des traducteurs typés par les messages générés :
+figatellultimate ne formate rien lui-même. `@figatellultimate/use-intl` donne des traducteurs typés par les messages générés :
 
 ```ts
-import { createTranslator } from '@figatellu/use-intl';
-import { loadMessages } from '#figatellu/messages';
+import { createTranslator } from '@figatellultimate/use-intl';
+import { loadMessages } from '#figatellultimate/messages';
 
 const t = createTranslator({ locale: 'fr', messages: await loadMessages('fr') });
 t('ui.folder.more', { count: 3 });
@@ -64,7 +64,7 @@ Côté serveur, `precompileMessages` compile les messages de chaque langue, et n
 
 ```ts
 // i18n/request.ts
-import { precompileMessages } from '@figatellu/use-intl/precompile';
+import { precompileMessages } from '@figatellultimate/use-intl/precompile';
 
 export default getRequestConfig(async ({ locale }) => ({
   locale,
@@ -75,7 +75,7 @@ export default getRequestConfig(async ({ locale }) => ({
 
 ```ts
 // next.config.ts
-import { withPrecompiledMessages } from '@figatellu/next16/config';
+import { withPrecompiledMessages } from '@figatellultimate/next16/config';
 
 export default createNextIntlPlugin('./i18n/request.ts')(withPrecompiledMessages(nextConfig));
 ```

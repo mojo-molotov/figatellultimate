@@ -1,7 +1,7 @@
-/** The figatellu configuration: locales, collections, taxonomies, navigation and the content source. */
+/** The figatellultimate configuration: locales, collections, taxonomies, navigation and the content source. */
 import { join } from 'node:path';
 
-import { createContentCollectionsSource } from '@figatellu/content-collections';
+import { createContentCollectionsSource } from '@figatellultimate/content-collections';
 import {
   defineCollection,
   defineConfig,
@@ -12,9 +12,9 @@ import {
   rest,
   segment,
   slug,
-} from '@figatellu/core';
+} from '@figatellultimate/core';
 
-// Three collections, by configuration only: no collection-specific code in figatellu.
+// Three collections, by configuration only: no collection-specific code in figatellultimate.
 // The SEO fields: a modification date, robots directives and a canonical override, per entry.
 const metadata = {
   title: 'title',
@@ -137,7 +137,7 @@ export default defineConfig({
     // navbar's menus only list the categories (`menuDepth`).
     { collection: 'blog', depth: 2, label: 'nav.blog' },
   ],
-  // Typed for `@figatellu/use-intl`: its precompiled messages type their ICU arguments by their keys.
+  // Typed for `@figatellultimate/use-intl`: its precompiled messages type their ICU arguments by their keys.
   messages: { directory: 'messages', schema: 'schema.ts', runtime: 'use-intl' },
   source: createContentCollectionsSource({
     configPath: join(import.meta.dirname, 'content-collections.ts'),

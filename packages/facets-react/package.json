@@ -1,13 +1,13 @@
 {
-  "name": "@figatellu/facets-react",
+  "name": "@figatellultimate/facets-react",
   "version": "0.0.0",
-  "description": "React binding of figatellu faceted collections: a hook that only handles keys, and the History API URL adapter.",
+  "description": "React binding of figatellultimate faceted collections: a hook that only handles keys, and the History API URL adapter.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
   "exports": {
     ".": {
-      "@figatellu/source": "./src/index.ts",
+      "@figatellultimate/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
@@ -32,11 +32,11 @@
     "lint:package": "publint --strict && attw --pack . --profile esm-only"
   },
   "dependencies": {
-    "@figatellu/facets": "workspace:*",
+    "@figatellultimate/facets": "workspace:*",
     "cmdk": "1.1.1",
     "radix-ui": "1.8.1"
   },
-  "figatellu": {
+  "figatellultimate": {
     "role": "adapter"
   },
   "peerDependencies": {

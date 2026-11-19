@@ -1,4 +1,4 @@
-// The generated augmentation, as `.figatellu/messages/types.ts` emits it for `runtime: 'use-intl'`.
+// The generated augmentation, as `.figatellultimate/messages/types.ts` emits it for `runtime: 'use-intl'`.
 export type TestMessages = {
   readonly content: {
     readonly blog: {

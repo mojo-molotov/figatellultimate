@@ -1,13 +1,13 @@
 /**
- * The use-intl adapter: figatellu's generated messages type the keys and ICU arguments, use-intl formats.
+ * The use-intl adapter: figatellultimate's generated messages type the keys and ICU arguments, use-intl formats.
  *
  * Architecture:
- *     .figatellu/messages/types (generated) ──declare module──> Register { table, namespace, messages, locale }
- *                                                                 │
+ *     .figatellultimate/messages/types (generated) ──declare module──> Register { table, namespace, messages, locale }
+ *                                                                        │
  *     createTranslator / useTranslations ──typed by Register──> use-intl's translator, returned as is
  *
  * Key design decisions:
- *     - figatellu owns the message schema and its types; the formatting runtime is delegated to an existing library,
+ *     - figatellultimate owns the message schema and its types; the formatting runtime is delegated to an existing library,
  *       through this thin adapter, so that the library stays replaceable.
  *     - use-intl is given untyped messages: it would otherwise derive its own key types from them, at a cost that
  *       grows with the messages. The generated lookup table types the calls instead, cheaply at any size.
@@ -67,7 +67,7 @@ export function createTranslator<const N extends RegisteredNamespace>(
 ): ScopedTranslator<N>;
 export function createTranslator(options: TranslatorOptions & { readonly namespace?: string | undefined }): unknown {
   const { messages, namespace, ...rest } = options;
-  // use-intl would derive its own key types from `messages`, at a cost that grows with them: figatellu's generated
+  // use-intl would derive its own key types from `messages`, at a cost that grows with them: figatellultimate's generated
   // table types the calls instead, so use-intl sees untyped messages.
   // The overloads give the public types; at runtime, use-intl's translator is returned as is (call and `has`).
   // Widened to use-intl's own type: use-intl then derives no key types from them.

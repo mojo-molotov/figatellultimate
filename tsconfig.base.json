@@ -5,8 +5,8 @@
     "lib": ["es2022"],
     "module": "nodenext",
     "moduleResolution": "nodenext",
-    // Workspace packages resolve each other through their sources (see the "@figatellu/source" export condition).
-    "customConditions": ["@figatellu/source"],
+    // Workspace packages resolve each other through their sources (see the "@figatellultimate/source" export condition).
+    "customConditions": ["@figatellultimate/source"],
     "types": [],
 
     "strict": true,

@@ -2,20 +2,20 @@
  * The footer of every page: one line of links (the documentation, the blog, home), the site's theme picker, then
  * the site's name and a heart changing color; revealed from under the page.
  */
-import { Hearts, Reveal } from '@figatellu/effects';
+import { Hearts, Reveal } from '@figatellultimate/effects';
 import { getTranslations } from 'next-intl/server';
 import NextLink from 'next/link';
 import type { ReactNode } from 'react';
 
-import type { Locale } from '#figatellu/locales';
-import { navigationOf } from '#figatellu/navigation';
+import type { Locale } from '#figatellultimate/locales';
+import { navigationOf } from '#figatellultimate/navigation';
 
 import { site } from '../site';
 import { SiteThemePicker } from './site-theme-picker';
 
 /**
  * The footer: a link to each section of the content's navigation that has a page, then to each page at its root,
- * in this locale; then "figatellu · Made with ❤️". Revealed from under the page; out of the search.
+ * in this locale; then "figatellultimate · Made with ❤️". Revealed from under the page; out of the search.
  */
 export async function SiteFooter({ locale }: { readonly locale: Locale }): Promise<ReactNode> {
   const t = await getTranslations({ locale });

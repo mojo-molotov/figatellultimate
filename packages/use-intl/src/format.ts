@@ -1,5 +1,5 @@
 /**
- * `@figatellu/use-intl/format`: a precompiled message formatted in the browser, with values only the browser knows
+ * `@figatellultimate/use-intl/format`: a precompiled message formatted in the browser, with values only the browser knows
  * (a count of results, a page number). A few hundred bytes (`icu-minify`'s formatter): no ICU parser, no use-intl
  * runtime, no catalog of messages on the page.
  *

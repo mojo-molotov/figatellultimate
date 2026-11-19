@@ -1,11 +1,11 @@
 /** The breadcrumb, its labels translated (server: no JavaScript of its own, its links the app's). */
-import type { Crumb } from '@figatellu/site';
-import { Breadcrumb } from '@figatellu/ui';
+import type { Crumb } from '@figatellultimate/site';
+import { Breadcrumb } from '@figatellultimate/ui';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 
-import type { Locale } from '#figatellu/locales';
-import type { MessageKey } from '#figatellu/messages';
+import type { Locale } from '#figatellultimate/locales';
+import type { MessageKey } from '#figatellultimate/messages';
 
 /** The breadcrumb, its section labels translated in the page's locale: on its own, wherever a page puts it. */
 export async function Crumbs({

@@ -7,7 +7,7 @@ import { parseArgs } from 'node:util';
 
 import { chromium, type Page } from 'playwright';
 
-import { blogIndex, findBlogFolderByUrl } from '#figatellu/blog';
+import { blogIndex, findBlogFolderByUrl } from '#figatellultimate/blog';
 
 const { values } = parseArgs({ options: { port: { type: 'string', default: '3198' } } });
 const base = `http://localhost:${values.port}`;

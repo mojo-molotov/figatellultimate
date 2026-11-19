@@ -1,31 +1,31 @@
 ---
 title: 'Installation'
-metadescription: 'Ajouter figatellu à un projet, brancher le code généré et lancer le premier build.'
+metadescription: 'Ajouter figatellultimate à un projet, brancher le code généré et lancer le premier build.'
 featuredPictureUrl: /covers/placeholder-77.jpeg
 order: 2
 ---
 
 # Installation
 
-figatellu s’ajoute à un projet existant : il lit vos dossiers de contenu, puis génère le code que votre application importe. Rien ne change dans votre framework.
+figatellultimate s’ajoute à un projet existant : il lit vos dossiers de contenu, puis génère le code que votre application importe. Rien ne change dans votre framework.
 
 ## Les paquets
 
-| Paquet                                                     | Rôle                                                                         |
-| ---------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `@figatellu/core`                                          | Le cœur pur : configuration, grammaires de chemins, URL, diagnostics.        |
-| `@figatellu/cli`                                           | La commande `figatellu` : build, check, watch, search, migrate.              |
-| `@figatellu/content-collections`                           | L’adaptateur de Content Collections.                                         |
-| `@figatellu/use-intl`                                      | Des traducteurs typés par les messages générés, et les messages précompilés. |
-| `@figatellu/site`                                          | Métadonnées, sitemap, flux, fil d’Ariane, données structurées.               |
-| `@figatellu/next16`                                        | L’adaptateur de Next.js 16.                                                  |
-| `@figatellu/facets`, `@figatellu/facets-react`             | Les collections à facettes, et leurs composants React.                       |
-| `@figatellu/search`, `@figatellu/search-react`             | La recherche locale sur Pagefind, et ses composants React.                   |
-| `@figatellu/ui`, `@figatellu/effects`, `@figatellu/themes` | Un design system minimal, des effets décoratifs, des thèmes.                 |
+| Paquet                                                                          | Rôle                                                                         |
+| ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `@figatellultimate/core`                                                        | Le cœur pur : configuration, grammaires de chemins, URL, diagnostics.        |
+| `@figatellultimate/cli`                                                         | La commande `figatellultimate` : build, check, watch, search, migrate.       |
+| `@figatellultimate/content-collections`                                         | L’adaptateur de Content Collections.                                         |
+| `@figatellultimate/use-intl`                                                    | Des traducteurs typés par les messages générés, et les messages précompilés. |
+| `@figatellultimate/site`                                                        | Métadonnées, sitemap, flux, fil d’Ariane, données structurées.               |
+| `@figatellultimate/next16`                                                      | L’adaptateur de Next.js 16.                                                  |
+| `@figatellultimate/facets`, `@figatellultimate/facets-react`                    | Les collections à facettes, et leurs composants React.                       |
+| `@figatellultimate/search`, `@figatellultimate/search-react`                    | La recherche locale sur Pagefind, et ses composants React.                   |
+| `@figatellultimate/ui`, `@figatellultimate/effects`, `@figatellultimate/themes` | Un design system minimal, des effets décoratifs, des thèmes.                 |
 
 ## Prérequis
 
-Il faut Node 24 ou plus récent : figatellu charge sa config TypeScript sans outil de compilation, grâce au retrait des types de Node. Le projet doit être en modules ES (`"type": "module"` dans `package.json`).
+Il faut Node 24 ou plus récent : figatellultimate charge sa config TypeScript sans outil de compilation, grâce au retrait des types de Node. Le projet doit être en modules ES (`"type": "module"` dans `package.json`).
 
 N’importe quel gestionnaire de paquets convient.
 
@@ -34,35 +34,35 @@ N’importe quel gestionnaire de paquets convient.
 Ajoutez la CLI, le cœur et l’adaptateur de votre outil de contenu :
 
 ```sh npm
-npm install -D @figatellu/cli @figatellu/core
-npm install -D @figatellu/content-collections @content-collections/core
+npm install -D @figatellultimate/cli @figatellultimate/core
+npm install -D @figatellultimate/content-collections @content-collections/core
 ```
 
 ```sh pnpm
-pnpm add -D @figatellu/cli @figatellu/core
-pnpm add -D @figatellu/content-collections @content-collections/core
+pnpm add -D @figatellultimate/cli @figatellultimate/core
+pnpm add -D @figatellultimate/content-collections @content-collections/core
 ```
 
 ```sh yarn
-yarn add -D @figatellu/cli @figatellu/core
-yarn add -D @figatellu/content-collections @content-collections/core
+yarn add -D @figatellultimate/cli @figatellultimate/core
+yarn add -D @figatellultimate/content-collections @content-collections/core
 ```
 
 ```sh bun
-bun add -d @figatellu/cli @figatellu/core
-bun add -d @figatellu/content-collections @content-collections/core
+bun add -d @figatellultimate/cli @figatellultimate/core
+bun add -d @figatellultimate/content-collections @content-collections/core
 ```
 
 Le cœur ne lit aucun fichier : c’est l’adaptateur qui confie à Content Collections le frontmatter, sa validation et le MDX. Un autre outil pourra le remplacer sans toucher à votre contenu.
 
 ## Brancher le code généré
 
-figatellu écrit son code dans `.figatellu/`, à la racine du projet. Votre application l’importe par un alias, déclaré une fois dans `package.json` :
+figatellultimate écrit son code dans `.figatellultimate/`, à la racine du projet. Votre application l’importe par un alias, déclaré une fois dans `package.json` :
 
 ```json
 {
   "imports": {
-    "#figatellu/*": "./.figatellu/*/index.js"
+    "#figatellultimate/*": "./.figatellultimate/*/index.js"
   }
 }
 ```
@@ -71,37 +71,37 @@ Le dossier est régénéré à chaque build : ajoutez-le à `.gitignore`.
 
 ### Ce que vous importez
 
-Chaque collection a son module, nommé d’après elle : `#figatellu/blog` donne `getBlogPost`, `findBlogPostByUrl` et l’index léger des articles. `#figatellu/urls` trouve n’importe quelle page par son URL, pour une route unique qui les sert toutes.
+Chaque collection a son module, nommé d’après elle : `#figatellultimate/blog` donne `getBlogPost`, `findBlogPostByUrl` et l’index léger des articles. `#figatellultimate/urls` trouve n’importe quelle page par son URL, pour une route unique qui les sert toutes.
 
 ## Premier build
 
 Lancez la CLI à la racine du projet :
 
 ```sh npm
-npx figatellu build
+npx figatellultimate build
 ```
 
 ```sh pnpm
-pnpm figatellu build
+pnpm figatellultimate build
 ```
 
 ```sh yarn
-yarn figatellu build
+yarn figatellultimate build
 ```
 
 ```sh bun
-bunx figatellu build
+bunx figatellultimate build
 ```
 
 Elle liste vos fichiers, déduit la structure de leurs chemins, valide chaque document, puis écrit le code généré. Chaque problème est signalé avec son fichier, sa cause et la façon de le corriger.
 
 ### En continu
 
-`figatellu watch` reconstruit à chaque modification et garde le dernier état valide : une erreur dans un fichier ne vide jamais le reste.
+`figatellultimate watch` reconstruit à chaque modification et garde le dernier état valide : une erreur dans un fichier ne vide jamais le reste.
 
 ### Vérifier sans écrire
 
-`figatellu check` fait tout le travail sans rien écrire : c’est la commande à lancer en intégration continue.
+`figatellultimate check` fait tout le travail sans rien écrire : c’est la commande à lancer en intégration continue.
 
 ## Et ensuite
 

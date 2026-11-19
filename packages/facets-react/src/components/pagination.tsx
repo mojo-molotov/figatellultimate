@@ -7,7 +7,7 @@
  *     - Real `<a href>` links (`hrefFor`): shareable pages, middle click and new tab work; a plain click navigates
  *       through the binding, without reloading.
  *     - Each ellipsis is a Radix DropdownMenu of the hidden pages; the model is the pure
- *       `paginationItems` of `@figatellu/facets`.
+ *       `paginationItems` of `@figatellultimate/facets`.
  *     - Focus follows a page change made from the pagination: the activated link may be gone.
  *     - No style, no text of its own; numbers formatted for the locale (some locales do not use Latin digits).
  *     - No icon of its own either: the app may give previous and next one each (`icons`), shown beside their label
@@ -17,7 +17,7 @@
  * Invariants (`components.test.tsx`): axe with an ellipsis menu open, keyboard, disabled ends, no pagination for a
  * single page, a modified click left to the browser, the locale's digits, the app's icons beside the steps' names.
  */
-import { paginationItems, type Action } from '@figatellu/facets';
+import { paginationItems, type Action } from '@figatellultimate/facets';
 import { Direction, DropdownMenu, Slot } from 'radix-ui';
 import {
   useEffect,

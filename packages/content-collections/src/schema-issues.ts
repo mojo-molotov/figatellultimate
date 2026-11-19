@@ -3,7 +3,7 @@
  *
  * Invariant: the same scenario gives the same diagnostics with valibot and zod (`content-source.test.ts`).
  */
-import type { FileErrorDiagnostic } from '@figatellu/core';
+import type { FileErrorDiagnostic } from '@figatellultimate/core';
 
 interface StandardIssue {
   readonly message: string;
@@ -43,7 +43,7 @@ function fieldOf(issue: StandardIssue): string {
  * @param sourcePath - Its collection-relative path.
  * @param schema - The collection's schema.
  * @param raw - The raw frontmatter.
- * @returns `missing-frontmatter-field` for a field absent from the raw frontmatter (established by figatellu,
+ * @returns `missing-frontmatter-field` for a field absent from the raw frontmatter (established by figatellultimate,
  *   whatever the schema library), `invalid-frontmatter-field` with the library's message for a field present but
  *   invalid, `invalid-frontmatter` for an issue without a path.
  *

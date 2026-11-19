@@ -1,31 +1,31 @@
 ---
 title: 'Installation'
-metadescription: 'Add figatellu to a project, wire the generated code and run the first build.'
+metadescription: 'Add figatellultimate to a project, wire the generated code and run the first build.'
 featuredPictureUrl: '/covers/first-steps.jpeg'
 order: 2
 ---
 
 # Installation
 
-figatellu joins an existing project: it reads your content folders, then generates the code your application imports. Nothing changes in your framework.
+figatellultimate joins an existing project: it reads your content folders, then generates the code your application imports. Nothing changes in your framework.
 
 ## The packages
 
-| Package                                                    | Role                                                                   |
-| ---------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `@figatellu/core`                                          | The pure core: configuration, path grammars, URLs, diagnostics.        |
-| `@figatellu/cli`                                           | The `figatellu` command: build, check, watch, search, migrate.         |
-| `@figatellu/content-collections`                           | The adapter of Content Collections.                                    |
-| `@figatellu/use-intl`                                      | Translators typed by the generated messages, and precompiled messages. |
-| `@figatellu/site`                                          | Metadata, sitemap, feeds, breadcrumbs, structured data.                |
-| `@figatellu/next16`                                        | The Next.js 16 adapter.                                                |
-| `@figatellu/facets`, `@figatellu/facets-react`             | Faceted collections, and their React components.                       |
-| `@figatellu/search`, `@figatellu/search-react`             | Local search over Pagefind, and its React components.                  |
-| `@figatellu/ui`, `@figatellu/effects`, `@figatellu/themes` | A minimal design system, decorative effects, themes.                   |
+| Package                                                                         | Role                                                                   |
+| ------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `@figatellultimate/core`                                                        | The pure core: configuration, path grammars, URLs, diagnostics.        |
+| `@figatellultimate/cli`                                                         | The `figatellultimate` command: build, check, watch, search, migrate.  |
+| `@figatellultimate/content-collections`                                         | The adapter of Content Collections.                                    |
+| `@figatellultimate/use-intl`                                                    | Translators typed by the generated messages, and precompiled messages. |
+| `@figatellultimate/site`                                                        | Metadata, sitemap, feeds, breadcrumbs, structured data.                |
+| `@figatellultimate/next16`                                                      | The Next.js 16 adapter.                                                |
+| `@figatellultimate/facets`, `@figatellultimate/facets-react`                    | Faceted collections, and their React components.                       |
+| `@figatellultimate/search`, `@figatellultimate/search-react`                    | Local search over Pagefind, and its React components.                  |
+| `@figatellultimate/ui`, `@figatellultimate/effects`, `@figatellultimate/themes` | A minimal design system, decorative effects, themes.                   |
 
 ## Requirements
 
-You need Node 24 or later: figatellu loads its TypeScript config with no build tool, through Node’s type stripping. The project must use ES modules (`"type": "module"` in `package.json`).
+You need Node 24 or later: figatellultimate loads its TypeScript config with no build tool, through Node’s type stripping. The project must use ES modules (`"type": "module"` in `package.json`).
 
 Any package manager works.
 
@@ -34,35 +34,35 @@ Any package manager works.
 Add the CLI, the core and the adapter of your content tool:
 
 ```sh npm
-npm install -D @figatellu/cli @figatellu/core
-npm install -D @figatellu/content-collections @content-collections/core
+npm install -D @figatellultimate/cli @figatellultimate/core
+npm install -D @figatellultimate/content-collections @content-collections/core
 ```
 
 ```sh pnpm
-pnpm add -D @figatellu/cli @figatellu/core
-pnpm add -D @figatellu/content-collections @content-collections/core
+pnpm add -D @figatellultimate/cli @figatellultimate/core
+pnpm add -D @figatellultimate/content-collections @content-collections/core
 ```
 
 ```sh yarn
-yarn add -D @figatellu/cli @figatellu/core
-yarn add -D @figatellu/content-collections @content-collections/core
+yarn add -D @figatellultimate/cli @figatellultimate/core
+yarn add -D @figatellultimate/content-collections @content-collections/core
 ```
 
 ```sh bun
-bun add -d @figatellu/cli @figatellu/core
-bun add -d @figatellu/content-collections @content-collections/core
+bun add -d @figatellultimate/cli @figatellultimate/core
+bun add -d @figatellultimate/content-collections @content-collections/core
 ```
 
 The core reads no file: the adapter hands the frontmatter, its validation and the MDX to Content Collections. Another tool can replace it without touching your content.
 
 ## Wire the generated code
 
-figatellu writes its code to `.figatellu/`, at the project’s root. Your application imports it through an alias, declared once in `package.json`:
+figatellultimate writes its code to `.figatellultimate/`, at the project’s root. Your application imports it through an alias, declared once in `package.json`:
 
 ```json
 {
   "imports": {
-    "#figatellu/*": "./.figatellu/*/index.js"
+    "#figatellultimate/*": "./.figatellultimate/*/index.js"
   }
 }
 ```
@@ -71,37 +71,37 @@ The folder is regenerated on every build: add it to `.gitignore`.
 
 ### What you import
 
-Each collection has its module, named after it: `#figatellu/blog` gives `getBlogPost`, `findBlogPostByUrl` and the posts’ light index. `#figatellu/urls` finds any page by its URL, for a single route serving them all.
+Each collection has its module, named after it: `#figatellultimate/blog` gives `getBlogPost`, `findBlogPostByUrl` and the posts’ light index. `#figatellultimate/urls` finds any page by its URL, for a single route serving them all.
 
 ## First build
 
 Run the CLI at the project’s root:
 
 ```sh npm
-npx figatellu build
+npx figatellultimate build
 ```
 
 ```sh pnpm
-pnpm figatellu build
+pnpm figatellultimate build
 ```
 
 ```sh yarn
-yarn figatellu build
+yarn figatellultimate build
 ```
 
 ```sh bun
-bunx figatellu build
+bunx figatellultimate build
 ```
 
 It lists your files, infers the structure from their paths, validates every document, then writes the generated code. Every problem comes with its file, its cause and how to fix it.
 
 ### Continuously
 
-`figatellu watch` rebuilds on every change and keeps the last valid state: an error in one file never empties the rest.
+`figatellultimate watch` rebuilds on every change and keeps the last valid state: an error in one file never empties the rest.
 
 ### Check without writing
 
-`figatellu check` does all the work and writes nothing: the command to run in continuous integration.
+`figatellultimate check` does all the work and writes nothing: the command to run in continuous integration.
 
 ## Next steps
 

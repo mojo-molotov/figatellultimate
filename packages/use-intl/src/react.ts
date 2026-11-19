@@ -6,7 +6,7 @@ import { useTranslations as useUseIntlTranslations } from 'use-intl/react';
 import type { RegisteredNamespace, ScopedTranslator, Translator } from './types.js';
 
 /**
- * The React hook: use-intl's `useTranslations`, inside its `IntlProvider`, typed by figatellu's generated messages.
+ * The React hook: use-intl's `useTranslations`, inside its `IntlProvider`, typed by figatellultimate's generated messages.
  *
  * @param namespace - A scope: keys become relative to it.
  * @returns A translator typed by the generated `MessageTable`.

@@ -1,13 +1,13 @@
-# @figatellu/facets
+# @figatellultimate/facets
 
 A pure engine for faceted collections: filter by N facets, sort, paginate, and keep the whole state in the URL.
 
 ```sh
-pnpm add @figatellu/facets
+pnpm add @figatellultimate/facets
 ```
 
 ```ts
-import { defineFacetedCollection } from '@figatellu/facets';
+import { defineFacetedCollection } from '@figatellultimate/facets';
 
 const engine = defineFacetedCollection({
   items: posts,
@@ -19,4 +19,4 @@ const engine = defineFacetedCollection({
 const { keys, pages } = engine.view(engine.read('?tags=bot&page=2'));
 ```
 
-Tests: [Allure report](https://mojo-molotov.github.io/figatellu/ci/) · [coverage](https://mojo-molotov.github.io/figatellu/ci/coverage/)
+Tests: [Allure report](https://mojo-molotov.github.io/figatellultimate/ci/) · [coverage](https://mojo-molotov.github.io/figatellultimate/ci/coverage/)

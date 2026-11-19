@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { rssOf } from '../index.js';
 import type { MetadataFields, Site, SiteEntryWithData } from '../types.js';
 
-const site: Site = { origin: 'https://example.com', name: 'figatellu', defaultLocale: 'fr' };
+const site: Site = { origin: 'https://example.com', name: 'figatellultimate', defaultLocale: 'fr' };
 const fields: MetadataFields = {
   title: 'title',
   description: 'description',

@@ -4,7 +4,7 @@
     // Node types only so that the editor resolves the fixtures; the boundary rules they exercise are syntactic.
     "types": ["node"],
     "jsx": "react-jsx",
-    "paths": { "@figatellu/fake-adapter": ["./packages/fake-adapter/src/index.ts"] }
+    "paths": { "@figatellultimate/fake-adapter": ["./packages/fake-adapter/src/index.ts"] }
   },
   "include": ["packages/*/src/**/*.ts", "packages/*/src/**/*.tsx"]
 }

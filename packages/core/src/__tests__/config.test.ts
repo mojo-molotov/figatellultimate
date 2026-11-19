@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { defineConfig, InvalidConfigError, parseConfig, type FigatelluConfig } from '../config.js';
+import { defineConfig, InvalidConfigError, parseConfig, type FigatellultimateConfig } from '../config.js';
 import type { ContentSource } from '../content/ports.js';
 import { defineCollection } from '../declarations/collection.js';
 import { locale, segment, slug } from '../declarations/grammar.js';
@@ -15,21 +15,25 @@ const source: ContentSource = {
   },
 };
 
-const valid: FigatelluConfig = { locales, collections: { pages, blog }, taxonomies: { tags }, source };
+const valid: FigatellultimateConfig = { locales, collections: { pages, blog }, taxonomies: { tags }, source };
 
 describe('defineConfig', () => {
   it('returns the config frozen, with the default output folder', () => {
     const config = defineConfig(valid);
 
-    expect(config.output).toBe('.figatellu');
+    expect(config.output).toBe('.figatellultimate');
     expect(config.collections).toEqual({ pages, blog });
     expect(Object.isFrozen(config)).toBe(true);
   });
 
   it('keeps an explicit output folder and URL options', () => {
-    const config = defineConfig({ ...valid, output: 'generated/figatellu', urls: { defaultLocale: 'explicit' } });
+    const config = defineConfig({
+      ...valid,
+      output: 'generated/figatellultimate',
+      urls: { defaultLocale: 'explicit' },
+    });
 
-    expect(config.output).toBe('generated/figatellu');
+    expect(config.output).toBe('generated/figatellultimate');
     expect(config.urls).toEqual({ defaultLocale: 'explicit' });
   });
 
@@ -81,7 +85,7 @@ describe('defineConfig: navigation', () => {
     pages: defineCollection({ ...pages, messages: { path: ['title'] }, metadata }),
     blog: defineCollection({ ...blog, messages: { category: ['title'], subcategory: ['title'] }, metadata }),
   };
-  const withNavigation = (navigation: unknown, collections: FigatelluConfig['collections'] = titled) =>
+  const withNavigation = (navigation: unknown, collections: FigatellultimateConfig['collections'] = titled) =>
     parseConfig({ ...valid, collections, messages: { directory: 'messages' }, navigation });
 
   it('keeps a valid navigation, frozen', () => {

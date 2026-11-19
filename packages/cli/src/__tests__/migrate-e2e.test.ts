@@ -9,7 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { EXIT, main } from '../main.js';
 
 const PACKAGE = join(import.meta.dirname, '..', '..');
-const WITH_FIGATELLU = join(PACKAGE, '..', 'content-collections', 'src', 'config.ts').replaceAll('\\', '/');
+const WITH_FIGATELLULTIMATE = join(PACKAGE, '..', 'content-collections', 'src', 'config.ts').replaceAll('\\', '/');
 
 /** Pages and blog posts, French by default, some translated; an image next to an English page. */
 const CONTENT: Readonly<Record<string, string>> = {
@@ -27,17 +27,17 @@ const CONTENT: Readonly<Record<string, string>> = {
 const CONTENT_COLLECTIONS_CONFIG = `
 import { defineCollection, defineConfig } from '@content-collections/core';
 import * as v from 'valibot';
-import { withFigatellu } from ${JSON.stringify(WITH_FIGATELLU)};
+import { withFigatellultimate } from ${JSON.stringify(WITH_FIGATELLULTIMATE)};
 
 const schema = v.object({ title: v.string(), content: v.string() });
-const pages = withFigatellu(defineCollection({ name: 'pages', directory: 'content/pages', include: '**/*.mdx', schema }));
-const blog = withFigatellu(defineCollection({ name: 'blog', directory: 'content/blog', include: '**/*.mdx', schema }));
+const pages = withFigatellultimate(defineCollection({ name: 'pages', directory: 'content/pages', include: '**/*.mdx', schema }));
+const blog = withFigatellultimate(defineCollection({ name: 'blog', directory: 'content/blog', include: '**/*.mdx', schema }));
 export default defineConfig({ content: [pages, blog] });
 `;
 
-const FIGATELLU_CONFIG = `import { join } from 'node:path';
-import { defineCollection, defineConfig, defineLocales, locale, rest, segment, slug } from '@figatellu/core';
-import { createContentCollectionsSource } from '@figatellu/content-collections';
+const FIGATELLULTIMATE_CONFIG = `import { join } from 'node:path';
+import { defineCollection, defineConfig, defineLocales, locale, rest, segment, slug } from '@figatellultimate/core';
+import { createContentCollectionsSource } from '@figatellultimate/content-collections';
 
 export default defineConfig({
   locales: defineLocales({ list: ['fr', 'en'], default: 'fr' }),
@@ -66,7 +66,7 @@ async function run(...argv: string[]): Promise<{ code: number; output: string }>
       done();
     },
   });
-  const code = await main([...argv, '--config', join(project.basePath, 'figatellu.config.ts')], {
+  const code = await main([...argv, '--config', join(project.basePath, 'figatellultimate.config.ts')], {
     stdout,
     fancy: false,
     cwd: project.basePath,
@@ -83,7 +83,7 @@ async function tree(): Promise<Record<string, string>> {
       const path = join(folder, entry.name);
 
       if (entry.isDirectory()) {
-        if (!['.figatellu', '.content-collections', 'node_modules'].includes(entry.name)) await walk(path);
+        if (!['.figatellultimate', '.content-collections', 'node_modules'].includes(entry.name)) await walk(path);
       } else files[relative(project.basePath, path).replaceAll('\\', '/')] = await readFile(path, 'utf8');
     }
   };
@@ -94,7 +94,7 @@ async function tree(): Promise<Record<string, string>> {
 }
 
 const withoutConfig = (files: Readonly<Record<string, string>>): Record<string, string> =>
-  Object.fromEntries(Object.entries(files).filter(([path]) => path !== 'figatellu.config.ts'));
+  Object.fromEntries(Object.entries(files).filter(([path]) => path !== 'figatellultimate.config.ts'));
 
 beforeAll(async () => {
   await project.create('package.json', JSON.stringify({ type: 'module' }));
@@ -102,11 +102,11 @@ beforeAll(async () => {
   for (const [path, contents] of Object.entries(CONTENT)) await project.create(path, contents);
 
   await project.create('content-collections.ts', CONTENT_COLLECTIONS_CONFIG);
-  await project.create('figatellu.config.ts', FIGATELLU_CONFIG);
+  await project.create('figatellultimate.config.ts', FIGATELLULTIMATE_CONFIG);
 });
 afterAll(() => project.cleanup());
 
-describe('figatellu migrate, end to end', () => {
+describe('figatellultimate migrate, end to end', () => {
   it('prints the plan and writes nothing without --write', async () => {
     const before = await tree();
     const { code, output } = await run('migrate', 'default-locale', 'en');
@@ -131,7 +131,9 @@ describe('figatellu migrate, end to end', () => {
     expect(migrated['content/pages/about.mdx']).toBe(CONTENT['content/pages/en/about.mdx']);
     expect(migrated['content/pages/fr/about.mdx']).toBe(CONTENT['content/pages/about.mdx']);
     expect(migrated['content/blog/news/bot/fr/post-01.mdx']).toBe(CONTENT['content/blog/news/bot/post-01.mdx']);
-    expect(migrated['figatellu.config.ts']).toBe(FIGATELLU_CONFIG.replace("default: 'fr'", "default: 'en'"));
+    expect(migrated['figatellultimate.config.ts']).toBe(
+      FIGATELLULTIMATE_CONFIG.replace("default: 'fr'", "default: 'en'"),
+    );
     expect(JSON.parse(migrated['redirects.json'] ?? '[]')).toContainEqual({
       from: '/docs/setup',
       to: '/fr/docs/setup',
@@ -166,13 +168,13 @@ describe('figatellu migrate, end to end', () => {
     const migrated = await tree();
 
     expect(migrated['content/pages/fr/index.mdx']).toBe(CONTENT['content/pages/index.mdx']);
-    expect(migrated['figatellu.config.ts']).toContain("default: 'fr', notation: 'explicit'");
+    expect(migrated['figatellultimate.config.ts']).toContain("default: 'fr', notation: 'explicit'");
     expect(migrated['redirects.json']).toBe(original['redirects.json']);
     expect((await run('migrate', 'notation', 'implicit', '--write')).code).toBe(EXIT.ok);
     const restored = await tree();
 
-    expect(restored['figatellu.config.ts']).toBe(
-      FIGATELLU_CONFIG.replace("default: 'fr'", "default: 'fr', notation: 'implicit'"),
+    expect(restored['figatellultimate.config.ts']).toBe(
+      FIGATELLULTIMATE_CONFIG.replace("default: 'fr'", "default: 'fr', notation: 'implicit'"),
     );
     expect(withoutConfig(restored)).toEqual(withoutConfig(original));
   }, 120_000);

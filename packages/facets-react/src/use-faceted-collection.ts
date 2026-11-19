@@ -7,13 +7,13 @@
  *     - A thin adapter over the pure engine: it reads the URL, keeps the remembered page, and navigates; every rule
  *       lives in the engine, none in refs or effects.
  *     - Keys only: the app maps them to what it renders (e.g. cards rendered once on the server).
- *     - The router is injected (`UrlAdapter`): the same hook for Next (`@figatellu/next16/facets`), the History API,
+ *     - The router is injected (`UrlAdapter`): the same hook for Next (`@figatellultimate/next16/facets`), the History API,
  *       or memory in tests.
  *
  * Invariants (`hook.test.ts`): the reconciliation replayed through the hook and an in-memory URL; the
  * navigation modes; the URL is the state, the remembered page never in it.
  */
-import type { Action, Engine, SelectionState, UrlAdapter, View } from '@figatellu/facets';
+import type { Action, Engine, SelectionState, UrlAdapter, View } from '@figatellultimate/facets';
 import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
 
 /** What the hook gives a listing: its state and view, how to act, real hrefs, and its sorts. */

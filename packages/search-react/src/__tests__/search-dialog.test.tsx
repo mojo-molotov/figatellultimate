@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { createSearch } from '@figatellu/search';
+import { createSearch } from '@figatellultimate/search';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import axe from 'axe-core';

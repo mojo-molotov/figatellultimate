@@ -3,7 +3,7 @@
 /**
  * The footer's theme picker: one button per theme, the chosen one pressed, the choice remembered. The page
  * blurs, changes theme, then comes back sharp (a view transition, `<html data-site-theme-switch>` while it plays; the motion is
- * `@figatellu/themes/base.css`'s), at once on a touch screen, without view transitions or with reduced motion.
+ * `@figatellultimate/themes/base.css`'s), at once on a touch screen, without view transitions or with reduced motion.
  */
 import { useEffect, useState, type ReactNode } from 'react';
 

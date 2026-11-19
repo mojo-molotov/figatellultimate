@@ -3,7 +3,7 @@
  * robots allow indexing; a folder or term page dated by its newest indexed entry. `noindex` pages stay mounted but
  * leave the sitemap, the feeds and the search.
  */
-import type { Entry, FigatelluConfig, FolderPage } from '@figatellu/core';
+import type { Entry, FigatellultimateConfig, FolderPage } from '@figatellultimate/core';
 
 import type { TermData } from './files/terms.js';
 import { compareText } from './model.js';
@@ -41,7 +41,7 @@ const newest = (dates: readonly (string | undefined)[]): string | undefined =>
  * @returns By URL, the pages with a date or not indexed.
  */
 export function pageSeo(
-  config: FigatelluConfig,
+  config: FigatellultimateConfig,
   entries: readonly Entry[],
   folders: readonly FolderPage[],
   terms: readonly TermData[],

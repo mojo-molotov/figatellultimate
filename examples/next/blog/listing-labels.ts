@@ -4,10 +4,10 @@
  */
 import { getTranslations } from 'next-intl/server';
 
-import type { Locale } from '#figatellu/locales';
-import { taxonomies } from '#figatellu/taxonomies';
+import type { Locale } from '#figatellultimate/locales';
+import { taxonomies } from '#figatellultimate/taxonomies';
 
-import type { Precompiled } from '@figatellu/use-intl/precompile';
+import type { Precompiled } from '@figatellultimate/use-intl/precompile';
 import { compiled } from '../i18n/labels';
 import { SORTS } from './facets';
 

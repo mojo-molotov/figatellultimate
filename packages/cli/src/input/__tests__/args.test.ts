@@ -4,12 +4,18 @@ import { parseCli } from '../args.js';
 
 describe('parseCli', () => {
   it.each([
-    [['build'], { kind: 'command', command: { name: 'build', config: 'figatellu.config.ts', mode: 'production' } }],
+    [
+      ['build'],
+      { kind: 'command', command: { name: 'build', config: 'figatellultimate.config.ts', mode: 'production' } },
+    ],
     [['check', '-c', 'x.ts'], { kind: 'command', command: { name: 'check', config: 'x.ts', mode: 'production' } }],
-    [['watch'], { kind: 'command', command: { name: 'watch', config: 'figatellu.config.ts', mode: 'development' } }],
+    [
+      ['watch'],
+      { kind: 'command', command: { name: 'watch', config: 'figatellultimate.config.ts', mode: 'development' } },
+    ],
     [
       ['build', '--mode', 'development'],
-      { kind: 'command', command: { name: 'build', config: 'figatellu.config.ts', mode: 'development' } },
+      { kind: 'command', command: { name: 'build', config: 'figatellultimate.config.ts', mode: 'development' } },
     ],
     [
       ['search', '--site', '.next/server/app'],
@@ -17,7 +23,7 @@ describe('parseCli', () => {
         kind: 'command',
         command: {
           name: 'search',
-          config: 'figatellu.config.ts',
+          config: 'figatellultimate.config.ts',
           mode: 'production',
           search: { site: '.next/server/app', out: 'public/pagefind', localeFolders: false },
         },
@@ -29,7 +35,7 @@ describe('parseCli', () => {
         kind: 'command',
         command: {
           name: 'search',
-          config: 'figatellu.config.ts',
+          config: 'figatellultimate.config.ts',
           mode: 'production',
           search: { site: 'out', out: 'dist/pagefind', localeFolders: true },
         },
@@ -41,7 +47,7 @@ describe('parseCli', () => {
         kind: 'command',
         command: {
           name: 'migrate',
-          config: 'figatellu.config.ts',
+          config: 'figatellultimate.config.ts',
           mode: 'production',
           migration: { target: { kind: 'default-locale', locale: 'en' }, write: false },
         },
@@ -53,7 +59,7 @@ describe('parseCli', () => {
         kind: 'command',
         command: {
           name: 'migrate',
-          config: 'figatellu.config.ts',
+          config: 'figatellultimate.config.ts',
           mode: 'production',
           migration: { target: { kind: 'notation', notation: 'explicit' }, write: true },
         },

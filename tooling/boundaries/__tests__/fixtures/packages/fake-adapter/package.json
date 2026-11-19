@@ -1,8 +1,8 @@
 {
-  "name": "@figatellu/fake-adapter",
+  "name": "@figatellultimate/fake-adapter",
   "private": true,
   "type": "module",
-  "figatellu": {
+  "figatellultimate": {
     "role": "adapter"
   }
 }

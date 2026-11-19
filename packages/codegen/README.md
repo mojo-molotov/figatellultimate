@@ -1,15 +1,15 @@
-# @figatellu/codegen
+# @figatellultimate/codegen
 
-The code generator of figatellu: turns validated content into the typed modules of `.figatellu/`. The CLI uses it.
+The code generator of figatellultimate: turns validated content into the typed modules of `.figatellultimate/`. The CLI uses it.
 
 ```sh
-pnpm add -D @figatellu/codegen
+pnpm add -D @figatellultimate/codegen
 ```
 
 ```ts
-import { emit } from '@figatellu/codegen';
+import { emit } from '@figatellultimate/codegen';
 
 for (const file of emit({ config, assembly, outputDirectory })) console.log(file.path);
 ```
 
-Tests: [Allure report](https://mojo-molotov.github.io/figatellu/ci/) · [coverage](https://mojo-molotov.github.io/figatellu/ci/coverage/)
+Tests: [Allure report](https://mojo-molotov.github.io/figatellultimate/ci/) · [coverage](https://mojo-molotov.github.io/figatellultimate/ci/coverage/)

@@ -1,18 +1,25 @@
 /** The single catch-all route: every content URL, folder page and author page, prerendered with its metadata. */
-import { toNextMetadata } from '@figatellu/next16';
-import { metadataOf, neighboursOf, pageMetadataOf, personOf, sectionOf, structuredDataOf } from '@figatellu/site';
-import { keptHeadings } from '@figatellu/toc';
-import { Pager } from '@figatellu/ui';
+import { toNextMetadata } from '@figatellultimate/next16';
+import {
+  metadataOf,
+  neighboursOf,
+  pageMetadataOf,
+  personOf,
+  sectionOf,
+  structuredDataOf,
+} from '@figatellultimate/site';
+import { keptHeadings } from '@figatellultimate/toc';
+import { Pager } from '@figatellultimate/ui';
 import type { Metadata } from 'next';
 import { hasLocale } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 
-import { navigationOf } from '#figatellu/navigation';
-import { taxonomies } from '#figatellu/taxonomies';
-import { authorsTermUrl } from '#figatellu/terms';
-import { findByUrl, metadataFields, mountedUrls, segmentsOf, urlOf } from '#figatellu/urls';
+import { navigationOf } from '#figatellultimate/navigation';
+import { taxonomies } from '#figatellultimate/taxonomies';
+import { authorsTermUrl } from '#figatellultimate/terms';
+import { findByUrl, metadataFields, mountedUrls, segmentsOf, urlOf } from '#figatellultimate/urls';
 
 import { AuthorPage, authorName } from '../../../blog/author-page';
 import { BlogFolderPage, folderTitle } from '../../../blog/folder-page';
@@ -74,7 +81,7 @@ export default async function Page(props: PageProps<'/[locale]/[[...url]]'>): Pr
 
   if (found === undefined) notFound();
 
-  // The blog's folder pages: rendered from figatellu's neutral data.
+  // The blog's folder pages: rendered from figatellultimate's neutral data.
   if (found.kind === 'folder') {
     const { folder } = found;
 
@@ -87,7 +94,7 @@ export default async function Page(props: PageProps<'/[locale]/[[...url]]'>): Pr
     );
   }
 
-  // An author's page: their posts, from figatellu's neutral data; described as a person.
+  // An author's page: their posts, from figatellultimate's neutral data; described as a person.
   if (found.kind === 'term') {
     const { term } = found;
     const t = await getTranslations({ locale: term.locale });

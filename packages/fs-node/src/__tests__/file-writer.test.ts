@@ -3,7 +3,7 @@ import { stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { GENERATED_HEADER } from '@figatellu/core';
+import { GENERATED_HEADER } from '@figatellultimate/core';
 import { FileSystem } from '@japa/file-system';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -15,8 +15,8 @@ let project: FileSystem;
 let output: string;
 
 beforeEach(() => {
-  project = new FileSystem(join(tmpdir(), `figatellu-writer-${randomUUID()}`));
-  output = join(project.basePath, '.figatellu');
+  project = new FileSystem(join(tmpdir(), `figatellultimate-writer-${randomUUID()}`));
+  output = join(project.basePath, '.figatellultimate');
 });
 afterEach(() => project.cleanup());
 
@@ -26,7 +26,7 @@ describe('createNodeFileWriter', () => {
     const result = await writer.commit([generated('locales/index.ts', 'a'), generated('blog/entries/en/x.ts', 'b')]);
 
     expect(result).toEqual({ ok: true, value: { written: 2, removed: 0, unchanged: 0 }, warnings: [] });
-    expect(await project.contents('.figatellu/blog/entries/en/x.ts')).toBe(`${GENERATED_HEADER}\nb\n`);
+    expect(await project.contents('.figatellultimate/blog/entries/en/x.ts')).toBe(`${GENERATED_HEADER}\nb\n`);
   });
 
   it('does not rewrite unchanged files (their modification time is kept)', async () => {
@@ -49,16 +49,16 @@ describe('createNodeFileWriter', () => {
     const result = await writer.commit([generated('a.ts', '2')]);
 
     expect(result.ok && result.value).toEqual({ written: 1, removed: 1, unchanged: 0 });
-    expect(await project.exists('.figatellu/old')).toBe(false);
-    expect(await project.contents('.figatellu/a.ts')).toContain('2');
+    expect(await project.exists('.figatellultimate/old')).toBe(false);
+    expect(await project.contents('.figatellultimate/a.ts')).toContain('2');
   });
 
   it('never removes a file it did not generate', async () => {
-    await project.create('.figatellu/mine.ts', 'export const userFile = true;\n');
+    await project.create('.figatellultimate/mine.ts', 'export const userFile = true;\n');
     const result = await createNodeFileWriter(output).commit([generated('a.ts', 'x')]);
 
     expect(result.ok && result.value.removed).toBe(0);
-    expect(await project.exists('.figatellu/mine.ts')).toBe(true);
+    expect(await project.exists('.figatellultimate/mine.ts')).toBe(true);
   });
 
   it('accepts a stream of files', async () => {
@@ -74,7 +74,7 @@ describe('createNodeFileWriter', () => {
 
   it('leaves no temporary file behind', async () => {
     await createNodeFileWriter(output).commit([generated('a.ts', 'a')]);
-    const entries = await project.readDir('.figatellu');
+    const entries = await project.readDir('.figatellultimate');
 
     expect(entries.map((e) => e.basename)).not.toContainEqual(expect.stringContaining('.tmp'));
   });

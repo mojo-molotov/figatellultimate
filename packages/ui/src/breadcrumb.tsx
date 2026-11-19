@@ -9,7 +9,7 @@ import type { ComponentProps, ReactNode } from 'react';
 import { Link } from './link.js';
 
 /**
- * One step of a breadcrumb, as `breadcrumbOf` (`@figatellu/site`) gives it: a message key `K` to translate (a
+ * One step of a breadcrumb, as `breadcrumbOf` (`@figatellultimate/site`) gives it: a message key `K` to translate (a
  * section) or a title (an entry).
  */
 export type Crumb<K extends string = string> = (
@@ -28,7 +28,7 @@ export interface BreadcrumbLabels {
 
 /** The breadcrumb's props: a `<nav>`'s, plus the steps, the translator and the labels. */
 export interface BreadcrumbProps<K extends string = string> extends ComponentProps<'nav'> {
-  /** `breadcrumbOf(navigationOf(locale), url, title)` from `@figatellu/site`, computed with the page. */
+  /** `breadcrumbOf(navigationOf(locale), url, title)` from `@figatellultimate/site`, computed with the page. */
   readonly crumbs: readonly Crumb<K>[];
   /** The app's translator for message keys (section labels): it gets the keys the crumbs hold, typed. */
   readonly t: (key: K) => string;

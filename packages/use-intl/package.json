@@ -1,28 +1,28 @@
 {
-  "name": "@figatellu/use-intl",
+  "name": "@figatellultimate/use-intl",
   "version": "0.0.0",
-  "description": "use-intl adapter of figatellu: a translator typed by the generated messages (keys, ICU arguments, scopes).",
+  "description": "use-intl adapter of figatellultimate: a translator typed by the generated messages (keys, ICU arguments, scopes).",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
   "exports": {
     ".": {
-      "@figatellu/source": "./src/index.ts",
+      "@figatellultimate/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
     "./react": {
-      "@figatellu/source": "./src/react.ts",
+      "@figatellultimate/source": "./src/react.ts",
       "types": "./dist/react.d.ts",
       "default": "./dist/react.js"
     },
     "./precompile": {
-      "@figatellu/source": "./src/precompile.ts",
+      "@figatellultimate/source": "./src/precompile.ts",
       "types": "./dist/precompile.d.ts",
       "default": "./dist/precompile.js"
     },
     "./format": {
-      "@figatellu/source": "./src/format.ts",
+      "@figatellultimate/source": "./src/format.ts",
       "types": "./dist/format.d.ts",
       "default": "./dist/format.js"
     },
@@ -59,7 +59,7 @@
     "lint:package": "publint --strict && attw --pack . --profile esm-only"
   },
   "dependencies": {},
-  "figatellu": {
+  "figatellultimate": {
     "role": "adapter"
   },
   "peerDependencies": {

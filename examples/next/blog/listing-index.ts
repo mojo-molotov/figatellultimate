@@ -3,7 +3,7 @@
  * (`app/[locale]/listing/[...folder]/route.ts`), fetched by the browser on the first filter or sort, never sent with
  * the page. Checked by its schema before it is read, cached once per listing (`createIndexLoader`).
  */
-import { createIndexLoader } from '@figatellu/facets-react';
+import { createIndexLoader } from '@figatellultimate/facets-react';
 import * as v from 'valibot';
 
 import type { CardData } from './cards';

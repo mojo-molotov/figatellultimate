@@ -1,5 +1,5 @@
 // Load test (`pnpm example:load [--posts N]`): the example copied to `.tmp/load-<N>/` (gitignored), with N generated
-// posts per locale spread over the blog's four subcategories, then timed (figatellu build, typecheck, next build,
+// posts per locale spread over the blog's four subcategories, then timed (figatellultimate build, typecheck, next build,
 // search index) and measured (JavaScript, HTML, generated code, navigation in Chromium). Plain Node, as `verify.ts`.
 import { spawn, spawnSync } from 'node:child_process';
 import {
@@ -34,7 +34,7 @@ const target = join(example, '..', '..', '.tmp', `load-${String(posts)}`);
 const SKIP = new Set([
   'node_modules',
   '.next',
-  '.figatellu',
+  '.figatellultimate',
   '.content-collections',
   '.tmp',
   'pagefind',
@@ -116,12 +116,12 @@ function run(label: string, command: string, args: readonly string[]): void {
 
   console.log(`✓ ${label}: ${timings[label].toFixed(1)} s`);
 }
-run('figatellu build', bin('figatellu'), ['build']);
+run('figatellultimate build', bin('figatellultimate'), ['build']);
 // Next generates the route types (`PageProps`, `LayoutProps`) the app's typecheck reads.
 run('next typegen', bin('next'), ['typegen']);
 run('typecheck (tsc)', bin('tsc'), ['--noEmit']);
 run('next build', bin('next'), ['build']);
-run('figatellu search', bin('figatellu'), [
+run('figatellultimate search', bin('figatellultimate'), [
   'search',
   '--site',
   '.next/server/app',
@@ -160,7 +160,7 @@ const report: string[] = [
   '## Sizes',
   '',
   `- Content: ${String(readdirSync(join(target, 'content/blog'), { recursive: true }).filter((name) => String(name).endsWith('.mdx')).length)} blog files`,
-  `- \`.figatellu/\`: ${kb(sizeOf(join(target, '.figatellu')))}`,
+  `- \`.figatellultimate/\`: ${kb(sizeOf(join(target, '.figatellultimate')))}`,
   `- All client JavaScript (\`.next/static\`): ${String(allJs.length)} files, ${kb(allJs.reduce((sum, file) => sum + statSync(file).size, 0))}`,
   `- Search index (\`public/pagefind\`): ${kb(sizeOf(join(target, 'public/pagefind')))}`,
   '',

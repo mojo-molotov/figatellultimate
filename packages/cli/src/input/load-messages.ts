@@ -6,7 +6,7 @@ import { readdir } from 'node:fs/promises';
 import { join, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import type { UnreadableMessageModuleDiagnostic } from '@figatellu/messages';
+import type { UnreadableMessageModuleDiagnostic } from '@figatellultimate/messages';
 
 /**
  * Every message module found, by file name, and the diagnostics of those that could not load.

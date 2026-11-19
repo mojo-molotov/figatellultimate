@@ -7,18 +7,18 @@ order: 6
 
 # Messages
 
-The interface’s texts live in message files, one per language. figatellu derives part of them from the content itself: a folder or a tag added requires its translation everywhere.
+The interface’s texts live in message files, one per language. figatellultimate derives part of them from the content itself: a folder or a tag added requires its translation everywhere.
 
 ## The generated skeleton
 
-Every folder declares its fields, such as a `title`, and every taxonomy term its own, such as a `label`. figatellu gathers them into a skeleton: `content.blog.news.$.title`, `taxonomies.tags.release.label`. The `$` separates a folder’s fields from its subfolders.
+Every folder declares its fields, such as a `title`, and every taxonomy term its own, such as a `label`. figatellultimate gathers them into a skeleton: `content.blog.news.$.title`, `taxonomies.tags.release.label`. The `$` separates a folder’s fields from its subfolders.
 
 ## The application’s schema
 
 `messages.schema` names a module that spreads the skeleton, then adds your own keys, left empty:
 
 ```ts
-import { skeleton, type MessageSchema } from '#figatellu/messages';
+import { skeleton, type MessageSchema } from '#figatellultimate/messages';
 
 const _ = '';
 
@@ -32,11 +32,11 @@ The schema is written once; every language derives its type from it.
 
 ## One language per file
 
-`messages/fr.ts` and `messages/en.ts` fill that schema, and each must satisfy it exactly. A forgotten key, or an extra one, does not compile, and `figatellu check` names the key and the file to complete.
+`messages/fr.ts` and `messages/en.ts` fill that schema, and each must satisfy it exactly. A forgotten key, or an extra one, does not compile, and `figatellultimate check` names the key and the file to complete.
 
 ## ICU messages
 
-Messages follow ICU. figatellu parses every one, requires for each language the plural categories it needs (`few` in Polish, `other` everywhere), and types the arguments: a message with `{count, plural, …}` takes a number, and forgetting it does not compile. Every language must take the same arguments as the default one.
+Messages follow ICU. figatellultimate parses every one, requires for each language the plural categories it needs (`few` in Polish, `other` everywhere), and types the arguments: a message with `{count, plural, …}` takes a number, and forgetting it does not compile. Every language must take the same arguments as the default one.
 
 ```ts
 folder: { more: '{count, plural, one {See the post} other {See the # posts}}' },
@@ -44,11 +44,11 @@ folder: { more: '{count, plural, one {See the post} other {See the # posts}}' },
 
 ## At runtime
 
-figatellu formats nothing itself. `@figatellu/use-intl` gives translators typed by the generated messages:
+figatellultimate formats nothing itself. `@figatellultimate/use-intl` gives translators typed by the generated messages:
 
 ```ts
-import { createTranslator } from '@figatellu/use-intl';
-import { loadMessages } from '#figatellu/messages';
+import { createTranslator } from '@figatellultimate/use-intl';
+import { loadMessages } from '#figatellultimate/messages';
 
 const t = createTranslator({ locale: 'en', messages: await loadMessages('en') });
 t('ui.folder.more', { count: 3 });
@@ -64,7 +64,7 @@ On the server, `precompileMessages` compiles each language's messages, and next-
 
 ```ts
 // i18n/request.ts
-import { precompileMessages } from '@figatellu/use-intl/precompile';
+import { precompileMessages } from '@figatellultimate/use-intl/precompile';
 
 export default getRequestConfig(async ({ locale }) => ({
   locale,
@@ -75,7 +75,7 @@ export default getRequestConfig(async ({ locale }) => ({
 
 ```ts
 // next.config.ts
-import { withPrecompiledMessages } from '@figatellu/next16/config';
+import { withPrecompiledMessages } from '@figatellultimate/next16/config';
 
 export default createNextIntlPlugin('./i18n/request.ts')(withPrecompiledMessages(nextConfig));
 ```

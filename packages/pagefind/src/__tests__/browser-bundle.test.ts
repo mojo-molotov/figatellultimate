@@ -3,14 +3,14 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { createSearch, type SearchPage } from '@figatellu/search';
+import { createSearch, type SearchPage } from '@figatellultimate/search';
 import { FileSystem } from '@japa/file-system';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { indexSite, type SearchPage as BuiltPage } from '../index.js';
 
 /**
- * The bundles `indexSite` writes, searched through Pagefind's own browser module (`pagefind.js`) and figatellu's
+ * The bundles `indexSite` writes, searched through Pagefind's own browser module (`pagefind.js`) and figatellultimate's
  * client, in Node: `fetch` is shimmed to read `file:` URLs, the way a browser fetches the bundle's fragments.
  */
 const folder = new FileSystem(join(import.meta.dirname, '..', '..', '.tmp', randomUUID()));

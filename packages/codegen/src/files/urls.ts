@@ -3,7 +3,7 @@
  * pages; reserved entries out), `metadataFields`, and `urlOf` / `segmentsOf`, the project's URL strategy written
  * once so that an app never rewrites it.
  */
-import type { FigatelluConfig, FolderPage, TermPage } from '@figatellu/core';
+import type { FigatellultimateConfig, FolderPage, TermPage } from '@figatellultimate/core';
 import { VariableDeclarationKind, Writers, type Project } from 'ts-morph';
 
 import { literal, pascal, type CollectionModel } from '../model.js';
@@ -29,7 +29,7 @@ import { property, union } from './type-builders.js';
  */
 export function urlsFile(
   project: Project,
-  config: FigatelluConfig,
+  config: FigatellultimateConfig,
   models: readonly CollectionModel[],
   folders: readonly FolderPage[] = [],
   terms: readonly TermPage[] = [],

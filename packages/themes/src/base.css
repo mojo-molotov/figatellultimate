@@ -1,6 +1,6 @@
 /*
- * @figatellu/themes/base.css: what every theme shares, loaded after `@figatellu/ui/styles.css` and
- * `@figatellu/effects/styles.css`, before a theme (`maquis.css`, `papier.css`).
+ * @figatellultimate/themes/base.css: what every theme shares, loaded after `@figatellultimate/ui/styles.css` and
+ * `@figatellultimate/effects/styles.css`, before a theme (`maquis.css`, `papier.css`).
  *
  * The page (body, the content column, the article layout with its table of contents), the listing and blog slots,
  * the MDX typography (`[data-slot='mdx-*']`) and print: layout and rhythm only, every color and font a token, so that a
@@ -445,7 +445,7 @@ main[data-folder='category'] [data-slot='listing-cards'] {
   margin-block-start: 0;
 }
 
-/* The effects (`@figatellu/effects`): hidden, unless a theme shows them. */
+/* The effects (`@figatellultimate/effects`): hidden, unless a theme shows them. */
 [data-slot='sparkles'],
 [data-slot='cursor-glow'] {
   display: none;
@@ -454,7 +454,7 @@ main[data-folder='category'] [data-slot='listing-cards'] {
 /*
  * An entry's body: every primitive of the MDX registry (the app's MDX components, one `data-slot` per element) by its `data-slot`, with the
  * design system's tokens, as shadcn's typography for MDX. `CodeBlock` and `ImageZoom` are styled by
- * `@figatellu/ui/styles.css`; only their place in the text is set here.
+ * `@figatellultimate/ui/styles.css`; only their place in the text is set here.
  */
 [data-slot='mdx'] {
   overflow-wrap: break-word;

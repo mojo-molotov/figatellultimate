@@ -4,12 +4,12 @@ import { getRequestConfig } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import * as rootParams from 'next/root-params';
 
-import type { Messages } from '#figatellu/messages';
+import type { Messages } from '#figatellultimate/messages';
 
 import { precompiledMessages } from './labels';
 import { routing } from './routing';
 
-// Each request's messages: figatellu's, validated at build time in every locale, loaded lazily, precompiled. The locale
+// Each request's messages: figatellultimate's, validated at build time in every locale, loaded lazily, precompiled. The locale
 // comes from the `[locale]` root segment (`next/root-params`, Next ≥ 16.3): no `setRequestLocale` in pages.
 export default getRequestConfig(async ({ locale: explicit }) => {
   // An explicit locale (`getTranslations({ locale })`) wins; otherwise the root segment's.

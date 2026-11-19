@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * The table of contents component: it measures the page and applies `@figatellu/toc`'s pure model.
+ * The table of contents component: it measures the page and applies `@figatellultimate/toc`'s pure model.
  *
  * Key design decisions:
  *     - A sidebar drawer: in the margin on wide screens (the text never moves), over the content on narrow ones,
@@ -30,7 +30,7 @@ import {
   type Heading,
   type Reading,
   type TocNode,
-} from '@figatellu/toc';
+} from '@figatellultimate/toc';
 import {
   useCallback,
   useEffect,

@@ -1,7 +1,7 @@
-// The shape of every locale's messages, written once: figatellu's skeleton
+// The shape of every locale's messages, written once: figatellultimate's skeleton
 // (`content` and `taxonomies`, derived from the content) spread first, then the app's own keys as holes.
 // A new folder or taxonomy term enters through the skeleton: every locale stops compiling until it is translated.
-import { skeleton, type MessageSchema, type MessagesOf } from '#figatellu/messages';
+import { skeleton, type MessageSchema, type MessagesOf } from '#figatellultimate/messages';
 
 const _ = '';
 

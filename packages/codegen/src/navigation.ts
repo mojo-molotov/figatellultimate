@@ -10,7 +10,7 @@ import {
   type Locales,
   type NavigationItem,
   type UrlOptions,
-} from '@figatellu/core';
+} from '@figatellultimate/core';
 
 import { compareText } from './model.js';
 

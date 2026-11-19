@@ -6,7 +6,7 @@ const SHARED = { blog: 'Blog' } as const;
 
 const nav = { blog: SHARED.blog } as const satisfies AppMessages['nav'];
 
-// From figatellu's skeleton: a new folder or term breaks this section until it is translated.
+// From figatellultimate's skeleton: a new folder or term breaks this section until it is translated.
 const content = {
   pages: { docs: { $: { title: 'Documentation' } } },
   blog: {
@@ -61,7 +61,7 @@ const content = {
   },
 } as const satisfies AppMessages['content'];
 
-// From figatellu's skeleton: a new folder or term breaks this section until it is translated.
+// From figatellultimate's skeleton: a new folder or term breaks this section until it is translated.
 const taxonomies = {
   tags: {
     accordion: { label: 'Accordion' },
@@ -115,7 +115,7 @@ const ui = {
   theme: { dark: 'Dark theme', site: 'Site theme', maquis: 'Maquis', paper: 'Paper' },
   footer: { nav: 'Site map', made: 'Made with', love: 'love' },
   pager: { nav: 'Previous and next pages', previous: 'Previous', next: 'Next' },
-  feed: { title: 'The figatellu blog', description: 'News from the Empire of Igoristan.' },
+  feed: { title: 'The figatellultimate blog', description: 'News from the Empire of Igoristan.' },
   collections: { pages: 'Pages', blog: SHARED.blog },
   search: {
     trigger: 'Search',
@@ -127,7 +127,7 @@ const ui = {
     more: 'See more',
     tooShort: 'Type at least {minimum} characters.',
     searching: 'Searching…',
-    unavailable: 'Search is unavailable (run figatellu search after the build).',
+    unavailable: 'Search is unavailable (run figatellultimate search after the build).',
     found: '{count, plural, =0 {No result} one {# result} other {# results}}',
     sort: {
       trigger: 'Sort results',

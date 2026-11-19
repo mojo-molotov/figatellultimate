@@ -9,7 +9,7 @@
  * exclusions
  *
  * Key design decisions:
- *     - figatellu drives: it lists paths and analyzes every file's structure itself, so a file whose frontmatter
+ *     - figatellultimate drives: it lists paths and analyzes every file's structure itself, so a file whose frontmatter
  *       fails validation still gets its structural diagnostics.
  *     - Paths and descriptors in memory, documents streamed.
  *
@@ -36,7 +36,7 @@ import { createUrlBuilder, type UrlBuilder } from '../paths/url.js';
 import { folderPagesOf } from '../paths/folders.js';
 import { termPageCollisions, termPagesOf, type TermsOf } from './term-pages.js';
 
-/** Thrown when figatellu's collections and the delegated tool's do not match (invalid configuration). */
+/** Thrown when figatellultimate's collections and the delegated tool's do not match (invalid configuration). */
 export class InvalidContentSourceError extends Error {
   override readonly name = 'InvalidContentSourceError';
 }
@@ -73,7 +73,7 @@ function checkSameCollections(declared: readonly string[], delegated: readonly s
 
   if (onlyDeclared.length > 0 || onlyDelegated.length > 0) {
     throw new InvalidContentSourceError(
-      `Collections must be declared on both sides. Only in figatellu: ${onlyDeclared.join(', ') || '-'}; ` +
+      `Collections must be declared on both sides. Only in figatellultimate: ${onlyDeclared.join(', ') || '-'}; ` +
         `only in the content source: ${onlyDelegated.join(', ') || '-'}.`,
     );
   }
@@ -130,7 +130,7 @@ async function listSources(input: LoadContentInput): Promise<{
  * @returns Each kept entry as soon as it is valid, then a summary with every diagnostic: paths listed and analyzed
  *   in memory (the global checks need them all), documents joined one by one, so that heavy data is never held all
  *   at once. Aborting rejects with the signal's reason.
- * @throws {InvalidContentSourceError} When figatellu's collections and the delegated tool's do not match.
+ * @throws {InvalidContentSourceError} When figatellultimate's collections and the delegated tool's do not match.
  *
  * @example
  * for await (const event of streamContent(input)) if (event.kind === 'entry') write(event.entry);
@@ -216,7 +216,7 @@ export async function* streamContent(input: LoadContentInput): AsyncGenerator<Co
  * @param input - As `streamContent`'s.
  * @returns The assembly: the kept entries in descriptor order (whatever the source's), the structure of every valid
  *   path, the excluded entries and every diagnostic.
- * @throws {InvalidContentSourceError} When figatellu's collections and the delegated tool's do not match.
+ * @throws {InvalidContentSourceError} When figatellultimate's collections and the delegated tool's do not match.
  *
  * @example
  * const assembly = await loadContent({ locales, collections, taxonomies, environment, paths, source });

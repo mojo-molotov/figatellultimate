@@ -3,7 +3,7 @@
  * convention, and package resolution through sources.
  *
  * Package resolution: inside the workspace, packages resolve each other through their sources: each package exports
- * a `@figatellu/source` condition pointing to its `src/` entry, used by TypeScript (`customConditions`), vitest,
+ * a `@figatellultimate/source` condition pointing to its `src/` entry, used by TypeScript (`customConditions`), vitest,
  * ESLint's resolver and dependency-cruiser, so nothing needs building before typechecking, linting or testing.
  * `publishConfig.exports` drops that condition, so a published package only exposes `dist` (then checked by publint
  * and attw on the packed tarball).
@@ -85,7 +85,7 @@ describe('workspace invariants', () => {
 
       for (const [subpath, conditions] of conditional) {
         // A stylesheet export (`./styles.css`) points to its CSS source; every other one to TypeScript.
-        expect(conditions['@figatellu/source']).toMatch(
+        expect(conditions['@figatellultimate/source']).toMatch(
           subpath.endsWith('.css') ? /^\.\/src\/.+\.css$/ : /^\.\/src\/.+\.ts$/,
         );
       }
@@ -95,7 +95,9 @@ describe('workspace invariants', () => {
         exports.map(([subpath, target]) => [
           subpath,
           typeof target === 'object' && target !== null
-            ? Object.fromEntries(Object.entries(target).filter(([condition]) => condition !== '@figatellu/source'))
+            ? Object.fromEntries(
+                Object.entries(target).filter(([condition]) => condition !== '@figatellultimate/source'),
+              )
             : target,
         ]),
       );

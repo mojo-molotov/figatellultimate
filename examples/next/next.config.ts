@@ -1,5 +1,5 @@
 /** Next's configuration: static generation, and next-intl's plugin. */
-import { withPrecompiledMessages } from '@figatellu/next16/config';
+import { withPrecompiledMessages } from '@figatellultimate/next16/config';
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
 

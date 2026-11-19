@@ -1,13 +1,13 @@
 /**
- * The Pagefind adapter: indexes the built HTML of the mounted entries, one bundle per locale, for `figatellu search`.
+ * The Pagefind adapter: indexes the built HTML of the mounted entries, one bundle per locale, for `figatellultimate search`.
  *
  * Architecture:
- *     figatellu search (CLI) ──> pages { url, locale, collection, html, sort } ──> indexSite
+ *     figatellultimate search (CLI) ──> pages { url, locale, collection, html, sort } ──> indexSite
  *         per locale: pagefind.createIndex({ forceLanguage }) ──> addHTMLFile(page + markers) ──> writeFiles
  *                     markers: the collection filter, the sort keys (title, newest, oldest), the date metadata
  *
  * Key design decisions:
- *     - figatellu gives each page its locale and collection (one rule for URLs): Pagefind would read `<html lang>`,
+ *     - figatellultimate gives each page its locale and collection (one rule for URLs): Pagefind would read `<html lang>`,
  *       which a root layout without routing cannot know.
  *     - One bundle per locale, each with its language forced: the client chooses the bundle, so the stemming never
  *       depends on the page the reader searches from.
@@ -27,7 +27,7 @@ import { join } from 'node:path';
 
 import * as pagefind from 'pagefind';
 
-/** A built page to index: its URL, locale and collection come from figatellu (one rule). */
+/** A built page to index: its URL, locale and collection come from figatellultimate (one rule). */
 export interface SearchPage {
   readonly url: string;
   readonly locale: string;
@@ -39,7 +39,7 @@ export interface SearchPage {
 }
 
 /**
- * The sort keys every page gets, read by `@figatellu/search`: `title` lowercased without accents (Pagefind
+ * The sort keys every page gets, read by `@figatellultimate/search`: `title` lowercased without accents (Pagefind
  * compares raw strings), and the date twice, so that undated pages come last both newest and oldest first.
  */
 export const SORT_KEYS = { title: 'title', newest: 'newest', oldest: 'oldest' } as const;

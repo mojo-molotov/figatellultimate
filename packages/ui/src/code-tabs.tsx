@@ -22,7 +22,7 @@ import { Tabs } from 'radix-ui';
 import { Children, isValidElement, useSyncExternalStore, type ReactNode } from 'react';
 
 /** Where the chosen label is remembered. */
-const STORAGE_KEY = 'figatellu-code-tab';
+const STORAGE_KEY = 'figatellultimate-code-tab';
 
 const listeners = new Set<() => void>();
 /** The choice when `localStorage` is not allowed (private browsing, blocked storage): this page only. */

@@ -2,20 +2,20 @@
  * The Content Collections adapter: core's `ContentSource` port, backed by Content Collections.
  *
  * Architecture:
- *     figatellu (core) lists paths ──> source.documents({ paths }) ──> this adapter
+ *     figatellultimate (core) lists paths ──> source.documents({ paths }) ──> this adapter
  *         ├─ build: createBuilder(config) ──> events ──> diagnostics (schema issues re-validated, schema-issues.ts)
- *         │                                └─> documents, delivered through withFigatellu (config.ts)
+ *         │                                └─> documents, delivered through withFigatellultimate (config.ts)
  *         └─ watch: one native watcher per root (watcher.ts) ──> reported paths
  *                   planSync(listing, reported, held) (sync-plan.ts) ──> sync file by file, or one rescan
  *
  *     Content Collections owns files, frontmatter parsing, schema validation (any Standard Schema library),
- *     transforms and MDX; figatellu owns structure from paths, diagnostics and typed access.
+ *     transforms and MDX; figatellultimate owns structure from paths, diagnostics and typed access.
  *
  * Key design decisions:
- *     - figatellu drives: it lists paths and analyzes the structure of every file itself, then joins the documents
+ *     - figatellultimate drives: it lists paths and analyzes the structure of every file itself, then joins the documents
  *       Content Collections validated by their path. A file whose frontmatter fails validation still gets its
- *       structural diagnostics (with Content Collections driving, it would never reach figatellu).
- *     - Documents come through `withFigatellu`, never by guessing the names of Content Collections' generated
+ *       structural diagnostics (with Content Collections driving, it would never reach figatellultimate).
+ *     - Documents come through `withFigatellultimate`, never by guessing the names of Content Collections' generated
  *       exports: the adapter stays replaceable, the only package importing Content Collections.
  *     - Schema issues are re-validated on the raw frontmatter: Content Collections flattens them into text.
  *     - In watch mode, a single writer: Content Collections' own watcher is not used. Its watcher syncs and rebuilds
@@ -26,11 +26,11 @@
  *     - Builds are serialized in a process: two sources' documents never mix.
  *
  * Known behaviors of Content Collections 0.15.3:
- *     - A file whose frontmatter cannot be parsed (e.g. unclosed YAML) is dropped silently; figatellu still reports
+ *     - A file whose frontmatter cannot be parsed (e.g. unclosed YAML) is dropped silently; figatellultimate still reports
  *       it, as `missing-document`, since it lists paths itself.
  *     - Its validation messages render Standard Schema paths as `[object Object]`, hence the re-validation.
  *
- * Invariants: documents through `withFigatellu`, directories relative to the project, structured schema diagnostics
+ * Invariants: documents through `withFigatellultimate`, directories relative to the project, structured schema diagnostics
  * with valibot and zod, no absolute path in documents or diagnostics (`*.test.ts`); the sync plan
  * (`sync-plan.test.ts`); the watch against a build from scratch, on every OS (the CLI's watch lab).
  */
@@ -42,14 +42,14 @@ import {
   type ContentSource,
   type FileErrorDiagnostic,
   type SourceDocument,
-} from '@figatellu/core';
+} from '@figatellultimate/core';
 
 import { exclusive, type Session } from './config.js';
 import { frontmatterDiagnostics, hasStandardSchema } from './schema-issues.js';
 import { planSync, stateAfterBuild, type CollectionFile, type SyncState } from './sync-plan.js';
 import { watchFiles } from './watcher.js';
 
-export { withFigatellu } from './config.js';
+export { withFigatellultimate } from './config.js';
 
 /** Above this many file operations in one run, one full rescan replaces them (each `sync` rebuilds). */
 const RESCAN_THRESHOLD = 20;
@@ -89,9 +89,9 @@ export interface ContentCollectionsSourceOptions {
  *
  * @param options - The config's path and the project's root.
  * @returns A source that gives each collection's directory, builds programmatically (synced with the listed paths
- *   in watch mode), maps Content Collections' error events to figatellu diagnostics, and streams the validated
+ *   in watch mode), maps Content Collections' error events to figatellultimate diagnostics, and streams the validated
  *   documents; it watches the collections and the config when asked to.
- * @throws {InvalidContentSourceError} When a collection is not wrapped with `withFigatellu` or lives outside the
+ * @throws {InvalidContentSourceError} When a collection is not wrapped with `withFigatellultimate` or lives outside the
  *   project: a broken configuration, not an outcome.
  *
  * @example
@@ -131,7 +131,7 @@ export function createContentCollectionsSource(options: ContentCollectionsSource
 
     if (session.directories.size === 0) {
       throw new InvalidContentSourceError(
-        'No collection is wrapped with withFigatellu() in the Content Collections config.',
+        'No collection is wrapped with withFigatellultimate() in the Content Collections config.',
       );
     }
 
@@ -227,7 +227,7 @@ export function createContentCollectionsSource(options: ContentCollectionsSource
       await prepare();
       // Content Collections cannot interrupt a build: the signal is only checked before starting one.
       // Content Collections 0.15 hands every document of a collection at once (`onSuccess`): this adapter streams
-      // what it receives; the memory gain is on figatellu's side.
+      // what it receives; the memory gain is on figatellultimate's side.
       const { documents, diagnostics } = await exclusive(async (session) => {
         documentOptions?.signal?.throwIfAborted();
         const listed = documentOptions?.paths;
@@ -275,7 +275,7 @@ export function createContentCollectionsSource(options: ContentCollectionsSource
       const roots = Object.values(directories ?? {}).map((directory) =>
         join(options.projectRoot, ...directory.split('/')),
       );
-      // figatellu's own watcher: Content Collections' one rebuilds concurrently on every event and can
+      // figatellultimate's own watcher: Content Collections' one rebuilds concurrently on every event and can
       // lose or duplicate files, and its per-folder handles lock folder renames on Windows; changes are applied by
       // the next run instead.
       const watcher = watchFiles(roots, [options.configPath], (path) => {

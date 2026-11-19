@@ -1,5 +1,5 @@
 /** `robots.txt`, from the site's origin. */
-import { toNextRobots } from '@figatellu/next16';
+import { toNextRobots } from '@figatellultimate/next16';
 import type { MetadataRoute } from 'next';
 
 import { site } from '../site';

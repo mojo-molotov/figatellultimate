@@ -10,15 +10,15 @@ import {
   segment,
   slug,
   type ContentSource,
-  type FigatelluConfig,
-} from '@figatellu/core';
-import { analyzeMessages } from '@figatellu/messages';
+  type FigatellultimateConfig,
+} from '@figatellultimate/core';
+import { analyzeMessages } from '@figatellultimate/messages';
 import { Project, ts } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
 
 import { emit, type GeneratedFile } from '../index.js';
 
-const OUTPUT = '/project/.figatellu';
+const OUTPUT = '/project/.figatellultimate';
 
 const source: ContentSource = {
   directories: () => Promise.resolve({ blog: 'content/blog' }),
@@ -28,7 +28,7 @@ const source: ContentSource = {
   },
 };
 
-const config: FigatelluConfig = defineConfig({
+const config: FigatellultimateConfig = defineConfig({
   locales: defineLocales({ list: { fr: { label: 'Français' }, en: { label: 'English' } }, default: 'fr' }),
   collections: {
     blog: defineCollection({
@@ -68,7 +68,7 @@ const EN: Module = {
 
 /** A message module as the user writes it: JSON is a valid object literal. */
 const moduleSource = (messages: Module, type: 'ReferenceMessages' | 'Messages'): string =>
-  `import type { ${type} } from '../.figatellu/messages/index.js';\n\nexport default ${JSON.stringify(messages)} as const satisfies ${type};\n`;
+  `import type { ${type} } from '../.figatellultimate/messages/index.js';\n\nexport default ${JSON.stringify(messages)} as const satisfies ${type};\n`;
 
 /** A deep copy of a module, changed by `edit`. */
 function variant(messages: Module, edit: (copy: Module) => void): Module {
@@ -181,8 +181,8 @@ describe('emit: messages', () => {
     'valid message modules and an app using them typecheck',
     () => {
       const app = `
-import { loadMessages, type MessageKey, type Messages, type MessageTable } from './.figatellu/messages/index.js';
-import { localeInfo } from './.figatellu/locales/index.js';
+import { loadMessages, type MessageKey, type Messages, type MessageTable } from './.figatellultimate/messages/index.js';
+import { localeInfo } from './.figatellultimate/locales/index.js';
 
 const key: MessageKey = 'content.blog.patch-notes.$.title';
 const taxonomy: MessageKey = 'taxonomies.tags.bot.label';
@@ -229,8 +229,8 @@ void [key, taxonomy, posts, greeting, open, dir, typo, wrong, none, extra];
 });
 
 describe('emit: the message skeleton', () => {
-  /** The app's schema as the example writes it: figatellu's skeleton spread, then the app's own keys as holes. */
-  const SCHEMA = `import { skeleton, type MessageSchema, type MessagesOf } from '../.figatellu/messages/index.js';
+  /** The app's schema as the example writes it: figatellultimate's skeleton spread, then the app's own keys as holes. */
+  const SCHEMA = `import { skeleton, type MessageSchema, type MessagesOf } from '../.figatellultimate/messages/index.js';
 
 const _ = '';
 export const schema = {
@@ -314,7 +314,7 @@ export type AppMessages = MessagesOf<typeof schema>;
 });
 
 describe('emit: messages for the use-intl adapter', () => {
-  const withRuntime: FigatelluConfig = defineConfig({
+  const withRuntime: FigatellultimateConfig = defineConfig({
     ...config,
     messages: { directory: 'messages', runtime: 'use-intl' },
   });
@@ -351,11 +351,11 @@ describe('emit: messages for the use-intl adapter', () => {
       project.createSourceFile('/project/package.json', JSON.stringify({ type: 'module' }));
       // A minimal stand-in for the adapter: only its `Register` interface matters here.
       project.createSourceFile(
-        '/project/node_modules/@figatellu/use-intl/package.json',
-        JSON.stringify({ name: '@figatellu/use-intl', type: 'module', types: 'index.d.ts' }),
+        '/project/node_modules/@figatellultimate/use-intl/package.json',
+        JSON.stringify({ name: '@figatellultimate/use-intl', type: 'module', types: 'index.d.ts' }),
       );
       project.createSourceFile(
-        '/project/node_modules/@figatellu/use-intl/index.d.ts',
+        '/project/node_modules/@figatellultimate/use-intl/index.d.ts',
         'export interface Register {}\nexport type Registered<K extends string> = Register extends Record<K, infer T> ? T : never;\n',
       );
 
@@ -367,8 +367,8 @@ describe('emit: messages for the use-intl adapter', () => {
       project.createSourceFile('/project/messages/en.ts', moduleSource(EN, 'Messages'));
       project.createSourceFile(
         '/project/app.ts',
-        `import type { Registered } from '@figatellu/use-intl';
-import type { MessageTable } from './.figatellu/messages/index.js';
+        `import type { Registered } from '@figatellultimate/use-intl';
+import type { MessageTable } from './.figatellultimate/messages/index.js';
 const args: Registered<'table'>['home.posts'] = { count: 1 };
 const scope: Registered<'namespace'> = 'content.blog.patch-notes';
 const locale: Registered<'locale'> = 'en';
@@ -387,7 +387,7 @@ void [args, scope, locale, leaf];
 
       expect(errors).toEqual([]);
       expect(generated.find((f) => f.path === 'messages/types.d.ts')?.contents).toContain(
-        'declare module "@figatellu/use-intl"',
+        'declare module "@figatellultimate/use-intl"',
       );
     },
     TYPECHECK_TIMEOUT,

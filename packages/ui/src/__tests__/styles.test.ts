@@ -117,7 +117,7 @@ describe('styles.css', () => {
     expect(print).not.toContain("[data-slot='breadcrumb']");
   });
 
-  it('only styles figatellu components: every rule targets a data-slot (or defines tokens; keyframes aside)', () => {
+  it('only styles figatellultimate components: every rule targets a data-slot (or defines tokens; keyframes aside)', () => {
     // A keyframe's steps (`from`, `to`) style no element: an animation's own, named by a rule that does.
     const rules = CSS.replace(/\/\*[\s\S]*?\*\//g, '').replace(/@keyframes[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g, '');
     const selectors = [...rules.matchAll(/(^|})\s*([^{}@]+?)\s*\{/g)]

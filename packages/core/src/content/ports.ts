@@ -1,6 +1,6 @@
 /**
- * The ports: what core needs from the outside, as interfaces; adapters implement them (`@figatellu/fs-node`,
- * `@figatellu/content-collections`).
+ * The ports: what core needs from the outside, as interfaces; adapters implement them (`@figatellultimate/fs-node`,
+ * `@figatellultimate/content-collections`).
  *
  *     PathLister     lists a content folder's files, as POSIX paths
  *     ContentSource  the delegated content pipeline: documents validated by the user's schema, its diagnostics, its
@@ -38,9 +38,9 @@ export interface PathLister {
 /** A document delivered by the delegated tool, already validated by the user's schema. */
 export interface SourceDocument {
   readonly collection: string;
-  /** Collection-relative POSIX path: the join key with figatellu's descriptors. */
+  /** Collection-relative POSIX path: the join key with figatellultimate's descriptors. */
   readonly sourcePath: string;
-  /** Validated (and possibly transformed) frontmatter; figatellu only reads the fields it is told about. */
+  /** Validated (and possibly transformed) frontmatter; figatellultimate only reads the fields it is told about. */
   readonly data: Readonly<Record<string, unknown>>;
   readonly body: string;
 }
@@ -65,12 +65,12 @@ export interface TypeSource {
   readonly type: string;
 }
 
-/** Port: the delegated content pipeline. Its errors come back as figatellu diagnostics. */
+/** Port: the delegated content pipeline. Its errors come back as figatellultimate diagnostics. */
 export interface ContentSource {
   /** Project-relative POSIX directory of each collection: the single declaration of where files live. */
   directories(): Promise<Readonly<Record<string, string>>>;
   /**
-   * Documents and diagnostics, as a stream. `paths` is what figatellu just listed on disk, per collection
+   * Documents and diagnostics, as a stream. `paths` is what figatellultimate just listed on disk, per collection
    * (collection-relative POSIX paths; a collection whose listing failed is absent): a stateful source reconciles
    * with it before delivering, so that a missed watcher event cannot leave it out of date.
    */

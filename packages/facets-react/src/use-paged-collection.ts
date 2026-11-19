@@ -27,7 +27,7 @@
  * lacks included; an action kept until the index, then applied; a single prefetch; a failed load as a value, loaded
  * again; the loader fetching each URL once, an error status or a bad body rejected and fetched again.
  */
-import { isDefaultView, type Action, type Engine, type UrlAdapter } from '@figatellu/facets';
+import { isDefaultView, type Action, type Engine, type UrlAdapter } from '@figatellultimate/facets';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useFacetedCollection, type FacetedCollectionBinding } from './use-faceted-collection.js';

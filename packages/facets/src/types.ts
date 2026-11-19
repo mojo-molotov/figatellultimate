@@ -120,7 +120,7 @@ export interface FacetedCollection<I> {
 
 /**
  * Where the selection state lives: the current search, and how to change it. Implemented with the History API
- * (`@figatellu/facets-react`) and for the Next App Router (`@figatellu/next16/facets`), or in memory in tests.
+ * (`@figatellultimate/facets-react`) and for the Next App Router (`@figatellultimate/next16/facets`), or in memory in tests.
  *
  * @example
  * // In memory, as tests do.

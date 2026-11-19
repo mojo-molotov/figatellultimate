@@ -14,7 +14,7 @@
  * Invariants (`search-box.test.tsx`, in happy-dom and in real browsers): axe empty and with results, the keyboard
  * flow, new tabs, the sort, dates, the highlight announced once per change, no text of its own.
  */
-import type { Search, SearchResult, SearchSort } from '@figatellu/search';
+import type { Search, SearchResult, SearchSort } from '@figatellultimate/search';
 import { Command } from 'cmdk';
 import { Direction, Select, ToggleGroup } from 'radix-ui';
 import {

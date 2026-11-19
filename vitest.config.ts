@@ -26,8 +26,8 @@ const config: ViteUserConfig = defineConfig({
   root: ROOT,
   // Workspace packages resolve each other through their sources: no build needed to test.
   // Tests run server-side (Node), where Vite reads `ssr.resolve.conditions`; `node` keeps Node's own resolution.
-  resolve: { conditions: ['@figatellu/source'] },
-  ssr: { resolve: { conditions: ['@figatellu/source', 'node'] } },
+  resolve: { conditions: ['@figatellultimate/source'] },
+  ssr: { resolve: { conditions: ['@figatellultimate/source', 'node'] } },
   test: {
     reporters: ['default', allureReporter('scenarios')],
     setupFiles: [join(ROOT, 'tooling', 'fast-check.setup.ts')],

@@ -46,7 +46,7 @@ const hasRoom = (slot: HTMLElement): boolean => slot.getBoundingClientRect().top
  * @returns The clipping slot and its sliding content; `data-revealing` on the slot while it has the room.
  *
  * @example
- * <Reveal><footer>figatellu · Made with <Hearts label="love" /></footer></Reveal>
+ * <Reveal><footer>figatellultimate · Made with <Hearts label="love" /></footer></Reveal>
  */
 export function Reveal({ children }: { readonly children: ReactNode }): ReactNode {
   const slot = useRef<HTMLDivElement>(null);

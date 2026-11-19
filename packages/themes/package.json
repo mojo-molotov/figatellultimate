@@ -1,7 +1,7 @@
 {
-  "name": "@figatellu/themes",
+  "name": "@figatellultimate/themes",
   "version": "0.0.0",
-  "description": "Themes for figatellu apps: a shared base and one stylesheet per theme (maquis, paper), over @figatellu/ui and @figatellu/effects, on their tokens and slots.",
+  "description": "Themes for figatellultimate apps: a shared base and one stylesheet per theme (maquis, paper), over @figatellultimate/ui and @figatellultimate/effects, on their tokens and slots.",
   "license": "MIT",
   "type": "module",
   "sideEffects": [
@@ -9,15 +9,15 @@
   ],
   "exports": {
     "./base.css": {
-      "@figatellu/source": "./src/base.css",
+      "@figatellultimate/source": "./src/base.css",
       "default": "./dist/base.css"
     },
     "./maquis.css": {
-      "@figatellu/source": "./src/maquis.css",
+      "@figatellultimate/source": "./src/maquis.css",
       "default": "./dist/maquis.css"
     },
     "./paper.css": {
-      "@figatellu/source": "./src/paper.css",
+      "@figatellultimate/source": "./src/paper.css",
       "default": "./dist/paper.css"
     },
     "./package.json": "./package.json"
@@ -45,7 +45,7 @@
     "test": "vitest run --config ../../vitest.config.ts --project themes",
     "lint:package": "publint --strict"
   },
-  "figatellu": {
+  "figatellultimate": {
     "role": "adapter"
   },
   "devDependencies": {

@@ -1,17 +1,17 @@
 ---
 featuredPictureUrl: /covers/placeholder-154.jpeg
 title: 'Configuration'
-metadescription: 'Les langues, les collections et leur grammaire, les taxonomies et la navigation, déclarées une fois dans figatellu.config.ts.'
+metadescription: 'Les langues, les collections et leur grammaire, les taxonomies et la navigation, déclarées une fois dans figatellultimate.config.ts.'
 order: 3
 ---
 
 # Configuration
 
-Tout se déclare une fois, dans `figatellu.config.ts` : les langues, les collections et leur grammaire de chemins, les taxonomies, la navigation et la source du contenu. La configuration est une donnée : chaque fonction `define…` valide sa partie là où elle est écrite, et une déclaration invalide échoue aussitôt, en disant quoi corriger.
+Tout se déclare une fois, dans `figatellultimate.config.ts` : les langues, les collections et leur grammaire de chemins, les taxonomies, la navigation et la source du contenu. La configuration est une donnée : chaque fonction `define…` valide sa partie là où elle est écrite, et une déclaration invalide échoue aussitôt, en disant quoi corriger.
 
 ```ts
-import { createContentCollectionsSource } from '@figatellu/content-collections';
-import { defineCollection, defineConfig, defineLocales, locale, rest, slug } from '@figatellu/core';
+import { createContentCollectionsSource } from '@figatellultimate/content-collections';
+import { defineCollection, defineConfig, defineLocales, locale, rest, slug } from '@figatellultimate/core';
 
 export default defineConfig({
   locales: defineLocales({ list: { fr: { label: 'Français' }, en: { label: 'English' } }, default: 'fr' }),
@@ -46,7 +46,7 @@ const blog = defineCollection({
 });
 ```
 
-De `news/releases/first.mdx`, figatellu déduit la catégorie, la sous-catégorie, la langue et l’URL `/blog/news/releases/first`. Un dossier de trop, un nom invalide ou deux fichiers à la même URL sont des erreurs qui nomment le fichier fautif.
+De `news/releases/first.mdx`, figatellultimate déduit la catégorie, la sous-catégorie, la langue et l’URL `/blog/news/releases/first`. Un dossier de trop, un nom invalide ou deux fichiers à la même URL sont des erreurs qui nomment le fichier fautif.
 
 ### La grammaire
 

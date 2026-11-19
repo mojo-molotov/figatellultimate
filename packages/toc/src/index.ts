@@ -1,6 +1,6 @@
 /**
  * The table of contents model: the tree of an entry's headings, the heading being read, where a click scrolls, and
- * the sections on screen. Pure and DOM-free: `TableOfContents` (`@figatellu/ui`) measures the page and renders.
+ * the sections on screen. Pure and DOM-free: `TableOfContents` (`@figatellultimate/ui`) measures the page and renders.
  *
  * Architecture:
  *     headings (from the build) ──> keptHeadings ──> tocTree                    the list to render
@@ -38,7 +38,7 @@
  */
 /**
  * A heading as the build recorded it, in document order (e.g. by `rehypeHeadings` of
- * `@figatellu/content-collections`, which sets the same `id` in the HTML).
+ * `@figatellultimate/content-collections`, which sets the same `id` in the HTML).
  */
 export interface Heading {
   readonly id: string;

@@ -11,7 +11,7 @@ import { EXIT, main } from '../main.js';
 import { runOnce } from '../pipeline/run.js';
 
 const PACKAGE = join(import.meta.dirname, '..', '..');
-const WITH_FIGATELLU = join(PACKAGE, '..', 'content-collections', 'src', 'config.ts').replaceAll('\\', '/');
+const WITH_FIGATELLULTIMATE = join(PACKAGE, '..', 'content-collections', 'src', 'config.ts').replaceAll('\\', '/');
 
 /** Sample pages, a missing English translation (`about`) included. */
 const CONTENT: Readonly<Record<string, string>> = {
@@ -25,18 +25,18 @@ const CONTENT: Readonly<Record<string, string>> = {
 const CONTENT_COLLECTIONS_CONFIG = `
 import { defineCollection, defineConfig } from '@content-collections/core';
 import * as v from 'valibot';
-import { withFigatellu } from ${JSON.stringify(WITH_FIGATELLU)};
+import { withFigatellultimate } from ${JSON.stringify(WITH_FIGATELLULTIMATE)};
 
-const pages = withFigatellu(
+const pages = withFigatellultimate(
   defineCollection({ name: 'pages', directory: 'content/pages', include: '**/*.mdx', schema: v.object({ title: v.string(), content: v.string() }) }),
 );
 export default defineConfig({ content: [pages] });
 `;
 
-const FIGATELLU_CONFIG = `
+const FIGATELLULTIMATE_CONFIG = `
 import { join } from 'node:path';
-import { defineCollection, defineConfig, defineLocales, locale, rest, slug } from '@figatellu/core';
-import { createContentCollectionsSource } from '@figatellu/content-collections';
+import { defineCollection, defineConfig, defineLocales, locale, rest, slug } from '@figatellultimate/core';
+import { createContentCollectionsSource } from '@figatellultimate/content-collections';
 
 export default defineConfig({
   locales: defineLocales({ list: ['fr', 'en'], default: 'fr' }),
@@ -61,7 +61,7 @@ async function run(...argv: string[]): Promise<{ code: number; output: string }>
       done();
     },
   });
-  const config = ['--config', join(project.basePath, 'figatellu.config.ts')];
+  const config = ['--config', join(project.basePath, 'figatellultimate.config.ts')];
   const code = await main([...argv, ...config], { stdout, fancy: false, cwd: project.basePath });
 
   return { code, output };
@@ -79,11 +79,11 @@ function typecheck(app: string): string[] {
       module: ts.ModuleKind.NodeNext,
       moduleResolution: ts.ModuleResolutionKind.NodeNext,
       // Workspace packages resolve through their sources, so the check never depends on a prior build.
-      customConditions: ['@figatellu/source'],
+      customConditions: ['@figatellultimate/source'],
     },
   });
 
-  tsProject.addSourceFilesAtPaths(join(project.basePath, '.figatellu', '**', '*.ts'));
+  tsProject.addSourceFilesAtPaths(join(project.basePath, '.figatellultimate', '**', '*.ts'));
   tsProject.createSourceFile(join(project.basePath, 'app.ts'), app, { overwrite: true });
 
   return tsProject
@@ -97,30 +97,30 @@ function typecheck(app: string): string[] {
 beforeAll(async () => {
   await project.create(
     'package.json',
-    JSON.stringify({ type: 'module', imports: { '#figatellu/*': './.figatellu/*/index.js' } }),
+    JSON.stringify({ type: 'module', imports: { '#figatellultimate/*': './.figatellultimate/*/index.js' } }),
   );
 
   for (const [path, contents] of Object.entries(CONTENT)) await project.create(path, contents);
 
   await project.create('content-collections.ts', CONTENT_COLLECTIONS_CONFIG);
-  await project.create('figatellu.config.ts', FIGATELLU_CONFIG);
+  await project.create('figatellultimate.config.ts', FIGATELLULTIMATE_CONFIG);
 });
 afterAll(() => project.cleanup());
 
-describe('figatellu build, end to end', () => {
+describe('figatellultimate build, end to end', () => {
   it('builds the generated modules: JavaScript with declarations, entry modules without', async () => {
     expect(await run('build')).toMatchObject({ code: EXIT.ok });
-    expect(await project.exists('.figatellu/pages/index.d.ts')).toBe(true);
-    expect(await project.exists('.figatellu/locales/index.js')).toBe(true);
-    expect(await project.exists('.figatellu/pages/entries/en/lp/sign-up.js')).toBe(true);
+    expect(await project.exists('.figatellultimate/pages/index.d.ts')).toBe(true);
+    expect(await project.exists('.figatellultimate/locales/index.js')).toBe(true);
+    expect(await project.exists('.figatellultimate/pages/entries/en/lp/sign-up.js')).toBe(true);
     // Entry modules have no declaration: an app's typecheck never reaches them.
-    expect(await project.exists('.figatellu/pages/entries/en/lp/sign-up.d.ts')).toBe(false);
+    expect(await project.exists('.figatellultimate/pages/entries/en/lp/sign-up.d.ts')).toBe(false);
   }, 60_000);
 
   it('generates precise getters, typed with the user’s schema', () => {
     const app = `
-import { getPage, findPage, type Page } from './.figatellu/pages/index.js';
-import type { Locale } from './.figatellu/locales/index.js';
+import { getPage, findPage, type Page } from './.figatellultimate/pages/index.js';
+import type { Locale } from './.figatellultimate/locales/index.js';
 
 declare const anyLocale: Locale;
 export async function ok(): Promise<string> {
@@ -144,7 +144,7 @@ export async function rejected(): Promise<void> {
     await project.create('content/pages/new-page.mdx', '---\ntitle: New\n---\nNew.\n');
 
     try {
-      const loaded = await loadConfig(join(project.basePath, 'figatellu.config.ts'), project.basePath);
+      const loaded = await loadConfig(join(project.basePath, 'figatellultimate.config.ts'), project.basePath);
 
       if (!loaded.ok) throw new Error('config should load');
 
@@ -160,7 +160,7 @@ export async function rejected(): Promise<void> {
           signal: controller.signal,
         }),
       ).rejects.toThrow();
-      expect(await project.exists('.figatellu/pages/entries/fr/new-page.js')).toBe(false);
+      expect(await project.exists('.figatellultimate/pages/entries/fr/new-page.js')).toBe(false);
     } finally {
       await project.remove('content/pages/new-page.mdx');
     }
@@ -169,21 +169,21 @@ export async function rejected(): Promise<void> {
   it('a build removes a header-marked generated file it does not produce', async () => {
     // A module carrying the generated header, at a path the build does not produce (it emits `.js`).
     await project.create(
-      '.figatellu/pages/index.ts',
-      '// Generated by figatellu. Do not edit: run `figatellu build` instead.\n',
+      '.figatellultimate/pages/index.ts',
+      '// Generated by figatellultimate. Do not edit: run `figatellultimate build` instead.\n',
     );
     const { code } = await run('build');
 
     expect(code).toBe(EXIT.ok);
-    expect(await project.exists('.figatellu/pages/index.ts')).toBe(false);
-    expect(await project.exists('.figatellu/pages/index.js')).toBe(true);
+    expect(await project.exists('.figatellultimate/pages/index.ts')).toBe(false);
+    expect(await project.exists('.figatellultimate/pages/index.js')).toBe(true);
   }, 60_000);
 
   it('never writes an absolute path into the generated modules', async () => {
-    const generated = await project.readDir('.figatellu');
+    const generated = await project.readDir('.figatellultimate');
 
     for (const entry of generated.filter((e) => e.dirent.isFile())) {
-      expect(await project.contents(`.figatellu/${entry.path}`)).not.toContain(project.basePath);
+      expect(await project.contents(`.figatellultimate/${entry.path}`)).not.toContain(project.basePath);
     }
   });
 });

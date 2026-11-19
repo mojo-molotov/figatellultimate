@@ -256,37 +256,37 @@ importers:
       '@content-collections/mdx':
         specifier: 0.2.2
         version: 0.2.2(@content-collections/core@0.15.3(typescript@6.0.3))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@7.2.0)
-      '@figatellu/effects':
+      '@figatellultimate/effects':
         specifier: workspace:*
         version: link:../../packages/effects
-      '@figatellu/facets':
+      '@figatellultimate/facets':
         specifier: workspace:*
         version: link:../../packages/facets
-      '@figatellu/facets-react':
+      '@figatellultimate/facets-react':
         specifier: workspace:*
         version: link:../../packages/facets-react
-      '@figatellu/next16':
+      '@figatellultimate/next16':
         specifier: workspace:*
         version: link:../../packages/next16
-      '@figatellu/search':
+      '@figatellultimate/search':
         specifier: workspace:*
         version: link:../../packages/search
-      '@figatellu/search-react':
+      '@figatellultimate/search-react':
         specifier: workspace:*
         version: link:../../packages/search-react
-      '@figatellu/site':
+      '@figatellultimate/site':
         specifier: workspace:*
         version: link:../../packages/site
-      '@figatellu/themes':
+      '@figatellultimate/themes':
         specifier: workspace:*
         version: link:../../packages/themes
-      '@figatellu/toc':
+      '@figatellultimate/toc':
         specifier: workspace:*
         version: link:../../packages/toc
-      '@figatellu/ui':
+      '@figatellultimate/ui':
         specifier: workspace:*
         version: link:../../packages/ui
-      '@figatellu/use-intl':
+      '@figatellultimate/use-intl':
         specifier: workspace:*
         version: link:../../packages/use-intl
       '@heroicons/react':
@@ -323,13 +323,13 @@ importers:
       '@content-collections/core':
         specifier: 0.15.3
         version: 0.15.3(typescript@6.0.3)
-      '@figatellu/cli':
+      '@figatellultimate/cli':
         specifier: workspace:*
         version: link:../../packages/cli
-      '@figatellu/content-collections':
+      '@figatellultimate/content-collections':
         specifier: workspace:*
         version: link:../../packages/content-collections
-      '@figatellu/core':
+      '@figatellultimate/core':
         specifier: workspace:*
         version: link:../../packages/core
       '@types/node':
@@ -356,19 +356,19 @@ importers:
       '@clack/prompts':
         specifier: 1.9.0
         version: 1.9.0
-      '@figatellu/codegen':
+      '@figatellultimate/codegen':
         specifier: workspace:*
         version: link:../codegen
-      '@figatellu/core':
+      '@figatellultimate/core':
         specifier: workspace:*
         version: link:../core
-      '@figatellu/fs-node':
+      '@figatellultimate/fs-node':
         specifier: workspace:*
         version: link:../fs-node
-      '@figatellu/messages':
+      '@figatellultimate/messages':
         specifier: workspace:*
         version: link:../messages
-      '@figatellu/pagefind':
+      '@figatellultimate/pagefind':
         specifier: workspace:*
         version: link:../pagefind
       ts-morph:
@@ -378,10 +378,10 @@ importers:
       '@content-collections/core':
         specifier: 0.15.3
         version: 0.15.3(typescript@6.0.3)
-      '@figatellu/content-collections':
+      '@figatellultimate/content-collections':
         specifier: workspace:*
         version: link:../content-collections
-      '@figatellu/use-intl':
+      '@figatellultimate/use-intl':
         specifier: workspace:*
         version: link:../use-intl
       cli-testing-library:
@@ -396,10 +396,10 @@ importers:
 
   packages/codegen:
     dependencies:
-      '@figatellu/core':
+      '@figatellultimate/core':
         specifier: workspace:*
         version: link:../core
-      '@figatellu/messages':
+      '@figatellultimate/messages':
         specifier: workspace:*
         version: link:../messages
       ts-morph:
@@ -412,10 +412,10 @@ importers:
 
   packages/content-collections:
     dependencies:
-      '@figatellu/core':
+      '@figatellultimate/core':
         specifier: workspace:*
         version: link:../core
-      '@figatellu/toc':
+      '@figatellultimate/toc':
         specifier: workspace:*
         version: link:../toc
       github-slugger:
@@ -425,7 +425,7 @@ importers:
       '@content-collections/core':
         specifier: 0.15.3
         version: 0.15.3(typescript@6.0.3)
-      '@figatellu/fs-node':
+      '@figatellultimate/fs-node':
         specifier: workspace:*
         version: link:../fs-node
       valibot:
@@ -468,7 +468,7 @@ importers:
 
   packages/facets-react:
     dependencies:
-      '@figatellu/facets':
+      '@figatellultimate/facets':
         specifier: workspace:*
         version: link:../facets
       cmdk:
@@ -508,13 +508,13 @@ importers:
 
   packages/fs-node:
     dependencies:
-      '@figatellu/core':
+      '@figatellultimate/core':
         specifier: workspace:*
         version: link:../core
 
   packages/messages:
     dependencies:
-      '@figatellu/core':
+      '@figatellultimate/core':
         specifier: workspace:*
         version: link:../core
       '@formatjs/icu-messageformat-parser':
@@ -523,10 +523,10 @@ importers:
 
   packages/next16:
     dependencies:
-      '@figatellu/facets':
+      '@figatellultimate/facets':
         specifier: workspace:*
         version: link:../facets
-      '@figatellu/site':
+      '@figatellultimate/site':
         specifier: workspace:*
         version: link:../site
     devDependencies:
@@ -558,7 +558,7 @@ importers:
         specifier: 1.5.2
         version: 1.5.2
     devDependencies:
-      '@figatellu/search':
+      '@figatellultimate/search':
         specifier: workspace:*
         version: link:../search
 
@@ -566,7 +566,7 @@ importers:
 
   packages/search-react:
     dependencies:
-      '@figatellu/search':
+      '@figatellultimate/search':
         specifier: workspace:*
         version: link:../search
       cmdk:
@@ -616,7 +616,7 @@ importers:
 
   packages/ui:
     dependencies:
-      '@figatellu/toc':
+      '@figatellultimate/toc':
         specifier: workspace:*
         version: link:../toc
       '@heroicons/react':

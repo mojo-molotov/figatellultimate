@@ -1,4 +1,4 @@
-/** The MDX components: every element the content produces, styled by the maquis theme (`@figatellu/themes/maquis.css`). */
+/** The MDX components: every element the content produces, styled by the maquis theme (`@figatellultimate/themes/maquis.css`). */
 import { MDXContent } from '@content-collections/mdx/react';
 import NextLink from 'next/link';
 import type { ComponentProps, ReactNode } from 'react';
@@ -9,8 +9,8 @@ import { Zoom } from './zoom';
 /**
  * The MDX registry, one for every collection: every
  * primitive the content may produce, overridden the way shadcn's `mdx-components.tsx` did, its caller's props (and
- * `className`) passed through; each carries a `data-slot` that the maquis theme (`@figatellu/themes/maquis.css`) styles with the design system's tokens.
- * Interactive blocks come from `@figatellu/ui`: `CodeBlock` for `pre`, `ImageZoom` for `img`.
+ * `className`) passed through; each carries a `data-slot` that the maquis theme (`@figatellultimate/themes/maquis.css`) styles with the design system's tokens.
+ * Interactive blocks come from `@figatellultimate/ui`: `CodeBlock` for `pre`, `ImageZoom` for `img`.
  */
 const components = {
   h1: (props: ComponentProps<'h1'>): ReactNode => <h1 data-slot="mdx-h1" {...props} />,

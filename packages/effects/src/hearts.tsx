@@ -59,7 +59,7 @@ interface Slots {
  *   screen readers.
  *
  * @example
- * <footer>figatellu · Made with <Hearts label="love" /></footer>
+ * <footer>figatellultimate · Made with <Hearts label="love" /></footer>
  */
 export function Hearts({ label, values = HEARTS, every = 10_000, random = Math.random }: HeartsProps): ReactNode {
   const first = values[0] ?? '❤️';

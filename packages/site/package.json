@@ -1,13 +1,13 @@
 {
-  "name": "@figatellu/site",
+  "name": "@figatellultimate/site",
   "version": "0.0.0",
-  "description": "Site helpers of figatellu: metadata, sitemap and static params, pure and framework-free.",
+  "description": "Site helpers of figatellultimate: metadata, sitemap and static params, pure and framework-free.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
   "exports": {
     ".": {
-      "@figatellu/source": "./src/index.ts",
+      "@figatellultimate/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
@@ -32,7 +32,7 @@
     "lint:package": "publint --strict && attw --pack . --profile esm-only"
   },
   "dependencies": {},
-  "figatellu": {
+  "figatellultimate": {
     "role": "runtime"
   },
   "devDependencies": {}

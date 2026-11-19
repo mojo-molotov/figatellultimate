@@ -20,24 +20,24 @@ const isMessages = (value: unknown): value is Texts =>
   isRecord(value) && Object.values(value).every((child) => typeof child === 'string' || isMessages(child));
 
 const PACKAGE = join(import.meta.dirname, '..', '..');
-const WITH_FIGATELLU = join(PACKAGE, '..', 'content-collections', 'src', 'config.ts').replaceAll('\\', '/');
+const WITH_FIGATELLULTIMATE = join(PACKAGE, '..', 'content-collections', 'src', 'config.ts').replaceAll('\\', '/');
 
 const CONTENT_COLLECTIONS_CONFIG = `
 import { defineCollection, defineConfig } from '@content-collections/core';
 import * as v from 'valibot';
-import { withFigatellu } from ${JSON.stringify(WITH_FIGATELLU)};
+import { withFigatellultimate } from ${JSON.stringify(WITH_FIGATELLULTIMATE)};
 
-const blog = withFigatellu(defineCollection({
+const blog = withFigatellultimate(defineCollection({
   name: 'blog', directory: 'content/blog', include: '**/*.mdx',
   schema: v.object({ title: v.string(), content: v.string() }),
 }));
 export default defineConfig({ content: [blog] });
 `;
 
-const FIGATELLU_CONFIG = `
+const FIGATELLULTIMATE_CONFIG = `
 import { join } from 'node:path';
-import { defineCollection, defineConfig, defineLocales, locale, segment, slug } from '@figatellu/core';
-import { createContentCollectionsSource } from '@figatellu/content-collections';
+import { defineCollection, defineConfig, defineLocales, locale, segment, slug } from '@figatellultimate/core';
+import { createContentCollectionsSource } from '@figatellultimate/content-collections';
 
 export default defineConfig({
   locales: defineLocales({ list: { fr: { label: 'Français' }, en: { label: 'English' } }, default: 'fr' }),
@@ -75,7 +75,7 @@ function messages(locale: 'fr' | 'en', categories: Readonly<Record<string, reado
         : '{count, plural, one {# post} other {# posts}}',
   };
 
-  return `import type { ${type} } from '#figatellu/messages';\n\nexport default ${JSON.stringify({ content: { blog }, home })} as const satisfies ${type};\n`;
+  return `import type { ${type} } from '#figatellultimate/messages';\n\nexport default ${JSON.stringify({ content: { blog }, home })} as const satisfies ${type};\n`;
 }
 
 const project = new FileSystem(join(PACKAGE, '.tmp', randomUUID()));
@@ -88,7 +88,7 @@ async function run(command: 'build' | 'check'): Promise<{ code: number; output: 
       done();
     },
   });
-  const code = await main([command, '--config', join(project.basePath, 'figatellu.config.ts')], {
+  const code = await main([command, '--config', join(project.basePath, 'figatellultimate.config.ts')], {
     stdout,
     fancy: false,
     cwd: project.basePath,
@@ -109,16 +109,16 @@ function typecheck(): string[] {
       module: ts.ModuleKind.NodeNext,
       moduleResolution: ts.ModuleResolutionKind.NodeNext,
       // The workspace's packages, from their sources (no build needed).
-      customConditions: ['@figatellu/source'],
+      customConditions: ['@figatellultimate/source'],
     },
   });
 
-  tsProject.addSourceFilesAtPaths(join(project.basePath, '.figatellu', '**', '*.ts'));
+  tsProject.addSourceFilesAtPaths(join(project.basePath, '.figatellultimate', '**', '*.ts'));
   tsProject.addSourceFilesAtPaths(join(project.basePath, 'messages', '*.ts'));
   tsProject.createSourceFile(
     join(project.basePath, 'app.ts'),
-    `import { createTranslator } from '@figatellu/use-intl';
-import { loadMessages, type MessageKey } from '#figatellu/messages';
+    `import { createTranslator } from '@figatellultimate/use-intl';
+import { loadMessages, type MessageKey } from '#figatellultimate/messages';
 
 const key: MessageKey = 'content.blog.patch-notes.bot.$.title';
 export async function render(): Promise<string> {
@@ -146,11 +146,11 @@ export async function render(): Promise<string> {
 beforeAll(async () => {
   await project.create(
     'package.json',
-    JSON.stringify({ type: 'module', imports: { '#figatellu/*': './.figatellu/*/index.js' } }),
+    JSON.stringify({ type: 'module', imports: { '#figatellultimate/*': './.figatellultimate/*/index.js' } }),
   );
   await project.create('content/blog/patch-notes/bot/post.mdx', '---\ntitle: Bot\n---\nBot.\n');
   await project.create('content-collections.ts', CONTENT_COLLECTIONS_CONFIG);
-  await project.create('figatellu.config.ts', FIGATELLU_CONFIG);
+  await project.create('figatellultimate.config.ts', FIGATELLULTIMATE_CONFIG);
   await project.create('messages/fr.ts', messages('fr', { 'patch-notes': ['bot'] }));
   await project.create('messages/en.ts', messages('en', { 'patch-notes': ['bot'] }));
 });
@@ -162,7 +162,7 @@ describe('content-derived messages, end to end', () => {
 
     expect(output).not.toContain('missing-message');
     expect(code).toBe(EXIT.ok);
-    expect(await project.exists('.figatellu/messages/index.js')).toBe(true);
+    expect(await project.exists('.figatellultimate/messages/index.js')).toBe(true);
     expect(typecheck()).toEqual([]);
   }, 60_000);
 
@@ -188,7 +188,7 @@ describe('content-derived messages, end to end', () => {
     const { code } = await run('build');
 
     expect(code).toBe(EXIT.ok);
-    expect(await project.contents('.figatellu/messages/types.d.ts')).toContain('"tutorials"');
+    expect(await project.contents('.figatellultimate/messages/types.d.ts')).toContain('"tutorials"');
     expect(typecheck()).toEqual([]);
   }, 60_000);
 
@@ -203,7 +203,7 @@ describe('content-derived messages, end to end', () => {
   }, 60_000);
 
   it('translates through the use-intl adapter at runtime, with the generated messages', async () => {
-    const { createTranslator } = await import('@figatellu/use-intl');
+    const { createTranslator } = await import('@figatellultimate/use-intl');
     const module: unknown = await import(join(project.basePath, 'messages', 'fr.ts'));
     // Untyped here (this test is not part of the project whose types register the messages): checked instead.
     const messages = isRecord(module) ? module['default'] : undefined;
@@ -221,9 +221,9 @@ describe('content-derived messages, end to end', () => {
     await project.create(
       'run.js',
       `import { createTranslator } from 'use-intl/core';
-import { getBlogPost } from '#figatellu/blog';
-import { loadMessages } from '#figatellu/messages';
-import { localeInfo } from '#figatellu/locales';
+import { getBlogPost } from '#figatellultimate/blog';
+import { loadMessages } from '#figatellultimate/messages';
+import { localeInfo } from '#figatellultimate/locales';
 
 const post = await getBlogPost({ locale: 'fr', category: 'patch-notes', subcategory: 'bot', slug: 'post' });
 const messages = await loadMessages('en');

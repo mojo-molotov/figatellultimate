@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Heading } from '@figatellu/toc';
+import type { Heading } from '@figatellultimate/toc';
 
 import { rehypeHeadings, type HastNode } from '../headings.js';
 
@@ -18,10 +18,10 @@ describe('rehypeHeadings', () => {
       type: 'root',
       children: [
         el('h1', [text('Votre premier site')]),
-        el('h2', [text('Installer '), el('code', [text('figatellu')])]),
+        el('h2', [text('Installer '), el('code', [text('figatellultimate')])]),
         el('p', [text('Du texte.')]),
         el('section', [el('h3', [text('Étape 1 : la config')])]),
-        el('h2', [text('Installer figatellu')]),
+        el('h2', [text('Installer figatellultimate')]),
         el('h2', [text('   ')]),
         el('h2', [text('Déjà nommé')], { id: 'custom' }),
       ],
@@ -31,10 +31,10 @@ describe('rehypeHeadings', () => {
     rehypeHeadings({ into })(tree);
     expect(into).toEqual([
       { id: 'votre-premier-site', text: 'Votre premier site', depth: 1 },
-      { id: 'installer-figatellu', text: 'Installer figatellu', depth: 2 },
+      { id: 'installer-figatellultimate', text: 'Installer figatellultimate', depth: 2 },
       { id: 'étape-1--la-config', text: 'Étape 1 : la config', depth: 3 },
       // Same text, unique id (as rehype-slug).
-      { id: 'installer-figatellu-1', text: 'Installer figatellu', depth: 2 },
+      { id: 'installer-figatellultimate-1', text: 'Installer figatellultimate', depth: 2 },
       { id: 'custom', text: 'Déjà nommé', depth: 2 },
     ]);
     // The ids in the tree are the recorded ones; the empty heading gets none.
@@ -48,9 +48,9 @@ describe('rehypeHeadings', () => {
     walk(tree);
     expect(ids).toEqual([
       'votre-premier-site',
-      'installer-figatellu',
+      'installer-figatellultimate',
       'étape-1--la-config',
-      'installer-figatellu-1',
+      'installer-figatellultimate-1',
       undefined,
       'custom',
     ]);

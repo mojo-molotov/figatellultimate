@@ -31,7 +31,7 @@
  *     - Rich-text tags (`<b>…</b>`) are read as plain text.
  *     - A select's options are not compared across locales.
  */
-import { suggest, type Locales, type MessageNode, type MessageTree } from '@figatellu/core';
+import { suggest, type Locales, type MessageNode, type MessageTree } from '@figatellultimate/core';
 
 import type { MessageDiagnostic } from './diagnostics.js';
 import { analyzeIcu, signature } from './icu.js';

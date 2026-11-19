@@ -1,6 +1,6 @@
 /**
- * `figatellu search`: after the framework's static build, the mounted entries of searchable collections read from
- * the built site and indexed per locale by `@figatellu/pagefind`, each with its title and date as sort keys.
+ * `figatellultimate search`: after the framework's static build, the mounted entries of searchable collections read from
+ * the built site and indexed per locale by `@figatellultimate/pagefind`, each with its title and date as sort keys.
  *
  * Invariants (`search-e2e.test.ts`, real Pagefind): only mounted, searchable entries; a missing page or one without
  * `data-pagefind-body` content fails, without absolute paths.
@@ -8,8 +8,8 @@
 import { readFile } from 'node:fs/promises';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 
-import { createUrlBuilder, type FigatelluConfig } from '@figatellu/core';
-import { indexSite, type IndexedSite, type SearchPage } from '@figatellu/pagefind';
+import { createUrlBuilder, type FigatellultimateConfig } from '@figatellultimate/core';
+import { indexSite, type IndexedSite, type SearchPage } from '@figatellultimate/pagefind';
 
 import { runOnce, type RunResult } from './run.js';
 
@@ -19,7 +19,7 @@ import { runOnce, type RunResult } from './run.js';
  *
  */
 export interface SearchInput {
-  readonly config: FigatelluConfig;
+  readonly config: FigatellultimateConfig;
   /** Absolute project root. */
   readonly directory: string;
   /** The framework's built HTML (relative to the working directory, or absolute). */
@@ -66,7 +66,7 @@ export function builtFileOf(url: string): string {
 }
 
 /**
- * `figatellu search`: the content run of `build` in production (same URL rule), then every mounted entry
+ * `figatellultimate search`: the content run of `build` in production (same URL rule), then every mounted entry
  * of a searchable collection is read from the built site and indexed by locale.
  *
  * @param input - The config, the built site, the output, and whether every locale has its own folder.

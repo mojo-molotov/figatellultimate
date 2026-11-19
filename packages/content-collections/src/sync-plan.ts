@@ -27,7 +27,7 @@ export interface SyncState {
 
 /** What a run knows: the state, the disk's listing, the reported paths, and when to rescan instead. */
 export interface SyncInput extends SyncState {
-  /** What figatellu just listed on disk, per collection: the truth (collections whose listing failed are absent). */
+  /** What figatellultimate just listed on disk, per collection: the truth (collections whose listing failed are absent). */
   readonly listed: Readonly<Record<string, readonly string[]>>;
   /** Files the watcher reported since the last run (create, change or delete alike). */
   readonly changed: readonly CollectionFile[];

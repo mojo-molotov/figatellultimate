@@ -1,4 +1,4 @@
-import { metadataOf, sitemapOf } from '@figatellu/site';
+import { metadataOf, sitemapOf } from '@figatellultimate/site';
 import type { Metadata, MetadataRoute, NextConfig } from 'next';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 

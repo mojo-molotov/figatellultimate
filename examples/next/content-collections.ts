@@ -4,18 +4,18 @@ import rehypeShiki from '@shikijs/rehype';
 import { compileMDX } from '@content-collections/mdx';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import remarkGfm from 'remark-gfm';
-import { rehypeHeadings, withFigatellu } from '@figatellu/content-collections/config';
+import { rehypeHeadings, withFigatellultimate } from '@figatellultimate/content-collections/config';
 import * as v from 'valibot';
 
 import { rehypeCodeGroups } from './rehype-code-groups';
 
-// MDX is compiled by the delegated tool: figatellu hands the compiled code over as `data.mdx`.
+// MDX is compiled by the delegated tool: figatellultimate hands the compiled code over as `data.mdx`.
 const common = {
   title: v.string(),
   metadescription: v.string(),
   featuredPictureUrl: v.optional(v.string()),
   draft: v.optional(v.boolean(), false),
-  // SEO: checked by figatellu as metadata fields.
+  // SEO: checked by figatellultimate as metadata fields.
   updated: v.optional(v.string()),
   robots: v.optional(v.string()),
   canonical: v.optional(v.string()),
@@ -55,11 +55,11 @@ const transform = async <D extends { content: string; _meta: Meta }>(
 
       return { mdx, headings };
     },
-    { key: '__figatellu_mdx' },
+    { key: '__figatellultimate_mdx' },
   )),
 });
 
-const pages = withFigatellu(
+const pages = withFigatellultimate(
   defineCollection({
     name: 'pages',
     directory: 'content/pages',
@@ -68,7 +68,7 @@ const pages = withFigatellu(
     transform,
   }),
 );
-const blog = withFigatellu(
+const blog = withFigatellultimate(
   defineCollection({
     name: 'blog',
     directory: 'content/blog',
@@ -77,7 +77,7 @@ const blog = withFigatellu(
     transform,
   }),
 );
-const landingPages = withFigatellu(
+const landingPages = withFigatellultimate(
   defineCollection({
     name: 'landingPages',
     directory: 'content/landing-pages',
@@ -88,7 +88,7 @@ const landingPages = withFigatellu(
 );
 
 // Each author's long bio, shown on their page under the short one: no page of its own.
-const authorBios = withFigatellu(
+const authorBios = withFigatellultimate(
   defineCollection({
     name: 'authorBios',
     directory: 'content/authors',

@@ -1,13 +1,13 @@
 /** The root layout of each locale: the design system's styles, the theme and the effects. */
-import { Effects } from '@figatellu/effects';
+import { Effects } from '@figatellultimate/effects';
 import { hasLocale } from 'next-intl';
-import { tocScript } from '@figatellu/ui/scripts';
+import { tocScript } from '@figatellultimate/ui/scripts';
 import { ThemeProvider } from 'next-themes';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 
-import { localeInfo, locales } from '#figatellu/locales';
-import { urlOf } from '#figatellu/urls';
+import { localeInfo, locales } from '#figatellultimate/locales';
+import { urlOf } from '#figatellultimate/urls';
 
 import { AppLinks } from '../../components/links';
 import { SITE_THEMES, siteThemeScript } from '../../components/site-themes';
@@ -16,11 +16,11 @@ import { SiteFooter } from '../../components/site-footer';
 
 // The minimal design system, the effects' mechanics, the themes' shared layout, then both themes, one picked by
 // `<html data-site-theme>` (`components/site-themes.ts`).
-import '@figatellu/ui/styles.css';
-import '@figatellu/effects/styles.css';
-import '@figatellu/themes/base.css';
-import '@figatellu/themes/maquis.css';
-import '@figatellu/themes/paper.css';
+import '@figatellultimate/ui/styles.css';
+import '@figatellultimate/effects/styles.css';
+import '@figatellultimate/themes/base.css';
+import '@figatellultimate/themes/maquis.css';
+import '@figatellultimate/themes/paper.css';
 
 // Static generation only: one root layout per declared locale.
 export const dynamicParams = false;
@@ -52,7 +52,12 @@ export default async function LocaleLayout(props: LayoutProps<'/[locale]'>): Pro
       </head>
       <body>
         {/* The stylesheet's dark tokens follow `data-theme`; without a choice, the system's preference. */}
-        <ThemeProvider attribute="data-theme" storageKey="figatellu-theme" enableSystem disableTransitionOnChange>
+        <ThemeProvider
+          attribute="data-theme"
+          storageKey="figatellultimate-theme"
+          enableSystem
+          disableTransitionOnChange
+        >
           {/* Client-side navigations: this layout, and what it holds, stays mounted from page to page. */}
           <AppLinks>{props.children}</AppLinks>
           <SiteFooter locale={locale} />

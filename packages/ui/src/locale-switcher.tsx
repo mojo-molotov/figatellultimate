@@ -11,7 +11,7 @@ import type { ComponentProps, ReactNode } from 'react';
 
 import { Link } from './link.js';
 
-/** What `localeLinksOf` gives (`@figatellu/site`). */
+/** What `localeLinksOf` gives (`@figatellultimate/site`). */
 export interface LocaleLink {
   readonly locale: string;
   readonly url: string;

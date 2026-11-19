@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { defineFacetedCollection, type Engine } from '@figatellu/facets';
+import { defineFacetedCollection, type Engine } from '@figatellultimate/facets';
 import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import axe from 'axe-core';

@@ -1,15 +1,15 @@
-# @figatellu/pagefind
+# @figatellultimate/pagefind
 
-The Pagefind adapter of figatellu: indexes the built HTML of the mounted entries, one bundle per locale. `figatellu search` uses it.
+The Pagefind adapter of figatellultimate: indexes the built HTML of the mounted entries, one bundle per locale. `figatellultimate search` uses it.
 
 ```sh
-pnpm add -D @figatellu/pagefind
+pnpm add -D @figatellultimate/pagefind
 ```
 
 ```ts
-import { indexSite } from '@figatellu/pagefind';
+import { indexSite } from '@figatellultimate/pagefind';
 
 const { locales, problems } = await indexSite({ pages, outputDirectory: 'public/pagefind' });
 ```
 
-Tests: [Allure report](https://mojo-molotov.github.io/figatellu/ci/) · [coverage](https://mojo-molotov.github.io/figatellu/ci/coverage/)
+Tests: [Allure report](https://mojo-molotov.github.io/figatellultimate/ci/) · [coverage](https://mojo-molotov.github.io/figatellultimate/ci/coverage/)

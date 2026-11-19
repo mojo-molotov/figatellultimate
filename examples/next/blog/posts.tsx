@@ -8,10 +8,10 @@
  *     - Paginated in its path (a subcategory, `paged`): the page holds its slice only, prerendered at `/page/N`, its
  *       pagination reaching the other prerendered pages; a filter or a sort fetches the listing's index
  *       (`listing-index.ts`, prefetched as the pointer or the focus reaches the toolbar), and the browser renders the
- *       cards of that view from it. `usePagedCollection` of `@figatellu/facets-react` does the orchestration.
+ *       cards of that view from it. `usePagedCollection` of `@figatellultimate/facets-react` does the orchestration.
  */
-import type { UrlAdapter } from '@figatellu/facets';
-import { isDefaultView, pagedHref } from '@figatellu/facets';
+import type { UrlAdapter } from '@figatellultimate/facets';
+import { isDefaultView, pagedHref } from '@figatellultimate/facets';
 import {
   FacetOptions,
   FacetsReset,
@@ -19,12 +19,12 @@ import {
   Pagination,
   SortSelect,
   usePagedCollection,
-} from '@figatellu/facets-react';
-import { useNextUrl } from '@figatellu/next16/facets';
-import { formatPrecompiled } from '@figatellu/use-intl/format';
+} from '@figatellultimate/facets-react';
+import { useNextUrl } from '@figatellultimate/next16/facets';
+import { formatPrecompiled } from '@figatellultimate/use-intl/format';
 import { useCallback, useMemo, type ReactNode } from 'react';
 
-import { localeInfo, type Locale } from '#figatellu/locales';
+import { localeInfo, type Locale } from '#figatellultimate/locales';
 
 import { PostCard } from './cards';
 import { postsEngine, type PostItem } from './facets';

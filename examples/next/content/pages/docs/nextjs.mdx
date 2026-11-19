@@ -7,22 +7,22 @@ order: 7
 
 # Next.js
 
-`@figatellu/next16` traduit les données neutres de figatellu pour l’App Router de Next.js 16 ; `@figatellu/site` les calcule, sans framework. La version majeure de Next est dans le nom du paquet : une nouvelle majeure aura son propre adaptateur.
+`@figatellultimate/next16` traduit les données neutres de figatellultimate pour l’App Router de Next.js 16 ; `@figatellultimate/site` les calcule, sans framework. La version majeure de Next est dans le nom du paquet : une nouvelle majeure aura son propre adaptateur.
 
 ```sh npm
-npm install @figatellu/next16 @figatellu/site
+npm install @figatellultimate/next16 @figatellultimate/site
 ```
 
 ```sh pnpm
-pnpm add @figatellu/next16 @figatellu/site
+pnpm add @figatellultimate/next16 @figatellultimate/site
 ```
 
 ```sh yarn
-yarn add @figatellu/next16 @figatellu/site
+yarn add @figatellultimate/next16 @figatellultimate/site
 ```
 
 ```sh bun
-bun add @figatellu/next16 @figatellu/site
+bun add @figatellultimate/next16 @figatellultimate/site
 ```
 
 ## Une route pour toutes les pages
@@ -31,7 +31,7 @@ Un catch-all facultatif par langue sert chaque entrée, page de dossier et page 
 
 ```tsx
 // app/[locale]/[[...url]]/page.tsx
-import { findByUrl, mountedUrls, segmentsOf, urlOf } from '#figatellu/urls';
+import { findByUrl, mountedUrls, segmentsOf, urlOf } from '#figatellultimate/urls';
 
 export const dynamicParams = false;
 
@@ -55,9 +55,9 @@ Avec `dynamicParams = false`, une URL inconnue est une vraie 404, jamais rendue 
 `metadataOf` lit les champs que la collection a déclarés : titre, description, image, URL canonique, alternatives `hreflang` avec `x-default`, directives robots, Open Graph :
 
 ```ts
-import { toNextMetadata } from '@figatellu/next16';
-import { metadataOf } from '@figatellu/site';
-import { metadataFields } from '#figatellu/urls';
+import { toNextMetadata } from '@figatellultimate/next16';
+import { metadataOf } from '@figatellultimate/site';
+import { metadataFields } from '#figatellultimate/urls';
 
 export async function generateMetadata(props) {
   const found = await findByUrl(/* … */);
@@ -90,7 +90,7 @@ Le sitemap liste chaque page indexable avec ses traductions et sa date de modifi
 
 ## Les redirections
 
-`figatellu migrate` écrit `redirects.json` quand des URL changent. Next les sert en redirections permanentes :
+`figatellultimate migrate` écrit `redirects.json` quand des URL changent. Next les sert en redirections permanentes :
 
 ```ts
 // next.config.ts
@@ -101,8 +101,8 @@ export default {
 
 ## Les liens
 
-Les composants de `@figatellu/ui` lient les pages par le composant de lien de l’application : enveloppez la mise en page dans `LinkProvider` avec `next/link`, et les navigations restent côté client.
+Les composants de `@figatellultimate/ui` lient les pages par le composant de lien de l’application : enveloppez la mise en page dans `LinkProvider` avec `next/link`, et les navigations restent côté client.
 
 ## Les messages
 
-next-intl formate les messages côté serveur, précompilés : `withPrecompiledMessages` de `@figatellu/next16/config` lui donne son moteur `format-only`, et les composants clients reçoivent leurs textes déjà formatés. Aucune page n’embarque l’analyseur ICU ni le catalogue des messages ; le détail est dans [Messages](/docs/messages).
+next-intl formate les messages côté serveur, précompilés : `withPrecompiledMessages` de `@figatellultimate/next16/config` lui donne son moteur `format-only`, et les composants clients reçoivent leurs textes déjà formatés. Aucune page n’embarque l’analyseur ICU ni le catalogue des messages ; le détail est dans [Messages](/docs/messages).

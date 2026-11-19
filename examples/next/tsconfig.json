@@ -25,7 +25,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    ".figatellu/**/*.d.ts",
+    ".figatellultimate/**/*.d.ts",
     ".next/dev/types/**/*.ts"
   ],
   "exclude": ["node_modules"]

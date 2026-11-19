@@ -1,10 +1,10 @@
 /** The JSON-LD of a page, and its breadcrumb's. */
-import { breadcrumbListOf, breadcrumbOf, jsonLd, type StructuredData } from '@figatellu/site';
+import { breadcrumbListOf, breadcrumbOf, jsonLd, type StructuredData } from '@figatellultimate/site';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 
-import type { Locale } from '#figatellu/locales';
-import { navigationOf } from '#figatellu/navigation';
+import type { Locale } from '#figatellultimate/locales';
+import { navigationOf } from '#figatellultimate/navigation';
 
 import { site } from '../site';
 

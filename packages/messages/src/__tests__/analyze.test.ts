@@ -8,7 +8,7 @@ import {
   segment,
   slug,
   type MessageTree,
-} from '@figatellu/core';
+} from '@figatellultimate/core';
 import { describe, expect, it } from 'vitest';
 
 import { analyzeMessages } from '../analyze.js';

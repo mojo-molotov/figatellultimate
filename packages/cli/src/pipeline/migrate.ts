@@ -1,5 +1,5 @@
 /**
- * `figatellu migrate default-locale <locale>` and `figatellu migrate notation <implicit|explicit>`: the plan, then
+ * `figatellultimate migrate default-locale <locale>` and `figatellultimate migrate notation <implicit|explicit>`: the plan, then
  * with `--write` the moves, the config edit and the redirect table.
  *
  * Key design decisions:
@@ -26,7 +26,7 @@ import {
   type MigrationPlan,
   type MigrationTarget,
   type MigrationWarning,
-} from '@figatellu/core';
+} from '@figatellultimate/core';
 import { Node, Project, SyntaxKind } from 'ts-morph';
 
 import type { LoadedConfig } from '../input/load-config.js';
@@ -92,7 +92,7 @@ export function editLocalesConfig(text: string, target: MigrationTarget): Config
   const property = target.kind === 'default-locale' ? 'default' : 'notation';
   const value = target.kind === 'default-locale' ? target.locale : target.notation;
   const notLiteral: ConfigEdit = { kind: 'not-literal', property, value };
-  const file = new Project({ useInMemoryFileSystem: true }).createSourceFile('figatellu.config.ts', text);
+  const file = new Project({ useInMemoryFileSystem: true }).createSourceFile('figatellultimate.config.ts', text);
   const call = file
     .getDescendantsOfKind(SyntaxKind.CallExpression)
     .find((node) => node.getExpression().getText() === 'defineLocales');
@@ -162,7 +162,7 @@ export async function applyMoves(
   if (occupied.length > 0) return { ok: false, failure: { kind: 'target-exists', paths: occupied } };
 
   const temporary = (index: number, move: ProjectMove): string =>
-    `${abs(move.from)}.figatellu-migrate-${String(index)}`;
+    `${abs(move.from)}.figatellultimate-migrate-${String(index)}`;
   const parked: number[] = [];
   const placed: number[] = [];
 
@@ -261,7 +261,7 @@ export interface MigrateResult {
 const REDIRECTS_FILE = 'redirects.json';
 
 /**
- * `figatellu migrate`: the content analyzed in development (drafts and test content move too), the plan,
+ * `figatellultimate migrate`: the content analyzed in development (drafts and test content move too), the plan,
  * and with `write`, the moves, the config edit and `redirects.json`. Never writes on content errors or a failed plan.
  *
  * @param input - The config, the target, whether to write, the project's folder and its file system.

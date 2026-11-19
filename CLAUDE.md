@@ -1,6 +1,6 @@
-# figatellu — collaboration instructions
+# figatellultimate — collaboration instructions
 
-figatellu is a typed, filesystem-driven content management library (MDX), with an i18n layer whose schema is derived from the content, a headless faceted-collection engine with its state in the URL, local search, and a minimal design system. It is a pnpm monorepo: the packages under `packages/`, a Next.js example app under `examples/next`, and the repository's own checks under `tooling/`.
+figatellultimate is a typed, filesystem-driven content management library (MDX), with an i18n layer whose schema is derived from the content, a headless faceted-collection engine with its state in the URL, local search, and a minimal design system. It is a pnpm monorepo: the packages under `packages/`, a Next.js example app under `examples/next`, and the repository's own checks under `tooling/`.
 
 This file is self-contained: every rule that applies to the project is written here, and each one is checked mechanically wherever a check can exist.
 
@@ -12,9 +12,9 @@ There are no architecture, spec, roadmap or decision documents: **the code and t
 - **Every export carries a full JSDoc**: a summary, `@param`, `@returns`, `@throws` when it throws, and an `@example` for public functions and components. Keep examples short: the detail lives in the module header.
 - A decision taken with the user goes into the header of the module it shapes, as a key design decision with its reason.
 - **No ids**: no decision, spec, step or bug numbers in code, tests, changesets or package metadata. A test title describes the behavior it checks; an invariant names the test file that checks it.
-- figatellu is a new project: comments describe what it does and why, never a comparison with a previous project.
+- figatellultimate is a new project: comments describe what it does and why, never a comparison with a previous project.
 - Package READMEs are minimal, for npm: what the package does, its installation, one usage example.
-- Never write `*/` inside a comment (e.g. a path like `.figatellu/*/index.js`): it closes the comment.
+- Never write `*/` inside a comment (e.g. a path like `.figatellultimate/*/index.js`): it closes the comment.
 
 ## Workflow
 
@@ -36,18 +36,18 @@ There are no architecture, spec, roadmap or decision documents: **the code and t
 
 ## Architecture
 
-- **A DX layer, not a content engine.** Generic content processing (files, frontmatter, schemas, MDX, watching, routing, i18n formatting) is delegated to an existing tool behind a port, replaceable; figatellu implements what is specific to it.
+- **A DX layer, not a content engine.** Generic content processing (files, frontmatter, schemas, MDX, watching, routing, i18n formatting) is delegated to an existing tool behind a port, replaceable; figatellultimate implements what is specific to it.
 - **Ports and adapters.** The core never imports an adapter and does no I/O; it never reads `process` (checked by `tooling/boundaries`). Package roles and their allowed dependencies live in `tooling/boundaries/roles.ts`, enforced by ESLint and dependency-cruiser.
 - **Composition, not inheritance.** The pipeline is a composition of pure functions; collections and taxonomies are declared as data, never subclassed.
 - **Validate what comes from outside.** The `define*` builders validate and freeze each part of the configuration where it is written; frontmatter is checked by the collection's schema (any Standard Schema: valibot, zod) before it is read; types are derived from what was validated.
 - **Silent libraries.** Packages print nothing by themselves: diagnostics are returned values, and only the CLI writes them.
 - **Injection seams for tests** (a content source, a URL adapter, the CLI's I/O) are explicit parameters, documented as such.
-- **Decorative looks stay out of `@figatellu/ui`**, a minimal design system (parts with `data-slot`, styled by tokens): decorative components live in `@figatellu/effects` (their mechanics, every look a token), and a theme of `@figatellu/themes` (one stylesheet) or the app decides where they show and how they look.
-- **React reaches elements through refs**, never `querySelector`, `querySelectorAll` or `closest` (lint rule `figatellu/react-no-dom-queries`, tests excepted).
+- **Decorative looks stay out of `@figatellultimate/ui`**, a minimal design system (parts with `data-slot`, styled by tokens): decorative components live in `@figatellultimate/effects` (their mechanics, every look a token), and a theme of `@figatellultimate/themes` (one stylesheet) or the app decides where they show and how they look.
+- **React reaches elements through refs**, never `querySelector`, `querySelectorAll` or `closest` (lint rule `figatellultimate/react-no-dom-queries`, tests excepted).
 
 ## Errors
 
-- **Expected failures are values.** They flow through the minimal railway-oriented `Result` of `@figatellu/core` (`shared/result.ts`): `andThen` chains dependent steps, `combine` accumulates every error so a user sees every problem at once. A function throws only for a programming error or an invalid configuration, and its JSDoc says so with `@throws`.
+- **Expected failures are values.** They flow through the minimal railway-oriented `Result` of `@figatellultimate/core` (`shared/result.ts`): `andThen` chains dependent steps, `combine` accumulates every error so a user sees every problem at once. A function throws only for a programming error or an invalid configuration, and its JSDoc says so with `@throws`.
 - **Typed diagnostics.** Each failure is a discriminated value with a `code`; a diagnostic says where, why and how to fix, in English.
 
 ## Typing and tooling
@@ -58,14 +58,14 @@ There are no architecture, spec, roadmap or decision documents: **the code and t
 - **No unused variables** (`@typescript-eslint/no-unused-vars`), in the workspace and the example.
 - **No type assertions** (`consistent-type-assertions: never`; `as const` aside): a guard, a schema or a better-typed API instead; a rare exception carries an `eslint-disable-next-line` with its reason. Prefer `x = … as const satisfies T` over an annotation, and `{ a: false } as const` over `{ a: false as const }`.
 - **pnpm and Turborepo**: the packages' own tasks (`build`, `typecheck`, `test`, `test:cli`, `lint:package`) run through Turborepo (`turbo.json`, `turbo run --filter=…` in the example), cached and in dependency order; a `transit` task makes a change in a package invalidate the cached tests and type checks of the packages depending on it (they read its sources). pnpm is the package manager: Turborepo needs one declared (`packageManager`), and leaving the choice free would pin Turborepo to 2.10.0 (from 2.10.1, `turbo run` finds no package once the package manager check is disabled).
-- Workspace packages resolve each other through their sources (the `@figatellu/source` export condition); a package's tests run through Turborepo (`pnpm test`, each package's `test` script runs its own vitest project from the root's configuration), or `pnpm vitest run --project <name>`.
+- Workspace packages resolve each other through their sources (the `@figatellultimate/source` export condition); a package's tests run through Turborepo (`pnpm test`, each package's `test` script runs its own vitest project from the root's configuration), or `pnpm vitest run --project <name>`.
 - CI (`.github/workflows/ci.yml`): format check, lint, boundaries, knip, typecheck, build, no generated artifact committed, publint and attw, changeset status, commitlint; tests on Linux, macOS and Windows with Node 24 and 26.
 - Conventional Commits (commitlint, husky `commit-msg`): lowercase subject, header and body lines at most 100 characters. Releases through changesets.
-- No coverage ignore on a whole file or a range to inflate coverage (lint-checked); generated output (`.figatellu/`, `dist/`) is never committed.
+- No coverage ignore on a whole file or a range to inflate coverage (lint-checked); generated output (`.figatellultimate/`, `dist/`) is never committed.
 
 ## Tests
 
-Test what matters, from the outside, the way a user meets it: the public contract, never private state, and no mock of figatellu's own code (only at the edges: a framework's router, a browser API).
+Test what matters, from the outside, the way a user meets it: the public contract, never private state, and no mock of figatellultimate's own code (only at the edges: a framework's router, a browser API).
 
 - **Families**, each run by its own vitest configuration and labeled in Allure (`tooling/allure.ts`):
   - **scenarios** (`pnpm test`): every package, components in happy-dom, type tests (`*.test-d.ts`) and properties;

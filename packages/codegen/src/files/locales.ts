@@ -1,7 +1,7 @@
 /**
  * `locales/index`: the locale union, the default locale, the list and each locale's metadata (label, direction).
  */
-import type { FigatelluConfig } from '@figatellu/core';
+import type { FigatellultimateConfig } from '@figatellultimate/core';
 import { VariableDeclarationKind, type Project } from 'ts-morph';
 
 import { literal } from '../model.js';
@@ -15,7 +15,7 @@ import { property, union } from './type-builders.js';
  * @param config - The config and its locales.
  * @returns The generated file(s), built in memory; nothing is written.
  */
-export function localesFile(project: Project, config: FigatelluConfig): GeneratedFile[] {
+export function localesFile(project: Project, config: FigatellultimateConfig): GeneratedFile[] {
   const { list, default: defaultLocale } = config.locales;
 
   return render(project, 'locales/index.ts', 'module', (file) => {

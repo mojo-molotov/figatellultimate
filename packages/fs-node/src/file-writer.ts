@@ -15,7 +15,7 @@ import { randomUUID } from 'node:crypto';
 import { mkdir, readdir, readFile, rename, rm, rmdir, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, sep } from 'node:path';
 
-import { err, GENERATED_HEADER, ok, type ListError, type Result } from '@figatellu/core';
+import { err, GENERATED_HEADER, ok, type ListError, type Result } from '@figatellultimate/core';
 
 import { errorCode } from './errors.js';
 
@@ -91,7 +91,7 @@ async function removeEmptyFolders(directory: string, removedFiles: readonly stri
 }
 
 /**
- * The Node writer of the generated folder (`.figatellu/`).
+ * The Node writer of the generated folder (`.figatellultimate/`).
  *
  * @param outputDirectory - The absolute folder to write.
  * @returns A writer whose `commit(files)` writes a file only when its contents change, atomically (a temporary file,
@@ -101,7 +101,7 @@ async function removeEmptyFolders(directory: string, removedFiles: readonly stri
  *   contract of the code generator.
  *
  * @example
- * const result = await createNodeFileWriter(join(root, '.figatellu')).commit(emit({ config, assembly, outputDirectory }));
+ * const result = await createNodeFileWriter(join(root, '.figatellultimate')).commit(emit({ config, assembly, outputDirectory }));
  * if (result.ok) result.value; // { written: 3, removed: 0, unchanged: 59 }
  */
 export function createNodeFileWriter(outputDirectory: string): FileWriter {

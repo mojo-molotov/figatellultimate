@@ -1,23 +1,23 @@
 /**
- * The Next.js 16 adapter: figatellu's framework-free results mapped onto the App Router's types. The client URL
- * adapter of faceted collections lives in its own entry, `@figatellu/next16/facets`.
+ * The Next.js 16 adapter: figatellultimate's framework-free results mapped onto the App Router's types. The client URL
+ * adapter of faceted collections lives in its own entry, `@figatellultimate/next16/facets`.
  *
  * Key design decisions:
  *     - A mapping only: no URL, metadata or routing logic lives here; it stays in the framework-free packages, so a
  *       second framework reuses it.
  *     - Next's major version is in the package's name: a next major gets its own adapter beside this one, and apps
  *       still on Next 16 keep theirs.
- *     - figatellu does no routing: locale routing belongs to the app or its i18n library (e.g. next-intl, configured
- *       to match figatellu's URL strategy).
+ *     - figatellultimate does no routing: locale routing belongs to the app or its i18n library (e.g. next-intl, configured
+ *       to match figatellultimate's URL strategy).
  *
  * Invariants (`next.test.ts`, and the example's real build): Next's own types are returned; `x-default` in the
  * languages; redirects matching their own URL only.
  */
-import type { EntryMetadata, Site, SitemapEntry } from '@figatellu/site';
+import type { EntryMetadata, Site, SitemapEntry } from '@figatellultimate/site';
 import type { Metadata, MetadataRoute, NextConfig } from 'next';
 
 /**
- * Next 16's `Metadata` from figatellu's framework-free metadata.
+ * Next 16's `Metadata` from figatellultimate's framework-free metadata.
  *
  * @param metadata - `metadataOf` or `pageMetadataOf`'s result.
  * @returns The title, description, robots, canonical, languages (`x-default` among them, as Next supports it) and
@@ -67,7 +67,7 @@ export function toNextMetadata(metadata: EntryMetadata): Metadata {
 }
 
 /**
- * Next 16's sitemap (`app/sitemap.ts`) from figatellu's.
+ * Next 16's sitemap (`app/sitemap.ts`) from figatellultimate's.
  *
  * @param entries - `sitemapOf`'s result.
  * @returns Each URL with its translations and its last modification date.
@@ -123,7 +123,7 @@ const escapePattern = (url: string): string => url.replace(/[:()*?+{}\\]/g, (c) 
 /**
  * Next 16's `redirects()` from a migration's redirect table (`redirects.json`).
  *
- * @param table - Old URL to new URL, as `figatellu migrate --write` writes them.
+ * @param table - Old URL to new URL, as `figatellultimate migrate --write` writes them.
  * @returns Permanent redirects, each source escaped so that it matches its own URL only (Next reads `:`, `(`, `*`…
  *   as route syntax).
  *

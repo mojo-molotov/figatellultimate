@@ -5,11 +5,11 @@
  */
 import { getTranslations } from 'next-intl/server';
 
-import { findBlogPostByUrl, type BlogFolder, type BlogPost } from '#figatellu/blog';
-import type { Locale } from '#figatellu/locales';
-import { taxonomies } from '#figatellu/taxonomies';
-import { authorsTermUrl } from '#figatellu/terms';
-import { urlOf } from '#figatellu/urls';
+import { findBlogPostByUrl, type BlogFolder, type BlogPost } from '#figatellultimate/blog';
+import type { Locale } from '#figatellultimate/locales';
+import { taxonomies } from '#figatellultimate/taxonomies';
+import { authorsTermUrl } from '#figatellultimate/terms';
+import { urlOf } from '#figatellultimate/urls';
 
 import type { CardData } from './cards';
 import type { PostItem } from './facets';

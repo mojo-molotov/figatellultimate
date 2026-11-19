@@ -1,10 +1,10 @@
 /**
  * The site's helpers, pure and framework-free: metadata, sitemap, static params, locale links, navigation sections,
- * breadcrumbs, structured data and feeds. A framework adapter maps their results (`@figatellu/next16` for Next).
+ * breadcrumbs, structured data and feeds. A framework adapter maps their results (`@figatellultimate/next16` for Next).
  *
  * Architecture:
- *     generated modules (#figatellu/urls, #figatellu/navigation) ──> these helpers ──> neutral, frozen data
- *                                                                                     └─> toNextMetadata, toNextSitemap…
+ *     generated modules (#figatellultimate/urls, #figatellultimate/navigation) ──> these helpers ──> neutral, frozen data
+ *                                                                                                   └─> toNextMetadata, toNextSitemap…
  *
  *     index.ts            metadataOf, pageMetadataOf, sitemapOf, catchAllParamsOf, localeLinksOf, sectionOf, breadcrumbOf
  *     structured-data.ts  structuredDataOf, breadcrumbListOf, personOf, jsonLd
@@ -266,7 +266,7 @@ export function localeLinksOf(
 }
 
 /**
- * A node of the generated `#figatellu/navigation`: an entry link, or a section labelled by a message key `K` (the
+ * A node of the generated `#figatellultimate/navigation`: an entry link, or a section labelled by a message key `K` (the
  * generated `MessageKey`, kept through every helper below so that `t` receives it as is).
  */
 export type NavigationNode<K extends string = string> =

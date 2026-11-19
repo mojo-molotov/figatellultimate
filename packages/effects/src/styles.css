@@ -1,6 +1,6 @@
 /*
- * @figatellu/effects/styles.css: the mechanics of the decorative effects, every look a token. Load it after
- * `@figatellu/ui/styles.css`; a theme (or the app) then decides where each effect shows, and its colors.
+ * @figatellultimate/effects/styles.css: the mechanics of the decorative effects, every look a token. Load it after
+ * `@figatellultimate/ui/styles.css`; a theme (or the app) then decides where each effect shows, and its colors.
  *
  *     --fig-glow-color, --fig-glow-size, --fig-glow-opacity    the cursor glow (default: the accent)
  *     --fig-collector-color                                    the collector's rim and tint (default: the accent)

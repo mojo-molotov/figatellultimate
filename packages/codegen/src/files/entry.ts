@@ -2,7 +2,7 @@
  * `<collection>/entries/<locale>/<key>.js`: one entry's data and body, plain JavaScript, imported lazily by its
  * index.
  */
-import type { Entry } from '@figatellu/core';
+import type { Entry } from '@figatellultimate/core';
 import { VariableDeclarationKind, type Project } from 'ts-morph';
 
 import { entryModule, literal, type CollectionModel } from '../model.js';

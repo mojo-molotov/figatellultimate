@@ -1,14 +1,14 @@
 /** The header of every page and its breadcrumb, from the content's navigation. */
-import { SEARCH_SORTS } from '@figatellu/search';
-import { breadcrumbOf, localeLinksOf } from '@figatellu/site';
-import type { NavigationNode } from '@figatellu/ui';
+import { SEARCH_SORTS } from '@figatellultimate/search';
+import { breadcrumbOf, localeLinksOf } from '@figatellultimate/site';
+import type { NavigationNode } from '@figatellultimate/ui';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 
-import { locales, type Locale } from '#figatellu/locales';
-import type { MessageKey } from '#figatellu/messages';
-import { navigationOf } from '#figatellu/navigation';
-import { mountedUrls } from '#figatellu/urls';
+import { locales, type Locale } from '#figatellultimate/locales';
+import type { MessageKey } from '#figatellultimate/messages';
+import { navigationOf } from '#figatellultimate/navigation';
+import { mountedUrls } from '#figatellultimate/urls';
 
 import { compiled } from '../i18n/labels';
 import { Crumbs } from './crumbs';

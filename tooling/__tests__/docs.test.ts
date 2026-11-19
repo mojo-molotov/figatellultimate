@@ -41,7 +41,7 @@ function sourcesUnder(dir: string): string[] {
   });
 }
 
-/** Every `@figatellu/source` entry of a manifest's `exports`. */
+/** Every `@figatellultimate/source` entry of a manifest's `exports`. */
 function entriesOf(dir: string): string[] {
   const manifest: unknown = JSON.parse(readFileSync(join(ROOT, dir, 'package.json'), 'utf8'));
   const exports = typeof manifest === 'object' && manifest !== null && 'exports' in manifest ? manifest.exports : {};
@@ -49,8 +49,8 @@ function entriesOf(dir: string): string[] {
   return Object.values(typeof exports === 'object' && exports !== null ? exports : {}).flatMap(
     (conditions: unknown) => {
       const source: unknown =
-        typeof conditions === 'object' && conditions !== null && '@figatellu/source' in conditions
-          ? conditions['@figatellu/source']
+        typeof conditions === 'object' && conditions !== null && '@figatellultimate/source' in conditions
+          ? conditions['@figatellultimate/source']
           : undefined;
 
       return typeof source === 'string' && /\.tsx?$/.test(source) ? [`${dir}/${source.slice(2)}`] : [];
@@ -67,7 +67,7 @@ const program = ts.createProgram({
   options: {
     module: ts.ModuleKind.NodeNext,
     moduleResolution: ts.ModuleResolutionKind.NodeNext,
-    customConditions: ['@figatellu/source'],
+    customConditions: ['@figatellultimate/source'],
     jsx: ts.JsxEmit.ReactJSX,
     allowImportingTsExtensions: true,
     noEmit: true,

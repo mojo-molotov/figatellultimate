@@ -1,13 +1,13 @@
 {
-  "name": "@figatellu/facets",
+  "name": "@figatellultimate/facets",
   "version": "0.0.0",
-  "description": "Faceted collections of figatellu: a pure engine (filters, sorts, pagination, transitions) with its whole state in the URL.",
+  "description": "Faceted collections of figatellultimate: a pure engine (filters, sorts, pagination, transitions) with its whole state in the URL.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
   "exports": {
     ".": {
-      "@figatellu/source": "./src/index.ts",
+      "@figatellultimate/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
@@ -32,7 +32,7 @@
     "lint:package": "publint --strict && attw --pack . --profile esm-only"
   },
   "dependencies": {},
-  "figatellu": {
+  "figatellultimate": {
     "role": "runtime"
   },
   "devDependencies": {}

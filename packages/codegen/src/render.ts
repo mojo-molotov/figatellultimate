@@ -3,7 +3,7 @@
  * JavaScript, declarations, or both; every file starts with the generated header (the writer only ever removes such
  * files).
  */
-import { GENERATED_HEADER } from '@figatellu/core';
+import { GENERATED_HEADER } from '@figatellultimate/core';
 import { IndentationText, NewLineKind, Project, QuoteKind, ts, type SourceFile } from 'ts-morph';
 
 /** One generated file, path relative to the output folder (POSIX). */
@@ -12,7 +12,7 @@ export interface GeneratedFile {
   readonly contents: string;
 }
 
-const HEADER = `${GENERATED_HEADER} Do not edit: run \`figatellu build\` instead.\n`;
+const HEADER = `${GENERATED_HEADER} Do not edit: run \`figatellultimate build\` instead.\n`;
 
 /**
  * An in-memory ts-morph project (no I/O).

@@ -1,7 +1,7 @@
 {
-  "name": "@figatellu/content-collections",
+  "name": "@figatellultimate/content-collections",
   "version": "0.0.0",
-  "description": "Content Collections adapter of figatellu: the ContentSource port backed by Content Collections.",
+  "description": "Content Collections adapter of figatellultimate: the ContentSource port backed by Content Collections.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
@@ -10,12 +10,12 @@
   },
   "exports": {
     ".": {
-      "@figatellu/source": "./src/index.ts",
+      "@figatellultimate/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
     "./config": {
-      "@figatellu/source": "./src/config.ts",
+      "@figatellultimate/source": "./src/config.ts",
       "types": "./dist/config.d.ts",
       "default": "./dist/config.js"
     },
@@ -44,19 +44,19 @@
     "lint:package": "publint --strict && attw --pack . --profile esm-only"
   },
   "dependencies": {
-    "@figatellu/core": "workspace:*",
-    "@figatellu/toc": "workspace:*",
+    "@figatellultimate/core": "workspace:*",
+    "@figatellultimate/toc": "workspace:*",
     "github-slugger": "2.0.0"
   },
   "peerDependencies": {
     "@content-collections/core": "^0.15.0"
   },
-  "figatellu": {
+  "figatellultimate": {
     "role": "adapter"
   },
   "devDependencies": {
     "@content-collections/core": "0.15.3",
-    "@figatellu/fs-node": "workspace:*",
+    "@figatellultimate/fs-node": "workspace:*",
     "valibot": "1.5.0",
     "zod": "4.6.7"
   }

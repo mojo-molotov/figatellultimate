@@ -11,22 +11,22 @@ La recherche tourne dans le navigateur du lecteur, sur un index construit depuis
 
 ## L’indexation
 
-Après le build du framework, `figatellu search` indexe le HTML construit de chaque entrée montée et cherchable :
+Après le build du framework, `figatellultimate search` indexe le HTML construit de chaque entrée montée et cherchable :
 
 ```sh npm
-npx figatellu search --site .next/server/app --out public/pagefind --locale-folders
+npx figatellultimate search --site .next/server/app --out public/pagefind --locale-folders
 ```
 
 ```sh pnpm
-pnpm figatellu search --site .next/server/app --out public/pagefind --locale-folders
+pnpm figatellultimate search --site .next/server/app --out public/pagefind --locale-folders
 ```
 
 ```sh yarn
-yarn figatellu search --site .next/server/app --out public/pagefind --locale-folders
+yarn figatellultimate search --site .next/server/app --out public/pagefind --locale-folders
 ```
 
 ```sh bun
-bunx figatellu search --site .next/server/app --out public/pagefind --locale-folders
+bunx figatellultimate search --site .next/server/app --out public/pagefind --locale-folders
 ```
 
 `--locale-folders` sert aux builds qui écrivent chaque langue dans son propre dossier, celle par défaut comprise, comme next-intl. Une collection qui déclare `searchable: false` est exclue. Le texte indexé est l’élément marqué `data-pagefind-body` : la navigation, le pied de page et les listes de pages restent hors des résultats.
@@ -36,7 +36,7 @@ bunx figatellu search --site .next/server/app --out public/pagefind --locale-fol
 `createSearch` interroge l’index d’une langue, paresseusement : rien ne se charge avant la première requête.
 
 ```ts
-import { createSearch } from '@figatellu/search';
+import { createSearch } from '@figatellultimate/search';
 
 const search = createSearch({ locale: 'en', collections: ['pages', 'blog'] });
 const page = await search.query('locale', { sort: 'date-desc' });
@@ -52,10 +52,10 @@ Les résultats arrivent par lots (`more`), chacun avec son URL, son titre, son e
 
 ## Le champ de recherche
 
-`@figatellu/search-react` donne un champ et une fenêtre de recherche, sans style et accessibles, ouverts depuis la barre de navigation ou avec ⌘K / Ctrl+K :
+`@figatellultimate/search-react` donne un champ et une fenêtre de recherche, sans style et accessibles, ouverts depuis la barre de navigation ou avec ⌘K / Ctrl+K :
 
 ```tsx
-import { SearchDialog } from '@figatellu/search-react';
+import { SearchDialog } from '@figatellultimate/search-react';
 
 <SearchDialog
   search={search}

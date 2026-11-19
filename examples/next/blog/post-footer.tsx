@@ -1,11 +1,11 @@
 /** The end of a post: its tags, authors and date. */
-import { EntryCardAuthor } from '@figatellu/ui';
+import { EntryCardAuthor } from '@figatellultimate/ui';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 
-import type { BlogPost } from '#figatellu/blog';
-import { taxonomies } from '#figatellu/taxonomies';
-import { authorsTermUrl } from '#figatellu/terms';
+import type { BlogPost } from '#figatellultimate/blog';
+import { taxonomies } from '#figatellultimate/taxonomies';
+import { authorsTermUrl } from '#figatellultimate/terms';
 
 /**
  * The end of a post: its tags, and its signature at the end of the line (its authors, then its date), as on its card: the same pills, each author linking their page

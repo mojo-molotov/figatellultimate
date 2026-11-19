@@ -1,28 +1,28 @@
 {
-  "name": "@figatellu/next16",
+  "name": "@figatellultimate/next16",
   "version": "0.0.0",
-  "description": "Next.js 16 adapter of figatellu: site metadata, sitemap, redirects and the facets URL adapter. The major version of Next is in the name.",
+  "description": "Next.js 16 adapter of figatellultimate: site metadata, sitemap, redirects and the facets URL adapter. The major version of Next is in the name.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
   "exports": {
     ".": {
-      "@figatellu/source": "./src/index.ts",
+      "@figatellultimate/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
     "./facets": {
-      "@figatellu/source": "./src/facets.ts",
+      "@figatellultimate/source": "./src/facets.ts",
       "types": "./dist/facets.d.ts",
       "default": "./dist/facets.js"
     },
     "./config": {
-      "@figatellu/source": "./src/config.ts",
+      "@figatellultimate/source": "./src/config.ts",
       "types": "./dist/config.d.ts",
       "default": "./dist/config.js"
     },
     "./listing-index": {
-      "@figatellu/source": "./src/listing-index.ts",
+      "@figatellultimate/source": "./src/listing-index.ts",
       "types": "./dist/listing-index.d.ts",
       "default": "./dist/listing-index.js"
     },
@@ -59,10 +59,10 @@
     "lint:package": "publint --strict && attw --pack . --profile esm-only"
   },
   "dependencies": {
-    "@figatellu/facets": "workspace:*",
-    "@figatellu/site": "workspace:*"
+    "@figatellultimate/facets": "workspace:*",
+    "@figatellultimate/site": "workspace:*"
   },
-  "figatellu": {
+  "figatellultimate": {
     "role": "adapter"
   },
   "devDependencies": {

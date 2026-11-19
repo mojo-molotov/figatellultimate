@@ -2,7 +2,7 @@
  * The Node `PathLister`: what files a content folder holds, as POSIX paths.
  *
  * Key design decisions:
- *     - Paths are POSIX inside figatellu; native separators are converted here, at the edge, never further in.
+ *     - Paths are POSIX inside figatellultimate; native separators are converted here, at the edge, never further in.
  *     - One recursive read per directory, files only: the content's structure is read once.
  *     - Failures are values with the file system code only: never the machine's absolute path (it would leak into
  *       diagnostics).
@@ -13,7 +13,7 @@
 import { readdir } from 'node:fs/promises';
 import { isAbsolute, join, relative, sep } from 'node:path';
 
-import { err, ok, type PathLister } from '@figatellu/core';
+import { err, ok, type PathLister } from '@figatellultimate/core';
 
 import { errorCode } from './errors.js';
 

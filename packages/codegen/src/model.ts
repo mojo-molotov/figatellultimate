@@ -2,7 +2,7 @@
  * The collection model every generated file of a collection derives from: its type names, query parameters, levels,
  * entries and lookup tree; and the shared helpers (names, literals, code-unit order).
  */
-import type { Collection, Entry } from '@figatellu/core';
+import type { Collection, Entry } from '@figatellultimate/core';
 
 /** Everything the generated files of one collection derive from. */
 export interface CollectionModel {

@@ -1,7 +1,7 @@
 /**
  * `taxonomies/index`: each taxonomy's terms and pure data, so that an app never imports the config at runtime.
  */
-import type { FigatelluConfig } from '@figatellu/core';
+import type { FigatellultimateConfig } from '@figatellultimate/core';
 import { VariableDeclarationKind, type Project } from 'ts-morph';
 
 import { literal } from '../model.js';
@@ -32,7 +32,7 @@ function typeOf(value: unknown): string {
  * @param config - The config and its taxonomies.
  * @returns The generated file(s), built in memory; nothing is written. None without a taxonomy.
  */
-export function taxonomiesFile(project: Project, config: FigatelluConfig): GeneratedFile[] {
+export function taxonomiesFile(project: Project, config: FigatellultimateConfig): GeneratedFile[] {
   const taxonomies = config.taxonomies ?? {};
 
   if (Object.keys(taxonomies).length === 0) return [];

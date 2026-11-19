@@ -1,5 +1,5 @@
 /**
- * `@figatellu/fs-node`: the Node file system adapters of figatellu's ports, used by the CLI.
+ * `@figatellultimate/fs-node`: the Node file system adapters of figatellultimate's ports, used by the CLI.
  *
  *     createNodePathLister ──> PathLister (core's port): what files a content folder holds
  *     createNodeFileWriter ──> FileWriter: the generated files written atomically, changed ones only

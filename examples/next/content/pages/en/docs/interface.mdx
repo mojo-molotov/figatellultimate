@@ -7,22 +7,22 @@ order: 10
 
 # Interface
 
-Three layers, each optional: `@figatellu/ui`, a minimal design system; `@figatellu/effects`, decorative effects; `@figatellu/themes`, themes over both. Their components have no text of their own: every label comes from your messages, in the reader’s language.
+Three layers, each optional: `@figatellultimate/ui`, a minimal design system; `@figatellultimate/effects`, decorative effects; `@figatellultimate/themes`, themes over both. Their components have no text of their own: every label comes from your messages, in the reader’s language.
 
 ```sh npm
-npm install @figatellu/ui @figatellu/effects @figatellu/themes react radix-ui
+npm install @figatellultimate/ui @figatellultimate/effects @figatellultimate/themes react radix-ui
 ```
 
 ```sh pnpm
-pnpm add @figatellu/ui @figatellu/effects @figatellu/themes react radix-ui
+pnpm add @figatellultimate/ui @figatellultimate/effects @figatellultimate/themes react radix-ui
 ```
 
 ```sh yarn
-yarn add @figatellu/ui @figatellu/effects @figatellu/themes react radix-ui
+yarn add @figatellultimate/ui @figatellultimate/effects @figatellultimate/themes react radix-ui
 ```
 
 ```sh bun
-bun add @figatellu/ui @figatellu/effects @figatellu/themes react radix-ui
+bun add @figatellultimate/ui @figatellultimate/effects @figatellultimate/themes react radix-ui
 ```
 
 ## The design system
@@ -41,7 +41,7 @@ bun add @figatellu/ui @figatellu/effects @figatellu/themes react radix-ui
 One stylesheet styles them all, through `data-slot` attributes and tokens:
 
 ```css
-@import '@figatellu/ui/styles.css';
+@import '@figatellultimate/ui/styles.css';
 
 :root {
   --fig-accent: #0f766e;
@@ -56,8 +56,8 @@ Every token has a dark value, under `prefers-color-scheme: dark` and under `data
 `Effects` loads a glow under the cursor and sparkles in the margins on desktops only, never on the server nor on a phone; `Collector` lights a card up under the mouse; `Reveal` reveals the footer from under the page. Every look is a token: `--fig-glow-color`, `--fig-sparkles-column`, `--fig-collector-color`.
 
 ```tsx
-import '@figatellu/effects/styles.css';
-import { Effects, Reveal } from '@figatellu/effects';
+import '@figatellultimate/effects/styles.css';
+import { Effects, Reveal } from '@figatellultimate/effects';
 
 <body>
   {children}
@@ -73,10 +73,10 @@ import { Effects, Reveal } from '@figatellu/effects';
 `base.css` lays out the site: the text column, the article and its table of contents, the listings, the MDX typography, print. A theme over it sets its looks only. **maquis** lays dark glass over the previews, the code and the tables, and shows the effects in the dark theme. **paper** puts soft ink on a grey paper, the headings in a serif, an ink-blue accent, with no effect at all.
 
 ```tsx
-import '@figatellu/ui/styles.css';
-import '@figatellu/effects/styles.css';
-import '@figatellu/themes/base.css';
-import '@figatellu/themes/paper.css';
+import '@figatellultimate/ui/styles.css';
+import '@figatellultimate/effects/styles.css';
+import '@figatellultimate/themes/base.css';
+import '@figatellultimate/themes/paper.css';
 ```
 
 Several themes can be loaded together: `<html data-site-theme="paper">` picks one. Without that attribute, a theme loaded alone applies. This site loads both, and its footer lets the reader choose.

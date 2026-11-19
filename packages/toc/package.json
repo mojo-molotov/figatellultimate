@@ -1,13 +1,13 @@
 {
-  "name": "@figatellu/toc",
+  "name": "@figatellultimate/toc",
   "version": "0.0.0",
-  "description": "Table of contents model of figatellu: the tree of headings and the active heading, pure.",
+  "description": "Table of contents model of figatellultimate: the tree of headings and the active heading, pure.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
   "exports": {
     ".": {
-      "@figatellu/source": "./src/index.ts",
+      "@figatellultimate/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
@@ -32,7 +32,7 @@
     "lint:package": "publint --strict && attw --pack . --profile esm-only"
   },
   "dependencies": {},
-  "figatellu": {
+  "figatellultimate": {
     "role": "runtime"
   },
   "devDependencies": {}

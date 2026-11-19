@@ -11,7 +11,7 @@ import {
   type Collection,
   type Entry,
   type NavigationItem,
-} from '@figatellu/core';
+} from '@figatellultimate/core';
 import { describe, expect, it } from 'vitest';
 
 import { navigationTrees, type NavigationNode } from '../navigation.js';

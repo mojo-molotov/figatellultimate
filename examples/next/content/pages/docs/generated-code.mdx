@@ -1,20 +1,20 @@
 ---
 featuredPictureUrl: /covers/placeholder-64.jpeg
 title: 'Le code généré'
-metadescription: 'Les modules typés que figatellu écrit dans .figatellu/ : getters, index, URL, langues, navigation, messages.'
+metadescription: 'Les modules typés que figatellultimate écrit dans .figatellultimate/ : getters, index, URL, langues, navigation, messages.'
 order: 5
 ---
 
 # Le code généré
 
-`figatellu build` écrit des modules typés dans `.figatellu/`, importés par l’alias `#figatellu/*`. Ils contiennent ce que le build a trouvé : une page qui n’existe pas n’a pas de getter, donc la demander ne compile pas.
+`figatellultimate build` écrit des modules typés dans `.figatellultimate/`, importés par l’alias `#figatellultimate/*`. Ils contiennent ce que le build a trouvé : une page qui n’existe pas n’a pas de getter, donc la demander ne compile pas.
 
 ## Le module d’une collection
 
 Chaque collection a son module, à son nom. Pour une collection `blog` dont l’entrée est `blogPost` :
 
 ```ts
-import { blogIndex, findBlogPost, findBlogPostByUrl, getBlogPost, listBlog } from '#figatellu/blog';
+import { blogIndex, findBlogPost, findBlogPostByUrl, getBlogPost, listBlog } from '#figatellultimate/blog';
 
 const post = await getBlogPost({ locale: 'en', category: 'news', slug: 'launch' });
 post.data.title; // typé par le schéma de la collection
@@ -33,10 +33,10 @@ Les données et les corps sont des modules à part, chargés seulement quand une
 
 ## Les URL
 
-`#figatellu/urls` sert toutes les pages depuis une seule route :
+`#figatellultimate/urls` sert toutes les pages depuis une seule route :
 
 ```ts
-import { findByUrl, mountedUrls, segmentsOf, urlOf } from '#figatellu/urls';
+import { findByUrl, mountedUrls, segmentsOf, urlOf } from '#figatellultimate/urls';
 
 const found = await findByUrl(urlOf('en', ['blog', 'news', 'launch']));
 // found.kind : 'entry', 'folder' ou 'term'
@@ -46,14 +46,14 @@ const found = await findByUrl(urlOf('en', ['blog', 'news', 'launch']));
 
 ## Langues, navigation, taxonomies
 
-| Module                  | Donne                                                                                            |
-| ----------------------- | ------------------------------------------------------------------------------------------------ |
-| `#figatellu/locales`    | `locales`, `defaultLocale`, `localeInfo` (libellé, sens d’écriture), le type `Locale`.           |
-| `#figatellu/navigation` | `navigationOf(locale)` : l’arbre de la barre de navigation, tiré du contenu.                     |
-| `#figatellu/taxonomies` | Les termes et les données de chaque taxonomie.                                                   |
-| `#figatellu/terms`      | Les pages de termes (`findAuthorsTermByUrl`, `authorsTermUrl`), avec le contenu de chaque terme. |
-| `#figatellu/messages`   | Le squelette, les types et le chargeur des messages.                                             |
+| Module                         | Donne                                                                                            |
+| ------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `#figatellultimate/locales`    | `locales`, `defaultLocale`, `localeInfo` (libellé, sens d’écriture), le type `Locale`.           |
+| `#figatellultimate/navigation` | `navigationOf(locale)` : l’arbre de la barre de navigation, tiré du contenu.                     |
+| `#figatellultimate/taxonomies` | Les termes et les données de chaque taxonomie.                                                   |
+| `#figatellultimate/terms`      | Les pages de termes (`findAuthorsTermByUrl`, `authorsTermUrl`), avec le contenu de chaque terme. |
+| `#figatellultimate/messages`   | Le squelette, les types et le chargeur des messages.                                             |
 
 ## Jamais commité
 
-Le dossier est régénéré à chaque build, et seuls les fichiers qui changent sont réécrits : un bundler qui le surveille ne recharge que ce qui a changé. Ajoutez `.figatellu/` au `.gitignore`.
+Le dossier est régénéré à chaque build, et seuls les fichiers qui changent sont réécrits : un bundler qui le surveille ne recharge que ce qui a changé. Ajoutez `.figatellultimate/` au `.gitignore`.

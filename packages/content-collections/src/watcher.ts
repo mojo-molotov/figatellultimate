@@ -4,7 +4,7 @@
  *
  * Key design decision: one handle on the root, never one per folder. Windows refuses to rename or move a folder
  * whose descendant is watched: with a watcher per folder (chokidar, Content Collections' own), an author could not
- * rename a content folder while `figatellu watch` ran. The watcher only signals that something moved; the listing's
+ * rename a content folder while `figatellultimate watch` ran. The watcher only signals that something moved; the listing's
  * diff finds what.
  */
 import { watch, type FSWatcher } from 'node:fs';

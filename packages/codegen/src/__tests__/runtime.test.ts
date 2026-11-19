@@ -18,7 +18,7 @@ import {
   segment,
   slug,
   type ContentSource,
-} from '@figatellu/core';
+} from '@figatellultimate/core';
 import * as v from 'valibot';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 

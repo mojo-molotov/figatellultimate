@@ -2,7 +2,7 @@
  * The MDX `pre`, and groups of code blocks as tabs: the design system's components (client), their labels
  * translated here, on the server.
  */
-import { CodeBlock, CodeTabs } from '@figatellu/ui';
+import { CodeBlock, CodeTabs } from '@figatellultimate/ui';
 import { getTranslations } from 'next-intl/server';
 import type { ComponentProps, ReactNode } from 'react';
 

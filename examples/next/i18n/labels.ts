@@ -1,5 +1,5 @@
 /**
- * The messages precompiled, once per locale (server), with `@figatellu/use-intl/precompile`: next-intl's translator
+ * The messages precompiled, once per locale (server), with `@figatellultimate/use-intl/precompile`: next-intl's translator
  * reads them (its `format-only` runtime, `withPrecompiledMessages` in `next.config.ts`), and client components get
  * the few whose values only the browser knows, precompiled, to format with `formatPrecompiled`. Every other text
  * reaches them as a plain string: no client component imports next-intl, no page carries the catalog of messages.
@@ -9,10 +9,10 @@ import {
   precompileMessages,
   type Precompiled,
   type PrecompiledMessages,
-} from '@figatellu/use-intl/precompile';
+} from '@figatellultimate/use-intl/precompile';
 
-import type { Locale } from '#figatellu/locales';
-import { loadMessages, type MessageKey } from '#figatellu/messages';
+import type { Locale } from '#figatellultimate/locales';
+import { loadMessages, type MessageKey } from '#figatellultimate/messages';
 
 /** Each locale's precompiled messages, compiled once per process. */
 const cache = new Map<Locale, PrecompiledMessages>();

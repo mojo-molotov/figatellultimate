@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { createSearch, type Search } from '@figatellu/search';
+import { createSearch, type Search } from '@figatellultimate/search';
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import axe from 'axe-core';
@@ -19,7 +19,7 @@ const DOCUMENTS = Array.from({ length: 7 }, (_, i) => ({
   collection: i < 4 ? 'blog' : 'pages',
 }));
 
-/** Pagefind's browser module, simulated: the shape `@figatellu/search` reads. */
+/** Pagefind's browser module, simulated: the shape `@figatellultimate/search` reads. */
 const sorts: unknown[] = [];
 const pagefind = {
   search: (term: string, options?: { filters?: { collection?: { any?: readonly string[] } }; sort?: unknown }) => {

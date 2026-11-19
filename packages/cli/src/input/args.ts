@@ -4,7 +4,7 @@
  */
 import { parseArgs } from 'node:util';
 
-import { suggest, type MigrationTarget } from '@figatellu/core';
+import { suggest, type MigrationTarget } from '@figatellultimate/core';
 
 /**
  * Which content a run keeps: `production` excludes drafts and test content, `development` keeps them.
@@ -60,7 +60,7 @@ const OPTIONS = {
 } as const;
 
 const MODES: readonly Mode[] = ['production', 'development'];
-const DEFAULT_CONFIG = 'figatellu.config.ts';
+const DEFAULT_CONFIG = 'figatellultimate.config.ts';
 const DEFAULT_SEARCH_OUT = 'public/pagefind';
 
 const usageError = (message: string, suggestions: readonly string[] = []): UsageError => ({
@@ -184,10 +184,10 @@ function migrationTarget(args: readonly string[]): MigrationTarget | UsageError 
 }
 
 /** The help text: every command and option, printed by `--help` and after a usage error. */
-export const HELP: string = `Usage: figatellu <command> [options]
+export const HELP: string = `Usage: figatellultimate <command> [options]
 
 Commands:
-  build    Analyze the content and write the generated modules (.figatellu/)
+  build    Analyze the content and write the generated modules (.figatellultimate/)
   check    Analyze the content without writing anything
   watch    Build, then rebuild on every content or config change
   search   Index the built site with Pagefind, one bundle per locale (after the framework's build)

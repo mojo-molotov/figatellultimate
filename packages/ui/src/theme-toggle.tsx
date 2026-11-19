@@ -160,7 +160,7 @@ interface ThemeToggleBase extends Omit<ComponentProps<'button'>, 'children' | 'o
 }
 
 /**
- * On its own (the page's `data-theme`, remembered, with `themeScript` of `@figatellu/ui/scripts`), or controlled by a theme library such as
+ * On its own (the page's `data-theme`, remembered, with `themeScript` of `@figatellultimate/ui/scripts`), or controlled by a theme library such as
  * next-themes: it then shows `theme` (`undefined` until the library knows it) and asks `onThemeChange` for the
  * other one, leaving the page's attribute and the storage to the library.
  */

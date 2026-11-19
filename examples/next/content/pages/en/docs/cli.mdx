@@ -1,49 +1,49 @@
 ---
 featuredPictureUrl: '/covers/post-01.jpeg'
 title: 'Command line'
-metadescription: 'figatellu build, check, watch, search and migrate: options, exit codes and migrations.'
+metadescription: 'figatellultimate build, check, watch, search and migrate: options, exit codes and migrations.'
 order: 11
 ---
 
 # Command line
 
-`@figatellu/cli` installs the `figatellu` command. Run it at the project’s root, where `figatellu.config.ts` lives.
+`@figatellultimate/cli` installs the `figatellultimate` command. Run it at the project’s root, where `figatellultimate.config.ts` lives.
 
 ## Commands
 
-| Command             | Does                                                                              |
-| ------------------- | --------------------------------------------------------------------------------- |
-| `figatellu build`   | Analyzes the content and writes the generated code to `.figatellu/`.              |
-| `figatellu check`   | The same analysis, writing nothing: for continuous integration.                   |
-| `figatellu watch`   | Builds, then rebuilds on every change of the content, the config or the messages. |
-| `figatellu search`  | Indexes the built site with Pagefind, one bundle per language.                    |
-| `figatellu migrate` | Moves the content to another default language or notation.                        |
+| Command                    | Does                                                                              |
+| -------------------------- | --------------------------------------------------------------------------------- |
+| `figatellultimate build`   | Analyzes the content and writes the generated code to `.figatellultimate/`.       |
+| `figatellultimate check`   | The same analysis, writing nothing: for continuous integration.                   |
+| `figatellultimate watch`   | Builds, then rebuilds on every change of the content, the config or the messages. |
+| `figatellultimate search`  | Indexes the built site with Pagefind, one bundle per language.                    |
+| `figatellultimate migrate` | Moves the content to another default language or notation.                        |
 
 ```sh npm
-npx figatellu build
-npx figatellu watch
+npx figatellultimate build
+npx figatellultimate watch
 ```
 
 ```sh pnpm
-pnpm figatellu build
-pnpm figatellu watch
+pnpm figatellultimate build
+pnpm figatellultimate watch
 ```
 
 ```sh yarn
-yarn figatellu build
-yarn figatellu watch
+yarn figatellultimate build
+yarn figatellultimate watch
 ```
 
 ```sh bun
-bunx figatellu build
-bunx figatellu watch
+bunx figatellultimate build
+bunx figatellultimate watch
 ```
 
 ## Options
 
 | Option                  | Effect                                                                                                                       |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `-c`, `--config <path>` | The config file (default `figatellu.config.ts`).                                                                             |
+| `-c`, `--config <path>` | The config file (default `figatellultimate.config.ts`).                                                                      |
 | `-m`, `--mode <mode>`   | `production` (default for build and check) leaves drafts and test content out; `development` (default for watch) keeps them. |
 | `--site <path>`         | search: the built HTML.                                                                                                      |
 | `--out <path>`          | search: where to write the bundles (default `public/pagefind`).                                                              |
@@ -68,23 +68,23 @@ bunx figatellu watch
 `migrate` changes the default language, or the notation (implicit or explicit language folders). Without `--write`, it prints its plan; with it, it moves every file, edits the config and writes `redirects.json`, all or nothing:
 
 ```sh npm
-npx figatellu migrate default-locale en
-npx figatellu migrate default-locale en --write
+npx figatellultimate migrate default-locale en
+npx figatellultimate migrate default-locale en --write
 ```
 
 ```sh pnpm
-pnpm figatellu migrate default-locale en
-pnpm figatellu migrate default-locale en --write
+pnpm figatellultimate migrate default-locale en
+pnpm figatellultimate migrate default-locale en --write
 ```
 
 ```sh yarn
-yarn figatellu migrate default-locale en
-yarn figatellu migrate default-locale en --write
+yarn figatellultimate migrate default-locale en
+yarn figatellultimate migrate default-locale en --write
 ```
 
 ```sh bun
-bunx figatellu migrate default-locale en
-bunx figatellu migrate default-locale en --write
+bunx figatellultimate migrate default-locale en
+bunx figatellultimate migrate default-locale en --write
 ```
 
 The redirects are composed with the previous ones: an old link reaches its page in one hop, whatever the number of migrations.

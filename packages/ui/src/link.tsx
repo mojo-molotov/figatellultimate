@@ -1,10 +1,10 @@
 'use client';
 
 /**
- * Links: figatellu's components render their internal links through the app's link component, given once.
+ * Links: figatellultimate's components render their internal links through the app's link component, given once.
  *
  * Invariant (`link.test.tsx`): with a provider, every internal link of the navbar, breadcrumb, card and switcher
- * renders through it, keeping figatellu's props; without one, plain anchors.
+ * renders through it, keeping figatellultimate's props; without one, plain anchors.
  */
 import { createContext, createElement, use, type ComponentProps, type ComponentType, type ReactNode } from 'react';
 
@@ -17,11 +17,11 @@ export type LinkComponent = ComponentType<LinkProps>;
 const LinkContext = createContext<LinkComponent | null>(null);
 
 /**
- * Gives every internal link of figatellu's components the app's link component.
+ * Gives every internal link of figatellultimate's components the app's link component.
  *
  * @param props - The link component (e.g. `next/link`) and the app.
  * @returns The provider: navigations through the navbar, breadcrumbs, cards and the locale switcher stay client-side,
- *   so the layout keeps its state. Without it, links are plain `<a>`: figatellu imports no framework.
+ *   so the layout keeps its state. Without it, links are plain `<a>`: figatellultimate imports no framework.
  *
  * @example
  * 'use client';

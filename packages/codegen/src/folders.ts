@@ -3,7 +3,7 @@
  * direct entries and translations, once per folder; its further pages (`…/page/N`, by its level's page size) listed
  * with their own URLs and translations, the app slicing the folder's items for each.
  */
-import type { Collection, Entry, FolderPage } from '@figatellu/core';
+import type { Collection, Entry, FolderPage } from '@figatellultimate/core';
 
 import { compareText } from './model.js';
 

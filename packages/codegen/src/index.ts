@@ -1,9 +1,9 @@
 /**
- * The code generator: turns a validated assembly into the typed modules of `.figatellu/`, imported by the app through
- * its `package.json` `imports`: `#figatellu/<module>` maps to `./.figatellu/<module>/index.js`.
+ * The code generator: turns a validated assembly into the typed modules of `.figatellultimate/`, imported by the app through
+ * its `package.json` `imports`: `#figatellultimate/<module>` maps to `./.figatellultimate/<module>/index.js`.
  *
  * Generated layout:
- *     .figatellu/
+ *     .figatellultimate/
  *       locales/        the locale union, the default locale, each locale's metadata
  *       <collection>/   index (light items, getX, findX, findXByUrl, listX, facets, folder pages), types, entries/...
  *       urls/           findByUrl, mountedUrls, metadataFields, urlOf, segmentsOf: one catch-all route for all

@@ -6,16 +6,16 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { createSearch, type SearchResult, type SearchSort } from '@figatellu/search';
-import { localeLinksOf } from '@figatellu/site';
+import { createSearch, type SearchResult, type SearchSort } from '@figatellultimate/search';
+import { localeLinksOf } from '@figatellultimate/site';
 
-import { defaultLocale, locales } from '#figatellu/locales';
-import { navigationOf } from '#figatellu/navigation';
+import { defaultLocale, locales } from '#figatellultimate/locales';
+import { navigationOf } from '#figatellultimate/navigation';
 
-import { blogIndex } from '#figatellu/blog';
-import { taxonomies } from '#figatellu/taxonomies';
-import { mountedUrls } from '#figatellu/urls';
-import { findBlogFolderByUrl } from '#figatellu/blog';
+import { blogIndex } from '#figatellultimate/blog';
+import { taxonomies } from '#figatellultimate/taxonomies';
+import { mountedUrls } from '#figatellultimate/urls';
+import { findBlogFolderByUrl } from '#figatellultimate/blog';
 
 import { PER_PAGE } from '../blog/facets.ts';
 
@@ -584,7 +584,7 @@ for (const locale of ['fr', 'en']) {
   const entryFile = join(bundles, locale, 'pagefind-entry.json');
 
   if (!existsSync(entryFile)) {
-    problems.push(`search: no bundle for ${locale} (run figatellu search)`);
+    problems.push(`search: no bundle for ${locale} (run figatellultimate search)`);
     continue;
   }
 
@@ -601,7 +601,7 @@ check(
   'search: landing pages should not be searchable',
 );
 
-// Search acceptance: the bundles searched like a browser would (Pagefind's own `pagefind.js`, figatellu's client),
+// Search acceptance: the bundles searched like a browser would (Pagefind's own `pagefind.js`, figatellultimate's client),
 // `fetch` reading the bundle's `file:` URLs. Each locale finds its own entries only, with its stemming; landing pages
 // are not searchable; the collection filter applies.
 const realFetch = globalThis.fetch;
@@ -915,7 +915,7 @@ for (const url of ['/docs/installation', '/en/docs/cli', '/docs/nextjs']) {
 
   check(tabs.slice(0, 4).join() === 'npm,pnpm,yarn,bun', `${url}: no package manager tabs (${tabs.join()})`);
   check(
-    html.includes('pnpm add -D') || html.includes('pnpm exec') || html.includes('figatellu'),
+    html.includes('pnpm add -D') || html.includes('pnpm exec') || html.includes('figatellultimate'),
     `${url}: a variant missing`,
   );
 }

@@ -8,22 +8,22 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { emit } from '@figatellu/codegen';
+import { emit } from '@figatellultimate/codegen';
 import {
   contentMessageTree,
   createUrlBuilder,
   loadContent,
   type Assembly,
   type Environment,
-  type FigatelluConfig,
-} from '@figatellu/core';
+  type FigatellultimateConfig,
+} from '@figatellultimate/core';
 import {
   analyzeMessages,
   checkNavigationLabels,
   type MessageDiagnostic,
   type MessagesModel,
-} from '@figatellu/messages';
-import { createNodeFileWriter, createNodePathLister, type CommitStats } from '@figatellu/fs-node';
+} from '@figatellultimate/messages';
+import { createNodeFileWriter, createNodePathLister, type CommitStats } from '@figatellultimate/fs-node';
 
 import type { Mode } from '../input/args.js';
 import { loadMessageModules } from '../input/load-messages.js';
@@ -33,7 +33,7 @@ import { loadMessageModules } from '../input/load-messages.js';
  *
  */
 export interface RunInput {
-  readonly config: FigatelluConfig;
+  readonly config: FigatellultimateConfig;
   /** Absolute project root: the config file's directory. */
   readonly directory: string;
   readonly mode: Mode;
@@ -56,13 +56,13 @@ export interface RunResult {
   /** `undefined` when nothing was written (check, or errors: the last valid state is kept). */
   readonly stats?: CommitStats | undefined;
   readonly writeError?: string | undefined;
-  /** Whether the app's package.json maps `#figatellu/*`. */
+  /** Whether the app's package.json maps `#figatellultimate/*`. */
   readonly importsMapped: boolean;
   readonly durations: { readonly content: number; readonly write: number };
 }
 
 /** The `imports` mapping an app needs: Node runs the JavaScript, TypeScript reads the sibling `index.d.ts`. */
-export const IMPORTS_MAPPING = { '#figatellu/*': './.figatellu/*/index.js' } as const;
+export const IMPORTS_MAPPING = { '#figatellultimate/*': './.figatellultimate/*/index.js' } as const;
 
 const environmentOf = (mode: Mode): Environment =>
   mode === 'production' ? { drafts: 'exclude', testContent: 'exclude' } : { drafts: 'include', testContent: 'include' };
@@ -75,7 +75,7 @@ async function hasImportsMapping(directory: string): Promise<boolean> {
 
     const imports: unknown = manifest.imports;
 
-    return typeof imports === 'object' && imports !== null && '#figatellu/*' in imports;
+    return typeof imports === 'object' && imports !== null && '#figatellultimate/*' in imports;
   } catch {
     return false;
   }
@@ -83,7 +83,7 @@ async function hasImportsMapping(directory: string): Promise<boolean> {
 
 /** The messages: required keys from every structurally valid entry, then each locale's module. */
 async function analyzeMessagesOf(
-  config: FigatelluConfig,
+  config: FigatellultimateConfig,
   directory: string,
   assembly: Assembly,
 ): Promise<{ model: MessagesModel; diagnostics: readonly MessageDiagnostic[] } | undefined> {
@@ -114,7 +114,7 @@ async function analyzeMessagesOf(
  * One run: content (structure + delegated documents), then codegen and atomic writes when everything is valid.
  *
  * @param input - The config, its folder, the mode, whether to write, and an abort signal.
- * @returns The run's result; an aborted run or a run with errors writes nothing, so `.figatellu/` keeps its last
+ * @returns The run's result; an aborted run or a run with errors writes nothing, so `.figatellultimate/` keeps its last
  *   valid state.
  */
 export async function runOnce(input: RunInput): Promise<RunResult> {
@@ -150,7 +150,7 @@ export async function runOnce(input: RunInput): Promise<RunResult> {
 
   // Last checkpoint: a superseded run must not overwrite the output with a stale generation.
   signal?.throwIfAborted();
-  const outputDirectory = join(directory, ...(config.output ?? '.figatellu').split('/'));
+  const outputDirectory = join(directory, ...(config.output ?? '.figatellultimate').split('/'));
   const committed = await createNodeFileWriter(outputDirectory).commit(
     emit({ config, assembly, outputDirectory, messages: messages?.model }),
   );

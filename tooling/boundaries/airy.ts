@@ -25,7 +25,7 @@ const DECLARATIONS = ['const', 'let', 'var'];
  */
 export function airy(files: readonly string[]): Linter.Config {
   return {
-    name: 'figatellu/airy-functions',
+    name: 'figatellultimate/airy-functions',
     files: [...files],
     plugins: { '@stylistic': stylistic },
     rules: {

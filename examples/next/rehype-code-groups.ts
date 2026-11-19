@@ -1,6 +1,6 @@
 /**
  * Consecutive code blocks marked with a package manager (```sh npm, then ```sh pnpm…) shown as tabs: grouped here,
- * rendered by `CodeTabs` (`@figatellu/ui`) through the MDX `div`. The author writes each variant; nothing is
+ * rendered by `CodeTabs` (`@figatellultimate/ui`) through the MDX `div`. The author writes each variant; nothing is
  * converted, so nothing can be wrong or fail the build. A marked block alone stays a plain block.
  */
 

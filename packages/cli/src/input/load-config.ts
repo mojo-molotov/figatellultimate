@@ -1,19 +1,26 @@
 /**
- * The config's loading: `figatellu.config.ts` imported with Node's native type stripping (no other TypeScript
+ * The config's loading: `figatellultimate.config.ts` imported with Node's native type stripping (no other TypeScript
  * loader), its default export validated by core's `parseConfig`.
  */
 import { access } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { err, InvalidConfigError, ok, parseConfig, type FigatelluConfig, type Result } from '@figatellu/core';
+import {
+  err,
+  InvalidConfigError,
+  ok,
+  parseConfig,
+  type FigatellultimateConfig,
+  type Result,
+} from '@figatellultimate/core';
 
 /**
  * A loaded config, and where it lives.
  *
  */
 export interface LoadedConfig {
-  readonly config: FigatelluConfig;
+  readonly config: FigatellultimateConfig;
   /** Absolute directory of the config file: the project root for listing paths and for the output folder. */
   readonly directory: string;
   readonly path: string;
@@ -35,7 +42,7 @@ function loadingHint(error: unknown): string | undefined {
   const code = typeof error === 'object' && error !== null && 'code' in error ? String(error.code) : '';
 
   if (code === 'ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX') {
-    return 'figatellu.config.ts is run by Node itself: use erasable TypeScript only (no enum, no namespace)';
+    return 'figatellultimate.config.ts is run by Node itself: use erasable TypeScript only (no enum, no namespace)';
   }
 
   if (code === 'ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING') return 'the config file cannot live under node_modules';
@@ -49,7 +56,7 @@ function loadingHint(error: unknown): string | undefined {
 let generation = 0;
 
 /**
- * Loads `figatellu.config.ts` with Node's native type stripping and validates it. `fresh` bypasses Node's
+ * Loads `figatellultimate.config.ts` with Node's native type stripping and validates it. `fresh` bypasses Node's
  * module cache (watch mode reloads the config after a change).
  *
  * @param path - The config's path, as given.
@@ -70,7 +77,7 @@ export async function loadConfig(
     return err({
       code: 'invalid-config',
       message: `No config file at ${path}.`,
-      hint: 'create figatellu.config.ts, or pass --config <path>',
+      hint: 'create figatellultimate.config.ts, or pass --config <path>',
     });
   }
 

@@ -10,11 +10,11 @@ import { allureReporter } from './tooling/allure.ts';
 const PACKAGES = ['effects', 'facets-react', 'search-react', 'ui'];
 
 const config: ViteUserConfig = defineConfig({
-  resolve: { conditions: ['@figatellu/source'] },
+  resolve: { conditions: ['@figatellultimate/source'] },
   test: {
     reporters: ['default', allureReporter('browsers')],
     projects: PACKAGES.map((name) => ({
-      resolve: { conditions: ['@figatellu/source'] },
+      resolve: { conditions: ['@figatellultimate/source'] },
       test: {
         name: `${name} (browser)`,
         root: `packages/${name}`,

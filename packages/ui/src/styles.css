@@ -1,11 +1,11 @@
 /*
- * @figatellu/ui — a minimal design system.
+ * @figatellultimate/ui — a minimal design system.
  *
  * Tokens first: override any of them on :root (or any ancestor) to restyle everything.
- * Only `data-slot` selectors: every figatellu component, nothing else of the page (no reset, no element selector).
+ * Only `data-slot` selectors: every figatellultimate component, nothing else of the page (no reset, no element selector).
  * Dark tokens apply under `prefers-color-scheme: dark` unless `data-theme="light"`, and always under
  * `data-theme="dark"` (set by `ThemeToggle` or a theme library).
- * Surfaces stay opaque and minimal: decorative looks (glass, glows) belong to a theme (`@figatellu/themes`) or the
+ * Surfaces stay opaque and minimal: decorative looks (glass, glows) belong to a theme (`@figatellultimate/themes`) or the
  * app's own stylesheet, loaded after this one, on the same selectors.
  *
  * Invariants (`styles.test.ts`): every rule targets a `data-slot` (or defines tokens); the same dark tokens from the
@@ -58,7 +58,7 @@
   --fig-shadow: 0 4px 16px rgb(0 0 0 / 0.5);
 }
 
-/* Shared: every figatellu control. */
+/* Shared: every figatellultimate control. */
 [data-slot='navbar'],
 [data-slot='locale-switcher-content'],
 [data-slot='facet-options-content'],

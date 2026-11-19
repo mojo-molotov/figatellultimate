@@ -5,8 +5,8 @@
  */
 import { posix } from 'node:path';
 
-import type { FigatelluConfig } from '@figatellu/core';
-import type { ArgumentType, MessagesModel, ShapeNode } from '@figatellu/messages';
+import type { FigatellultimateConfig } from '@figatellultimate/core';
+import type { ArgumentType, MessagesModel, ShapeNode } from '@figatellultimate/messages';
 import {
   ModuleDeclarationKind,
   StructureKind,
@@ -104,7 +104,11 @@ const requiredPart = (reference: Group): Group => ({
  * @param model - The analyzed messages.
  * @returns The generated file(s), built in memory; nothing is written.
  */
-export function messageTypesFile(project: Project, config: FigatelluConfig, model: MessagesModel): GeneratedFile[] {
+export function messageTypesFile(
+  project: Project,
+  config: FigatellultimateConfig,
+  model: MessagesModel,
+): GeneratedFile[] {
   const all = messages(model.reference);
 
   return render(project, 'messages/types.ts', 'types', (file) => {
@@ -129,7 +133,7 @@ export function messageTypesFile(project: Project, config: FigatelluConfig, mode
     file.addTypeAlias({
       name: 'MessageSchema',
       isExported: true,
-      docs: ["An app's message schema: figatellu's skeleton, spread, then the app's own keys as holes."],
+      docs: ["An app's message schema: figatellultimate's skeleton, spread, then the app's own keys as holes."],
       type: Writers.intersectionType('ContentSkeleton', '{ readonly [key: string]: MessageSchemaNode }'),
     });
     file.addTypeAlias({
@@ -189,7 +193,7 @@ export function messageTypesFile(project: Project, config: FigatelluConfig, mode
         namedImports: ['Locale'],
       });
       file.addModule({
-        name: literal('@figatellu/use-intl'),
+        name: literal('@figatellultimate/use-intl'),
         hasDeclareKeyword: true,
         declarationKind: ModuleDeclarationKind.Module,
         docs: ["Types the use-intl adapter's translators with these messages."],
@@ -218,9 +222,13 @@ export function messageTypesFile(project: Project, config: FigatelluConfig, mode
  * @param model - The analyzed messages.
  * @returns The generated file(s), built in memory; nothing is written.
  */
-export function messageIndexFile(project: Project, config: FigatelluConfig, model: MessagesModel): GeneratedFile[] {
+export function messageIndexFile(
+  project: Project,
+  config: FigatellultimateConfig,
+  model: MessagesModel,
+): GeneratedFile[] {
   const directory = config.messages?.directory ?? 'messages';
-  const output = config.output ?? '.figatellu';
+  const output = config.output ?? '.figatellultimate';
   // From `<output>/messages/` to the messages folder, both relative to the config file: never an absolute path.
   const toMessages = posix.relative(`/${output}/messages`, `/${directory}`);
   const locales = [...config.locales.list];

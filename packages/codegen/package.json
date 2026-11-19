@@ -1,7 +1,7 @@
 {
-  "name": "@figatellu/codegen",
+  "name": "@figatellultimate/codegen",
   "version": "0.0.0",
-  "description": "Code generator of figatellu: turns a validated assembly into typed modules (ts-morph, in memory).",
+  "description": "Code generator of figatellultimate: turns a validated assembly into typed modules (ts-morph, in memory).",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
@@ -10,7 +10,7 @@
   },
   "exports": {
     ".": {
-      "@figatellu/source": "./src/index.ts",
+      "@figatellultimate/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
@@ -35,11 +35,11 @@
     "lint:package": "publint --strict && attw --pack . --profile esm-only"
   },
   "dependencies": {
-    "@figatellu/core": "workspace:*",
-    "@figatellu/messages": "workspace:*",
+    "@figatellultimate/core": "workspace:*",
+    "@figatellultimate/messages": "workspace:*",
     "ts-morph": "28.0.0"
   },
-  "figatellu": {
+  "figatellultimate": {
     "role": "tooling"
   },
   "devDependencies": {

@@ -16,7 +16,7 @@ const config: KnipConfig = {
     },
     'packages/cli': {
       // Imported only by the configs of the end-to-end project generated at test time, invisible to knip.
-      ignoreDependencies: ['@content-collections/core', '@figatellu/content-collections', 'valibot'],
+      ignoreDependencies: ['@content-collections/core', '@figatellultimate/content-collections', 'valibot'],
     },
   },
 };

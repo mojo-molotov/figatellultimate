@@ -1,8 +1,8 @@
 {
-  "name": "@figatellu/fixture-core",
+  "name": "@figatellultimate/fixture-core",
   "private": true,
   "type": "module",
-  "figatellu": {
+  "figatellultimate": {
     "role": "core"
   }
 }

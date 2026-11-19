@@ -2,8 +2,8 @@
  * Diagnostic reports: one English template per code, saying where, why and how to fix; a problem repeated in many
  * files is summarized once (`report.test.ts`).
  */
-import type { Diagnostic } from '@figatellu/core';
-import type { MessageDiagnostic } from '@figatellu/messages';
+import type { Diagnostic } from '@figatellultimate/core';
+import type { MessageDiagnostic } from '@figatellultimate/messages';
 
 /** Text styling: colors in a terminal, identity in plain output. */
 export interface Styler {
@@ -253,7 +253,7 @@ export function explainMessage(diagnostic: MessageDiagnostic): Explanation {
     case 'unknown-navigation-label':
       return {
         message: `the navigation label ${key} of ${quote(d.data.collection)} is not a message of this locale`,
-        hint: didYouMean(d.suggestions) ?? 'add it to the messages, or change the label in figatellu.config.ts',
+        hint: didYouMean(d.suggestions) ?? 'add it to the messages, or change the label in figatellultimate.config.ts',
       };
   }
 }

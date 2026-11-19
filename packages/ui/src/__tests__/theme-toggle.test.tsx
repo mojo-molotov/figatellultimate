@@ -62,7 +62,7 @@ describe('ThemeToggle', () => {
     await waitFor(() => {
       expect(document.documentElement.dataset['theme']).toBe(other);
     });
-    expect(localStorage.getItem('figatellu-theme')).toBe(other);
+    expect(localStorage.getItem('figatellultimate-theme')).toBe(other);
     expect(button.getAttribute('aria-pressed')).toBe(String(other === 'dark'));
     // The orbit played and the page's transition ended: Space switches back.
     await act(async () => {
@@ -307,11 +307,11 @@ describe('ThemeToggle', () => {
         script.remove();
       };
 
-      localStorage.setItem('figatellu-theme', 'dark');
+      localStorage.setItem('figatellultimate-theme', 'dark');
       run();
       expect(document.documentElement.dataset['theme']).toBe('dark');
       delete document.documentElement.dataset['theme'];
-      localStorage.setItem('figatellu-theme', '<script>');
+      localStorage.setItem('figatellultimate-theme', '<script>');
       run();
       expect(document.documentElement.dataset['theme']).toBeUndefined();
     },

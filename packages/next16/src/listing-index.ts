@@ -1,8 +1,8 @@
 /**
- * `@figatellu/next16/listing-index`: the route of the listings' indexes, a server entry. A listing paginated in its
+ * `@figatellultimate/next16/listing-index`: the route of the listings' indexes, a server entry. A listing paginated in its
  * path holds its slice only; its index (every item, and whatever else its page needs, such as its cards) is one
  * static JSON, which the browser loads on the first selection or sort (`usePagedCollection` and `createIndexLoader`
- * of `@figatellu/facets-react`).
+ * of `@figatellultimate/facets-react`).
  *
  *     app/[locale]/listing/[...folder]/route.ts
  *       export const dynamic = 'force-static';           ← written in the route: Next reads them as literals

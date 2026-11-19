@@ -2,9 +2,9 @@
  * The React layer of faceted collections: the binding (`useFacetedCollection`), the History API URL adapter, and
  * unstyled, accessible components on Radix UI and cmdk (facet options, sort select, pagination, page select, reset).
  *
- * Layers: `@figatellu/facets` (pure engine) ──> a URL adapter ──> the binding (`usePagedCollection` when paginated in
+ * Layers: `@figatellultimate/facets` (pure engine) ──> a URL adapter ──> the binding (`usePagedCollection` when paginated in
  * its path, its index loaded on demand) ──> these components; styles come from
- * the app or `@figatellu/ui/styles.css`, through each part's `data-slot`.
+ * the app or `@figatellultimate/ui/styles.css`, through each part's `data-slot`.
  */
 
 export * from './components/facet-options.js';

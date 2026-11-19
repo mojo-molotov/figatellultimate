@@ -7,22 +7,22 @@ order: 10
 
 # Interface
 
-Trois couches, chacune facultative : `@figatellu/ui`, un design system minimal ; `@figatellu/effects`, des effets décoratifs ; `@figatellu/themes`, des thèmes par-dessus les deux. Leurs composants n’ont aucun texte à eux : chaque libellé vient de vos messages, dans la langue du lecteur.
+Trois couches, chacune facultative : `@figatellultimate/ui`, un design system minimal ; `@figatellultimate/effects`, des effets décoratifs ; `@figatellultimate/themes`, des thèmes par-dessus les deux. Leurs composants n’ont aucun texte à eux : chaque libellé vient de vos messages, dans la langue du lecteur.
 
 ```sh npm
-npm install @figatellu/ui @figatellu/effects @figatellu/themes react radix-ui
+npm install @figatellultimate/ui @figatellultimate/effects @figatellultimate/themes react radix-ui
 ```
 
 ```sh pnpm
-pnpm add @figatellu/ui @figatellu/effects @figatellu/themes react radix-ui
+pnpm add @figatellultimate/ui @figatellultimate/effects @figatellultimate/themes react radix-ui
 ```
 
 ```sh yarn
-yarn add @figatellu/ui @figatellu/effects @figatellu/themes react radix-ui
+yarn add @figatellultimate/ui @figatellultimate/effects @figatellultimate/themes react radix-ui
 ```
 
 ```sh bun
-bun add @figatellu/ui @figatellu/effects @figatellu/themes react radix-ui
+bun add @figatellultimate/ui @figatellultimate/effects @figatellultimate/themes react radix-ui
 ```
 
 ## Le design system
@@ -41,7 +41,7 @@ bun add @figatellu/ui @figatellu/effects @figatellu/themes react radix-ui
 Une seule feuille de styles les met tous en forme, par des attributs `data-slot` et des tokens :
 
 ```css
-@import '@figatellu/ui/styles.css';
+@import '@figatellultimate/ui/styles.css';
 
 :root {
   --fig-accent: #0f766e;
@@ -56,8 +56,8 @@ Chaque token a une valeur sombre, sous `prefers-color-scheme: dark` et sous `dat
 `Effects` charge une lueur sous le curseur et des particules dans les marges, sur ordinateur seulement, jamais côté serveur ni sur téléphone ; `Collector` éclaire une carte sous la souris ; `Reveal` dévoile le pied de page sous la page. Chaque apparence est un token : `--fig-glow-color`, `--fig-sparkles-column`, `--fig-collector-color`.
 
 ```tsx
-import '@figatellu/effects/styles.css';
-import { Effects, Reveal } from '@figatellu/effects';
+import '@figatellultimate/effects/styles.css';
+import { Effects, Reveal } from '@figatellultimate/effects';
 
 <body>
   {children}
@@ -73,10 +73,10 @@ import { Effects, Reveal } from '@figatellu/effects';
 `base.css` met en page le site : la colonne du texte, l’article et son sommaire, les listes, la typographie du MDX, l’impression. Un thème par-dessus ne règle que son apparence. **maquis** pose du verre sombre sur les aperçus, le code et les tableaux, et montre les effets en thème sombre. **paper** met une encre douce sur un papier gris, les titres en serif, un accent bleu d’encre, sans aucun effet.
 
 ```tsx
-import '@figatellu/ui/styles.css';
-import '@figatellu/effects/styles.css';
-import '@figatellu/themes/base.css';
-import '@figatellu/themes/paper.css';
+import '@figatellultimate/ui/styles.css';
+import '@figatellultimate/effects/styles.css';
+import '@figatellultimate/themes/base.css';
+import '@figatellultimate/themes/paper.css';
 ```
 
 Plusieurs thèmes peuvent être chargés ensemble : `<html data-site-theme="paper">` en choisit un. Sans cet attribut, un thème chargé seul s’applique. Ce site charge les deux, et son pied de page laisse le lecteur choisir.

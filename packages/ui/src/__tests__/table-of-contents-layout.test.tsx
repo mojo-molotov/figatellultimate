@@ -2,7 +2,7 @@
 // Reading, with the stylesheet and real scrolling: only a real browser computes it (`pnpm test:browser`).
 import '../styles.css';
 
-import type { Heading } from '@figatellu/toc';
+import type { Heading } from '@figatellultimate/toc';
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { createElement } from 'react';

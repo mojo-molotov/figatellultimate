@@ -6,8 +6,8 @@ import type { CompiledMessage } from 'icu-minify/format';
 import type { AbstractIntlMessages } from 'use-intl/core';
 
 /**
- * Filled by the generated code (`.figatellu/messages/types.ts`, when the config declares `runtime: 'use-intl'`):
- * `declare module '@figatellu/use-intl' { interface Register { … } }`.
+ * Filled by the generated code (`.figatellultimate/messages/types.ts`, when the config declares `runtime: 'use-intl'`):
+ * `declare module '@figatellultimate/use-intl' { interface Register { … } }`.
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- augmented by the generated code
 export interface Register {}
@@ -64,7 +64,7 @@ type ScopedArgs<N extends string, K extends string> = `${N}.${K}` extends infer 
   ? ArgsOf<F>
   : never;
 
-/** A translator over every key, typed by figatellu's generated messages; formatting is use-intl's. */
+/** A translator over every key, typed by figatellultimate's generated messages; formatting is use-intl's. */
 export interface Translator {
   <K extends keyof Table>(key: K, ...args: ArgsOf<K>): string;
   /** Whether the messages hold this key (e.g. optional content). */

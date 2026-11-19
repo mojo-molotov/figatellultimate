@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import type { Heading } from '@figatellu/toc';
+import type { Heading } from '@figatellultimate/toc';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import axe from 'axe-core';

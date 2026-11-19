@@ -101,7 +101,7 @@ export function createDepcruiseConfig(root: string): IConfiguration {
       combinedDependencies: true,
       tsConfig: { fileName: 'tsconfig.json' },
       enhancedResolveOptions: {
-        conditionNames: ['@figatellu/source', 'import', 'types', 'default'],
+        conditionNames: ['@figatellultimate/source', 'import', 'types', 'default'],
       },
     },
   };

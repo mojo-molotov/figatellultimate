@@ -18,7 +18,7 @@ import { createContext, useContext, useId, useState, type ComponentProps, type R
 import { Link } from './link.js';
 
 /**
- * What `navigationOf(locale)` gives (`#figatellu/navigation`): an entry link, or a section labelled by a message
+ * What `navigationOf(locale)` gives (`#figatellultimate/navigation`): an entry link, or a section labelled by a message
  * key `K` (the generated `MessageKey`).
  */
 export type NavigationNode<K extends string = string> =

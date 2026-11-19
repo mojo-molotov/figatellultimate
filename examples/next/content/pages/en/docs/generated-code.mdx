@@ -1,20 +1,20 @@
 ---
 featuredPictureUrl: '/covers/post-05.jpeg'
 title: 'Generated code'
-metadescription: 'The typed modules figatellu writes to .figatellu/: getters, indexes, URLs, locales, navigation, messages.'
+metadescription: 'The typed modules figatellultimate writes to .figatellultimate/: getters, indexes, URLs, locales, navigation, messages.'
 order: 5
 ---
 
 # Generated code
 
-`figatellu build` writes typed modules to `.figatellu/`, imported through the `#figatellu/*` alias. They hold what the build found: a page that does not exist has no getter, so asking for it does not compile.
+`figatellultimate build` writes typed modules to `.figatellultimate/`, imported through the `#figatellultimate/*` alias. They hold what the build found: a page that does not exist has no getter, so asking for it does not compile.
 
 ## A collection’s module
 
 Each collection has its module, named after it. For a collection `blog` with the entry `blogPost`:
 
 ```ts
-import { blogIndex, findBlogPost, findBlogPostByUrl, getBlogPost, listBlog } from '#figatellu/blog';
+import { blogIndex, findBlogPost, findBlogPostByUrl, getBlogPost, listBlog } from '#figatellultimate/blog';
 
 const post = await getBlogPost({ locale: 'en', category: 'news', slug: 'launch' });
 post.data.title; // typed by the collection's schema
@@ -33,10 +33,10 @@ Data and bodies are separate modules, loaded only when an entry is read: listing
 
 ## URLs
 
-`#figatellu/urls` serves every page from one route:
+`#figatellultimate/urls` serves every page from one route:
 
 ```ts
-import { findByUrl, mountedUrls, segmentsOf, urlOf } from '#figatellu/urls';
+import { findByUrl, mountedUrls, segmentsOf, urlOf } from '#figatellultimate/urls';
 
 const found = await findByUrl(urlOf('en', ['blog', 'news', 'launch']));
 // found.kind: 'entry', 'folder' or 'term'
@@ -46,14 +46,14 @@ const found = await findByUrl(urlOf('en', ['blog', 'news', 'launch']));
 
 ## Locales, navigation, taxonomies
 
-| Module                  | Gives                                                                            |
-| ----------------------- | -------------------------------------------------------------------------------- |
-| `#figatellu/locales`    | `locales`, `defaultLocale`, `localeInfo` (label, direction), the `Locale` type.  |
-| `#figatellu/navigation` | `navigationOf(locale)`: the navbar’s tree, from the content.                     |
-| `#figatellu/taxonomies` | Each taxonomy’s terms and data.                                                  |
-| `#figatellu/terms`      | Term pages (`findAuthorsTermByUrl`, `authorsTermUrl`), with each term’s content. |
-| `#figatellu/messages`   | The messages’ skeleton, types and loader.                                        |
+| Module                         | Gives                                                                            |
+| ------------------------------ | -------------------------------------------------------------------------------- |
+| `#figatellultimate/locales`    | `locales`, `defaultLocale`, `localeInfo` (label, direction), the `Locale` type.  |
+| `#figatellultimate/navigation` | `navigationOf(locale)`: the navbar’s tree, from the content.                     |
+| `#figatellultimate/taxonomies` | Each taxonomy’s terms and data.                                                  |
+| `#figatellultimate/terms`      | Term pages (`findAuthorsTermByUrl`, `authorsTermUrl`), with each term’s content. |
+| `#figatellultimate/messages`   | The messages’ skeleton, types and loader.                                        |
 
 ## Never committed
 
-The folder is regenerated on every build, and only the files that change are rewritten: a bundler watching it reloads what changed, nothing else. Add `.figatellu/` to `.gitignore`.
+The folder is regenerated on every build, and only the files that change are rewritten: a bundler watching it reloads what changed, nothing else. Add `.figatellultimate/` to `.gitignore`.

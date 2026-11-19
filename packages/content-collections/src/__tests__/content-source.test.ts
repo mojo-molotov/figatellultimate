@@ -12,12 +12,12 @@ import {
   type ContentSource,
   type Diagnostic,
   type SourceDocument,
-} from '@figatellu/core';
-import { createNodePathLister } from '@figatellu/fs-node';
+} from '@figatellultimate/core';
+import { createNodePathLister } from '@figatellultimate/fs-node';
 import { FileSystem } from '@japa/file-system';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { createContentCollectionsSource, withFigatellu } from '../index.js';
+import { createContentCollectionsSource, withFigatellultimate } from '../index.js';
 
 /** Collects a source's stream into documents and diagnostics. */
 async function load(source: ContentSource): Promise<{ documents: SourceDocument[]; diagnostics: Diagnostic[] }> {
@@ -59,13 +59,13 @@ const SCHEMAS = {
   },
 } as const;
 
-/** A user's Content Collections config, wrapped with withFigatellu. */
+/** A user's Content Collections config, wrapped with withFigatellultimate. */
 const config = (library: { readonly import: string; readonly schema: string }): string => `
 import { defineCollection, defineConfig } from '@content-collections/core';
 ${library.import}
-import { withFigatellu } from ${JSON.stringify(ADAPTER_SOURCE)};
+import { withFigatellultimate } from ${JSON.stringify(ADAPTER_SOURCE)};
 
-const blog = withFigatellu(
+const blog = withFigatellultimate(
   defineCollection({ name: 'blog', directory: 'content/blog', include: '**/*.mdx', schema: ${library.schema} }),
 );
 export default defineConfig({ content: [blog] });
@@ -114,10 +114,10 @@ describe.each(['valibot', 'zod'])('createContentCollectionsSource (%s schema)', 
     expect(ok?.body).toContain('Body of ok.');
   });
 
-  it('maps errors to figatellu diagnostics: missing fields established by figatellu, others field by field', async () => {
+  it('maps errors to figatellultimate diagnostics: missing fields established by figatellultimate, others field by field', async () => {
     const { diagnostics } = await load(source());
 
-    // Content Collections drops a file with unparsable YAML silently (no event, no document): figatellu reports it
+    // Content Collections drops a file with unparsable YAML silently (no event, no document): figatellultimate reports it
     // as `missing-document` because it lists paths itself, see the loadContent test below.
     expect(summarize(diagnostics)).toEqual([
       ['cat/sub/bad-type.mdx', 'invalid-frontmatter-field', 'title'],
@@ -131,7 +131,7 @@ describe.each(['valibot', 'zod'])('createContentCollectionsSource (%s schema)', 
     const instance = source();
 
     await instance.directories();
-    const typeSource = instance.typeSource?.('blog', join(FIXTURES, '.figatellu', 'blog'));
+    const typeSource = instance.typeSource?.('blog', join(FIXTURES, '.figatellultimate', 'blog'));
 
     expect(typeSource).toEqual({
       imports: [
@@ -177,7 +177,7 @@ describe('loadContent with Content Collections and the Node lister', () => {
       ['cat/sub/drafts/x.mdx', 'missing-frontmatter-field', 'title'],
       ['cat/sub/drafts/x.mdx', 'unknown-locale', null],
     ]);
-    // Silently dropped by Content Collections, caught by figatellu because it lists paths itself.
+    // Silently dropped by Content Collections, caught by figatellultimate because it lists paths itself.
     expect(summarize(assembly.diagnostics).filter(([path]) => path === 'cat/sub/broken-yaml.mdx')).toEqual([
       ['cat/sub/broken-yaml.mdx', 'missing-document', null],
     ]);
@@ -217,7 +217,7 @@ describe('createContentCollectionsSource: watch', () => {
   }, 20_000);
 });
 
-describe('withFigatellu', () => {
+describe('withFigatellultimate', () => {
   it('keeps the collection as is and chains the user’s own onSuccess', async () => {
     const calls: unknown[] = [];
     const collection = {
@@ -229,7 +229,7 @@ describe('withFigatellu', () => {
         return Promise.resolve();
       },
     };
-    const wrapped = withFigatellu(collection);
+    const wrapped = withFigatellultimate(collection);
 
     expect(wrapped.name).toBe('x');
     // Outside an adapter build, documents are not captured: only the user's hook runs.

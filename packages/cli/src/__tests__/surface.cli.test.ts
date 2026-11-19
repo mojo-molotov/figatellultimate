@@ -1,5 +1,5 @@
 /**
- * The command line's surface, as a user meets it: the built `figatellu` binary run in a real process, on a disposable
+ * The command line's surface, as a user meets it: the built `figatellultimate` binary run in a real process, on a disposable
  * project, its output and exit code read as a terminal would show them (cli-testing-library).
  *
  *     pnpm build ──> node packages/cli/dist/bin.js <args> (cwd: a disposable project)
@@ -46,19 +46,19 @@ const CONTENT: Readonly<Record<string, string>> = {
 
 const CONTENT_COLLECTIONS_CONFIG = `
 import { defineCollection, defineConfig } from '@content-collections/core';
-import { withFigatellu } from '@figatellu/content-collections/config';
+import { withFigatellultimate } from '@figatellultimate/content-collections/config';
 import * as v from 'valibot';
 
-const pages = withFigatellu(
+const pages = withFigatellultimate(
   defineCollection({ name: 'pages', directory: 'content/pages', include: '**/*.mdx', schema: v.object({ title: v.string(), content: v.string() }) }),
 );
 export default defineConfig({ content: [pages] });
 `;
 
-const FIGATELLU_CONFIG = `
+const FIGATELLULTIMATE_CONFIG = `
 import { join } from 'node:path';
-import { createContentCollectionsSource } from '@figatellu/content-collections';
-import { defineCollection, defineConfig, defineLocales, locale, rest, slug } from '@figatellu/core';
+import { createContentCollectionsSource } from '@figatellultimate/content-collections';
+import { defineCollection, defineConfig, defineLocales, locale, rest, slug } from '@figatellultimate/core';
 
 export default defineConfig({
   locales: defineLocales({ list: ['fr', 'en'], default: 'fr' }),
@@ -72,7 +72,7 @@ export default defineConfig({
 });
 `;
 
-/** Starts the binary in the project, as a user would type `figatellu <args>`. */
+/** Starts the binary in the project, as a user would type `figatellultimate <args>`. */
 const start = (...args: string[]): Promise<RenderResult> =>
   render(process.execPath, [BIN, ...args], {
     cwd: project.basePath,
@@ -80,7 +80,7 @@ const start = (...args: string[]): Promise<RenderResult> =>
   });
 
 /** Runs the binary to its end: its exit code and everything it printed. */
-async function figatellu(...args: string[]): Promise<{ readonly code: number; readonly output: string }> {
+async function figatellultimate(...args: string[]): Promise<{ readonly code: number; readonly output: string }> {
   const instance = await start(...args);
   const code = await vi.waitFor(
     () => {
@@ -97,7 +97,7 @@ async function figatellu(...args: string[]): Promise<{ readonly code: number; re
 }
 
 /** The help's first line: what a usage error must end with. */
-const USAGE = 'Usage: figatellu <command> [options]';
+const USAGE = 'Usage: figatellultimate <command> [options]';
 
 beforeAll(async () => {
   await project.create('package.json', JSON.stringify({ type: 'module' }));
@@ -105,14 +105,14 @@ beforeAll(async () => {
   for (const [path, contents] of Object.entries(CONTENT)) await project.create(path, contents);
 
   await project.create('content-collections.ts', CONTENT_COLLECTIONS_CONFIG);
-  await project.create('figatellu.config.ts', FIGATELLU_CONFIG);
+  await project.create('figatellultimate.config.ts', FIGATELLULTIMATE_CONFIG);
 });
 afterEach(() => cleanup());
 afterAll(() => project.cleanup());
 
-describe('figatellu: help and usage', () => {
+describe('figatellultimate: help and usage', () => {
   it('--help lists every command and exits 0', async () => {
-    const { code, output } = await figatellu('--help');
+    const { code, output } = await figatellultimate('--help');
 
     expect(code).toBe(0);
     expect(output).toContain(USAGE);
@@ -121,7 +121,7 @@ describe('figatellu: help and usage', () => {
   });
 
   it('--version prints the package version and exits 0', async () => {
-    const { code, output } = await figatellu('--version');
+    const { code, output } = await figatellultimate('--version');
 
     expect(code).toBe(0);
     expect(output.trim()).toBe(version);
@@ -133,7 +133,7 @@ describe('figatellu: help and usage', () => {
     [['build', 'extra'], 'Unexpected argument "extra".'],
     [['search'], 'The search command needs --site <built HTML directory>'],
   ])('%j: the problem, then the help, exit 2', async (args, problem) => {
-    const { code, output } = await figatellu(...args);
+    const { code, output } = await figatellultimate(...args);
 
     expect(code).toBe(2);
     expect(output).toContain(problem);
@@ -141,23 +141,23 @@ describe('figatellu: help and usage', () => {
   });
 
   it('a missing config is a usage problem, with what to do', async () => {
-    const { code, output } = await figatellu('build', '--config', 'missing.config.ts');
+    const { code, output } = await figatellultimate('build', '--config', 'missing.config.ts');
 
     expect(code).toBe(2);
     expect(output).toContain('No config file at missing.config.ts.');
-    expect(output).toContain('create figatellu.config.ts, or pass --config <path>');
+    expect(output).toContain('create figatellultimate.config.ts, or pass --config <path>');
   });
 });
 
-describe('figatellu: commands', () => {
+describe('figatellultimate: commands', () => {
   it('build writes the generated modules and exits 0; a second build rewrites nothing', async () => {
-    const first = await figatellu('build');
+    const first = await figatellultimate('build');
 
     expect(first.output).toContain('✓ 3 entries · 0 excluded (production)');
     expect(first.code).toBe(0);
-    expect(await project.exists('.figatellu/pages/index.js')).toBe(true);
+    expect(await project.exists('.figatellultimate/pages/index.js')).toBe(true);
 
-    const second = await figatellu('build');
+    const second = await figatellultimate('build');
 
     expect(second.code).toBe(0);
     expect(second.output).toMatch(/0 written · \d+ unchanged · 0 removed/);
@@ -167,19 +167,19 @@ describe('figatellu: commands', () => {
     await project.create('content/pages/Bad Name.mdx', '---\ntitle: Bad\n---\nBad.\n');
 
     try {
-      const { code, output } = await figatellu('check');
+      const { code, output } = await figatellultimate('check');
 
       expect(code).toBe(1);
       expect(output).toContain('content/pages/Bad Name.mdx');
       expect(output).toContain('rename it to "bad-name"');
-      expect(await project.exists('.figatellu/pages/entries/fr/bad-name.js')).toBe(false);
+      expect(await project.exists('.figatellultimate/pages/entries/fr/bad-name.js')).toBe(false);
     } finally {
       await project.remove('content/pages/Bad Name.mdx');
     }
   });
 
   it('migrate prints its plan and moves nothing without --write', async () => {
-    const { code, output } = await figatellu('migrate', 'default-locale', 'en');
+    const { code, output } = await figatellultimate('migrate', 'default-locale', 'en');
 
     expect(code).toBe(0);
     expect(output).toContain('/about → /fr/about');
@@ -197,14 +197,14 @@ describe('figatellu: commands', () => {
       await project.create('content/pages/watched.mdx', '---\ntitle: Watched\n---\nWatched.\n');
       await vi.waitFor(
         async () => {
-          expect(await project.exists('.figatellu/pages/entries/fr/watched.js')).toBe(true);
+          expect(await project.exists('.figatellultimate/pages/entries/fr/watched.js')).toBe(true);
         },
         { timeout: 30_000, interval: 100 },
       );
       await project.remove('content/pages/watched.mdx');
       await vi.waitFor(
         async () => {
-          expect(await project.exists('.figatellu/pages/entries/fr/watched.js')).toBe(false);
+          expect(await project.exists('.figatellultimate/pages/entries/fr/watched.js')).toBe(false);
         },
         { timeout: 30_000, interval: 100 },
       );

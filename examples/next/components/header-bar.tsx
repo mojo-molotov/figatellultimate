@@ -4,18 +4,18 @@
  * The client part of the header: the navbar, the search, the locale switcher and the theme toggle. Every text comes
  * formatted from the server (`site-header.tsx`); the two that take a count, precompiled, are formatted here.
  */
-import { createSearch, SEARCH_SORTS, type SearchSort } from '@figatellu/search';
-import { SearchDialog } from '@figatellu/search-react';
-import type { LocaleLink } from '@figatellu/site';
-import { LocaleSwitcher, Navbar, ThemeToggle, type NavigationNode } from '@figatellu/ui';
+import { createSearch, SEARCH_SORTS, type SearchSort } from '@figatellultimate/search';
+import { SearchDialog } from '@figatellultimate/search-react';
+import type { LocaleLink } from '@figatellultimate/site';
+import { LocaleSwitcher, Navbar, ThemeToggle, type NavigationNode } from '@figatellultimate/ui';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 
-import { localeInfo, locales, type Locale } from '#figatellu/locales';
+import { localeInfo, locales, type Locale } from '#figatellultimate/locales';
 
-import { formatPrecompiled } from '@figatellu/use-intl/format';
-import type { Precompiled } from '@figatellu/use-intl/precompile';
+import { formatPrecompiled } from '@figatellultimate/use-intl/format';
+import type { Precompiled } from '@figatellultimate/use-intl/precompile';
 
 /** Every text of the client header, formatted on the server; the two that take a count, precompiled. */
 export interface HeaderLabels {

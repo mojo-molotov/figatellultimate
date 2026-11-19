@@ -1,9 +1,9 @@
 /** Where a page sits, shown under its search result. */
-import { breadcrumbOf } from '@figatellu/site';
+import { breadcrumbOf } from '@figatellultimate/site';
 import { getTranslations } from 'next-intl/server';
 
-import type { Locale } from '#figatellu/locales';
-import { navigationOf } from '#figatellu/navigation';
+import type { Locale } from '#figatellultimate/locales';
+import { navigationOf } from '#figatellultimate/navigation';
 
 /**
  * Where a page sits, for its search result: its breadcrumb without the home (every page is under it) nor the page

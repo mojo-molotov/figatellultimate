@@ -2,16 +2,16 @@
  * Package roles: the single source of the boundary rules, enforced twice (ESLint for editor feedback,
  * dependency-cruiser as a whole-graph guard in CI), on shipped code only (tests may wire several adapters together).
  *
- * Every package declares its role in its `package.json`: `{ "figatellu": { "role": "core" } }`.
+ * Every package declares its role in its `package.json`: `{ "figatellultimate": { "role": "core" } }`.
  *
- *     role       may import                                   must not import                          runs on
- *     ────────   ──────────────────────────────────────────   ──────────────────────────────────────   ───────────────────
- *     core       its own files, allow-listed pure deps        any other @figatellu package, Node, process   anywhere (ES2022)
- *     runtime    core, runtime                                adapter, tooling, Node, process          browser, edge, workers
- *     adapter    core, runtime, its integration target        tooling, other adapters                  depends on the target
- *     tooling    everything                                   (nothing)                                Node ≥ 24
+ *     role       may import                                   must not import                                       runs on
+ *     ────────   ──────────────────────────────────────────   ───────────────────────────────────────────────────   ───────────────────
+ *     core       its own files, allow-listed pure deps        any other @figatellultimate package, Node, process   anywhere (ES2022)
+ *     runtime    core, runtime                                adapter, tooling, Node, process                       browser, edge, workers
+ *     adapter    core, runtime, its integration target        tooling, other adapters                               depends on the target
+ *     tooling    everything                                   (nothing)                                             Node ≥ 24
  *
- * Inside `@figatellu/core`, folders are layers, lowest first, each importing only those below it:
+ * Inside `@figatellultimate/core`, folders are layers, lowest first, each importing only those below it:
  *     shared ──> declarations ──> paths ──> messages ──> content ──> config.ts, index.ts
  *
  * Key design decisions:
@@ -30,14 +30,14 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { builtinModules } from 'node:module';
 import { join } from 'node:path';
 
-/** Role of a workspace package, declared in its `package.json` under `figatellu.role`. */
+/** Role of a workspace package, declared in its `package.json` under `figatellultimate.role`. */
 export type Role = 'core' | 'runtime' | 'adapter' | 'tooling';
 
 const ROLES: readonly Role[] = ['core', 'runtime', 'adapter', 'tooling'];
 
 /** A workspace package, as the boundary checks see it: its name, its folder and its role. */
 export interface WorkspacePackage {
-  /** npm name, e.g. `@figatellu/core`. */
+  /** npm name, e.g. `@figatellultimate/core`. */
   readonly name: string;
   /** POSIX path relative to the workspace root, e.g. `packages/core`. */
   readonly dir: string;
@@ -82,7 +82,9 @@ export function discoverPackages(root: string): WorkspacePackage[] {
       const role = readRole(manifest);
 
       if (name === undefined || role === undefined) {
-        throw new Error(`${dir}/package.json must declare a "name" and a "figatellu.role" (${ROLES.join(' | ')}).`);
+        throw new Error(
+          `${dir}/package.json must declare a "name" and a "figatellultimate.role" (${ROLES.join(' | ')}).`,
+        );
       }
 
       return { name, dir, role };
@@ -98,9 +100,9 @@ function readString(value: unknown, key: string): string | undefined {
 }
 
 function readRole(manifest: unknown): Role | undefined {
-  if (typeof manifest !== 'object' || manifest === null || !('figatellu' in manifest)) return undefined;
+  if (typeof manifest !== 'object' || manifest === null || !('figatellultimate' in manifest)) return undefined;
 
-  const role: unknown = readString(manifest.figatellu, 'role');
+  const role: unknown = readString(manifest.figatellultimate, 'role');
 
   return isRole(role) ? role : undefined;
 }

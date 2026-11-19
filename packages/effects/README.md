@@ -1,15 +1,15 @@
-# @figatellu/effects
+# @figatellultimate/effects
 
-Decorative effects for figatellu apps: a glow under the cursor, sparkles in the margins, preview cards lighting up under the mouse. `Effects` loads them on desktops only; every look is a token, so a theme (such as `@figatellu/themes/maquis.css`) decides where they show and their colors.
+Decorative effects for figatellultimate apps: a glow under the cursor, sparkles in the margins, preview cards lighting up under the mouse. `Effects` loads them on desktops only; every look is a token, so a theme (such as `@figatellultimate/themes/maquis.css`) decides where they show and their colors.
 
 ```sh
-pnpm add @figatellu/effects react
+pnpm add @figatellultimate/effects react
 ```
 
 ```tsx
-import '@figatellu/ui/styles.css';
-import '@figatellu/effects/styles.css';
-import { Collector, Effects } from '@figatellu/effects';
+import '@figatellultimate/ui/styles.css';
+import '@figatellultimate/effects/styles.css';
+import { Collector, Effects } from '@figatellultimate/effects';
 
 <body>
   {children}
@@ -18,4 +18,4 @@ import { Collector, Effects } from '@figatellu/effects';
 <Collector><EntryCard … /></Collector>;
 ```
 
-Tests: [Allure report](https://mojo-molotov.github.io/figatellu/ci/) · [coverage](https://mojo-molotov.github.io/figatellu/ci/coverage/)
+Tests: [Allure report](https://mojo-molotov.github.io/figatellultimate/ci/) · [coverage](https://mojo-molotov.github.io/figatellultimate/ci/coverage/)

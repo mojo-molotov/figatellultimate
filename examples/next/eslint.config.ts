@@ -9,7 +9,7 @@ import { airy } from '../../tooling/boundaries/airy.ts';
 
 const config: Linter.Config[] = [
   // Relative to where ESLint runs (the workspace's root, or here): at any depth.
-  { ignores: ['**/.next/**', '**/.figatellu/**', '**/public/**', '**/next-env.d.ts', '**/*.{js,mjs,cjs}'] },
+  { ignores: ['**/.next/**', '**/.figatellultimate/**', '**/public/**', '**/next-env.d.ts', '**/*.{js,mjs,cjs}'] },
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: { parser },

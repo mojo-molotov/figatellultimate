@@ -2,8 +2,8 @@
  * A post's card as data, and its rendering: the server renders a page's cards, the browser those of a filtered view
  * from the listing's index (`listing-index.ts`). Plain data, so that both sides render the same card.
  */
-import { Collector } from '@figatellu/effects';
-import { EntryCard, type EntryAuthor, type EntryCardLabels, type EntryTag } from '@figatellu/ui';
+import { Collector } from '@figatellultimate/effects';
+import { EntryCard, type EntryAuthor, type EntryCardLabels, type EntryTag } from '@figatellultimate/ui';
 import type { ReactNode } from 'react';
 
 /** What a post's card shows, its texts already translated: what `EntryCard` takes. */

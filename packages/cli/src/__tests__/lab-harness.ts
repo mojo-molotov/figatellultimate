@@ -1,4 +1,4 @@
-// Watch lab harness: a disposable project watched by `figatellu watch`, and the oracle that compares what the
+// Watch lab harness: a disposable project watched by `figatellultimate watch`, and the oracle that compares what the
 // watch wrote with a build from scratch. Shared by the lab suites (`*.lab.test.ts`).
 import { randomUUID } from 'node:crypto';
 import { cp, readdir, readFile, rm } from 'node:fs/promises';
@@ -12,7 +12,7 @@ import { EXIT, main } from '../main.js';
 
 const PACKAGE = join(import.meta.dirname, '..', '..');
 
-export const WITH_FIGATELLU: string = join(PACKAGE, '..', 'content-collections', 'src', 'config.ts').replaceAll(
+export const WITH_FIGATELLULTIMATE: string = join(PACKAGE, '..', 'content-collections', 'src', 'config.ts').replaceAll(
   '\\',
   '/',
 );
@@ -62,7 +62,7 @@ export interface Lab {
   /** Absolute path of a project file, from a POSIX path. */
   at(path: string): string;
   /**
-   * Creates the project, watches it, and replays the scenarios in order: after each one, the watched `.figatellu/`
+   * Creates the project, watches it, and replays the scenarios in order: after each one, the watched `.figatellultimate/`
    * must be byte-identical to a build from scratch of a copy (its own config module, hence a new content source).
    */
   run(title: string, scenarios: readonly Scenario[]): void;
@@ -100,16 +100,16 @@ export function createLab(files: Readonly<Record<string, string>>): Lab {
     fresh += 1;
     const copy = join(tmp, `fresh-${String(fresh)}`);
 
-    await cp(project.basePath, copy, { recursive: true, filter: (source) => !source.includes('.figatellu') });
+    await cp(project.basePath, copy, { recursive: true, filter: (source) => !source.includes('.figatellultimate') });
     const { stdout } = capture();
 
-    await main(['build', '--mode', 'development', '--config', join(copy, 'figatellu.config.ts')], {
+    await main(['build', '--mode', 'development', '--config', join(copy, 'figatellultimate.config.ts')], {
       stdout,
       fancy: false,
       cwd: copy,
     });
 
-    return snapshot(join(copy, '.figatellu'));
+    return snapshot(join(copy, '.figatellultimate'));
   }
 
   return {
@@ -118,7 +118,7 @@ export function createLab(files: Readonly<Record<string, string>>): Lab {
       beforeAll(async () => {
         for (const [path, contents] of Object.entries(files)) await project.create(path, contents);
 
-        watchExit = main(['watch', '--config', at('figatellu.config.ts')], {
+        watchExit = main(['watch', '--config', at('figatellultimate.config.ts')], {
           stdout: watchOutput.stdout,
           fancy: false,
           cwd: project.basePath,
@@ -140,7 +140,7 @@ export function createLab(files: Readonly<Record<string, string>>): Lab {
             async () => {
               await act();
               await settle();
-              const watched = await snapshot(at('.figatellu'));
+              const watched = await snapshot(at('.figatellultimate'));
               const expected = await freshBuild();
 
               // Precondition: the fresh build produced something, so two empty trees cannot pass.

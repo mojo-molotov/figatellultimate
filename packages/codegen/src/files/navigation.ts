@@ -1,7 +1,7 @@
 /**
  * `navigation/index`: one navigation tree per locale.
  */
-import type { Entry, FigatelluConfig, FolderPage } from '@figatellu/core';
+import type { Entry, FigatellultimateConfig, FolderPage } from '@figatellultimate/core';
 import { VariableDeclarationKind, type Project } from 'ts-morph';
 
 import { literal } from '../model.js';
@@ -20,7 +20,7 @@ import { render, type GeneratedFile } from '../render.js';
  */
 export function navigationFile(
   project: Project,
-  config: FigatelluConfig,
+  config: FigatellultimateConfig,
   entries: readonly Entry[],
   folders: readonly FolderPage[] = [],
 ): GeneratedFile[] {

@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { err, ok, type PathLister } from '@figatellu/core';
+import { err, ok, type PathLister } from '@figatellultimate/core';
 import { FileSystem } from '@japa/file-system';
 import { afterAll, describe, expect, it } from 'vitest';
 
@@ -58,7 +58,7 @@ const projects: FileSystem[] = [];
 
 /** Node implementation, on the same tree materialized as a disposable project. */
 async function nodeLister(tree: Tree): Promise<PathLister> {
-  const project = new FileSystem(join(tmpdir(), `figatellu-fs-node-${randomUUID()}`));
+  const project = new FileSystem(join(tmpdir(), `figatellultimate-fs-node-${randomUUID()}`));
 
   projects.push(project);
 

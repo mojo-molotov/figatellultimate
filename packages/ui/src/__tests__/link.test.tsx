@@ -11,7 +11,7 @@ Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
 /** The app's link component: an anchor marked as the router's, e.g. `next/link`. */
 const RouterLink = (props: LinkProps): ReactNode => <a data-router="" {...props} />;
 
-/** Every internal link figatellu's components render, inside a provider or not. */
+/** Every internal link figatellultimate's components render, inside a provider or not. */
 function renderAll(provided: boolean) {
   const user = userEvent.setup();
   const components = (
@@ -88,7 +88,7 @@ describe('LinkProvider', () => {
     expect(found.filter(([, router]) => !router)).toEqual([]);
   });
 
-  it('renders plain anchors without a provider: figatellu imports no framework', async () => {
+  it('renders plain anchors without a provider: figatellultimate imports no framework', async () => {
     const { user } = renderAll(false);
 
     await user.click(screen.getByRole('button', { name: /«Langue»/ }));
@@ -96,7 +96,7 @@ describe('LinkProvider', () => {
     expect(links().filter(([, router]) => router)).toEqual([]);
   });
 
-  it('keeps the props figatellu sets on a link: its slot and the current page', () => {
+  it('keeps the props figatellultimate sets on a link: its slot and the current page', () => {
     renderAll(true);
     const about = screen.getAllByRole('link', { name: '«À propos»' })[0];
 

@@ -1,7 +1,7 @@
 {
-  "name": "@figatellu/ui",
+  "name": "@figatellultimate/ui",
   "version": "0.0.0",
-  "description": "A minimal design system on top of figatellu: a navbar generated from the content, a locale switcher, and one stylesheet of tokens styling every figatellu component.",
+  "description": "A minimal design system on top of figatellultimate: a navbar generated from the content, a locale switcher, and one stylesheet of tokens styling every figatellultimate component.",
   "license": "MIT",
   "type": "module",
   "sideEffects": [
@@ -9,18 +9,18 @@
   ],
   "exports": {
     ".": {
-      "@figatellu/source": "./src/index.ts",
+      "@figatellultimate/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
     "./scripts": {
-      "@figatellu/source": "./src/scripts.ts",
+      "@figatellultimate/source": "./src/scripts.ts",
       "types": "./dist/scripts.d.ts",
       "default": "./dist/scripts.js"
     },
     "./package.json": "./package.json",
     "./styles.css": {
-      "@figatellu/source": "./src/styles.css",
+      "@figatellultimate/source": "./src/styles.css",
       "default": "./dist/styles.css"
     }
   },
@@ -50,11 +50,11 @@
     "lint:package": "publint --strict && attw --pack . --profile esm-only --exclude-entrypoints ./styles.css"
   },
   "dependencies": {
-    "@figatellu/toc": "workspace:*",
+    "@figatellultimate/toc": "workspace:*",
     "@heroicons/react": "2.2.0",
     "radix-ui": "1.8.1"
   },
-  "figatellu": {
+  "figatellultimate": {
     "role": "adapter"
   },
   "peerDependencies": {

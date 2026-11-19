@@ -31,27 +31,27 @@ bun create next-app mon-site
 cd mon-site
 ```
 
-## 2. Installer figatellu
+## 2. Installer figatellultimate
 
 La CLI, le cœur et l’adaptateur de Content Collections, qui lit le frontmatter et compile le MDX :
 
 ```sh npm
-npm install -D @figatellu/cli @figatellu/core @figatellu/content-collections @content-collections/core
+npm install -D @figatellultimate/cli @figatellultimate/core @figatellultimate/content-collections @content-collections/core
 npm install @content-collections/mdx valibot
 ```
 
 ```sh pnpm
-pnpm add -D @figatellu/cli @figatellu/core @figatellu/content-collections @content-collections/core
+pnpm add -D @figatellultimate/cli @figatellultimate/core @figatellultimate/content-collections @content-collections/core
 pnpm add @content-collections/mdx valibot
 ```
 
 ```sh yarn
-yarn add -D @figatellu/cli @figatellu/core @figatellu/content-collections @content-collections/core
+yarn add -D @figatellultimate/cli @figatellultimate/core @figatellultimate/content-collections @content-collections/core
 yarn add @content-collections/mdx valibot
 ```
 
 ```sh bun
-bun add -d @figatellu/cli @figatellu/core @figatellu/content-collections @content-collections/core
+bun add -d @figatellultimate/cli @figatellultimate/core @figatellultimate/content-collections @content-collections/core
 bun add @content-collections/mdx valibot
 ```
 
@@ -63,10 +63,10 @@ Content Collections lit et valide les fichiers :
 // content-collections.ts
 import { defineCollection, defineConfig } from '@content-collections/core';
 import { compileMDX } from '@content-collections/mdx';
-import { withFigatellu } from '@figatellu/content-collections/config';
+import { withFigatellultimate } from '@figatellultimate/content-collections/config';
 import * as v from 'valibot';
 
-const pages = withFigatellu(
+const pages = withFigatellultimate(
   defineCollection({
     name: 'pages',
     directory: 'content/pages',
@@ -79,14 +79,14 @@ const pages = withFigatellu(
 export default defineConfig({ content: [pages] });
 ```
 
-figatellu dit ce que signifient les dossiers :
+figatellultimate dit ce que signifient les dossiers :
 
 ```ts
-// figatellu.config.ts
+// figatellultimate.config.ts
 import { join } from 'node:path';
 
-import { createContentCollectionsSource } from '@figatellu/content-collections';
-import { defineCollection, defineConfig, defineLocales, locale, rest, slug } from '@figatellu/core';
+import { createContentCollectionsSource } from '@figatellultimate/content-collections';
+import { defineCollection, defineConfig, defineLocales, locale, rest, slug } from '@figatellultimate/core';
 
 export default defineConfig({
   locales: defineLocales({ list: ['en'], default: 'en' }),
@@ -121,12 +121,12 @@ Ma première page, écrite en MDX.
 
 ## 5. Importer le code généré
 
-Dans `package.json`, l’alias du code généré ; ajoutez `.figatellu/` au `.gitignore` :
+Dans `package.json`, l’alias du code généré ; ajoutez `.figatellultimate/` au `.gitignore` :
 
 ```json
 {
   "type": "module",
-  "imports": { "#figatellu/*": "./.figatellu/*/index.js" }
+  "imports": { "#figatellultimate/*": "./.figatellultimate/*/index.js" }
 }
 ```
 
@@ -137,7 +137,7 @@ Dans `package.json`, l’alias du code généré ; ajoutez `.figatellu/` au `.
 import { MDXContent } from '@content-collections/mdx/react';
 import { notFound } from 'next/navigation';
 
-import { findByUrl, mountedUrls, segmentsOf, urlOf } from '#figatellu/urls';
+import { findByUrl, mountedUrls, segmentsOf, urlOf } from '#figatellultimate/urls';
 
 export const dynamicParams = false;
 
@@ -158,26 +158,26 @@ export default async function Page(props: PageProps<'/[[...url]]'>) {
 ## 7. Construire et lancer
 
 ```sh npm
-npx figatellu build
+npx figatellultimate build
 npx next dev
 ```
 
 ```sh pnpm
-pnpm figatellu build
+pnpm figatellultimate build
 pnpm next dev
 ```
 
 ```sh yarn
-yarn figatellu build
+yarn figatellultimate build
 yarn next dev
 ```
 
 ```sh bun
-bunx figatellu build
+bunx figatellultimate build
 bunx next dev
 ```
 
-`figatellu build` vérifie chaque fichier et écrit `.figatellu/` ; demander une page qui n’existe pas ne compile pas. Pour reconstruire à chaque changement, lancez `figatellu watch` à côté du serveur de développement.
+`figatellultimate build` vérifie chaque fichier et écrit `.figatellultimate/` ; demander une page qui n’existe pas ne compile pas. Pour reconstruire à chaque changement, lancez `figatellultimate watch` à côté du serveur de développement.
 
 ## Ensuite
 

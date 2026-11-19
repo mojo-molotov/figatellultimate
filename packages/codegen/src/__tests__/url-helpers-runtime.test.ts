@@ -16,7 +16,7 @@ import {
   slug,
   type ContentSource,
   type UrlOptions,
-} from '@figatellu/core';
+} from '@figatellultimate/core';
 import * as v from 'valibot';
 import { afterAll, describe, expect, it } from 'vitest';
 
@@ -34,7 +34,7 @@ const locales = defineLocales({ list: ['fr', 'en'], default: 'fr' });
 const UrlHelpers = v.looseObject({ urlOf: v.function(), segmentsOf: v.function() });
 const folders: FileSystem[] = [];
 
-/** The generated `#figatellu/urls` of a project with these URL options, imported. */
+/** The generated `#figatellultimate/urls` of a project with these URL options, imported. */
 async function helpersFor(urls: UrlOptions) {
   const config = defineConfig({
     locales,

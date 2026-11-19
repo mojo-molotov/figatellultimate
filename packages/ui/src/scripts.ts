@@ -1,5 +1,5 @@
 /**
- * `@figatellu/ui/scripts`: the inline scripts a page puts in its `<head>`, run before the first paint, so that a
+ * `@figatellultimate/ui/scripts`: the inline scripts a page puts in its `<head>`, run before the first paint, so that a
  * remembered choice (the theme, a closed table of contents) never flashes on load.
  *
  * Key design decision: an entry of its own, without `'use client'`: a server component (a root layout) calls these,
@@ -7,10 +7,10 @@
  */
 
 /** Where `ThemeToggle` remembers the visitor's theme (a per-visitor convenience). */
-export const THEME_STORAGE_KEY = 'figatellu-theme';
+export const THEME_STORAGE_KEY = 'figatellultimate-theme';
 
 /** Where `TableOfContents` remembers the visitor's choice by default. */
-export const TOC_STORAGE_KEY = 'figatellu:toc';
+export const TOC_STORAGE_KEY = 'figatellultimate:toc';
 
 /**
  * The inline script that applies the remembered theme before the first paint, so that a dark choice never flashes

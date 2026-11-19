@@ -5,13 +5,13 @@
  * each one with its slice. The engine's pagination, over the pages themselves: the same component and behavior as a
  * listing's, with nothing to filter.
  */
-import { defineFacetedCollection, pagedHref, type UrlAdapter } from '@figatellu/facets';
-import { Pagination, useFacetedCollection } from '@figatellu/facets-react';
-import { formatPrecompiled } from '@figatellu/use-intl/format';
+import { defineFacetedCollection, pagedHref, type UrlAdapter } from '@figatellultimate/facets';
+import { Pagination, useFacetedCollection } from '@figatellultimate/facets-react';
+import { formatPrecompiled } from '@figatellultimate/use-intl/format';
 import { useRouter } from 'next/navigation';
 import { useMemo, type ReactNode } from 'react';
 
-import { localeInfo, type Locale } from '#figatellu/locales';
+import { localeInfo, type Locale } from '#figatellultimate/locales';
 
 import type { ListingLabels } from './listing-labels';
 import { PAGINATION_ICONS } from './pagination-icons';

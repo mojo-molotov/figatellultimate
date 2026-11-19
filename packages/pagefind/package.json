@@ -1,7 +1,7 @@
 {
-  "name": "@figatellu/pagefind",
+  "name": "@figatellultimate/pagefind",
   "version": "0.0.0",
-  "description": "Pagefind adapter of figatellu: indexes the built pages, one bundle per locale with its stemming, a collection filter on each page.",
+  "description": "Pagefind adapter of figatellultimate: indexes the built pages, one bundle per locale with its stemming, a collection filter on each page.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
@@ -10,7 +10,7 @@
   },
   "exports": {
     ".": {
-      "@figatellu/source": "./src/index.ts",
+      "@figatellultimate/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
@@ -37,10 +37,10 @@
   "dependencies": {
     "pagefind": "1.5.2"
   },
-  "figatellu": {
+  "figatellultimate": {
     "role": "adapter"
   },
   "devDependencies": {
-    "@figatellu/search": "workspace:*"
+    "@figatellultimate/search": "workspace:*"
   }
 }

@@ -1,17 +1,17 @@
 ---
 featuredPictureUrl: '/covers/post-02.jpeg'
 title: 'Configuration'
-metadescription: 'Locales, collections and their grammar, taxonomies and navigation, declared once in figatellu.config.ts.'
+metadescription: 'Locales, collections and their grammar, taxonomies and navigation, declared once in figatellultimate.config.ts.'
 order: 3
 ---
 
 # Configuration
 
-Everything is declared once, in `figatellu.config.ts`: the locales, the collections and their path grammar, the taxonomies, the navigation and the content source. The configuration is data: every `define…` function validates its part where it is written, and an invalid declaration fails at once, saying what to fix.
+Everything is declared once, in `figatellultimate.config.ts`: the locales, the collections and their path grammar, the taxonomies, the navigation and the content source. The configuration is data: every `define…` function validates its part where it is written, and an invalid declaration fails at once, saying what to fix.
 
 ```ts
-import { createContentCollectionsSource } from '@figatellu/content-collections';
-import { defineCollection, defineConfig, defineLocales, locale, rest, slug } from '@figatellu/core';
+import { createContentCollectionsSource } from '@figatellultimate/content-collections';
+import { defineCollection, defineConfig, defineLocales, locale, rest, slug } from '@figatellultimate/core';
 
 export default defineConfig({
   locales: defineLocales({ list: { fr: { label: 'Français' }, en: { label: 'English' } }, default: 'fr' }),
@@ -46,7 +46,7 @@ const blog = defineCollection({
 });
 ```
 
-From `news/releases/first.mdx`, figatellu infers the category, the subcategory, the language and the URL `/blog/news/releases/first`. One folder too many, an invalid name or two files at one URL are errors naming the file at fault.
+From `news/releases/first.mdx`, figatellultimate infers the category, the subcategory, the language and the URL `/blog/news/releases/first`. One folder too many, an invalid name or two files at one URL are errors naming the file at fault.
 
 ### The grammar
 

@@ -1,13 +1,13 @@
 {
-  "name": "@figatellu/search",
+  "name": "@figatellultimate/search",
   "version": "0.0.0",
-  "description": "Local search of figatellu: a headless client over the Pagefind bundles, one per locale, with progressive results.",
+  "description": "Local search of figatellultimate: a headless client over the Pagefind bundles, one per locale, with progressive results.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
   "exports": {
     ".": {
-      "@figatellu/source": "./src/index.ts",
+      "@figatellultimate/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
@@ -32,7 +32,7 @@
     "lint:package": "publint --strict && attw --pack . --profile esm-only"
   },
   "dependencies": {},
-  "figatellu": {
+  "figatellultimate": {
     "role": "runtime"
   },
   "devDependencies": {}

@@ -10,19 +10,19 @@ order: 8
 Une collection à facettes filtre une liste sur plusieurs facettes, la trie et la pagine, avec tout son état dans l’URL : une vue filtrée est un lien que n’importe qui peut partager, et la vue par défaut est prérendue.
 
 ```sh npm
-npm install @figatellu/facets @figatellu/facets-react react radix-ui cmdk
+npm install @figatellultimate/facets @figatellultimate/facets-react react radix-ui cmdk
 ```
 
 ```sh pnpm
-pnpm add @figatellu/facets @figatellu/facets-react react radix-ui cmdk
+pnpm add @figatellultimate/facets @figatellultimate/facets-react react radix-ui cmdk
 ```
 
 ```sh yarn
-yarn add @figatellu/facets @figatellu/facets-react react radix-ui cmdk
+yarn add @figatellultimate/facets @figatellultimate/facets-react react radix-ui cmdk
 ```
 
 ```sh bun
-bun add @figatellu/facets @figatellu/facets-react react radix-ui cmdk
+bun add @figatellultimate/facets @figatellultimate/facets-react react radix-ui cmdk
 ```
 
 ## Le moteur
@@ -30,7 +30,7 @@ bun add @figatellu/facets @figatellu/facets-react react radix-ui cmdk
 `defineFacetedCollection` déclare les éléments, leurs facettes et leurs tris, et la taille des pages. Le moteur est pur : il lit une URL, calcule une vue et écrit l’URL suivante.
 
 ```ts
-import { defineFacetedCollection } from '@figatellu/facets';
+import { defineFacetedCollection } from '@figatellultimate/facets';
 
 const engine = defineFacetedCollection({
   items: posts,
@@ -65,8 +65,8 @@ Changer un filtre garde la place du lecteur par défaut (`keepReadingPosition`)�
 `useFacetedCollection` relie le moteur à l’URL ; les composants sont sans style et accessibles :
 
 ```tsx
-import { FacetOptions, FacetsReset, Pagination, SortSelect, useFacetedCollection } from '@figatellu/facets-react';
-import { useNextUrl } from '@figatellu/next16/facets';
+import { FacetOptions, FacetsReset, Pagination, SortSelect, useFacetedCollection } from '@figatellultimate/facets-react';
+import { useNextUrl } from '@figatellultimate/next16/facets';
 
 const binding = useFacetedCollection(engine, useNextUrl());
 
@@ -95,7 +95,7 @@ const { binding, index, prefetch } = usePagedCollection({
 });
 ```
 
-L’index est une route statique par liste, produite par `listingIndexRoute` de `@figatellu/next16/listing-index` :
+L’index est une route statique par liste, produite par `listingIndexRoute` de `@figatellultimate/next16/listing-index` :
 
 ```ts
 export const dynamic = 'force-static';
@@ -103,4 +103,4 @@ export const dynamicParams = false;
 export const { GET, generateStaticParams } = listingIndexRoute({ listings, params, build });
 ```
 
-Hors de Next, `pagedHref` et `pagedSearch` de `@figatellu/facets` font passer une vue à cet emplacement et inversement.
+Hors de Next, `pagedHref` et `pagedSearch` de `@figatellultimate/facets` font passer une vue à cet emplacement et inversement.

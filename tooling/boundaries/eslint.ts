@@ -38,7 +38,7 @@ const NON_SHIPPED_FILES: string[] = ['**/__tests__/**/*.{ts,tsx}', '*.config.ts'
 function dependencyConfigs(root: string): Linter.Config[] {
   return discoverPackages(root).flatMap((pkg) => [
     {
-      name: `figatellu/dependencies/${pkg.name}`,
+      name: `figatellultimate/dependencies/${pkg.name}`,
       files: [`${pkg.dir}/**/*.{ts,tsx}`],
       rules: {
         'import-x/no-extraneous-dependencies': [
@@ -48,7 +48,7 @@ function dependencyConfigs(root: string): Linter.Config[] {
       },
     },
     {
-      name: `figatellu/dependencies/${pkg.name}/non-shipped`,
+      name: `figatellultimate/dependencies/${pkg.name}/non-shipped`,
       files: NON_SHIPPED_FILES.map((glob) => `${pkg.dir}/${glob}`),
       rules: {
         'import-x/no-extraneous-dependencies': [
@@ -78,7 +78,7 @@ function boundaryConfigs(root: string): Linter.Config[] {
         }))
       : [];
     const config: Linter.Config = {
-      name: `figatellu/boundaries/${pkg.name}`,
+      name: `figatellultimate/boundaries/${pkg.name}`,
       files: [`${pkg.dir}/**/*.{ts,tsx}`],
       // Package boundaries protect shipped code; tests may wire several adapters together (integration tests).
       ignores: [`${pkg.dir}/**/__tests__/**`],
@@ -119,12 +119,12 @@ export function createEslintConfig(root: string, ignores: readonly string[] = []
     importX.flatConfigs.recommended,
     importX.flatConfigs.typescript,
     {
-      name: 'figatellu/base',
+      name: 'figatellultimate/base',
       settings: {
         'import-x/resolver-next': [
-          // Workspace packages resolve each other through their sources (`@figatellu/source` export condition).
+          // Workspace packages resolve each other through their sources (`@figatellultimate/source` export condition).
           createTypeScriptImportResolver({
-            conditionNames: ['@figatellu/source', 'types', 'import', 'node', 'require', 'default'],
+            conditionNames: ['@figatellultimate/source', 'types', 'import', 'node', 'require', 'default'],
           }),
         ],
       },
@@ -141,13 +141,13 @@ export function createEslintConfig(root: string, ignores: readonly string[] = []
     airy(['**/*.{ts,tsx}']),
     {
       // React's rules of hooks and compiler-backed checks, wherever React code lives.
-      name: 'figatellu/react-hooks',
+      name: 'figatellultimate/react-hooks',
       files: ['**/*.tsx', 'packages/*-react/**/*.ts', 'packages/next16/**/*.ts', 'packages/use-intl/**/*.ts'],
       extends: [reactHooks.configs.flat['recommended-latest']],
     },
     {
       // React code reaches its own elements through refs, never by querying the DOM; tests may query what they render.
-      name: 'figatellu/react-no-dom-queries',
+      name: 'figatellultimate/react-no-dom-queries',
       files: [
         'packages/ui/src/**/*.{ts,tsx}',
         'packages/*-react/src/**/*.{ts,tsx}',
@@ -167,7 +167,7 @@ export function createEslintConfig(root: string, ignores: readonly string[] = []
     dependencyConfigs(root),
     boundaryConfigs(root),
     {
-      name: 'figatellu/plain-js',
+      name: 'figatellultimate/plain-js',
       files: ['**/*.js', '**/*.mjs', '**/*.cjs'],
       extends: [tsConfigs.disableTypeChecked],
     },

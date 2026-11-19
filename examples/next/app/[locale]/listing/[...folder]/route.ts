@@ -2,12 +2,12 @@
  * A listing's index: every post of a subcategory, as the items its engine filters and sorts and as their cards' data,
  * one static JSON per listing and locale (`/listing/news/bot`, `/en/listing/news/bot`). A listing's page carries only
  * its slice; the browser fetches this on the first filter or sort (`blog/listing-index.ts`, which checks it). The
- * route itself is `listingIndexRoute` of `@figatellu/next16`.
+ * route itself is `listingIndexRoute` of `@figatellultimate/next16`.
  */
-import { listingIndexRoute } from '@figatellu/next16/listing-index';
+import { listingIndexRoute } from '@figatellultimate/next16/listing-index';
 
-import { findBlogFolderByUrl, type BlogFolder } from '#figatellu/blog';
-import { mountedUrls } from '#figatellu/urls';
+import { findBlogFolderByUrl, type BlogFolder } from '#figatellultimate/blog';
+import { mountedUrls } from '#figatellultimate/urls';
 
 import { cardDataOf, itemsOf, postsOf } from '../../../../blog/posts-data';
 

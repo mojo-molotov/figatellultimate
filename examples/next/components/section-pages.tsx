@@ -1,14 +1,14 @@
 /** The list of a section's pages, below its own page. */
-import { sectionOf } from '@figatellu/site';
-import { EntryCard } from '@figatellu/ui';
+import { sectionOf } from '@figatellultimate/site';
+import { EntryCard } from '@figatellultimate/ui';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 
-import { Collector } from '@figatellu/effects';
+import { Collector } from '@figatellultimate/effects';
 
-import type { Locale } from '#figatellu/locales';
-import { navigationOf } from '#figatellu/navigation';
-import { findPageByUrl } from '#figatellu/pages';
+import type { Locale } from '#figatellultimate/locales';
+import { navigationOf } from '#figatellultimate/navigation';
+import { findPageByUrl } from '#figatellultimate/pages';
 
 /**
  * The pages of the section a page opens, e.g. `/docs` lists its pages and subfolders: the same navigation as

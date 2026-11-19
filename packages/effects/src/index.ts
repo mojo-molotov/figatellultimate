@@ -1,8 +1,8 @@
 'use client';
 
 /**
- * `@figatellu/effects`: decorative effects for figatellu apps, their mechanics in `styles.css`
- * (`@figatellu/effects/styles.css`), every look a token for a theme to set.
+ * `@figatellultimate/effects`: decorative effects for figatellultimate apps, their mechanics in `styles.css`
+ * (`@figatellultimate/effects/styles.css`), every look a token for a theme to set.
  *
  *     Effects ──┬─> CursorGlow  (a mouse)                         ┐ each a chunk of its own, fetched only
  *               └─> Sparkles    (a mouse and room for margins)    ┘ where it can show, never on the server
@@ -13,8 +13,8 @@
  *                   --fig-sparkles-*)
  *
  * Key design decisions:
- *     - Out of `@figatellu/ui`, a minimal design system, and out of the themes: effects are generic components, a
- *       theme only decides where they show and how they look (`@figatellu/themes/maquis.css`: dark theme only).
+ *     - Out of `@figatellultimate/ui`, a minimal design system, and out of the themes: effects are generic components, a
+ *       theme only decides where they show and how they look (`@figatellultimate/themes/maquis.css`: dark theme only).
  *     - Framework-free (`React.lazy`, media queries): no `next/dynamic`, the same effects in any React app.
  *     - Decorative: hidden from assistive technologies, never catching a click, still or absent with
  *       `prefers-reduced-motion`.

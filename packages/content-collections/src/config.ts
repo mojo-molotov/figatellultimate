@@ -1,16 +1,16 @@
 /**
- * The entry of the user's Content Collections config (`@figatellu/content-collections/config`): `withFigatellu` and
- * `rehypeHeadings`. Import-light on purpose: the user's config loads neither the builder nor figatellu's core.
+ * The entry of the user's Content Collections config (`@figatellultimate/content-collections/config`): `withFigatellultimate` and
+ * `rehypeHeadings`. Import-light on purpose: the user's config loads neither the builder nor figatellultimate's core.
  *
  * Key design decision: Content Collections bundles and imports the user's config as a separate module instance, so
- * `withFigatellu` and the adapter only meet on `globalThis`, under a registered symbol only this module writes.
+ * `withFigatellultimate` and the adapter only meet on `globalThis`, under a registered symbol only this module writes.
  */
-// `@figatellu/content-collections/config`: what the user's Content Collections config imports. Kept free of any
-// import, so the config loads neither the builder nor @figatellu/core, whatever the loader or bundler.
+// `@figatellultimate/content-collections/config`: what the user's Content Collections config imports. Kept free of any
+// import, so the config loads neither the builder nor @figatellultimate/core, whatever the loader or bundler.
 
 /**
  * State shared between the adapter and the user's Content Collections config. The config is bundled and imported
- * by Content Collections as a separate module instance, so `withFigatellu` and the adapter only meet on `globalThis`.
+ * by Content Collections as a separate module instance, so `withFigatellultimate` and the adapter only meet on `globalThis`.
  */
 export interface Session {
   readonly directories: Map<string, string>;
@@ -22,7 +22,7 @@ interface Channel {
   queue: Promise<unknown>;
 }
 
-const CHANNEL = Symbol.for('figatellu.content-collections');
+const CHANNEL = Symbol.for('figatellultimate.content-collections');
 
 /** Only this module writes the channel, under a registered symbol: a value with its shape is ours. */
 const isChannel = (value: unknown): value is Channel =>
@@ -87,10 +87,10 @@ interface WrappableCollection {
  *
  * @example
  * // content-collections.ts
- * const blog = withFigatellu(defineCollection({ name: 'blog', directory: 'content/blog', include: '**' + '/*.mdx', schema }));
+ * const blog = withFigatellultimate(defineCollection({ name: 'blog', directory: 'content/blog', include: '**' + '/*.mdx', schema }));
  * export default defineConfig({ content: [blog] });
  */
-export function withFigatellu<C extends WrappableCollection>(collection: C): C {
+export function withFigatellultimate<C extends WrappableCollection>(collection: C): C {
   channel().session?.directories.set(collection.name, collection.directory);
   const userOnSuccess = collection.onSuccess;
 

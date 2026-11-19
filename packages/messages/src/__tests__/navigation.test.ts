@@ -1,4 +1,4 @@
-import { defineLocales } from '@figatellu/core';
+import { defineLocales } from '@figatellultimate/core';
 import { describe, expect, it } from 'vitest';
 
 import { analyzeMessages, checkNavigationLabels } from '../index.js';

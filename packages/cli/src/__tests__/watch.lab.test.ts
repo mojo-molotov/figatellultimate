@@ -1,9 +1,9 @@
-// Watch lab: after each burst of file system changes, what `figatellu watch` wrote must be byte-identical to
+// Watch lab: after each burst of file system changes, what `figatellultimate watch` wrote must be byte-identical to
 // a build from scratch. Timing-dependent and slow: run by `pnpm test:lab` and a scheduled CI job, not on every PR.
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { createLab, sleep, WITH_FIGATELLU, type Scenario } from './lab-harness.js';
+import { createLab, sleep, WITH_FIGATELLULTIMATE, type Scenario } from './lab-harness.js';
 
 const post = (title: string): string => `---\ntitle: ${title}\ntags: [guide]\n---\n\n# ${title}\n`;
 const page = (title: string): string => `---\ntitle: ${title}\n---\n\n# ${title}\n`;
@@ -23,23 +23,23 @@ const CONTENT: Readonly<Record<string, string>> = {
 const CONTENT_COLLECTIONS_CONFIG = `
 import { defineCollection, defineConfig } from '@content-collections/core';
 import * as v from 'valibot';
-import { withFigatellu } from ${JSON.stringify(WITH_FIGATELLU)};
+import { withFigatellultimate } from ${JSON.stringify(WITH_FIGATELLULTIMATE)};
 
-const blog = withFigatellu(defineCollection({
+const blog = withFigatellultimate(defineCollection({
   name: 'blog', directory: 'content/blog', include: '**/*.mdx',
   schema: v.object({ title: v.string(), tags: v.array(v.string()), content: v.string() }),
 }));
-const pages = withFigatellu(defineCollection({
+const pages = withFigatellultimate(defineCollection({
   name: 'pages', directory: 'content/pages', include: '**/*.mdx',
   schema: v.object({ title: v.string(), content: v.string() }),
 }));
 export default defineConfig({ content: [blog, pages] });
 `;
 
-const FIGATELLU_CONFIG = `
+const FIGATELLULTIMATE_CONFIG = `
 import { join } from 'node:path';
-import { defineCollection, defineConfig, defineLocales, defineTaxonomy, locale, rest, segment, slug } from '@figatellu/core';
-import { createContentCollectionsSource } from '@figatellu/content-collections';
+import { defineCollection, defineConfig, defineLocales, defineTaxonomy, locale, rest, segment, slug } from '@figatellultimate/core';
+import { createContentCollectionsSource } from '@figatellultimate/content-collections';
 
 export default defineConfig({
   locales: defineLocales({ list: ['fr', 'en'], default: 'fr' }),
@@ -63,7 +63,7 @@ export default defineConfig({
 const lab = createLab({
   ...CONTENT,
   'content-collections.ts': CONTENT_COLLECTIONS_CONFIG,
-  'figatellu.config.ts': FIGATELLU_CONFIG,
+  'figatellultimate.config.ts': FIGATELLULTIMATE_CONFIG,
 });
 const at = (path: string): string => lab.at(path);
 const blog = (path: string): string => at(`content/blog/${path}`);
@@ -148,4 +148,4 @@ const SCENARIOS: readonly Scenario[] = [
   ],
 ];
 
-lab.run('figatellu watch lab: the watched output always equals a build from scratch', SCENARIOS);
+lab.run('figatellultimate watch lab: the watched output always equals a build from scratch', SCENARIOS);

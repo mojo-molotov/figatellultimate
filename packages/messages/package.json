@@ -1,7 +1,7 @@
 {
-  "name": "@figatellu/messages",
+  "name": "@figatellultimate/messages",
   "version": "0.0.0",
-  "description": "Message analysis of figatellu: required keys, ICU syntax, plurals and arguments, as diagnostics.",
+  "description": "Message analysis of figatellultimate: required keys, ICU syntax, plurals and arguments, as diagnostics.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
@@ -10,7 +10,7 @@
   },
   "exports": {
     ".": {
-      "@figatellu/source": "./src/index.ts",
+      "@figatellultimate/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
@@ -35,10 +35,10 @@
     "lint:package": "publint --strict && attw --pack . --profile esm-only"
   },
   "dependencies": {
-    "@figatellu/core": "workspace:*",
+    "@figatellultimate/core": "workspace:*",
     "@formatjs/icu-messageformat-parser": "3.5.22"
   },
-  "figatellu": {
+  "figatellultimate": {
     "role": "tooling"
   }
 }

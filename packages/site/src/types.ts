@@ -5,7 +5,7 @@
  * The published site: its origin, its name, and the default locale (for `x-default`).
  *
  * @example
- * const site: Site = { origin: 'https://example.com', name: 'figatellu', defaultLocale };
+ * const site: Site = { origin: 'https://example.com', name: 'figatellultimate', defaultLocale };
  */
 export interface Site {
   /** E.g. `'https://example.com'`, without a trailing slash (one is tolerated). */
@@ -28,7 +28,7 @@ export interface SiteEntry {
   readonly indexed?: boolean | undefined;
 }
 
-/** A mounted URL, as `#figatellu/urls` lists them (`mountedUrls`): what the locale switcher reads. */
+/** A mounted URL, as `#figatellultimate/urls` lists them (`mountedUrls`): what the locale switcher reads. */
 export interface MountedUrl extends SiteEntry {
   readonly collection: string;
   /** The entry key, locale-independent: ancestors are its prefixes. */

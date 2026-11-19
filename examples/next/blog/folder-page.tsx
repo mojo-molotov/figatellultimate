@@ -1,13 +1,13 @@
 /** The blog's folder pages: the blog, a category, and a subcategory with its faceted list. */
-import { EntryCard } from '@figatellu/ui';
+import { EntryCard } from '@figatellultimate/ui';
 import { getTranslations } from 'next-intl/server';
 import NextLink from 'next/link';
 import type { ReactNode } from 'react';
 
-import type { BlogFolder, BlogPost, BlogSubfolder } from '#figatellu/blog';
-import type { Locale } from '#figatellu/locales';
+import type { BlogFolder, BlogPost, BlogSubfolder } from '#figatellultimate/blog';
+import type { Locale } from '#figatellultimate/locales';
 
-import { Collector } from '@figatellu/effects';
+import { Collector } from '@figatellultimate/effects';
 import { SiteHeader } from '../components/site-header';
 import { PostCard } from './cards';
 import { FolderPagination } from './folder-pagination';
@@ -43,7 +43,7 @@ const sliceOf = <T,>(items: readonly T[], folder: BlogFolder): readonly T[] =>
   folder.perPage === undefined ? items : items.slice((folder.page - 1) * folder.perPage, folder.page * folder.perPage);
 
 /**
- * A blog folder page, rendered from figatellu's neutral data, one page at a time (`perPage`, each page prerendered
+ * A blog folder page, rendered from figatellultimate's neutral data, one page at a time (`perPage`, each page prerendered
  * with its slice): the blog lists its categories, each with its description; a category shows each subcategory with
  * its latest posts and "see more", in the folders' order; a subcategory lists its posts with facets, sorts and
  * pagination.

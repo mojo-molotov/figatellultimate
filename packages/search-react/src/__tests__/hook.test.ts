@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import type { QueryOptions, Search, SearchPage, SearchResult } from '@figatellu/search';
+import type { QueryOptions, Search, SearchPage, SearchResult } from '@figatellultimate/search';
 import { act, createElement, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';

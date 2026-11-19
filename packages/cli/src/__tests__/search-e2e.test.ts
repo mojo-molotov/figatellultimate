@@ -10,7 +10,7 @@ import { EXIT, main } from '../main.js';
 import { builtFileOf } from '../pipeline/search.js';
 
 const PACKAGE = join(import.meta.dirname, '..', '..');
-const WITH_FIGATELLU = join(PACKAGE, '..', 'content-collections', 'src', 'config.ts').replaceAll('\\', '/');
+const WITH_FIGATELLULTIMATE = join(PACKAGE, '..', 'content-collections', 'src', 'config.ts').replaceAll('\\', '/');
 
 /** Pages in two locales (one reserved), and offers: a collection kept out of the search. */
 const CONTENT: Readonly<Record<string, string>> = {
@@ -25,18 +25,18 @@ const CONTENT: Readonly<Record<string, string>> = {
 const CONTENT_COLLECTIONS_CONFIG = `
 import { defineCollection, defineConfig } from '@content-collections/core';
 import * as v from 'valibot';
-import { withFigatellu } from ${JSON.stringify(WITH_FIGATELLU)};
+import { withFigatellultimate } from ${JSON.stringify(WITH_FIGATELLULTIMATE)};
 
 const schema = v.object({ title: v.string(), content: v.string() });
-const pages = withFigatellu(defineCollection({ name: 'pages', directory: 'content/pages', include: '**/*.mdx', schema }));
-const offers = withFigatellu(defineCollection({ name: 'offers', directory: 'content/offers', include: '**/*.mdx', schema }));
+const pages = withFigatellultimate(defineCollection({ name: 'pages', directory: 'content/pages', include: '**/*.mdx', schema }));
+const offers = withFigatellultimate(defineCollection({ name: 'offers', directory: 'content/offers', include: '**/*.mdx', schema }));
 export default defineConfig({ content: [pages, offers] });
 `;
 
-const FIGATELLU_CONFIG = `
+const FIGATELLULTIMATE_CONFIG = `
 import { join } from 'node:path';
-import { defineCollection, defineConfig, defineLocales, locale, rest, slug } from '@figatellu/core';
-import { createContentCollectionsSource } from '@figatellu/content-collections';
+import { defineCollection, defineConfig, defineLocales, locale, rest, slug } from '@figatellultimate/core';
+import { createContentCollectionsSource } from '@figatellultimate/content-collections';
 
 export default defineConfig({
   locales: defineLocales({ list: ['fr', 'en'], default: 'fr' }),
@@ -73,7 +73,7 @@ async function run(...argv: string[]): Promise<{ code: number; output: string }>
       done();
     },
   });
-  const code = await main([...argv, '--config', join(project.basePath, 'figatellu.config.ts')], {
+  const code = await main([...argv, '--config', join(project.basePath, 'figatellultimate.config.ts')], {
     stdout,
     fancy: false,
     cwd: project.basePath,
@@ -91,7 +91,7 @@ beforeAll(async () => {
   for (const [path, contents] of Object.entries(CONTENT)) await project.create(path, contents);
 
   await project.create('content-collections.ts', CONTENT_COLLECTIONS_CONFIG);
-  await project.create('figatellu.config.ts', FIGATELLU_CONFIG);
+  await project.create('figatellultimate.config.ts', FIGATELLULTIMATE_CONFIG);
 });
 beforeEach(async () => {
   for (const [url, html] of Object.entries(BUILT)) await project.create(`site/${builtFileOf(url)}`, html);
@@ -112,7 +112,7 @@ describe('builtFileOf', () => {
   });
 });
 
-describe('figatellu search, end to end', () => {
+describe('figatellultimate search, end to end', () => {
   it('indexes the mounted, searchable entries: one bundle per locale, with its language', async () => {
     const { code, output } = await run('search', '--site', 'site');
 

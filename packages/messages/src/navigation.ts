@@ -1,7 +1,7 @@
 /**
  * The navigation's labels, checked against the reference messages at build time.
  */
-import { suggest, type NavigationItem } from '@figatellu/core';
+import { suggest, type NavigationItem } from '@figatellultimate/core';
 
 import type { UnknownNavigationLabelDiagnostic } from './diagnostics.js';
 import type { MessagesModel, ShapeNode } from './model.js';

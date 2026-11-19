@@ -8,7 +8,7 @@ coverage/
 
 # The example app's build and generated outputs
 examples/*/.next/
-examples/*/.figatellu/
+examples/*/.figatellultimate/
 examples/*/.content-collections/
 examples/*/next-env.d.ts
 examples/*/public/pagefind/

@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { defineFacetedCollection, type Engine, type UrlAdapter } from '@figatellu/facets';
+import { defineFacetedCollection, type Engine, type UrlAdapter } from '@figatellultimate/facets';
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 

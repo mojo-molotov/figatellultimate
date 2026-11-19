@@ -5,7 +5,7 @@
  *       Installation          Configuration
  *
  * Key design decisions:
- *     - The pages come from the app (e.g. `neighboursOf` of `@figatellu/site`, in the navigation's order): this
+ *     - The pages come from the app (e.g. `neighboursOf` of `@figatellultimate/site`, in the navigation's order): this
  *       component only links them, through the app's link component (`LinkProvider`).
  *     - No text of its own: the landmark's name and the "previous" and "next" words are labels; each link is named by
  *       its word and the page's title, so that a screen reader says where it leads.

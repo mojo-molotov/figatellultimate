@@ -1,11 +1,11 @@
 /** The blog's RSS feed, one per locale, prerendered. */
-import { rssOf } from '@figatellu/site';
+import { rssOf } from '@figatellultimate/site';
 import { hasLocale } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
 
-import { blogIndex } from '#figatellu/blog';
-import { locales } from '#figatellu/locales';
-import { metadataFields, urlOf } from '#figatellu/urls';
+import { blogIndex } from '#figatellultimate/blog';
+import { locales } from '#figatellultimate/locales';
+import { metadataFields, urlOf } from '#figatellultimate/urls';
 
 import { routing } from '../../../i18n/routing';
 import { site } from '../../../site';

@@ -1,5 +1,5 @@
 /*
- * @figatellu/themes/maquis.css: the maquis theme, on `base.css` (loaded before it) and the design system's tokens.
+ * @figatellultimate/themes/maquis.css: the maquis theme, on `base.css` (loaded before it) and the design system's tokens.
  *
  * Dark glass over the previews, the code and the tables, where the effects show: the cursor glow, and the sparkles on
  * listing pages, in the dark theme only. Its colors are the design system's own.
@@ -85,7 +85,7 @@
 }
 
 /*
- * The effects (`@figatellu/effects`, hidden by `base.css`): shown in the dark theme only; the sparkles on listing pages
+ * The effects (`@figatellultimate/effects`, hidden by `base.css`): shown in the dark theme only; the sparkles on listing pages
  * only (a folder page, an author's page, a section's list of pages), with room for margins.
  */
 

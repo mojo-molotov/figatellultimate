@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { breadcrumbListOf, jsonLd, personOf, structuredDataOf } from '../index.js';
 import type { MetadataFields, Site, SiteEntryWithData } from '../types.js';
 
-const site: Site = { origin: 'https://example.com', name: 'figatellu', defaultLocale: 'fr' };
+const site: Site = { origin: 'https://example.com', name: 'figatellultimate', defaultLocale: 'fr' };
 const fields: MetadataFields = {
   title: 'title',
   description: 'description',
@@ -47,7 +47,7 @@ describe('structuredDataOf', () => {
       url: 'https://example.com/en/blog/news/launch',
       mainEntityOfPage: 'https://example.com/en/blog/news/launch',
       inLanguage: 'en',
-      publisher: { '@type': 'Organization', name: 'figatellu' },
+      publisher: { '@type': 'Organization', name: 'figatellultimate' },
     });
   });
 

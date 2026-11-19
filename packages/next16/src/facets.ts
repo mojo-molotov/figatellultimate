@@ -1,5 +1,5 @@
 /**
- * `@figatellu/next16/facets`, a client entry: the App Router's URL adapter of faceted collections.
+ * `@figatellultimate/next16/facets`, a client entry: the App Router's URL adapter of faceted collections.
  *
  * Key design decisions:
  *     - The History API rather than `router.push`: Next's router integrates `pushState` and `replaceState`
@@ -8,7 +8,7 @@
  *     - A listing paginated in its path (`first`, its own URL): its default pages are prerendered pages
  *       (`/blog/news/page/2`), reached through the router, which fetches the page with its slice; any other view
  *       stays in the query on the listing's URL, through the History API (`pagedHref`, `pagedSearch` of
- *       `@figatellu/facets`). A location it never writes (`/blog/news/page/3?tags=bot`, `/blog/news?page=2`) is
+ *       `@figatellultimate/facets`). A location it never writes (`/blog/news/page/3?tags=bot`, `/blog/news?page=2`) is
  *       replaced, once read, by the view's own: the address shows what the page shows, and a default page gets its
  *       slice from the server.
  *
@@ -18,7 +18,7 @@
  */
 'use client';
 
-import { pagedHref, pagedSearch, type UrlAdapter } from '@figatellu/facets';
+import { pagedHref, pagedSearch, type UrlAdapter } from '@figatellultimate/facets';
 // With its extension: `next` declares no `exports`, and an ES module resolved as `nodenext` needs the real file.
 import { usePathname, useRouter, useSearchParams } from 'next/navigation.js';
 import { useEffect, useMemo } from 'react';

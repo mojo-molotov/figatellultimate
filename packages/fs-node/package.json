@@ -1,7 +1,7 @@
 {
-  "name": "@figatellu/fs-node",
+  "name": "@figatellultimate/fs-node",
   "version": "0.0.0",
-  "description": "Node.js file system adapter of figatellu: lists content paths for the PathLister port.",
+  "description": "Node.js file system adapter of figatellultimate: lists content paths for the PathLister port.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
@@ -10,7 +10,7 @@
   },
   "exports": {
     ".": {
-      "@figatellu/source": "./src/index.ts",
+      "@figatellultimate/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
@@ -26,9 +26,9 @@
     "lint:package": "publint --strict && attw --pack . --profile esm-only"
   },
   "dependencies": {
-    "@figatellu/core": "workspace:*"
+    "@figatellultimate/core": "workspace:*"
   },
-  "figatellu": {
+  "figatellultimate": {
     "role": "adapter"
   },
   "publishConfig": {

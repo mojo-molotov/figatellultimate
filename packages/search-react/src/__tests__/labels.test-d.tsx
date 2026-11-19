@@ -1,4 +1,4 @@
-import type { Search } from '@figatellu/search';
+import type { Search } from '@figatellultimate/search';
 import type { ReactNode } from 'react';
 import { describe, expectTypeOf, it } from 'vitest';
 

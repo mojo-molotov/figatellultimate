@@ -29,7 +29,7 @@ jobs:
       # The example consumes the packages as a user would: built.
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium-headless-shell
-      - run: pnpm --filter figatellu-example-next example:load --posts ${{ inputs.posts || '2500' }}
+      - run: pnpm --filter figatellultimate-example-next example:load --posts ${{ inputs.posts || '2500' }}
       - if: always()
         run: cat .tmp/load-*/load-report.md >> "$GITHUB_STEP_SUMMARY"
       - if: always()

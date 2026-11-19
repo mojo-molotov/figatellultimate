@@ -9,7 +9,7 @@ import {
   segment,
   slug,
   type Entry,
-} from '@figatellu/core';
+} from '@figatellultimate/core';
 import { describe, expect, it } from 'vitest';
 
 import { folderData } from '../folders.js';

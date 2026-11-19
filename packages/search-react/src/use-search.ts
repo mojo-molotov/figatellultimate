@@ -6,7 +6,7 @@
  * Invariants (`hook.test.ts`): idle without a term; preload then search; a late answer never replaces a newer one;
  * results kept while searching; `more()` appends; options alone search at once.
  */
-import type { QueryOptions, Search, SearchPage, SearchResult } from '@figatellu/search';
+import type { QueryOptions, Search, SearchPage, SearchResult } from '@figatellultimate/search';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 /** What the binding is doing: idle without a term, then searching, done, or why not. */

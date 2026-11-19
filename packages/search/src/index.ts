@@ -1,5 +1,5 @@
 /**
- * A headless local search client over the Pagefind bundles `figatellu search` writes, one per locale.
+ * A headless local search client over the Pagefind bundles `figatellultimate search` writes, one per locale.
  *
  * Architecture:
  *     createSearch({ locale, collections }) ──> Search
@@ -18,13 +18,13 @@
  *       drops the result; a missing bundle is retried by the next query (it may have been built since).
  *     - A quiet time before searching, a newer query superseding the pending one (`null`): fewer requests while
  *       typing; skipped when only the options change.
- *     - Sorting is Pagefind's, on keys `figatellu search` indexes: applied to every result before any is loaded, so
+ *     - Sorting is Pagefind's, on keys `figatellultimate search` indexes: applied to every result before any is loaded, so
  *       "see more" stays in order.
  *     - An excerpt never starts with the result's title: a page's body usually opens with its heading, already shown.
  *     - No framework, no DOM or Node types, and Pagefind's package is never imported: the built `pagefind.js` is
  *       loaded at runtime, and checked field by field (an external contract).
  *
- * Invariants (`search.test.ts` with an injected loader; the real bundles in `@figatellu/pagefind`'s
+ * Invariants (`search.test.ts` with an injected loader; the real bundles in `@figatellultimate/pagefind`'s
  * `browser-bundle.test.ts` and in the example's `verify.ts`):
  *     - Never throws; `unavailable` instead.
  *     - Only the latest query searches; a superseded one resolves to `null`.
@@ -47,7 +47,7 @@ export interface SearchResult<C extends string> {
   readonly collection: C;
   /** The page's Pagefind metadata (`data-pagefind-meta`), its text values only: e.g. a breadcrumb the app put there. */
   readonly meta: Readonly<Record<string, string>>;
-  /** Its publication date as `figatellu search` indexed it, `undefined` for an undated page. */
+  /** Its publication date as `figatellultimate search` indexed it, `undefined` for an undated page. */
   readonly date?: string | undefined;
 }
 
@@ -76,7 +76,7 @@ export const SEARCH_SORTS = ['relevance', 'title-asc', 'title-desc', 'date-desc'
 export type SearchSort = (typeof SEARCH_SORTS)[number];
 
 /**
- * Each sort as Pagefind's, on the keys `figatellu search` indexes (`@figatellu/pagefind`): the title lowercased
+ * Each sort as Pagefind's, on the keys `figatellultimate search` indexes (`@figatellultimate/pagefind`): the title lowercased
  * without accents, and the date twice, so that undated pages come last both newest and oldest first.
  */
 const PAGEFIND_SORTS = {
@@ -126,7 +126,7 @@ export interface SearchOptions<C extends string> {
   readonly locale: string;
   /** The searchable collections' names: a result from any other collection is dropped. */
   readonly collections: readonly C[];
-  /** Where `figatellu search --out` was served from; default `/pagefind`. */
+  /** Where `figatellultimate search --out` was served from; default `/pagefind`. */
   readonly base?: string | undefined;
   /** Results per batch; default 5. */
   readonly batch?: number | undefined;
@@ -270,7 +270,7 @@ function withoutTitle(excerpt: string, title: string): string {
 
 /**
  * A result from its fragment, `undefined` when the fragment is malformed. The collection is the `collection` filter
- * `figatellu search` put on every page, from the same build as the app's collection names.
+ * `figatellultimate search` put on every page, from the same build as the app's collection names.
  */
 function resultOf<C extends string>(data: unknown, collections: readonly C[]): SearchResult<C> | undefined {
   if (!isObject(data) || typeof data['url'] !== 'string') return undefined;
@@ -322,7 +322,7 @@ function delay(ms: number): Promise<void> {
       });
 }
 
-/** Imports a bundle by URL, untouched by bundlers: it exists only after `figatellu search`. */
+/** Imports a bundle by URL, untouched by bundlers: it exists only after `figatellultimate search`. */
 const importBundle = (url: string): Promise<unknown> =>
   import(/* webpackIgnore: true */ /* turbopackIgnore: true */ /* @vite-ignore */ url);
 

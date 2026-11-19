@@ -1,5 +1,5 @@
-import type { Diagnostic } from '@figatellu/core';
-import type { MessageDiagnostic } from '@figatellu/messages';
+import type { Diagnostic } from '@figatellultimate/core';
+import type { MessageDiagnostic } from '@figatellultimate/messages';
 import { describe, expect, it } from 'vitest';
 
 import { countDiagnostics, explain, explainMessage, reportLines } from '../report.js';

@@ -1,10 +1,10 @@
 /**
  * `terms/index`: term pages (`XTermPage`, `findXTermByUrl`, `xTermUrl`), their entries resolved from the light
  * indexes, and each term's own content when its taxonomy declares one (`content`: an entry of an unmounted
- * collection, keyed by term, in the page's locale). A module of its own: `#figatellu/taxonomies` stays pure data for
+ * collection, keyed by term, in the page's locale). A module of its own: `#figatellultimate/taxonomies` stays pure data for
  * the client.
  */
-import type { Entry, FigatelluConfig, TermPage } from '@figatellu/core';
+import type { Entry, FigatellultimateConfig, TermPage } from '@figatellultimate/core';
 import { VariableDeclarationKind, type Project } from 'ts-morph';
 
 import { compareText, literal, pascal, type CollectionModel } from '../model.js';
@@ -32,7 +32,7 @@ export interface TermData {
  * @returns Each term page with its translations and its entries, in order.
  */
 export function termData(
-  config: FigatelluConfig,
+  config: FigatellultimateConfig,
   entries: readonly Entry[],
   pages: readonly TermPage[],
   url: (entry: Entry) => string,
@@ -81,7 +81,7 @@ export function termData(
  * @returns Each taxonomy with pages, and the collections whose reference fields point to it.
  */
 export function termTaxonomies(
-  config: FigatelluConfig,
+  config: FigatellultimateConfig,
 ): readonly { readonly name: string; readonly collections: readonly string[] }[] {
   return Object.entries(config.taxonomies ?? {})
     .filter(([, taxonomy]) => taxonomy.pages !== null)
@@ -95,7 +95,7 @@ export function termTaxonomies(
 
 /**
  * `terms/index.ts`: for each taxonomy with pages, `XTermPage` and `findXTermByUrl`, the entries resolved from
- * the light indexes (nothing duplicated). A module of its own: `#figatellu/taxonomies` stays pure data for the client.
+ * the light indexes (nothing duplicated). A module of its own: `#figatellultimate/taxonomies` stays pure data for the client.
  *
  * @param project - The in-memory ts-morph project.
  * @param config - The config.
@@ -105,7 +105,7 @@ export function termTaxonomies(
  */
 export function termsFile(
   project: Project,
-  config: FigatelluConfig,
+  config: FigatellultimateConfig,
   models: readonly CollectionModel[],
   data: readonly TermData[],
 ): GeneratedFile[] {

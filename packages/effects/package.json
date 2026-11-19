@@ -1,7 +1,7 @@
 {
-  "name": "@figatellu/effects",
+  "name": "@figatellultimate/effects",
   "version": "0.0.0",
-  "description": "Decorative effects for figatellu apps: a cursor glow, sparkles in the margins, cards lighting up under the mouse, loaded on desktops only; every look a token, for a theme to set.",
+  "description": "Decorative effects for figatellultimate apps: a cursor glow, sparkles in the margins, cards lighting up under the mouse, loaded on desktops only; every look a token, for a theme to set.",
   "license": "MIT",
   "type": "module",
   "sideEffects": [
@@ -9,12 +9,12 @@
   ],
   "exports": {
     ".": {
-      "@figatellu/source": "./src/index.ts",
+      "@figatellultimate/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
     "./styles.css": {
-      "@figatellu/source": "./src/styles.css",
+      "@figatellultimate/source": "./src/styles.css",
       "default": "./dist/styles.css"
     },
     "./package.json": "./package.json"
@@ -40,7 +40,7 @@
     "test": "vitest run --config ../../vitest.config.ts --project effects",
     "lint:package": "publint --strict && attw --pack . --profile esm-only --exclude-entrypoints ./styles.css"
   },
-  "figatellu": {
+  "figatellultimate": {
     "role": "adapter"
   },
   "peerDependencies": {

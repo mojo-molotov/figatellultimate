@@ -1,7 +1,7 @@
 'use client';
 
 /** The image zoom with its labels as plain strings: a server component cannot hand a function to a client one. */
-import { ImageZoom } from '@figatellu/ui';
+import { ImageZoom } from '@figatellultimate/ui';
 import type { ComponentProps, ReactNode } from 'react';
 
 /** An image enlarged in a modal, its labels formatted on the server. */

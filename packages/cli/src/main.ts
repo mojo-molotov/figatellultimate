@@ -1,5 +1,5 @@
 /**
- * The `figatellu` command line: `build`, `check`, `watch`, `search` and `migrate`, dispatched from parsed
+ * The `figatellultimate` command line: `build`, `check`, `watch`, `search` and `migrate`, dispatched from parsed
  * arguments.
  *
  * Architecture:
@@ -11,7 +11,7 @@
  * redirects.json
  *
  * Key design decisions:
- *     - figatellu drives: it lists paths, analyzes structure, joins the delegated tool's documents, emits and
+ *     - figatellultimate drives: it lists paths, analyzes structure, joins the delegated tool's documents, emits and
  * writes; the content source watches its own files.
  *     - Watch runs are serialized: a change aborts the stale run and starts one fresh run, which keeps the last
  * valid output until it succeeds.
@@ -59,7 +59,7 @@ export interface MainIo {
 /** Exit codes: 0 no error, 1 content errors, 2 invalid config or usage, 3 unexpected failure. */
 export const EXIT = { ok: 0, content: 1, usage: 2, unexpected: 3 } as const;
 
-const BUG_TRACKER = 'https://github.com/mojo-molotov/figatellu/issues';
+const BUG_TRACKER = 'https://github.com/mojo-molotov/figatellultimate/issues';
 
 const ms = (duration: number): string => `${duration.toFixed(0)} ms`;
 
@@ -106,21 +106,21 @@ async function runAndReport(ui: Ui, loaded: LoadedConfig, command: Command, sign
   }
 
   if (write && result.hasErrors)
-    ui.warn('Nothing written: .figatellu/ keeps its last valid state (fix the errors above).');
+    ui.warn('Nothing written: .figatellultimate/ keeps its last valid state (fix the errors above).');
 
   if (result.writeError !== undefined) ui.error(`Cannot write the generated modules (${result.writeError}).`);
 
   if (result.stats !== undefined) {
     const { written, unchanged, removed } = result.stats;
 
-    ui.phase('Writing .figatellu/').done(
+    ui.phase('Writing .figatellultimate/').done(
       `${String(written)} written · ${String(unchanged)} unchanged · ${String(removed)} removed · ${ms(result.durations.write)}`,
     );
   }
 
   if (write && !result.importsMapped) {
     ui.warn(
-      `Import the generated modules with #figatellu/…: add to package.json "imports": ${JSON.stringify(IMPORTS_MAPPING)}`,
+      `Import the generated modules with #figatellultimate/…: add to package.json "imports": ${JSON.stringify(IMPORTS_MAPPING)}`,
     );
   }
 
@@ -130,7 +130,7 @@ async function runAndReport(ui: Ui, loaded: LoadedConfig, command: Command, sign
 // One-shot commands read the config as it is on disk (fresh): a migration edits it, and callers embedding `main`
 // (tests, scripts) may run several commands in one process.
 async function runCommand(ui: Ui, command: Command, cwd: string): Promise<number> {
-  ui.intro(`figatellu ${command.name}`);
+  ui.intro(`figatellultimate ${command.name}`);
   const loaded = await loadConfig(command.config, cwd, true);
 
   if (!loaded.ok) {
@@ -153,9 +153,9 @@ const SEARCH_ADVICE: Readonly<Record<SearchDiagnostic['code'], string>> = {
   'pagefind-error': 'Pagefind refused this page; see its message',
 };
 
-/** `figatellu search`: fails when the content has errors or a mounted entry cannot be indexed. */
+/** `figatellultimate search`: fails when the content has errors or a mounted entry cannot be indexed. */
 async function runSearchCommand(ui: Ui, command: Command, cwd: string): Promise<number> {
-  ui.intro('figatellu search');
+  ui.intro('figatellultimate search');
   const loaded = await loadConfig(command.config, cwd, true);
 
   if (!loaded.ok) {
@@ -170,7 +170,7 @@ async function runSearchCommand(ui: Ui, command: Command, cwd: string): Promise<
   const result = await runSearch({ config: loaded.value.config, directory: loaded.value.directory, cwd, ...options });
 
   if (result.run.hasErrors) {
-    phase.failed('The content has errors: run figatellu check');
+    phase.failed('The content has errors: run figatellultimate check');
     ui.outro(ui.style.red('Nothing indexed'));
 
     return EXIT.content;
@@ -204,9 +204,9 @@ async function runSearchCommand(ui: Ui, command: Command, cwd: string): Promise<
   return EXIT.ok;
 }
 
-/** `figatellu migrate`: the plan, then, with `--write`, the moves, the config and the redirects. */
+/** `figatellultimate migrate`: the plan, then, with `--write`, the moves, the config and the redirects. */
 async function runMigrateCommand(ui: Ui, command: Command, cwd: string): Promise<number> {
-  ui.intro('figatellu migrate');
+  ui.intro('figatellultimate migrate');
   const loaded = await loadConfig(command.config, cwd, true);
 
   if (!loaded.ok) {
@@ -228,7 +228,7 @@ async function runMigrateCommand(ui: Ui, command: Command, cwd: string): Promise
   const { run, plan, moves } = result;
 
   if (run.hasErrors) {
-    phase.failed('The content has errors: fix them first (figatellu check), nothing moved');
+    phase.failed('The content has errors: fix them first (figatellultimate check), nothing moved');
     ui.outro(ui.style.red('Nothing migrated'));
 
     return EXIT.content;
@@ -347,7 +347,7 @@ async function runMigrateCommand(ui: Ui, command: Command, cwd: string): Promise
 
   if (applied.redirectsFile !== undefined)
     ui.info(
-      `Redirects written to ${applied.redirectsFile}, composed with the earlier ones (permanent; toNextRedirects in @figatellu/next16).`,
+      `Redirects written to ${applied.redirectsFile}, composed with the earlier ones (permanent; toNextRedirects in @figatellultimate/next16).`,
     );
 
   if (applied.leftovers.length > 0) {
@@ -355,7 +355,7 @@ async function runMigrateCommand(ui: Ui, command: Command, cwd: string): Promise
     ui.block('Left in place', [...applied.leftovers]);
   }
 
-  ui.outro(ui.style.green(`Migrated: run ${ui.style.bold('figatellu build')}`));
+  ui.outro(ui.style.green(`Migrated: run ${ui.style.bold('figatellultimate build')}`));
 
   return EXIT.ok;
 }
@@ -404,7 +404,7 @@ function watchMessages(loaded: LoadedConfig, onChange: () => void): { close(): v
 }
 
 async function runWatch(ui: Ui, command: Command, cwd: string, signal?: AbortSignal): Promise<number> {
-  ui.intro('figatellu watch');
+  ui.intro('figatellultimate watch');
   const initial = await loadConfig(command.config, cwd);
 
   if (!initial.ok) {
@@ -497,7 +497,7 @@ async function runWatch(ui: Ui, command: Command, cwd: string, signal?: AbortSig
 }
 
 /**
- * The figatellu command line. Resolves to the process exit code; prints only through `io.stdout`.
+ * The figatellultimate command line. Resolves to the process exit code; prints only through `io.stdout`.
  *
  * @param argv - The arguments after the program's name.
  * @param io - Where to print, whether the UI is the terminal's, the working directory, and an abort signal for
@@ -548,7 +548,7 @@ export async function main(argv: readonly string[], io: MainIo = { stdout: proce
     }
   } catch (error) {
     ui.error(`Unexpected failure: ${error instanceof Error ? (error.stack ?? error.message) : String(error)}`);
-    ui.info(`This is a figatellu bug, please report it: ${BUG_TRACKER}`);
+    ui.info(`This is a figatellultimate bug, please report it: ${BUG_TRACKER}`);
 
     return EXIT.unexpected;
   }
