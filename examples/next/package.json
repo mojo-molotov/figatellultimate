@@ -9,7 +9,7 @@
   "scripts": {
     "generate": "figatellultimate build",
     "dev": "turbo run build --filter=figatellultimate-example-next^... && figatellultimate build && next dev",
-    "example:build": "turbo run build --filter=figatellultimate-example-next^... && figatellultimate build && next build && figatellultimate search --site .next/server/app --out public/pagefind --locale-folders",
+    "example:build": "turbo run build --filter=figatellultimate-example-next^... && figatellultimate build && next build && node scripts/search.ts",
     "example:verify": "node scripts/verify.ts",
     "example:browse": "node scripts/browse.ts",
     "example:load": "node scripts/load-test.ts"
