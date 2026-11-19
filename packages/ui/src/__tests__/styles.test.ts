@@ -19,6 +19,19 @@ function declared(selector: string): Record<string, string> {
   );
 }
 
+/** Every property of the first rule whose selector is `selector`. */
+function propertiesOf(selector: string): Record<string, string> {
+  const at = CSS.indexOf(`\n${selector} {`);
+
+  if (at === -1) throw new Error(`no rule ${selector}`);
+
+  const body = CSS.slice(CSS.indexOf('{', at) + 1, CSS.indexOf('}', at)).replace(/\/\*[\s\S]*?\*\//g, '');
+
+  return Object.fromEntries(
+    [...body.matchAll(/([\w-]+):\s*([^;]+);/g)].map((m): [string, string] => [m[1] ?? '', (m[2] ?? '').trim()]),
+  );
+}
+
 /** The tokens of a theme: light from `:root`, dark from `:root[data-theme='dark']` over light. */
 const tokens = (theme: 'light' | 'dark'): Record<string, string> =>
   theme === 'light' ? declared(':root') : { ...declared(':root'), ...declared(":root[data-theme='dark']") };
@@ -154,6 +167,27 @@ describe('styles.css', () => {
     );
 
     expect(reduced).toMatch(/\[data-slot='entry-card-image'\] \{\s*transform: none;/);
+  });
+
+  it("paints the table of contents' drawer on its fixed frame, never on its scrolling panel", () => {
+    // Safari on iOS paints a scrolling box's background over its content's extent only, until it is scrolled: on a
+    // short list, the drawer showed the page through it.
+    expect(propertiesOf("[data-slot='toc']")).toMatchObject({
+      background: 'var(--fig-bg)',
+      'border-inline-end': '1px solid var(--fig-border)',
+    });
+    expect(propertiesOf("[data-slot='toc-panel']")['background']).toBeUndefined();
+    // Precondition: the panel is the one that scrolls.
+    expect(propertiesOf("[data-slot='toc-panel']")['overflow-y']).toBe('auto');
+  });
+
+  it("sets the navbar's extras at the end of the toggle's line on a narrow screen, the toggle at its start", () => {
+    const narrow = CSS.slice(CSS.indexOf('@media (max-width: 48rem)', CSS.indexOf("[data-slot='navbar-extras']")));
+
+    // At the line's end in the reading direction: a logical margin, right to left too.
+    expect(narrow.slice(0, narrow.indexOf('\n}\n'))).toMatch(
+      /\[data-slot='navbar-extras'\] \{\s*margin-inline-start: auto;/,
+    );
   });
 
   it("shows the pagination's step icons alone on a narrow screen, their labels hidden but still read", () => {

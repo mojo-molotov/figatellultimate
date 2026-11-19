@@ -716,7 +716,10 @@ a[data-slot='entry-card-author']:hover {
     --entry-card-title-lines: 3;
   }
 
+  /* Stretched to the card's width: a grid item with an aspect ratio is not, by default, in Safari (its width then
+     followed its minimum height, a third of the card). */
   [data-slot='entry-card-media'] {
+    justify-self: stretch;
     aspect-ratio: 1200 / 630;
   }
 }
@@ -892,6 +895,12 @@ a[data-slot='entry-card-author']:hover {
 @media (max-width: 48rem) {
   [data-slot='navbar-toggle'] {
     display: inline-flex;
+  }
+
+  /* The toggle at the line's start, the extras (search, locale, theme) at its end, as the menu pushes them on a wide
+     screen: logical, so right to left too. */
+  [data-slot='navbar-extras'] {
+    margin-inline-start: auto;
   }
 
   [data-slot='navbar'][data-state='closed'] [data-slot='navbar-list'] {
@@ -1378,14 +1387,21 @@ a[data-slot='entry-card-author']:hover {
   inset-block: 0;
   inset-inline-start: 0;
   width: min(var(--toc-width), calc(100vw - 3rem));
+  box-sizing: border-box;
   font-size: 0.9rem;
   transform: translateX(0);
+  /* The drawer's surface on this fixed frame, never on the panel that scrolls: Safari on iOS paints a scrolling box's
+     background over its content's extent only, until it is scrolled, and a short list showed the page through. */
+  border-inline-end: 1px solid var(--fig-border);
+  background: var(--fig-bg);
 }
 
 [data-slot='toc'][data-side='end'] {
   --toc-out: 100%;
   inset-inline-start: auto;
   inset-inline-end: 0;
+  border-inline-end: 0;
+  border-inline-start: 1px solid var(--fig-border);
 }
 
 :dir(rtl) [data-slot='toc'],
@@ -1415,14 +1431,7 @@ a[data-slot='entry-card-author']:hover {
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: calc(var(--fig-space) * 2);
-  border-inline-end: 1px solid var(--fig-border);
-  background: var(--fig-bg);
   box-shadow: 0 0 2rem rgb(0 0 0 / 0.15);
-}
-
-[data-slot='toc'][data-side='end'] [data-slot='toc-panel'] {
-  border-inline-end: 0;
-  border-inline-start: 1px solid var(--fig-border);
 }
 
 [data-slot='toc-title'] {

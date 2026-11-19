@@ -116,6 +116,35 @@ describe('Navbar layout with styles.css', () => {
     }
   });
 
+  it.skipIf(!inBrowser)('a stacked entry card’s image spans the card’s whole width, on a phone', async () => {
+    // A phone's screen, then the configuration's own again (`vitest.browser.config.ts`): only the window's width
+    // switches the card to its stacked layout (`max-width: 36rem`).
+    const { page } = await import('vitest/browser');
+
+    await page.viewport(390, 844);
+
+    try {
+      render(
+        <EntryCard
+          href="/p"
+          title="Un titre"
+          description="Une description."
+          image="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='630'/%3E"
+          locale="fr"
+          labels={{ tags: 'Tags', authors: 'Auteurs' }}
+        />,
+      );
+      const media = document.querySelector('[data-slot="entry-card-media"]')?.getBoundingClientRect();
+      const body = document.querySelector('[data-slot="entry-card-body"]')?.getBoundingClientRect();
+
+      // Precondition: stacked, the text above the image's width; side by side, the comparison would mean nothing.
+      expect(body?.top).toBeGreaterThan(media?.bottom ?? Infinity);
+      expect(Math.abs((media?.width ?? 0) - (body?.width ?? 0))).toBeLessThan(1);
+    } finally {
+      await page.viewport(1280, 800);
+    }
+  });
+
   it.skipIf(!inBrowser)('an entry card’s image fills the card’s whole height beside the text', () => {
     render(
       <div style={{ width: '760px' }}>
