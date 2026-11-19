@@ -149,14 +149,11 @@ describe('TableOfContents while reading', () => {
 
     window.addEventListener('scroll', watch);
     await user.click(within(nav).getByRole('link', { name: 'Section 10' }));
-    await waitFor(
-      () => {
-        expect(Math.abs((document.getElementById('section-10')?.getBoundingClientRect().top ?? 999) - 64)).toBeLessThan(
-          4,
-        );
-      },
-      { timeout: 3000 },
-    );
+    await waitFor(() => {
+      expect(Math.abs((document.getElementById('section-10')?.getBoundingClientRect().top ?? 999) - 64)).toBeLessThan(
+        4,
+      );
+    });
     window.removeEventListener('scroll', watch);
     // Only the followed heading was ever current during the scroll (and maybe the first, before it started).
     expect([...passed].filter((text) => text !== 'Section 1' && text !== 'Section 10')).toEqual([]);
@@ -211,14 +208,9 @@ describe('TableOfContents while reading', () => {
     const before = history.length;
 
     await user.click(within(nav).getByRole('link', { name: 'Section 8' }));
-    await waitFor(
-      () => {
-        expect(Math.abs((document.getElementById('section-8')?.getBoundingClientRect().top ?? 999) - 64)).toBeLessThan(
-          4,
-        );
-      },
-      { timeout: 3000 },
-    );
+    await waitFor(() => {
+      expect(Math.abs((document.getElementById('section-8')?.getBoundingClientRect().top ?? 999) - 64)).toBeLessThan(4);
+    });
     expect(location.hash).toBe('#section-8');
     expect(history.length).toBe(before);
     expect(document.activeElement?.id).toBe('section-8');
@@ -232,8 +224,9 @@ describe('TableOfContents while reading', () => {
     const nav = renderPage();
 
     await user.click(within(nav).getByRole('link', { name: 'Section 7' }));
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    expect(current(nav)).toBe('Section 7');
+    await waitFor(() => {
+      expect(current(nav)).toBe('Section 7');
+    });
     await scrollToY(window.scrollY + 20);
     await new Promise((resolve) => setTimeout(resolve, 200));
     expect(current(nav)).toBe('Section 7');
@@ -244,8 +237,9 @@ describe('TableOfContents while reading', () => {
     const nav = renderPage();
 
     await user.click(within(nav).getByRole('link', { name: 'Section 11' }));
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    expect(current(nav)).toBe('Section 11');
+    await waitFor(() => {
+      expect(current(nav)).toBe('Section 11');
+    });
     // It stops just short of the very bottom.
     expect(Math.ceil(window.scrollY + window.innerHeight)).toBeLessThan(document.documentElement.scrollHeight);
   });

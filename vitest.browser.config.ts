@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import { playwright } from '@vitest/browser-playwright';
 import { defineConfig, type ViteUserConfig } from 'vitest/config';
 
@@ -20,6 +22,7 @@ const config: ViteUserConfig = defineConfig({
       // Not `extends: true`: each project repeats what it needs of the root, its timeouts included.
       test: {
         ...TEST_TIMEOUTS,
+        setupFiles: [join(import.meta.dirname, 'tooling', 'async-timeout.setup.ts')],
         name: `${name} (browser)`,
         root: `packages/${name}`,
         include: ['src/__tests__/**/*.test.tsx'],

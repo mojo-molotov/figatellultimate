@@ -177,9 +177,10 @@ describe('Navbar layout with styles.css', () => {
     await waitFor(() => {
       expect(trigger.getAttribute('data-state')).toBe('open');
     });
-    // The transition ends on the rotated state; read its target, not a frame in between.
-    await new Promise((resolve) => setTimeout(resolve, 250));
-    expect(getComputedStyle(trigger, '::after').transform).not.toBe(closed);
+    // The transition ends on the rotated state, however slow the runner.
+    await waitFor(() => {
+      expect(getComputedStyle(trigger, '::after').transform).not.toBe(closed);
+    });
     await user.keyboard('{Escape}');
     const switcher = screen.getByRole('button', { name: /Français/ });
     const icon = switcher.querySelector('[data-slot="locale-switcher-icon"]');
@@ -193,7 +194,8 @@ describe('Navbar layout with styles.css', () => {
     await waitFor(() => {
       expect(switcher.getAttribute('data-state')).toBe('open');
     });
-    await new Promise((resolve) => setTimeout(resolve, 250));
-    expect(getComputedStyle(icon, '::after').transform).not.toBe(before);
+    await waitFor(() => {
+      expect(getComputedStyle(icon, '::after').transform).not.toBe(before);
+    });
   });
 });

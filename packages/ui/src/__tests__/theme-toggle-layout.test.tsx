@@ -52,12 +52,9 @@ describe('ThemeToggle, styled', () => {
       expect(getComputedStyle(icon('theme-toggle-moon')).animationName).toBe('fig-theme-set');
       expect(getComputedStyle(icon('theme-toggle-moon')).display).not.toBe('none');
       expect(button.getAttribute('aria-disabled')).toBe('true');
-      await waitFor(
-        () => {
-          expect(button.hasAttribute('aria-disabled')).toBe(false);
-        },
-        { timeout: 2000 },
-      );
+      await waitFor(() => {
+        expect(button.hasAttribute('aria-disabled')).toBe(false);
+      });
       expect(getComputedStyle(icon('theme-toggle-moon')).display).toBe('none');
     },
   );
@@ -87,12 +84,9 @@ describe('ThemeToggle, styled', () => {
       expect(getComputedStyle(screen.getByRole('button', { name: 'Thème sombre' })).viewTransitionName).toBe(
         'fig-theme-toggle',
       );
-      await waitFor(
-        () => {
-          expect(document.documentElement.dataset['themeSwitch']).toBeUndefined();
-        },
-        { timeout: 3000 },
-      );
+      await waitFor(() => {
+        expect(document.documentElement.dataset['themeSwitch']).toBeUndefined();
+      });
       expect(document.documentElement.dataset['theme']).toBe('dark');
       expect(document.body.querySelector('[data-slot="theme-horizon"]')).toBeNull();
       expect(getComputedStyle(document.documentElement).overflow).not.toBe('hidden');

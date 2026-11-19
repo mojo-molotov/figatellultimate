@@ -92,12 +92,9 @@ describe('CodeBlock, styled with Shiki’s two themes', () => {
     expect(button.getAttribute('data-state')).toBe('copied');
     expect(look()).toEqual({ opacity: 1, check: true });
     // Letting go: it fades out with its check, never showing the clipboard first.
-    await waitFor(
-      () => {
-        expect(button.getAttribute('data-state')).toBe('done');
-      },
-      { timeout: 3000 },
-    );
+    await waitFor(() => {
+      expect(button.getAttribute('data-state')).toBe('done');
+    });
     expect(look()).toEqual({ opacity: 0, check: true });
   });
 });

@@ -94,12 +94,9 @@ describe('ImageZoom in a content column', () => {
       expect(trigger.getBoundingClientRect().bottom).toBeGreaterThan(0);
       trigger.click();
       (await screen.findByRole('button', { name: '«fermer»' })).click();
-      await waitFor(
-        () => {
-          expect(document.activeElement?.getAttribute('aria-label')).toBe('«agrandir : Une image»');
-        },
-        { timeout: 3000 },
-      );
+      await waitFor(() => {
+        expect(document.activeElement?.getAttribute('aria-label')).toBe('«agrandir : Une image»');
+      });
       expect(window.scrollY).toBe(before);
     },
   );
