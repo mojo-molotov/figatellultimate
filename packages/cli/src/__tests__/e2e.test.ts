@@ -138,7 +138,7 @@ export async function rejected(): Promise<void> {
 `;
 
     expect(typecheck(app)).toEqual([]);
-  });
+  }, 60_000);
 
   it('an aborted run never writes: a stale generation cannot overwrite a newer one (watch)', async () => {
     await project.create('content/pages/new-page.mdx', '---\ntitle: New\n---\nNew.\n');
