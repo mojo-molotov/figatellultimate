@@ -57,9 +57,13 @@ export async function SiteHeader({
   title,
   breadcrumb,
   crumbs = url,
+  translates = url,
 }: {
   readonly locale: Locale;
+  /** The page's URL: the navbar's current item. */
   readonly url: string;
+  /** The URL the locale switcher translates, when not the page's: a 404 has none, it offers the home pages. */
+  readonly translates?: string | undefined;
   /** The URL the breadcrumb reads, when not the page's: a folder's further page shows its first page's. */
   readonly crumbs?: string | undefined;
   /** The page's title, the breadcrumb's last step when the navigation does not list it (a blog post). */
@@ -76,7 +80,7 @@ export async function SiteHeader({
         locale={locale}
         url={url}
         items={translated(items, (key) => t(key))}
-        links={localeLinksOf(url, mountedUrls, locales)}
+        links={localeLinksOf(translates, mountedUrls, locales)}
         labels={await headerLabels(locale)}
       />
       {/* Static: computed with the page, real links. */}

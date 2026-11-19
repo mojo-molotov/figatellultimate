@@ -40,6 +40,11 @@ export interface TermPages {
    * `…/page/2`, each prerendered with its slice only. Every entry on one page without it.
    */
   readonly perPage?: number;
+  /**
+   * The term pages' SEO, as an entry's `metadata` but naming a field of each term's messages: `description`, its
+   * meta description (e.g. an author's `'bio'`), one of the taxonomy's `messages`.
+   */
+  readonly metadata?: { readonly description?: string };
 }
 
 function validate(terms: readonly string[]): void {
@@ -84,7 +89,7 @@ export interface TaxonomyOptions {
 }
 
 /** Term pages: a valid base, and every term a valid URL segment (the naming rule of segments). */
-function validatePages(pages: unknown, terms: readonly string[]): TermPages | null {
+function validatePages(pages: unknown, terms: readonly string[], messages: readonly string[]): TermPages | null {
   if (pages === undefined) return null;
 
   const base: unknown = typeof pages === 'object' && pages !== null ? Reflect.get(pages, 'base') : undefined;
@@ -103,13 +108,41 @@ function validatePages(pages: unknown, terms: readonly string[]): TermPages | nu
 
   const perPage: unknown = typeof pages === 'object' && pages !== null ? Reflect.get(pages, 'perPage') : undefined;
 
-  if (perPage === undefined) return Object.freeze({ base });
-
-  if (typeof perPage !== 'number' || !Number.isInteger(perPage) || perPage < 1) {
+  if (perPage !== undefined && (typeof perPage !== 'number' || !Number.isInteger(perPage) || perPage < 1)) {
     throw new InvalidTaxonomyError('Taxonomy pages: `perPage` must be a whole number, 1 or more, e.g. 10.');
   }
 
-  return Object.freeze({ base, perPage });
+  const metadata = validateTermMetadata(Reflect.get(pages ?? {}, 'metadata'), messages);
+
+  return Object.freeze({
+    base,
+    ...(typeof perPage === 'number' ? { perPage } : {}),
+    ...(metadata === undefined ? {} : { metadata }),
+  });
+}
+
+/** `pages.metadata`: one of the taxonomy's messages fields, for its term pages' SEO. */
+function validateTermMetadata(
+  metadata: unknown,
+  messages: readonly string[],
+): { readonly description?: string } | undefined {
+  if (metadata === undefined) return undefined;
+
+  if (typeof metadata !== 'object' || metadata === null || Array.isArray(metadata))
+    throw new InvalidTaxonomyError(
+      'Taxonomy pages: `metadata` must name messages fields, e.g. { description: "bio" }.',
+    );
+
+  const description: unknown = Reflect.get(metadata, 'description');
+
+  if (description === undefined) return Object.freeze({});
+
+  if (typeof description !== 'string' || !messages.includes(description))
+    throw new InvalidTaxonomyError(
+      `Taxonomy pages: \`metadata.description\` must be one of its messages fields (${messages.join(', ') || 'none declared'}): declare it in \`messages\`.`,
+    );
+
+  return Object.freeze({ description });
 }
 
 /** The list form of a taxonomy: `Array.isArray` does not narrow a readonly array out of the union, a guard does. */
@@ -124,8 +157,9 @@ const isTermList = (input: readonly string[] | Readonly<Record<string, unknown>>
  *   collection holding each term's content (`content`).
  * @returns The frozen declaration; the caller's data is deep-copied, never frozen in place.
  * @throws {InvalidTaxonomyError} On an invalid declaration: no term, an empty term, a duplicate, invalid message
- *   fields, or, when the taxonomy has pages, an invalid base, a term that is not a valid URL segment or a page size
- *   that is not a whole number of 1 or more; `content` without pages, or not a collection's name.
+ *   fields, or, when the taxonomy has pages, an invalid base, a term that is not a valid URL segment, a page size
+ *   that is not a whole number of 1 or more or a `metadata.description` that is not one of its messages fields;
+ *   `content` without pages, or not a collection's name.
  *
  * @example
  * defineTaxonomy(['guide', 'release'], { messages: ['label'] });
@@ -166,7 +200,7 @@ export function defineTaxonomy(
     terms: Object.freeze(terms),
     data: isList ? null : frozenCopy(input),
     messages: Object.freeze([...messages]),
-    pages: validatePages(options.pages, terms),
+    pages: validatePages(options.pages, terms, messages),
     content,
   });
 }

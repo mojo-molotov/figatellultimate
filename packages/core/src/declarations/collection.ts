@@ -123,6 +123,12 @@ export interface FolderPagesInput<N extends string = string> {
    * `…/page/3`, each prerendered with its slice only. A level without a size lists everything on one page.
    */
   readonly perPage?: { readonly [K in N]?: number } & { readonly root?: number };
+  /**
+   * The folder pages' SEO, as an entry's `metadata` but naming a field of each folder's messages, since a folder has
+   * no frontmatter: `description`, its meta description (e.g. `'description'`). Every level with pages must declare
+   * that field in its `messages`; the collection's own page has no messages, and so no description.
+   */
+  readonly metadata?: { readonly description?: string };
 }
 
 /**
@@ -136,6 +142,8 @@ export interface FolderPages<N extends string = string> {
   readonly images: Readonly<Record<string, string>>;
   /** Items per page, by level (`root` for the collection's own page); none: one page. */
   readonly perPage: Readonly<Record<string, number>>;
+  /** The messages field each folder page's SEO reads: its `description`. */
+  readonly metadata: { readonly description?: string };
 }
 
 /** A validated, frozen collection declaration (plain, serializable data). */
@@ -489,6 +497,7 @@ function validateFolderPages<E extends string, G extends readonly GrammarPart[]>
     preview = 2,
     images = {},
     perPage = {},
+    metadata = {},
   }: Readonly<Record<string, unknown>> = { ...folderPages };
 
   if (typeof root !== 'boolean') fail(entry, 'folderPages.root must be a boolean');
@@ -530,5 +539,34 @@ function validateFolderPages<E extends string, G extends readonly GrammarPart[]>
     preview: preview,
     images: validateFolderImages(entry, images, segments.length),
     perPage: validatePerPage(entry, perPage, checked, root),
+    metadata: validateFolderMetadata(entry, metadata, checked, input.messages ?? {}),
   });
+}
+
+/** `folderPages.metadata`: a messages field every level with pages declares, for its pages' SEO. */
+function validateFolderMetadata(
+  entry: string,
+  metadata: unknown,
+  levels: readonly string[],
+  messages: Readonly<Record<string, readonly string[] | undefined>>,
+): { readonly description?: string } {
+  if (typeof metadata !== 'object' || metadata === null || Array.isArray(metadata))
+    fail(entry, 'folderPages.metadata must name messages fields, e.g. { description: "description" }');
+
+  const description: unknown = Reflect.get(metadata, 'description');
+
+  if (description === undefined) return Object.freeze({});
+
+  if (typeof description !== 'string' || description === '')
+    fail(entry, 'folderPages.metadata.description must name a messages field, e.g. "description"');
+
+  for (const level of levels) {
+    if (!(messages[level] ?? []).includes(description))
+      fail(
+        entry,
+        `folderPages.metadata.description reads "${description}", which messages.${level} does not declare: add it there, so that every ${level} page has its description`,
+      );
+  }
+
+  return Object.freeze({ description });
 }

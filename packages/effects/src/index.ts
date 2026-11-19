@@ -9,8 +9,10 @@
  *     Collector ── a preview card lighting up under the mouse
  *     Hearts ──── a heart changing color every few seconds, cross-fading (a footer's "made with ❤️")
  *     Reveal ──── a footer revealed from under the page as it scrolls into view, where the page has the room
+ *     Backdrop ── an image behind a section's content, faint, vignetted and faded in (a 404)
  *     styles.css ── positions, masks, motion; colors and sizes as tokens (--fig-glow-*, --fig-collector-color,
- *                   --fig-sparkles-*)
+ *                   --fig-sparkles-*,
+ *                   --fig-backdrop-*)
  *
  * Key design decisions:
  *     - Out of `@figatellultimate/ui`, a minimal design system, and out of the themes: effects are generic components, a
@@ -19,8 +21,9 @@
  *     - Decorative: hidden from assistive technologies, never catching a click, still or absent with
  *       `prefers-reduced-motion`.
  *
- * Invariants: see `effects.tsx`, `cursor-glow.tsx`, `sparkles.tsx`, `collector.tsx`, `hearts.tsx`, `reveal.tsx` and `styles.test.ts`.
+ * Invariants: see `effects.tsx`, `cursor-glow.tsx`, `sparkles.tsx`, `collector.tsx`, `hearts.tsx`, `reveal.tsx`, `backdrop.tsx` and `styles.test.ts`.
  */
+export { Backdrop, type BackdropImageProps } from './backdrop.js';
 export { Collector } from './collector.js';
 export { CursorGlow } from './cursor-glow.js';
 export { Effects } from './effects.js';

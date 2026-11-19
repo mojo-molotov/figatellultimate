@@ -385,6 +385,10 @@ function addFolders(
       property('level', [...levels.map(literal), 'null'].join(' | ')),
       property('label', `${key} | null`),
       property('messages', messagesType),
+      {
+        ...property('metadata', `{ readonly description?: ${key} }`),
+        docs: ['Its SEO (`folderPages.metadata`): the message key of its description.'],
+      },
       property('image', 'string', true),
       property('alternates', 'Readonly<Partial<Record<Locale, string>>>'),
       property('subfolders', `readonly ${folderType}Subfolder[]`),
@@ -430,7 +434,7 @@ function addFolders(
   });
   file.addTypeAlias({
     name: 'FolderData',
-    type: `{ readonly url: string; readonly locale: Locale; readonly segments: Readonly<Record<string, string>>; readonly level: ${[...levels.map(literal), 'null'].join(' | ')}; readonly label: ${key} | null; readonly messages: ${messagesType}; readonly image?: string; readonly alternates: Readonly<Partial<Record<Locale, string>>>; readonly subfolders: readonly { readonly segments: Readonly<Record<string, string>>; readonly level: string; readonly label: ${key}; readonly messages: ${messagesType}; readonly url?: string; readonly image?: string; readonly total: number; readonly latest: readonly string[] }[]; readonly entries: readonly string[]; readonly pages: number; readonly perPage?: number }`,
+    type: `{ readonly url: string; readonly locale: Locale; readonly segments: Readonly<Record<string, string>>; readonly level: ${[...levels.map(literal), 'null'].join(' | ')}; readonly label: ${key} | null; readonly messages: ${messagesType}; readonly metadata: { readonly description?: ${key} }; readonly image?: string; readonly alternates: Readonly<Partial<Record<Locale, string>>>; readonly subfolders: readonly { readonly segments: Readonly<Record<string, string>>; readonly level: string; readonly label: ${key}; readonly messages: ${messagesType}; readonly url?: string; readonly image?: string; readonly total: number; readonly latest: readonly string[] }[]; readonly entries: readonly string[]; readonly pages: number; readonly perPage?: number }`,
   });
   file.addFunction({
     name: `find${folderType}FolderByUrl`,

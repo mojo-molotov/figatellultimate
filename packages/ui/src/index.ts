@@ -17,6 +17,8 @@
  *       or the app's stylesheet, targeting the same `data-slot`s.
  *     - Internal links through the app's link component (`LinkProvider`): client-side navigations without importing a
  *       framework.
+ *     - Images through the app's image component (`ImageProvider`): resized, modern formats (`next/image`) without
+ *       importing a framework; plain `<img>` without one.
  */
 
 export * from './breadcrumb.js';
@@ -25,6 +27,7 @@ export * from './code-tabs.js';
 export * from './entry-card.js';
 export * from './entry-card-author.js';
 export * from './image-zoom.js';
+export { ImageProvider, type ImageComponent, type ImageProps } from './image.js';
 export { LinkProvider, type LinkComponent, type LinkProps } from './link.js';
 export * from './locale-switcher.js';
 export * from './navbar.js';

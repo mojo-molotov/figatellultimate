@@ -109,6 +109,21 @@ describe('breadcrumbListOf', () => {
   });
 });
 
+describe('structuredDataOf and personOf: descriptions, plain', () => {
+  const typeset = 'Tout sur Sartinu\u00a0: son habitat\u202f; son kvas\u202f!';
+
+  it('turn the French no-break spaces into plain spaces, as the meta description', () => {
+    // Precondition: the source is typeset, so that leaving it as it is cannot pass.
+    expect(typeset).toMatch(/[\u00a0\u202f]/);
+    expect(
+      structuredDataOf({ ...post, data: { ...post.data, description: typeset } }, fields, site)['description'],
+    ).toBe('Tout sur Sartinu : son habitat ; son kvas !');
+    expect(personOf({ name: 'Gustave', url: '/authors/gustave', description: typeset }, site)['description']).toBe(
+      'Tout sur Sartinu : son habitat ; son kvas !',
+    );
+  });
+});
+
 describe('personOf', () => {
   it('describes a term page as a person', () => {
     expect(

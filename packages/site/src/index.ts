@@ -19,6 +19,9 @@
  *     - `x-default` is the default locale's URL, and only when that translation exists; alternates list existing
  *       translations only (never `x-default` looked up in the current locale).
  *     - Frontmatter fields are read through the names a collection declares, never hard-coded per collection.
+ *     - The descriptions machines read have plain spaces: the meta description, Open Graph's and the structured
+ *       data's. No-break spaces are the page's typography (French spacing, written in the content and shown in its
+ *       previews), not a search result's; the source keeps them, and so does the feed, which a reader reads.
  *     - The title carries the site's name (`Blog · Site`, `Site.titleTemplate`), so that a tab, a bookmark or a
  *       search result says where it comes from; the home page of each locale is the name alone, which its own title
  *       would only repeat, and so is an untitled page. Open Graph keeps the page's own title: the name is its
@@ -28,7 +31,7 @@
  * Invariants:
  *     - Frozen results, nothing mutated, the same input gives equal output (`site.test.ts`).
  *     - `x-default` and alternates as above (`site.test.ts`).
- *     - The title as above (`site.test.ts`).
+ *     - The title, and the description's plain spaces, as above (`site.test.ts`).
  *     - Each URL gives one params object (`site.test.ts`).
  *     - The locale switcher never links a URL that is not mounted (`locale-links.test.ts`).
  *     - Breadcrumbs and sections as documented on each function (`breadcrumb.test.ts`, `section.test.ts`).
@@ -49,7 +52,7 @@ import type {
   SiteEntryWithData,
   SitemapEntry,
 } from './types.js';
-import { absoluteAlternates, absoluteOn, text, texts, w3cDate } from './shared.js';
+import { absoluteAlternates, absoluteOn, plainSpaces, text, texts, w3cDate } from './shared.js';
 
 export { breadcrumbListOf, jsonLd, personOf, structuredDataOf, type Person } from './structured-data.js';
 export { rssOf, type FeedChannel, type FeedInput } from './feed.js';
@@ -97,7 +100,9 @@ export function metadataOf(entry: SiteEntryWithData, fields: MetadataFields, sit
   const absolute = absoluteOn(site);
   const read = (field: string | undefined): unknown => (field === undefined ? undefined : entry.data[field]);
   const title = text(read(fields.title));
-  const description = text(read(fields.description));
+  // The meta description, read by search engines and link previews: the editorial typography stays on the page.
+  const typeset = text(read(fields.description));
+  const description = typeset === undefined ? undefined : plainSpaces(typeset);
   const image = text(read(fields.image));
   const publishedTime = text(read(fields.publishedTime));
   const modifiedTime = text(read(fields.modifiedTime));

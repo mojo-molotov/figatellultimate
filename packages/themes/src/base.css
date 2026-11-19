@@ -40,6 +40,16 @@ body > [data-layout] {
   border-block-start: 1px solid var(--fig-border);
 }
 
+/*
+ * Revealed on a desktop only: on a touch screen (no mouse nor trackpad), the footer scrolls in as any content, the
+ * curtain effect being a desktop's. Later than the effects' stylesheet, as specific: this rule wins.
+ */
+@media (hover: none), (pointer: coarse) {
+  [data-slot='reveal']:has([data-slot='site-footer']) > [data-slot='reveal-content'] {
+    animation: none;
+  }
+}
+
 [data-slot='site-footer'] {
   padding: calc(var(--fig-space) * 3) calc(var(--fig-space) * 2);
   background: var(--fig-surface);
@@ -617,10 +627,12 @@ main[data-folder='category'] [data-slot='listing-cards'] {
   font-size: 0.875em;
 }
 
-/* Images span the text, at a reasonable height; the zoom shows them whole. */
+/* Images span the text, at a reasonable height; the zoom shows them whole. Their measured `height` only reserves the
+   room: scaled with the width. */
 [data-slot='mdx'] [data-slot='image-zoom-image'] {
   display: block;
   width: 100%;
+  height: auto;
   max-height: 22rem;
   object-fit: cover;
   border-radius: var(--fig-radius);
@@ -734,5 +746,48 @@ main :is(h1, h2, h3, h4, h5, h6) {
   [data-slot='mdx-table'],
   [data-slot='mdx-blockquote'] {
     break-inside: avoid;
+  }
+}
+
+/*
+ * The 404: its few lines centered in the page's room, over its backdrop (`Backdrop`, from the effects), which the
+ * page holds and clips; `isolation` keeps the backdrop behind this content, never behind the page's own background.
+ */
+main[data-page='not-found'] {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 4rem 1.5rem;
+  text-align: center;
+}
+
+main[data-page='not-found'] h1 {
+  margin: 0;
+  font-family: var(--fig-heading-font, var(--fig-font));
+  font-size: clamp(2rem, 5vw, 3rem);
+}
+
+main[data-page='not-found'] p {
+  margin: 0;
+  max-width: 36rem;
+  font-size: 1.25rem;
+}
+
+/* Its backdrop in the dark theme only, chosen or the system's: on a light page, too faint to be seen. */
+main[data-page='not-found'] [data-slot='backdrop'] {
+  display: none;
+}
+
+:root[data-theme='dark'] main[data-page='not-found'] [data-slot='backdrop'] {
+  display: block;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) main[data-page='not-found'] [data-slot='backdrop'] {
+    display: block;
   }
 }

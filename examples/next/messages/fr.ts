@@ -15,42 +15,141 @@ const content = {
         title: 'La cour impériale',
         description: 'L’étiquette et les banquets de la cour, où l’on trinque au build vert.',
       },
-      etiquette: { $: { title: 'Étiquette' } },
-      banquets: { $: { title: 'Banquets' } },
+      etiquette: {
+        $: {
+          title: 'Étiquette',
+          description: 'Comment s’adresser aux linters, saluer un build vert et prendre place à la table des commits.',
+        },
+      },
+      banquets: {
+        $: {
+          title: 'Banquets',
+          description: 'Cent figatelli, un kvas millésimé et un toast levé au cache, servis en production.',
+        },
+      },
     },
     islands: {
       $: { title: 'Les îles', description: 'Elbe, la Sardaigne et tout ce qui flotte autour de l’Empire.' },
-      elba: { $: { title: 'Elbe' } },
-      sardinia: { $: { title: 'Sardaigne' } },
+      elba: {
+        $: {
+          title: 'Elbe',
+          description: 'L’exil du serveur de préproduction, le phare de Portoferraio et l’origine des erreurs d’Elbe.',
+        },
+      },
+      sardinia: {
+        $: {
+          title: 'Sardaigne',
+          description:
+            'Les voisins qui déploient le vendredi, le câble sous-marin vers Bonifacio et le traité du brocciu.',
+        },
+      },
     },
     academy: {
       $: { title: 'L’Académie', description: 'Où l’on apprend TypeScript et le lint, une règle écrite puis vérifiée.' },
-      typescript: { $: { title: 'TypeScript' } },
-      linting: { $: { title: 'L’art du lint' } },
+      typescript: {
+        $: {
+          title: 'TypeScript',
+          description: 'Des types stricts, des génériques et des unions discriminées, jusqu’au diplôme sans any.',
+        },
+      },
+      linting: {
+        $: {
+          title: 'L’art du lint',
+          description: 'Les imports triés, les lignes aérées et le concours du zéro avertissement.',
+        },
+      },
     },
     empire: {
       $: {
         title: 'L’Empire',
         description: 'Les décrets et les chroniques de l’Empire d’Igoristan, gravés puis versionnés.',
       },
-      decrees: { $: { title: 'Décrets impériaux' } },
-      chronicles: { $: { title: 'Chroniques' } },
-      firewall: { $: { title: 'Pare-feu impérial' } },
-      tribunal: { $: { title: 'Tribunal du linter' } },
-      harbour: { $: { title: 'Affaires portuaires' } },
-      diplomacy: { $: { title: 'Diplomatie' } },
-      archives: { $: { title: 'Archives impériales' } },
-      ceremonies: { $: { title: 'Cérémonies' } },
+      decrees: {
+        $: {
+          title: 'Décrets impériaux',
+          description:
+            'Les décrets, circulaires et ordonnances de l’Empereur, du figatellu obligatoire à la sieste de deux heures.',
+        },
+      },
+      chronicles: {
+        $: {
+          title: 'Chroniques',
+          description: 'Les jours qui ont marqué l’Empire, racontés par leurs témoins et retenus par la postérité.',
+        },
+      },
+      firewall: {
+        $: {
+          title: 'Pare-feu impérial',
+          description: 'Les selfies flous refoulés à la frontière et les paquets npm venus du continent.',
+        },
+      },
+      tribunal: {
+        $: {
+          title: 'Tribunal du linter',
+          description: 'Les procès du point-virgule manquant, de l’any implicite et des tabulations.',
+        },
+      },
+      harbour: {
+        $: {
+          title: 'Affaires portuaires',
+          description:
+            'Les douanes des imports circulaires, les ferries chargés de dépendances et le phare devenu serveur.',
+        },
+      },
+      diplomacy: {
+        $: {
+          title: 'Diplomatie',
+          description: 'Les traités de paix avec les navigateurs et le sommet des fuseaux horaires.',
+        },
+      },
+      archives: {
+        $: {
+          title: 'Archives impériales',
+          description: 'Le premier commit de l’Empire, la carte perdue du maquis et la disquette de saint Igor.',
+        },
+      },
+      ceremonies: {
+        $: {
+          title: 'Cérémonies',
+          description:
+            'Le couronnement du build vert, la bénédiction des branches et la parade des tests de non-régression.',
+        },
+      },
     },
     maquis: {
       $: { title: 'Le maquis', description: 'Les Corsicamons et la cuisine de l’île, entre deux verres de kvas.' },
-      corsicamon: { $: { title: 'Corsicamon' } },
-      kitchen: { $: { title: 'Cuisine impériale' } },
-      donkeys: { $: { title: 'Les ânes' } },
-      'chestnut-grove': { $: { title: 'La châtaigneraie' } },
-      shepherds: { $: { title: 'Bergers' } },
-      vigils: { $: { title: 'Veillées' } },
-      tramontane: { $: { title: 'La tramontane' } },
+      corsicamon: {
+        $: {
+          title: 'Corsicamon',
+          description:
+            'Le Corsicadex, les forces et faiblesses de chaque Corsicamon, et comment l’attraper sans renverser son kvas.',
+        },
+      },
+      kitchen: {
+        $: {
+          title: 'Cuisine impériale',
+          description: 'Les recettes impériales de l’île, du brocciu au figatellu, servies en production.',
+        },
+      },
+      donkeys: {
+        $: {
+          title: 'Les ânes',
+          description: 'Les ânes du maquis, qui relisent les pull requests et gardent leur sérénité le vendredi.',
+        },
+      },
+      'chestnut-grove': {
+        $: {
+          title: 'La châtaigneraie',
+          description: 'Les châtaignes compilées à la main et l’arbre aux mille branches git.',
+        },
+      },
+      shepherds: {
+        $: { title: 'Bergers', description: 'Les bergers qui comptent en binaire et la transhumance des serveurs.' },
+      },
+      vigils: { $: { title: 'Veillées', description: 'Les contes du soir, du chargement éternel au cache invalidé.' } },
+      tramontane: {
+        $: { title: 'La tramontane', description: 'Le vent qui emporte les tests, le cache et la météo des builds.' },
+      },
     },
   },
 } as const satisfies AppMessages['content'];
@@ -111,7 +210,12 @@ const ui = {
   theme: { dark: 'Thème sombre', site: 'Thème du site', maquis: 'Maquis', paper: 'Papier' },
   footer: { nav: 'Plan du site', made: 'Made with', love: 'amour' },
   pager: { nav: 'Pages précédente et suivante', previous: 'Précédent', next: 'Suivant' },
-  feed: { title: 'Le blog de figatellultimate', description: 'Les nouvelles de l’Empire d’Igoristan.' },
+  notFound: {
+    title: 'Page introuvable',
+    text: 'Cette page n’existe pas, ou plus : elle a peut-être été déplacée.',
+    home: 'Retour à l’accueil',
+  },
+  feed: { title: 'Le blog de Figatellultimate', description: 'Les nouvelles de l’Empire d’Igoristan.' },
   collections: { pages: 'Pages', blog: SHARED.blog },
   search: {
     trigger: 'Rechercher',

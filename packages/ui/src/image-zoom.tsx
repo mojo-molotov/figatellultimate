@@ -17,6 +17,10 @@
  *       and the page stays where the reader left it, never jumping to the image.
  *     - The zoom out keeps the last zoomed point until the image is whole again: it shrinks back where the reader
  *       looked, never jumping to the center.
+ *     - Both images through the app's image component (`ImageProvider`), at the size the content gives (an MDX image
+ *       measured at build); the enlarged one at most the screen's width (`sizes`). An image without its width and
+ *       height in pixels (remote, unmeasured) stays a plain `<img>`: an image component such as `next/image` fails
+ *       without them.
  *
  * Invariants (`image-zoom.test.tsx` and `image-zoom-layout.test.tsx` in real browsers).
  */
@@ -30,6 +34,8 @@ import {
   type PointerEvent,
   type ReactNode,
 } from 'react';
+
+import { Image, pixelsOf } from './image.js';
 
 /** A desktop: a mouse or a trackpad, and a wide screen. */
 const DESKTOP = '(hover: hover) and (pointer: fine) and (min-width: 64rem)';
@@ -72,7 +78,25 @@ export function ImageZoom({ labels, ...props }: ImageZoomProps): ReactNode {
   // The server cannot know the device: the plain image first, the button once hydrated where the query holds.
   const desktop = useSyncExternalStore(subscribe, onDesktop, () => false);
   const trigger = useRef<HTMLButtonElement>(null);
-  const image = <img {...props} data-slot="image-zoom-image" />;
+  const { src, width: givenWidth, height: givenHeight, ...rest } = props;
+  // Pixels only: an image component reads no `50%`.
+  const width = pixelsOf(givenWidth);
+  const height = pixelsOf(givenHeight);
+  // Through the app's image component with its size only: `next/image` fails without one.
+  const measured = typeof src === 'string' && width !== undefined && height !== undefined ? src : undefined;
+  const image =
+    measured !== undefined ? (
+      <Image
+        {...rest}
+        width={width}
+        height={height}
+        src={measured}
+        alt={props.alt ?? ''}
+        data-slot="image-zoom-image"
+      />
+    ) : (
+      <img {...props} data-slot="image-zoom-image" />
+    );
   const alt = props.alt?.trim() ?? '';
 
   if (!desktop || alt === '') return image;
@@ -96,7 +120,13 @@ export function ImageZoom({ labels, ...props }: ImageZoomProps): ReactNode {
           <VisuallyHidden.Root asChild>
             <Dialog.Title>{alt}</Dialog.Title>
           </VisuallyHidden.Root>
-          <ImageZoomLens src={props.src} srcSet={props.srcSet} />
+          <ImageZoomLens
+            src={src}
+            measured={measured !== undefined}
+            srcSet={props.srcSet}
+            width={width}
+            height={height}
+          />
           <Dialog.Close data-slot="image-zoom-close" aria-label={labels.close} />
         </Dialog.Content>
       </Dialog.Portal>
@@ -120,10 +150,17 @@ function originOf(event: PointerEvent<HTMLElement>): { readonly x: number; reado
  */
 function ImageZoomLens({
   src,
+  measured,
   srcSet,
+  width,
+  height,
 }: {
-  readonly src: string | undefined;
+  readonly src: ComponentProps<'img'>['src'];
+  /** Its width and height are known: through the app's image component. */
+  readonly measured: boolean;
   readonly srcSet: string | undefined;
+  readonly width: number | undefined;
+  readonly height: number | undefined;
 }): ReactNode {
   // The point the zoom is around: kept after the release, so that the zoom out shrinks the image around it.
   const [origin, setOrigin] = useState<{ readonly x: number; readonly y: number } | null>(null);
@@ -181,15 +218,30 @@ function ImageZoomLens({
       onContextMenu={release}
     >
       {/* Named by the dialog's title: its alternative text would say it twice. */}
-      <img
-        src={src}
-        {...(srcSet === undefined ? {} : { srcSet, sizes: '90vw' })}
-        alt=""
-        draggable={false}
-        data-slot="image-zoom-full"
-        data-zoomed={zoomed ? '' : undefined}
-        style={origin === null ? undefined : { transformOrigin: `${String(origin.x)}% ${String(origin.y)}%` }}
-      />
+      {measured && typeof src === 'string' ? (
+        <Image
+          src={src}
+          {...(width === undefined ? {} : { width })}
+          {...(height === undefined ? {} : { height })}
+          {...(srcSet === undefined ? {} : { srcSet })}
+          sizes="90vw"
+          alt=""
+          draggable={false}
+          data-slot="image-zoom-full"
+          data-zoomed={zoomed ? '' : undefined}
+          style={origin === null ? undefined : { transformOrigin: `${String(origin.x)}% ${String(origin.y)}%` }}
+        />
+      ) : (
+        <img
+          src={src}
+          {...(srcSet === undefined ? {} : { srcSet, sizes: '90vw' })}
+          alt=""
+          draggable={false}
+          data-slot="image-zoom-full"
+          data-zoomed={zoomed ? '' : undefined}
+          style={origin === null ? undefined : { transformOrigin: `${String(origin.x)}% ${String(origin.y)}%` }}
+        />
+      )}
     </div>
   );
 }

@@ -958,11 +958,75 @@ for (const item of mountedUrls) {
   );
 }
 
+// Images through `next/image` (`components/images.tsx`): the cards' covers and the authors' avatars resized, every
+// local content image with its measured size (`rehypeImageSizes`), so that its room is reserved before it loads.
+{
+  const imagesOf = (html: string, slot: string): string[] =>
+    [...html.matchAll(new RegExp(`<img[^>]*data-slot="${slot}"[^>]*>`, 'g'))].map((match) => match[0]);
+  const listing = htmlOf('/blog/maquis/corsicamon') ?? '';
+  const covers = imagesOf(listing, 'entry-card-image');
+  const avatars = imagesOf(listing, 'entry-card-avatar');
+
+  check(covers.length > 0 && avatars.length > 0, '/blog/maquis/corsicamon: no card cover or avatar to check');
+  check(
+    [...covers, ...avatars].every((tag) => tag.includes('/_next/image?url=')),
+    '/blog/maquis/corsicamon: a card image not served by next/image',
+  );
+
+  const contentImages = mountedUrls
+    .flatMap((item) => imagesOf(htmlOf(item.url) ?? '', 'image-zoom-image'))
+    .filter((tag) => /src="\/(?!\/)/.test(tag) || tag.includes('/_next/image?url='));
+
+  check(contentImages.length > 0, 'no local content image to check');
+  check(
+    contentImages.every((tag) => / width="\d+"/.test(tag) && / height="\d+"/.test(tag)),
+    'a local content image without its measured width and height',
+  );
+}
+
+// The SEO of pages without frontmatter (`folderPages.metadata`, `pages.metadata`): every category, subcategory and
+// author page, each of its further pages too, in each locale, has a meta description; the blog's own page and its further pages have none.
+{
+  const descriptionOf = (html: string): string | undefined =>
+    /<meta name="description" content="([^"]*)"/.exec(html)?.[1];
+  const described = mountedUrls.filter((item) => item.kind === 'folder' || item.kind === 'term');
+  const missing = described.filter((item) => {
+    const html = htmlOf(item.url);
+
+    return html !== undefined && !/^\/(en\/)?blog(\/page\/\d+)?$/.test(item.url) && (descriptionOf(html) ?? '') === '';
+  });
+
+  check(described.length > 0, 'no folder or author page to check');
+  check(
+    missing.length === 0,
+    `pages without a meta description: ${missing
+      .map((item) => item.url)
+      .slice(0, 5)
+      .join(', ')}`,
+  );
+  check(descriptionOf(htmlOf('/blog') ?? '') === undefined, '/blog: a meta description it has no message for');
+
+  // Plain spaces in every meta description and Open Graph's: the French spacing is the page's, never a search result's.
+  const typeset = mountedUrls.filter((item) =>
+    /<meta (?:name="description"|property="og:description") content="[^"]*[\u00a0\u202f]|"description":"[^"]*[\u00a0\u202f]/.test(
+      htmlOf(item.url) ?? '',
+    ),
+  );
+
+  check(
+    typeset.length === 0,
+    `no-break spaces in a meta description: ${typeset
+      .map((item) => item.url)
+      .slice(0, 5)
+      .join(', ')}`,
+  );
+}
+
 if (problems.length > 0) {
   console.error(`✖ ${String(problems.length)} problem(s):\n${problems.map((p) => `  - ${p}`).join('\n')}`);
   process.exitCode = 1;
 } else {
   console.log(
-    `✓ ${String(mountedUrls.length)} mounted URLs prerendered with canonical, alternates, x-default and Open Graph; subcategory pages with their default view and pagination links; sitemap (dated, noindex left out), structured data, feeds, robots.txt, drafts, the footer, one search bundle per locale (French and English queries, stemming, collection filter), and the navbar from the content in each page's language as expected.`,
+    `✓ ${String(mountedUrls.length)} mounted URLs prerendered with canonical, alternates, x-default and Open Graph; subcategory pages with their default view and pagination links; sitemap (dated, noindex left out), structured data, feeds, robots.txt, drafts, the footer, one search bundle per locale (French and English queries, stemming, collection filter), images through next/image with their sizes, a meta description on every folder and author page, with plain spaces, and the navbar from the content in each page's language as expected.`,
   );
 }

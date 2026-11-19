@@ -99,7 +99,7 @@ export function* emit(input: EmitInput): Generator<GeneratedFile, void, undefine
   const url = (entry: (typeof assembly.entries)[number]): string => urls.url(entry.descriptor);
   const termPages = termData(config, assembly.entries, terms, url);
 
-  files.push(...termsFile(project, config, models, termPages));
+  files.push(...termsFile(project, config, models, termPages, messageKeys));
   files.push(
     ...urlsFile(project, config, models, folders, terms, pageSeo(config, assembly.entries, folders, termPages, url)),
   );

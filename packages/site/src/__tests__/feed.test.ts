@@ -89,4 +89,16 @@ describe('rssOf', () => {
       rssOf({ channel, entries, fields, site }),
     );
   });
+
+  it("keeps the French spacing of each description: a feed reader shows it to a reader, as the page's previews", () => {
+    const typeset = 'Tout sur Sartinu\u00a0: son habitat\u202f!';
+    const xml = rssOf({
+      entries: [entry('typeset', { date: '2026-01-01', description: typeset })],
+      fields,
+      site,
+      channel,
+    });
+
+    expect(values(xml, 'description')).toContain(typeset);
+  });
 });

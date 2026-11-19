@@ -19,6 +19,11 @@
       "types": "./dist/config.d.ts",
       "default": "./dist/config.js"
     },
+    "./images": {
+      "@figatellultimate/source": "./src/images.ts",
+      "types": "./dist/images.d.ts",
+      "default": "./dist/images.js"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -30,6 +35,10 @@
       "./config": {
         "types": "./dist/config.d.ts",
         "default": "./dist/config.js"
+      },
+      "./images": {
+        "types": "./dist/images.d.ts",
+        "default": "./dist/images.js"
       },
       "./package.json": "./package.json"
     }
@@ -46,7 +55,8 @@
   "dependencies": {
     "@figatellultimate/core": "workspace:*",
     "@figatellultimate/toc": "workspace:*",
-    "github-slugger": "2.0.0"
+    "github-slugger": "2.0.0",
+    "image-size": "2.1.0"
   },
   "peerDependencies": {
     "@content-collections/core": "^0.15.0"

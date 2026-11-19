@@ -60,3 +60,26 @@ describe('defineTaxonomy: content', () => {
     expect(() => defineTaxonomy(['gustave'], options)).toThrow(InvalidTaxonomyError);
   });
 });
+
+describe("defineTaxonomy: the term pages' SEO", () => {
+  it("keeps the description its pages read from each term's messages", () => {
+    const authors = defineTaxonomy(['gustave'], {
+      messages: ['name', 'bio'],
+      pages: { base: 'authors', metadata: { description: 'bio' } },
+    });
+
+    expect(authors.pages?.metadata).toEqual({ description: 'bio' });
+    expect(defineTaxonomy(['gustave'], { pages: { base: 'authors' } }).pages?.metadata).toBeUndefined();
+  });
+
+  it.each([
+    [
+      'a field its messages do not declare',
+      { messages: ['name'], pages: { base: 'authors', metadata: { description: 'bio' } } },
+    ],
+    ['metadata that is not an object', { messages: ['bio'], pages: { base: 'authors', metadata: 'bio' } }],
+  ])('throws InvalidTaxonomyError on %s', (_, options) => {
+    // @ts-expect-error -- an untyped (JS or JSON) caller: validated at runtime.
+    expect(() => defineTaxonomy(['gustave'], options)).toThrow(InvalidTaxonomyError);
+  });
+});

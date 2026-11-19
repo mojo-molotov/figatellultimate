@@ -10,6 +10,7 @@
 import { HoverCard } from 'radix-ui';
 import type { ReactNode } from 'react';
 
+import { Image } from './image.js';
 import { Link } from './link.js';
 
 /** An author as the app knows them: a taxonomy term's data and messages. */
@@ -35,7 +36,7 @@ export interface EntryAuthor {
 export function EntryCardAuthor({ author }: { readonly author: EntryAuthor }): ReactNode {
   const avatar =
     author.avatar === undefined ? null : (
-      <img data-slot="entry-card-avatar" src={author.avatar} alt="" width={24} height={24} />
+      <Image data-slot="entry-card-avatar" src={author.avatar} alt="" width={24} height={24} />
     );
   // A link to the author's page when there is one; else the name, focusable when it has a preview.
   const name =
@@ -59,7 +60,7 @@ export function EntryCardAuthor({ author }: { readonly author: EntryAuthor }): R
       <HoverCard.Portal>
         <HoverCard.Content data-slot="entry-card-author-card" sideOffset={6}>
           {author.avatar === undefined ? null : (
-            <img data-slot="entry-card-author-avatar" src={author.avatar} alt="" width={48} height={48} />
+            <Image data-slot="entry-card-author-avatar" src={author.avatar} alt="" width={48} height={48} />
           )}
           <div>
             <p data-slot="entry-card-author-name">{author.name}</p>

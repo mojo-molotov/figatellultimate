@@ -27,6 +27,8 @@ export interface TermData {
   readonly pages: number;
   /** Its taxonomy's page size, when it has one. */
   readonly perPage?: number;
+  /** Its SEO (`pages.metadata`): the message key of its description. */
+  readonly metadata: { readonly description?: string };
   /** Its pages after the first: each one's URL, number and translations (a locale may have fewer pages). */
   readonly slices: readonly {
     readonly url: string;
@@ -78,6 +80,7 @@ export function termData(
     if (page.page > 1) return [];
 
     const perPage = config.taxonomies?.[page.taxonomy]?.pages?.perPage;
+    const description = config.taxonomies?.[page.taxonomy]?.pages?.metadata?.description;
 
     return [
       {
@@ -88,6 +91,10 @@ export function termData(
         alternates: alternatesOf(page),
         pages: page.pages,
         ...(perPage === undefined ? {} : { perPage }),
+        metadata:
+          description === undefined
+            ? {}
+            : { description: ['taxonomies', page.taxonomy, page.term, description].join('.') },
         slices: pages
           .filter((slice) => slice.first === page.url && slice.page > 1)
           .map((slice) => ({ url: slice.url, page: slice.page, alternates: alternatesOf(slice) })),
@@ -132,6 +139,7 @@ export function termTaxonomies(
  * @param config - The config.
  * @param models - The collections' models.
  * @param data - Every term page's data (`termData`).
+ * @param messageKeys - Whether the term pages' description keys are typed by the generated `MessageKey`.
  * @returns The generated file(s), built in memory; nothing is written. None without a taxonomy with pages.
  */
 export function termsFile(
@@ -139,8 +147,11 @@ export function termsFile(
   config: FigatellultimateConfig,
   models: readonly CollectionModel[],
   data: readonly TermData[],
+  messageKeys = false,
 ): GeneratedFile[] {
   const taxonomies = termTaxonomies(config);
+  // A term page's description key, typed by the generated `MessageKey` when the project declares messages.
+  const key = messageKeys ? 'MessageKey' : 'string';
 
   if (taxonomies.length === 0) return [];
 
@@ -158,6 +169,13 @@ export function termsFile(
 
   return render(project, 'terms/index.ts', 'module', (file) => {
     file.addImportDeclaration({ isTypeOnly: true, moduleSpecifier: '../locales/index.js', namedImports: ['Locale'] });
+
+    if (messageKeys)
+      file.addImportDeclaration({
+        isTypeOnly: true,
+        moduleSpecifier: '../messages/index.js',
+        namedImports: ['MessageKey'],
+      });
 
     // Each term's content, by locale and term: the content collection's entries are keyed by term.
     for (const { name, type } of contents) {
@@ -227,6 +245,10 @@ export function termsFile(
           property('pages', 'number'),
           property('first', 'string'),
           property('perPage', 'number', true),
+          {
+            ...property('metadata', `{ readonly description?: ${key} }`),
+            docs: ['Its SEO (`pages.metadata`): the message key of its description.'],
+          },
           ...(content === undefined
             ? []
             : [
@@ -239,7 +261,7 @@ export function termsFile(
               ]),
         ],
       });
-      const raw = `{ readonly url: string; readonly locale: Locale; readonly taxonomy: ${literal(name)}; readonly term: ${prefix}Term; readonly alternates: Readonly<Partial<Record<Locale, string>>>; readonly entries: readonly { readonly collection: ${mine.map((model) => literal(model.name)).join(' | ') || 'never'}; readonly url: string }[]; readonly pages: number; readonly perPage?: number }`;
+      const raw = `{ readonly url: string; readonly locale: Locale; readonly taxonomy: ${literal(name)}; readonly term: ${prefix}Term; readonly alternates: Readonly<Partial<Record<Locale, string>>>; readonly entries: readonly { readonly collection: ${mine.map((model) => literal(model.name)).join(' | ') || 'never'}; readonly url: string }[]; readonly pages: number; readonly perPage?: number; readonly metadata: { readonly description?: ${key} } }`;
       const mineData = data.filter((page) => page.taxonomy === name);
 
       file.addVariableStatement({

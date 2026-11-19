@@ -3,8 +3,8 @@ import { withPrecompiledMessages } from '@figatellultimate/next16/config';
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
 
-// Classic static generation: every route prerendered at build time, unknown URLs are real
-// 404s (`dynamicParams = false`). Cache Components (`cacheComponents: true`) are optional in Next 16.4 and become the
+// Classic static generation: every route prerendered at build time; an unknown URL is a real 404, rendered on demand
+// in its locale's layout (`app/[locale]/not-found.tsx`). Cache Components (`cacheComponents: true`) are optional in Next 16.4 and become the
 // default in Next 17; see the README to enable them. next-intl routes by locale.
 const nextConfig: NextConfig = {
   experimental: {

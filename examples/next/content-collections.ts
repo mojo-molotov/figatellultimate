@@ -5,6 +5,8 @@ import { compileMDX } from '@content-collections/mdx';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import remarkGfm from 'remark-gfm';
 import { rehypeHeadings, withFigatellultimate } from '@figatellultimate/content-collections/config';
+import { rehypeImageSizes } from '@figatellultimate/content-collections/images';
+import { resolve } from 'node:path';
 import * as v from 'valibot';
 
 import { rehypeCodeGroups } from './rehype-code-groups';
@@ -46,6 +48,9 @@ const transform = async <D extends { content: string; _meta: Meta }>(
           // Consecutive blocks marked npm, pnpm, yarn, bun: one block in tabs.
           rehypeCodeGroups,
           [rehypeHeadings, { into: headings }],
+          // Each local image's width and height, from its file in `public/`: `next/image` reserves its room. The
+          // build runs from the example's folder (`figatellultimate build`), as Next serves `public/` from it.
+          [rehypeImageSizes, { publicDirectory: resolve('public') }],
           // After the ids: each section heading links to itself, its text the link's name.
           [rehypeAutolinkHeadings, { behavior: 'wrap', test: ['h2', 'h3', 'h4'] }],
           // Code highlighted at build time, both themes as CSS variables picked by the stylesheet.

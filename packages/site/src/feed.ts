@@ -2,7 +2,8 @@
  * RSS 2.0 feeds, one per collection and locale, from the entries the app loads.
  *
  * Key design decisions:
- *     - RSS 2.0, the most widely read format; the description of each entry, not its full content.
+ *     - RSS 2.0, the most widely read format; the description of each entry, not its full content, its French
+ *       spacing kept: a feed reader shows it to a reader, as the page's previews (`feed.test.ts`).
  *     - Deterministic: no clock, a stable order; a build always writes the same feed for the same content.
  *     - A `noindex` entry is left out, as from the sitemap and the search.
  *

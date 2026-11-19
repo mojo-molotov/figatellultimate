@@ -15,48 +15,150 @@ const content = {
         title: 'The imperial court',
         description: 'The court’s etiquette and banquets, where they toast the green build.',
       },
-      etiquette: { $: { title: 'Etiquette' } },
-      banquets: { $: { title: 'Banquets' } },
+      etiquette: {
+        $: {
+          title: 'Etiquette',
+          description: 'How to address linters, bow to a green build and take a seat at the commit table.',
+        },
+      },
+      banquets: {
+        $: {
+          title: 'Banquets',
+          description: 'A hundred figatelli, a vintage kvass and a toast raised to the cache, served in production.',
+        },
+      },
     },
     islands: {
       $: { title: 'The islands', description: 'Elba, Sardinia and everything afloat around the Empire.' },
-      elba: { $: { title: 'Elba' } },
-      sardinia: { $: { title: 'Sardinia' } },
+      elba: {
+        $: {
+          title: 'Elba',
+          description:
+            'The exile of the staging server, the lighthouse of Portoferraio and the true origin of Elba errors.',
+        },
+      },
+      sardinia: {
+        $: {
+          title: 'Sardinia',
+          description:
+            'The neighbours who deploy on Fridays, the undersea cable to Bonifacio and the treaty of brocciu.',
+        },
+      },
     },
     academy: {
       $: {
         title: 'The Academy',
         description: 'Where TypeScript and linting are taught, a rule written, then checked.',
       },
-      typescript: { $: { title: 'TypeScript' } },
-      linting: { $: { title: 'The art of linting' } },
+      typescript: {
+        $: {
+          title: 'TypeScript',
+          description: 'Strict types, generics and discriminated unions, all the way to the diploma of banned any.',
+        },
+      },
+      linting: {
+        $: { title: 'The art of linting', description: 'Sorted imports, airy lines and the zero-warning contest.' },
+      },
     },
     empire: {
       $: {
         title: 'The Empire',
         description: 'The decrees and chronicles of the Empire of Igoristan, carved, then versioned.',
       },
-      decrees: { $: { title: 'Imperial decrees' } },
-      chronicles: { $: { title: 'Chronicles' } },
-      firewall: { $: { title: 'Imperial Firewall' } },
-      tribunal: { $: { title: 'The linter’s court' } },
-      harbour: { $: { title: 'Harbour affairs' } },
-      diplomacy: { $: { title: 'Diplomacy' } },
-      archives: { $: { title: 'Imperial archives' } },
-      ceremonies: { $: { title: 'Ceremonies' } },
+      decrees: {
+        $: {
+          title: 'Imperial decrees',
+          description:
+            'The Emperor’s decrees, circulars and ordinances, from mandatory figatellu to the two o’clock nap.',
+        },
+      },
+      chronicles: {
+        $: {
+          title: 'Chronicles',
+          description: 'The days that marked the Empire, told by their eyewitnesses and kept by posterity.',
+        },
+      },
+      firewall: {
+        $: {
+          title: 'Imperial Firewall',
+          description: 'Blurry selfies turned back at the border and npm packages from the mainland.',
+        },
+      },
+      tribunal: {
+        $: {
+          title: 'The linter’s court',
+          description: 'The trials of the missing semicolon, of implicit any and of tabs.',
+        },
+      },
+      harbour: {
+        $: {
+          title: 'Harbour affairs',
+          description:
+            'The customs of circular imports, ferries loaded with dependencies and the lighthouse turned server.',
+        },
+      },
+      diplomacy: {
+        $: { title: 'Diplomacy', description: 'Peace treaties with the browsers and the summit of time zones.' },
+      },
+      archives: {
+        $: {
+          title: 'Imperial archives',
+          description: 'The Empire’s first commit, the lost map of the maquis and Saint Igor’s floppy disk.',
+        },
+      },
+      ceremonies: {
+        $: {
+          title: 'Ceremonies',
+          description:
+            'The coronation of the green build, the blessing of branches and the parade of regression tests.',
+        },
+      },
     },
     maquis: {
       $: {
         title: 'The maquis',
         description: 'The Corsicamons and the island’s cooking, between two glasses of kvass.',
       },
-      corsicamon: { $: { title: 'Corsicamon' } },
-      kitchen: { $: { title: 'Imperial kitchen' } },
-      donkeys: { $: { title: 'The donkeys' } },
-      'chestnut-grove': { $: { title: 'The chestnut grove' } },
-      shepherds: { $: { title: 'Shepherds' } },
-      vigils: { $: { title: 'Evening gatherings' } },
-      tramontane: { $: { title: 'The tramontane' } },
+      corsicamon: {
+        $: {
+          title: 'Corsicamon',
+          description:
+            'The Corsicadex, each Corsicamon’s strengths and weaknesses, and how to catch it without spilling your kvass.',
+        },
+      },
+      kitchen: {
+        $: {
+          title: 'Imperial kitchen',
+          description: 'The island’s imperial recipes, from brocciu to figatellu, served in production.',
+        },
+      },
+      donkeys: {
+        $: {
+          title: 'The donkeys',
+          description: 'The donkeys of the maquis, who review pull requests and keep their Friday serenity.',
+        },
+      },
+      'chestnut-grove': {
+        $: {
+          title: 'The chestnut grove',
+          description: 'Chestnuts compiled by hand and the tree of a thousand git branches.',
+        },
+      },
+      shepherds: {
+        $: { title: 'Shepherds', description: 'Shepherds who count in binary and the transhumance of servers.' },
+      },
+      vigils: {
+        $: {
+          title: 'Evening gatherings',
+          description: 'Evening tales, from the eternal loader to the invalidated cache.',
+        },
+      },
+      tramontane: {
+        $: {
+          title: 'The tramontane',
+          description: 'The wind that blows tests away, the cache too, and the weather of builds.',
+        },
+      },
     },
   },
 } as const satisfies AppMessages['content'];
@@ -115,7 +217,12 @@ const ui = {
   theme: { dark: 'Dark theme', site: 'Site theme', maquis: 'Maquis', paper: 'Paper' },
   footer: { nav: 'Site map', made: 'Made with', love: 'love' },
   pager: { nav: 'Previous and next pages', previous: 'Previous', next: 'Next' },
-  feed: { title: 'The figatellultimate blog', description: 'News from the Empire of Igoristan.' },
+  notFound: {
+    title: 'Page not found',
+    text: 'This page does not exist, or no longer does: it may have moved.',
+    home: 'Back to the home page',
+  },
+  feed: { title: 'The Figatellultimate blog', description: 'News from the Empire of Igoristan.' },
   collections: { pages: 'Pages', blog: SHARED.blog },
   search: {
     trigger: 'Search',

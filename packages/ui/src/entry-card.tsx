@@ -8,6 +8,7 @@
 import type { ComponentProps, ReactNode } from 'react';
 
 import { EntryCardAuthor, type EntryAuthor } from './entry-card-author.js';
+import { Image } from './image.js';
 import { Link } from './link.js';
 
 /** A tag: a taxonomy term and its translated label. */
@@ -81,7 +82,15 @@ export function EntryCard({
     <article data-slot="entry-card" {...props}>
       {image === undefined ? null : (
         <Link href={href} data-slot="entry-card-media" tabIndex={-1} aria-hidden>
-          <img data-slot="entry-card-image" src={image} alt="" loading="lazy" />
+          {/* Filling its frame, which the card sizes: 12rem beside the text, the whole width once stacked. */}
+          <Image
+            data-slot="entry-card-image"
+            src={image}
+            alt=""
+            loading="lazy"
+            fill
+            sizes="(max-width: 36rem) 100vw, 12rem"
+          />
         </Link>
       )}
       <div data-slot="entry-card-body">

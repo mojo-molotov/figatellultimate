@@ -36,9 +36,11 @@ const config = defineConfig({
       base: 'blog',
       grammar: [segment('category'), segment('subcategory'), locale({ optional: true }), slug()],
       metadata: { title: 'title', publishedTime: 'date', image: 'cover' },
-      messages: { category: ['title', 'description'], subcategory: ['title'] },
+      messages: { category: ['title', 'description'], subcategory: ['title', 'description'] },
       folderPages: {
         root: true,
+        // Each folder page's meta description, read from its messages.
+        metadata: { description: 'description' },
         levels: ['category', 'subcategory'],
         images: { news: '/covers/news.jpeg' },
         // One entry a page in a subcategory: bot has two in French, one in English.
@@ -77,6 +79,7 @@ const Found = v.optional(
         ),
         image: v.optional(v.string()),
         messages: v.record(v.string(), v.string()),
+        metadata: v.object({ description: v.optional(v.string()) }),
         alternates: v.unknown(),
         url: v.string(),
         page: v.number(),
@@ -192,7 +195,20 @@ describe('generated folder pages, run', () => {
     ]);
     const bot = await urls.findByUrl('/blog/news/bot');
 
-    expect(bot?.folder?.messages).toEqual({ title: 'content.blog.news.bot.$.title' });
+    expect(bot?.folder?.messages).toEqual({
+      title: 'content.blog.news.bot.$.title',
+      description: 'content.blog.news.bot.$.description',
+    });
+  });
+
+  it("gives a folder page its description's message key, for its SEO; none to the collection's own page", async () => {
+    expect((await urls.findByUrl('/blog/news'))?.folder?.metadata).toEqual({
+      description: 'content.blog.news.$.description',
+    });
+    expect((await urls.findByUrl('/en/blog/news/bot'))?.folder?.metadata).toEqual({
+      description: 'content.blog.news.bot.$.description',
+    });
+    expect((await urls.findByUrl('/blog'))?.folder?.metadata).toEqual({});
   });
 
   it('mounts a folder page per slice: its own URL, translations and key, the folder found with its page', async () => {

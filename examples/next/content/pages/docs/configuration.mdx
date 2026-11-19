@@ -96,6 +96,13 @@ folderPages: { root: true, levels: ['category', 'subcategory'], preview: 2, imag
 folderPages: { root: true, levels: ['category', 'subcategory'], perPage: { root: 6, subcategory: 5 } },
 ```
 
+Une page de dossier n’a pas de frontmatter : son SEO se déclare comme le `metadata` d’une entrée, mais en nommant un champ des messages du dossier. `metadata.description` donne à chaque page de dossier sa meta description ; chaque niveau qui a des pages doit déclarer ce champ dans ses `messages`, sinon la config est refusée. La page de la collection elle-même n’a pas de messages, donc pas de description.
+
+```ts
+messages: { category: ['title', 'description'], subcategory: ['title', 'description'] },
+folderPages: { root: true, levels: ['category', 'subcategory'], metadata: { description: 'description' } },
+```
+
 ## Les taxonomies
 
 Les tags et les auteurs sont des listes fermées, déclarées une fois avec `defineTaxonomy`. Le frontmatter les référence par leur clé, et une clé inconnue est une erreur qui propose la plus proche. Un terme peut porter des données pures (un avatar), exiger des champs de messages (un nom, une bio), avoir une page qui liste ses entrées, et un long texte à lui :
@@ -108,6 +115,8 @@ authors: defineTaxonomy(
 ```
 
 `content` nomme une collection non montée dont les entrées portent le nom d’un terme : `content/authors/ada.mdx` est la longue bio d’Ada, affichée sur sa page. Elle est facultative, par terme et par langue.
+
+De même, `pages.metadata.description` nomme le champ des messages qui décrit chaque page de terme pour le SEO, par exemple la bio d’un auteur : `pages: { base: 'authors', metadata: { description: 'bio' } }`. Ce champ doit être l’un de ses `messages`.
 
 ## La navigation
 

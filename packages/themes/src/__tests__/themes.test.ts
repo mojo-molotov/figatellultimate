@@ -125,6 +125,28 @@ describe('base.css', () => {
     expect(motion.slice(0, motion.indexOf('@keyframes fig-blur-away'))).not.toMatch(/animation: /);
   });
 
+  it('reveals the footer on a desktop only: on a touch screen, it scrolls in as any content', () => {
+    const touch = mediaOf(source).find(({ condition }) => condition === '(hover: none), (pointer: coarse)');
+
+    // Precondition: the block exists, so that its body is read.
+    expect(touch).toBeDefined();
+    expect(touch?.body.replace(/\s+/g, ' ')).toContain(
+      "[data-slot='reveal']:has([data-slot='site-footer']) > [data-slot='reveal-content'] { animation: none; }",
+    );
+  });
+
+  it("shows the 404's backdrop in the dark theme only, chosen or the system's: too faint to see on a light page", () => {
+    const body = (selector: string) => rules.find((rule) => rule.selector === selector)?.body ?? '';
+    const backdrop = "main[data-page='not-found'] [data-slot='backdrop']";
+    const system = mediaOf(source).find(({ condition }) => condition === '(prefers-color-scheme: dark)');
+
+    expect(body(backdrop)).toBe('display: none;');
+    expect(body(`:root[data-theme='dark'] ${backdrop}`)).toBe('display: block;');
+    expect(system?.body.replace(/\s+/g, ' ')).toContain(
+      `:root:not([data-theme='light']) ${backdrop} { display: block; }`,
+    );
+  });
+
   it("sets a folder page's pagination on its title's line, at its end, below it when they do not fit or on a phone", () => {
     const body = (selector: string) => rules.find((rule) => rule.selector === selector)?.body ?? '';
 

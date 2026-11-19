@@ -10,6 +10,7 @@ import type { ReactNode } from 'react';
 import { localeInfo, locales } from '#figatellultimate/locales';
 import { urlOf } from '#figatellultimate/urls';
 
+import { AppImages } from '../../components/images';
 import { AppLinks } from '../../components/links';
 import { SITE_THEMES, siteThemeScript } from '../../components/site-themes';
 import { routing } from '../../i18n/routing';
@@ -23,8 +24,10 @@ import '@figatellultimate/themes/base.css';
 import '@figatellultimate/themes/maquis.css';
 import '@figatellultimate/themes/paper.css';
 
-// Static generation only: one root layout per declared locale.
-export const dynamicParams = false;
+// One root layout per declared locale, prerendered. Unknown params are let through, as Next applies a layout's
+// `dynamicParams` to its children too: the catch-all route's unknown URLs reach their locale's 404
+// (`not-found.tsx`); an undeclared locale is still a 404, below.
+export const dynamicParams = true;
 
 export function generateStaticParams(): { locale: string }[] {
   return locales.map((locale) => ({ locale }));
@@ -60,7 +63,9 @@ export default async function LocaleLayout(props: LayoutProps<'/[locale]'>): Pro
           disableTransitionOnChange
         >
           {/* Client-side navigations: this layout, and what it holds, stays mounted from page to page. */}
-          <AppLinks>{props.children}</AppLinks>
+          <AppLinks>
+            <AppImages>{props.children}</AppImages>
+          </AppLinks>
           <SiteFooter locale={locale} />
           {/* The cursor glow and the margins' sparkles, loaded on desktops only. */}
           <Effects />

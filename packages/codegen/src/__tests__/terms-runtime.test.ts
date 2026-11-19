@@ -59,7 +59,12 @@ const config = defineConfig({
     authors: defineTaxonomy(
       { gustave: { avatar: '/g.svg' }, arnaud: { avatar: '/a.svg' } },
       // One post a page: gustave and arnaud have two pages in French.
-      { pages: { base: 'authors', perPage: 1 }, content: 'authorBios' },
+      // Each author's page described by their bio, for its SEO.
+      {
+        messages: ['name', 'bio'],
+        pages: { base: 'authors', perPage: 1, metadata: { description: 'bio' } },
+        content: 'authorBios',
+      },
     ),
     tags: defineTaxonomy(['bot']),
   },
@@ -94,6 +99,7 @@ const Found = v.optional(
         first: v.string(),
         perPage: v.optional(v.number()),
         content: v.optional(v.looseObject({ key: v.string(), locale: v.string() })),
+        metadata: v.object({ description: v.optional(v.string()) }),
       }),
     ),
   }),
@@ -221,6 +227,14 @@ describe('generated term pages, run', () => {
     expect((await urls.findByUrl('/en/authors/gustave'))?.term?.content).toBeUndefined();
     expect((await urls.findByUrl('/authors/arnaud'))?.term?.content).toBeUndefined();
     expect(urls.mountedUrls.filter((item) => item.collection === 'authorBios')).toEqual([]);
+  });
+
+  it("gives a term's page, and each of its further pages, its description's message key, for its SEO", async () => {
+    const first = await urls.findByUrl('/authors/gustave');
+    const second = await urls.findByUrl('/authors/gustave/page/2');
+
+    expect(first?.term?.metadata).toEqual({ description: 'taxonomies.authors.gustave.bio' });
+    expect(second?.term?.metadata).toEqual(first?.term?.metadata);
   });
 
   it("gives a term's page URL in a locale, nothing where the term has no page", () => {

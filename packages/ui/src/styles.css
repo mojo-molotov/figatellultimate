@@ -1966,7 +1966,9 @@ a[data-slot='entry-card-author']:hover {
 
 [data-slot='image-zoom-full'] {
   display: block;
-  /* The screen at most, never beyond the image's natural size. */
+  /* The screen at most, never beyond the image's natural size; its `width` and `height` scaled together. */
+  width: auto;
+  height: auto;
   max-width: 90vw;
   max-height: 90vh;
   user-select: none;

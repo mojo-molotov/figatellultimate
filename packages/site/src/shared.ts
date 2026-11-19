@@ -18,6 +18,15 @@ export const absoluteOn =
       : `${site.origin.replace(/\/+$/, '')}${path.startsWith('/') ? '' : '/'}${path}`;
 
 /**
+ * No-break spaces (U+00A0, the narrow U+202F, the figure U+2007) as plain spaces: for the descriptions machines read
+ * (meta, Open Graph, structured data), the French spacing being the page's typography.
+ *
+ * @param value - A typeset text.
+ * @returns The same text with plain spaces.
+ */
+export const plainSpaces = (value: string): string => value.replaceAll(/[\u00a0\u202f\u2007]/g, ' ');
+
+/**
  * A frontmatter value read as text.
  *
  * @param value - A frontmatter value.

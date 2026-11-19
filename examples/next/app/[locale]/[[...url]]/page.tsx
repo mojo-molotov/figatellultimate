@@ -38,8 +38,9 @@ import { site } from '../../../site';
 // from configuration only: one
 // optional catch-all per locale.
 
-// Static generation only: an unknown URL is a real 404, never rendered on demand.
-export const dynamicParams = false;
+// Every mounted URL is prerendered; an unknown one is let through to `notFound()`, which renders the locale's 404
+// (`../not-found.tsx`) on demand, with a real 404 status.
+export const dynamicParams = true;
 
 export function generateStaticParams(): { locale: string; url: string[] }[] {
   // Every mounted URL under its locale, entries and folder pages; reserved entries are left to their dedicated routes
@@ -67,13 +68,27 @@ export async function generateMetadata(props: PageProps<'/[locale]/[[...url]]'>)
     // The author's avatar as the page's image: previews of the link show who it is.
     const image = taxonomies.authors.data[found.term.term].avatar;
 
-    return toNextMetadata(pageMetadataOf({ ...found.term, title: await authorName(found.term), image }, site));
+    // Its description: the message its taxonomy's SEO names (`pages.metadata`), the author's short bio.
+    const described = found.term.metadata.description;
+    const description =
+      described === undefined ? undefined : (await getTranslations({ locale: found.term.locale }))(described);
+
+    return toNextMetadata(
+      pageMetadataOf({ ...found.term, title: await authorName(found.term), image, description }, site),
+    );
   }
 
   const { image } = found.folder;
 
   // Every page of a folder under its folder's title, without a number: the page is the list, wherever one reads it.
-  return toNextMetadata(pageMetadataOf({ ...found.folder, title: await folderTitle(found.folder), image }, site));
+  // Its description: the message its folder pages' SEO names (`folderPages.metadata`); none for the blog's own page.
+  const described = found.folder.metadata.description;
+  const description =
+    described === undefined ? undefined : (await getTranslations({ locale: found.folder.locale }))(described);
+
+  return toNextMetadata(
+    pageMetadataOf({ ...found.folder, title: await folderTitle(found.folder), image, description }, site),
+  );
 }
 
 export default async function Page(props: PageProps<'/[locale]/[[...url]]'>): Promise<ReactNode> {

@@ -103,6 +103,12 @@ export default {
 
 `@figatellultimate/ui`’s components link pages through the application’s link component: wrap the layout in `LinkProvider` with `next/link`, and navigations stay client-side.
 
+## Images
+
+Their images go through the application's image component the same way: wrap the layout in `ImageProvider` with `next/image`, and the cards' covers, the authors' avatars and the content's images are resized and served in modern formats. `@figatellultimate/effects`' `Backdrop` takes `next/image` through its `image` prop.
+
+A content image must know its size: `rehypeImageSizes`, from `@figatellultimate/content-collections/images`, reads at build time the width and height of every local image in the `public/` folder. A remote or unmeasured image stays a plain `<img>`.
+
 ## Messages
 
 next-intl formats the messages on the server, precompiled: `withPrecompiledMessages` from `@figatellultimate/next16/config` gives it its `format-only` runtime, and client components receive their texts already formatted. No page ships the ICU parser nor the catalog of messages; the details are in [Messages](/en/docs/messages).

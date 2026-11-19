@@ -32,6 +32,8 @@ export interface FolderData {
   readonly label: string | null;
   /** The message key of each field its level declares; none for the collection's own page. */
   readonly messages: Readonly<Record<string, string>>;
+  /** Its SEO (`folderPages.metadata`): the message key of its description; none for the collection's own page. */
+  readonly metadata: { readonly description?: string };
   /** Declared for its path, else its newest entry's image. */
   readonly image?: string;
   readonly alternates: Readonly<Record<string, string>>;
@@ -175,6 +177,10 @@ export function folderData(
       level: folder.level,
       label: folder.level === null ? null : labelOf(name, values),
       messages: messagesOf(folder.level, values),
+      metadata:
+        folder.level === null || declared.metadata.description === undefined
+          ? {}
+          : { description: keyOf(name, values, declared.metadata.description) },
       ...imageOf(values, inside),
       alternates,
       subfolders,

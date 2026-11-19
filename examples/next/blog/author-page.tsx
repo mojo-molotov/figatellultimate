@@ -1,5 +1,6 @@
 /** An author's page: their avatar, name, short and long bios, and posts. */
 import { getTranslations } from 'next-intl/server';
+import NextImage from 'next/image';
 import type { ReactNode } from 'react';
 
 import { taxonomies } from '#figatellultimate/taxonomies';
@@ -43,7 +44,7 @@ export async function AuthorPage({ page }: { readonly page: AuthorsTermPage }): 
       <SiteHeader locale={locale} url={page.url} title={name} />
       <main data-listing="author">
         <header data-slot="author-header">
-          <img src={taxonomies.authors.data[term].avatar} alt="" width={96} height={96} />
+          <NextImage src={taxonomies.authors.data[term].avatar} alt="" width={96} height={96} priority />
           <div>
             <h1>{name}</h1>
             <p>{t(`taxonomies.authors.${term}.bio`)}</p>

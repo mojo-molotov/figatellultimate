@@ -96,6 +96,13 @@ folderPages: { root: true, levels: ['category', 'subcategory'], preview: 2, imag
 folderPages: { root: true, levels: ['category', 'subcategory'], perPage: { root: 6, subcategory: 5 } },
 ```
 
+A folder page has no frontmatter: its SEO is declared like an entry's `metadata`, but naming a field of the folder's messages. `metadata.description` gives every folder page its meta description; each level with pages must declare that field in its `messages`, or the config is refused. The collection's own page has no messages, and so no description.
+
+```ts
+messages: { category: ['title', 'description'], subcategory: ['title', 'description'] },
+folderPages: { root: true, levels: ['category', 'subcategory'], metadata: { description: 'description' } },
+```
+
 ## Taxonomies
 
 Tags and authors are closed lists, declared once with `defineTaxonomy`. The frontmatter references them by key, and an unknown key is an error suggesting the closest one. A term may carry pure data (an avatar), require message fields (a name, a bio), have a page listing its entries, and a long text of its own:
@@ -108,6 +115,8 @@ authors: defineTaxonomy(
 ```
 
 `content` names an unmounted collection whose entries are keyed by term: `content/authors/ada.mdx` is Ada’s long bio, shown on her page. It is optional, per term and per language.
+
+Likewise, `pages.metadata.description` names the messages field that describes each term page for its SEO, e.g. an author's bio: `pages: { base: 'authors', metadata: { description: 'bio' } }`. That field must be one of its `messages`.
 
 ## Navigation
 

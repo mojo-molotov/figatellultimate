@@ -36,7 +36,7 @@ Checked weekly on Linux, macOS and Windows by the `Example app` workflow.
 
 ## Static generation, or Cache Components
 
-Every route is prerendered (`●` in `next build`), and an unknown URL is a real 404 (`dynamicParams = false`); `example:verify` checks that every route is static. To try Cache Components instead (the default in Next 17), set `cacheComponents: true` in `next.config.ts` and remove the `dynamicParams` exports, which Cache Components forbid: pages stay complete at build time, but Next then reports them as partial prerendering and serves unknown URLs with status 200 and `noindex`.
+Every route is prerendered (`●` in `next build`), and `example:verify` checks that every route is static; an unknown URL is a real 404, rendered on demand in its locale's layout (`app/[locale]/not-found.tsx`). To try Cache Components instead (the default in Next 17), set `cacheComponents: true` in `next.config.ts` and remove the `dynamicParams` exports, which Cache Components forbid: pages stay complete at build time, but Next then reports them as partial prerendering and serves unknown URLs with status 200 and `noindex`.
 
 ## Accepted limitations
 

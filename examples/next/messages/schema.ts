@@ -21,6 +21,7 @@ export const schema = {
     footer: { nav: _, made: _, love: _ },
     pager: { nav: _, previous: _, next: _ },
     feed: { title: _, description: _ },
+    notFound: { title: _, text: _, home: _ },
     collections: { pages: _, blog: _ },
     search: {
       trigger: _,

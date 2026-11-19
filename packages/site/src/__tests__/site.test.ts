@@ -137,6 +137,18 @@ describe('metadataOf: the title carries the site’s name', () => {
   });
 });
 
+describe('metadataOf: the description, plain', () => {
+  it('turns the French no-break spaces into plain spaces, in the meta description and Open Graph only', () => {
+    const typeset = 'Tout sur Sartinu\u00a0: son habitat, ses attaques\u202f; et son kvas\u202f!';
+    const result = metadataOf({ ...english, data: { ...english.data, metadescription: typeset } }, fields, site);
+
+    // Precondition: the source is typeset, so that leaving it as it is cannot pass.
+    expect(typeset).toMatch(/[\u00a0\u202f]/);
+    expect(result.description).toBe('Tout sur Sartinu : son habitat, ses attaques ; et son kvas !');
+    expect(result.openGraph.description).toBe(result.description);
+  });
+});
+
 describe('metadataOf: robots and canonical overrides', () => {
   const seoFields: MetadataFields = { ...fields, robots: 'robots', canonical: 'canonical', modifiedTime: 'updated' };
 

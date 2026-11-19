@@ -13,8 +13,10 @@ const rules = [...CSS.matchAll(/([^{}@]+)\{([^{}]*)\}/g)].map((match) => ({
 }));
 
 /** The effects laid over the page: never catching a pointer. */
-const LAYERS = ['collector', 'sparkles', 'cursor-glow'];
-const SLOTS = [...LAYERS, 'hearts', 'heart', 'hearts-label', 'reveal', 'reveal-content'];
+const LAYERS = ['collector', 'sparkles', 'cursor-glow', 'backdrop'];
+const SLOTS = [...LAYERS, 'hearts', 'heart', 'hearts-label', 'reveal', 'reveal-content', 'backdrop-image'];
+/** The tokens' rules: the page's root, and its dark theme (chosen, or the system's). */
+const ROOTS = [':root', ":root[data-theme='dark']", ":root:not([data-theme='light'])"];
 /** A keyframe's steps (`from`, `to`, `50%`) are not rules of the page. */
 const KEYFRAME = /^(from|to|\d+%)$/;
 
@@ -27,9 +29,10 @@ describe('styles.css', () => {
     expect(rules.length).toBeGreaterThan(5);
 
     for (const { selector } of rules.filter((rule) => !KEYFRAME.test(rule.selector)))
-      expect(selector === ':root' || SLOTS.some((slot) => selector.includes(`[data-slot='${slot}']`)), selector).toBe(
-        true,
-      );
+      expect(
+        ROOTS.includes(selector) || SLOTS.some((slot) => selector.includes(`[data-slot='${slot}']`)),
+        selector,
+      ).toBe(true);
   });
 
   it.each(LAYERS)('never lets %s catch a pointer', (slot) => {
@@ -44,6 +47,19 @@ describe('styles.css', () => {
 
     for (const { selector, body } of layers) expect(body, selector).toContain('pointer-events: none');
   });
+  it('fades the backdrop in only for those who accept motion', () => {
+    const animated = rules.filter(
+      ({ selector, body }) => selector.includes("[data-slot='backdrop-image']") && body.includes('animation:'),
+    );
+    const still = [...SOURCE.matchAll(/@media \(prefers-reduced-motion: reduce\) \{((?:[^{}]*\{[^{}]*\})*)[^{}]*\}/g)]
+      .map(([, body]) => body ?? '')
+      .join('');
+
+    // Precondition: the backdrop does fade in.
+    expect(animated.length).toBeGreaterThan(0);
+    expect(still).toMatch(/\[data-slot='backdrop-image'\][^{]*\{[^}]*animation: none/);
+  });
+
   it('shows the cursor glow and the sparkles on a screen only, never on paper', () => {
     // Every rule showing them sits in a `@media screen …` block.
     const showing = [...SOURCE.matchAll(/@media ([^{]+)\{((?:[^{}]*\{[^{}]*\})*)[^{}]*\}/g)].filter(([, , body]) =>

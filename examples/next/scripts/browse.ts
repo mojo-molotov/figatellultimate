@@ -140,6 +140,53 @@ try {
   await select.waitForURL('**/page/4', { timeout: 5000 }).catch(() => undefined);
   check(new URL(select.url()).pathname === `${LISTING}/page/4`, `${LISTING}: the page select did not reach page 4`);
   await select.close();
+
+  // The footer revealed from under the page on a desktop only: on a phone, it scrolls in as any content.
+  for (const [device, options, revealed] of [
+    ['a desktop', { viewport: { width: 1280, height: 900 } }, true],
+    ['a phone', { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true }, false],
+  ] as const) {
+    const phone = await browser.newPage(options);
+
+    await phone.goto(`${base}${LISTING}`, { waitUntil: 'networkidle' });
+    const animation = await phone
+      .locator('[data-slot="reveal-content"]')
+      .evaluate((element) => getComputedStyle(element).animationName);
+
+    check(
+      (animation === 'fig-reveal') === revealed,
+      `${LISTING} on ${device}: the footer's reveal is ${animation === 'fig-reveal' ? 'on' : 'off'}`,
+    );
+    await phone.close();
+  }
+
+  // An unknown URL: a real 404, yet a page of the site in its locale, with the navigation and a link home.
+  for (const [url, lang, title, home, link] of [
+    ['/nope/never', 'fr', 'Page introuvable · Figatellultimate', '/', 'Retour à l’accueil'],
+    ['/en/nope/never', 'en', 'Page not found · Figatellultimate', '/en', 'Back to the home page'],
+  ] as const) {
+    const missing = await browser.newPage();
+    const response = await missing.goto(`${base}${url}`, { waitUntil: 'networkidle' });
+
+    check(response?.status() === 404, `${url}: status ${String(response?.status())}, not 404`);
+    check((await missing.locator('html').getAttribute('lang')) === lang, `${url}: not in ${lang}`);
+    check((await missing.title()) === title, `${url}: titled « ${await missing.title()} »`);
+    check((await missing.getByRole('navigation').count()) > 0, `${url}: without the site's navigation`);
+    check((await missing.locator('[aria-current="page"]').count()) === 0, `${url}: a navigation item marked current`);
+    check(
+      (await missing.getByRole('link', { name: link }).getAttribute('href')) === home,
+      `${url}: no link to ${home}`,
+    );
+    check(
+      // Through next/image: `/_next/image?url=%2Fcovers%2Fplaceholder-151.jpeg&w=…`.
+      decodeURIComponent((await missing.locator('[data-slot="backdrop-image"]').getAttribute('src')) ?? '').includes(
+        '/_next/image?url=/covers/placeholder-151.jpeg',
+      ),
+      `${url}: without its backdrop through next/image`,
+    );
+    await missing.close();
+  }
+
   await browser.close();
 } finally {
   server.kill();
@@ -150,6 +197,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the button under the mouse, the page taller or shorter; a filter in the URL, or chosen early, is applied; the page select reaches its page.',
+    '✓ previous and next keep the button under the mouse, the page taller or shorter; a filter in the URL, or chosen early, is applied; the page select reaches its page; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
   );
 }

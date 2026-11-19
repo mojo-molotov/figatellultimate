@@ -43,7 +43,7 @@ export default defineConfig({
       grammar: [segment('category'), segment('subcategory'), locale({ optional: true }), slug()],
       indexForbiddenUnder: ['category', 'subcategory'],
       references: { tags: 'tags', authors: 'authors' },
-      messages: { category: ['title', 'description'], subcategory: ['title'] },
+      messages: { category: ['title', 'description'], subcategory: ['title', 'description'] },
       draft: 'draft',
       metadata: { ...metadata, publishedTime: 'date', tags: 'tags', type: 'article', schema: 'BlogPosting' },
       // The blog, category and subcategory pages, mounted like entries.
@@ -51,6 +51,8 @@ export default defineConfig({
       folderPages: {
         root: true,
         levels: ['category', 'subcategory'],
+        // SEO: each folder page's meta description, read from its messages (the blog's own page has none).
+        metadata: { description: 'description' },
         preview: 2,
         // A page at a time, each one prerendered with its slice (`/page/N`): categories, subcategories, posts.
         perPage: { root: 4, category: 2, subcategory: 5 },
@@ -126,7 +128,12 @@ export default defineConfig({
     // ten posts a page (`/authors/igor/page/2`), each page prerendered with its slice only.
     authors: defineTaxonomy(
       { igor: { avatar: '/authors/igor.jpeg' }, napoleon: { avatar: '/authors/napoleon.jpeg' } },
-      { messages: ['name', 'bio'], pages: { base: 'authors', perPage: 10 }, content: 'authorBios' },
+      {
+        messages: ['name', 'bio'],
+        // SEO: each author's page described by their short bio.
+        pages: { base: 'authors', perPage: 10, metadata: { description: 'bio' } },
+        content: 'authorBios',
+      },
     ),
   },
   // The navbar, generated from the content: pages and one level of folders, then the blog's categories and

@@ -221,6 +221,7 @@ describe('defineCollection: folderPages', () => {
       preview: 2,
       images: {},
       perPage: {},
+      metadata: {},
     });
     expect(define({ root: true, levels: ['category', 'subcategory'], preview: 3 }).folderPages).toEqual({
       root: true,
@@ -228,6 +229,7 @@ describe('defineCollection: folderPages', () => {
       preview: 3,
       images: {},
       perPage: {},
+      metadata: {},
     });
   });
 
@@ -250,6 +252,29 @@ describe('defineCollection: folderPages', () => {
 
     expect(declared?.perPage).toEqual({ root: 4, subcategory: 5 });
     expect(Object.isFrozen(declared?.perPage)).toBe(true);
+  });
+
+  it("keeps the SEO description it reads from each folder's messages, frozen", () => {
+    const declared = define(
+      { root: true, levels: ['category', 'subcategory'], metadata: { description: 'description' } },
+      { messages: { category: ['title', 'description'], subcategory: ['title', 'description'] } },
+    ).folderPages;
+
+    expect(declared?.metadata).toEqual({ description: 'description' });
+    expect(Object.isFrozen(declared?.metadata)).toBe(true);
+  });
+
+  it.each([
+    ['metadata that is not an object', { levels: ['category'], metadata: 'description' }, {}, /metadata/],
+    ['a description that is not a field name', { levels: ['category'], metadata: { description: 1 } }, {}, /metadata/],
+    [
+      'a description a level does not declare in its messages',
+      { levels: ['category', 'subcategory'], metadata: { description: 'description' } },
+      { messages: { category: ['title', 'description'], subcategory: ['title'] } },
+      /messages\.subcategory/,
+    ],
+  ])('rejects %s', (_, folderPages, extra, message) => {
+    expect(() => define(folderPages, extra)).toThrow(message);
   });
 
   it.each([

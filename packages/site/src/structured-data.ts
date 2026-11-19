@@ -11,7 +11,7 @@
  * Invariants: each type, missing fields left out, the declared canonical, the escaping and its round trip
  * (`structured-data.test.ts`).
  */
-import { absoluteOn, text, w3cDate } from './shared.js';
+import { absoluteOn, plainSpaces, text, w3cDate } from './shared.js';
 import type { MetadataFields, Site, SiteEntryWithData, StructuredData } from './types.js';
 
 const CONTEXT = 'https://schema.org';
@@ -53,6 +53,8 @@ export function structuredDataOf(
   const type = fields.schema ?? 'WebPage';
   const article = type !== 'WebPage';
   const title = read(fields.title);
+  // Read by machines: plain spaces, as the meta description.
+  const description = read(fields.description);
   const image = read(fields.image);
   const published = read(fields.publishedTime);
   const modified = read(fields.modifiedTime) ?? published;
@@ -64,7 +66,7 @@ export function structuredDataOf(
     '@type': type,
     ...defined({
       [article ? 'headline' : 'name']: title,
-      description: read(fields.description),
+      description: description === undefined ? undefined : plainSpaces(description),
       image: image === undefined ? undefined : Object.freeze([absolute(image)]),
       datePublished: published === undefined ? undefined : w3cDate(published),
       dateModified: modified === undefined ? undefined : w3cDate(modified),
@@ -149,7 +151,7 @@ export function personOf(
       name: person.name,
       url: absolute(person.url),
       image: person.image === undefined ? undefined : absolute(person.image),
-      description: person.description,
+      description: person.description === undefined ? undefined : plainSpaces(person.description),
       sameAs: person.sameAs === undefined || person.sameAs.length === 0 ? undefined : Object.freeze([...person.sameAs]),
     }),
   });

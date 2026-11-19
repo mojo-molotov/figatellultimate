@@ -10,5 +10,6 @@ export function ZoomImage({
   close,
   ...props
 }: ComponentProps<'img'> & { readonly open: string; readonly close: string }): ReactNode {
-  return <ImageZoom {...props} labels={{ open: () => open, close }} />;
+  // As wide as the text's column (48rem), the whole screen below it: the size `next/image` serves.
+  return <ImageZoom sizes="(max-width: 48rem) 100vw, 48rem" {...props} labels={{ open: () => open, close }} />;
 }

@@ -7,6 +7,9 @@
  *     --fig-sparkles-color, --fig-sparkles-column              the sparkles, and the text column they stay out of
  *     --fig-hearts-fade                                        how long a heart takes to fade into the next
  *     --fig-reveal-layer                                       the revealed content's layer (default 45)
+ *     --fig-backdrop-opacity                                   the backdrop's faintness (0.05, 0.1 in the dark)
+ *     --fig-backdrop-center, --fig-backdrop-edge               where its vignette starts fading, and ends
+ *     --fig-backdrop-fade                                      how long it takes to fade in
  *
  * Every effect is decorative: never catching a click, behind the content, still or absent with
  * `prefers-reduced-motion`. The glow shows only with a mouse; the sparkles and the glow show wherever they are
@@ -26,6 +29,46 @@
   --fig-hearts-fade: 700ms;
   /* Above panels docked over the page (the table of contents, 40), below popups (50) and dialogs (60). */
   --fig-reveal-layer: 45;
+  --fig-backdrop-opacity: 0.05;
+  --fig-backdrop-center: 30%;
+  --fig-backdrop-edge: 60%;
+  --fig-backdrop-fade: 2500ms;
+}
+
+/* An image reads less on a dark page: the backdrop a little stronger there, chosen or the system's. */
+:root[data-theme='dark'] {
+  --fig-backdrop-opacity: 0.1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --fig-backdrop-opacity: 0.1;
+  }
+}
+
+/* Backdrop: the section's image, behind its content and clipped to it, vignetted, faint, faded in. */
+[data-slot='backdrop'] {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+[data-slot='backdrop-image'] {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: var(--fig-backdrop-opacity);
+  mask-image: radial-gradient(circle, #000 var(--fig-backdrop-center), transparent var(--fig-backdrop-edge));
+  mask-repeat: no-repeat;
+  animation: fig-backdrop-fade var(--fig-backdrop-fade) ease-out;
+}
+
+@keyframes fig-backdrop-fade {
+  from {
+    opacity: 0;
+  }
 }
 
 /*
@@ -95,6 +138,10 @@
 
 /* Reduced motion: the whole rim lit at once, following nothing. */
 @media (prefers-reduced-motion: reduce) {
+  [data-slot='backdrop-image'] {
+    animation: none;
+  }
+
   [data-slot='collector']::before,
   [data-slot='collector']::after {
     transition: none;
