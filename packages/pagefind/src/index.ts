@@ -3,8 +3,9 @@
  *
  * Architecture:
  *     figatellultimate search (CLI) ──> pages { url, locale, collection, html, sort } ──> indexSite
- *         per locale: pagefind.createIndex({ forceLanguage }) ──> addHTMLFile(page + markers) ──> writeFiles
+ *         per locale: pagefind.createIndex({ forceLanguage }) ──> addHTMLFile(page + markers) ──> getFiles
  *                     markers: the collection filter, the sort keys (title, newest, oldest), the date metadata
+ *                     getFiles ──> each file written here, awaited ──> pagefind.close() once every locale is done
  *
  * Key design decisions:
  *     - figatellultimate gives each page its locale and collection (one rule for URLs): Pagefind would read `<html lang>`,
@@ -19,11 +20,17 @@
  *     - A page with nothing to index fails the indexing: the safety net of static generation (a page rendered on the
  *       client only would have an empty body).
  *     - The only package importing Pagefind: the search runtime loads the built bundle instead.
+ *     - The bundle is written here from Pagefind's in-memory files (`getFiles`), each write awaited. Rejected:
+ *       Pagefind's own `writeFiles`, which answers before its last files reach the disk, while `close()` kills its
+ *       process at once: the last locale's files were sometimes left empty. Like `writeFiles`, the folder is not
+ *       emptied first.
  *
- * Invariants: problems for empty pages (`index-site.test.ts`); the written bundles searched as a browser would, per
- * locale, with filters, sorts and dates (`browser-bundle.test.ts`).
+ * Invariants: problems for empty pages, and every bundle complete once `indexSite` returns, repeated against the
+ * timing race (`index-site.test.ts`); the written bundles searched as a browser would, per locale, with filters,
+ * sorts and dates (`browser-bundle.test.ts`).
  */
-import { join } from 'node:path';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 
 import * as pagefind from 'pagefind';
 
@@ -134,6 +141,25 @@ function withMarkers(page: SearchPage): string {
 }
 
 /**
+ * Writes a bundle's files, each awaited: on disk, complete, before Pagefind is closed.
+ *
+ * @param directory - The locale's bundle folder.
+ * @param files - Pagefind's in-memory files, their paths relative and POSIX.
+ * @returns Once every file is written.
+ */
+async function writeBundle(
+  directory: string,
+  files: readonly { readonly path: string; readonly content: Uint8Array }[],
+): Promise<void> {
+  for (const file of files) {
+    const path = join(directory, ...file.path.split('/'));
+
+    await mkdir(dirname(path), { recursive: true });
+    await writeFile(path, file.content);
+  }
+}
+
+/**
  * Indexes built pages with Pagefind's Node API.
  *
  * @param input - The pages (URL, locale, collection, HTML, sort keys) and the output folder.
@@ -185,10 +211,11 @@ export async function indexSite(input: {
         }
       }
 
-      const written = await index.writeFiles({ outputPath: join(input.outputDirectory, locale) });
+      const built = await index.getFiles();
 
-      if (written.errors.length > 0)
-        problems.push({ code: 'pagefind-error', url: '/', message: written.errors.join('; ') });
+      if (built.errors.length > 0)
+        problems.push({ code: 'pagefind-error', url: '/', message: built.errors.join('; ') });
+      else await writeBundle(join(input.outputDirectory, locale), built.files);
 
       await index.deleteIndex();
       locales[locale] = { pages: count, words };

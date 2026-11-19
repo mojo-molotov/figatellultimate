@@ -56,6 +56,40 @@ describe('indexSite, with the real Pagefind', () => {
     expect(filters.length).toBeGreaterThan(0);
   }, 60_000);
 
+  it('every bundle is complete once it returns, the last locale too: Pagefind, closed once done, never cuts a write short', async () => {
+    // Pagefind once answered before its last files reached the disk, and closing it then left them empty
+    // (about one indexing in a hundred and fifty, four pages a locale): a timing race, so the indexing is repeated
+    // two hundred times, which catches it about three runs in four.
+    const pages = [0, 1, 2, 3].flatMap((n) => [
+      page(
+        `/docs/${String(n)}`,
+        'fr',
+        'pages',
+        `Guide ${String(n)}`,
+        `Les chevaux galopent dans la prairie ${String(n)}.`,
+      ),
+      page(
+        `/en/docs/${String(n)}`,
+        'en',
+        'pages',
+        `Guide ${String(n)}`,
+        `The horses run across the meadow ${String(n)}.`,
+      ),
+    ]);
+
+    for (let run = 0; run < 200; run++) {
+      const result = await indexSite({ outputDirectory: join(folder.basePath, 'race', String(run)), pages });
+
+      expect(result.problems).toEqual([]);
+
+      for (const locale of ['en', 'fr']) {
+        const entry: unknown = JSON.parse(await folder.contents(`race/${String(run)}/${locale}/pagefind-entry.json`));
+
+        expect(entry).toHaveProperty(['languages', locale]);
+      }
+    }
+  }, 120_000);
+
   it('reports a page without data-pagefind-body instead of indexing its navigation (the safety net of static generation)', async () => {
     const result = await indexSite({
       outputDirectory: join(folder.basePath, 'unmarked'),
