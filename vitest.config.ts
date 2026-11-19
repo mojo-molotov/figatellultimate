@@ -45,7 +45,8 @@ const config: ViteUserConfig = defineConfig({
       provider: 'v8',
       include: ['packages/{core,facets,site,toc,messages,codegen,search}/src/**'],
       exclude: ['**/__tests__/**', '**/index.ts', '**/ports.ts'],
-      reporter: ['text-summary', 'html', 'lcov'],
+      // `json-summary`: read by `tooling/coverage-summary.ts` for the CI job's summary.
+      reporter: ['text-summary', 'html', 'lcov', 'json-summary'],
     },
     projects: [...packageProjects, { extends: true, test: { name: 'tooling', root: join(ROOT, 'tooling') } }],
   },

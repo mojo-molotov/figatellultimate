@@ -66,6 +66,14 @@ jobs:
       # Coverage once (a report, no threshold); the same tests elsewhere.
       - if: matrix.os == 'ubuntu-latest' && matrix.node == 26
         run: pnpm test:coverage
+      # The coverage per package in the job's summary; the link to the full report, published on pushes to main.
+      - name: Add the coverage to the job's summary
+        if: always() && matrix.os == 'ubuntu-latest' && matrix.node == 26
+        env:
+          REPORT_URL: >-
+            ${{ github.event_name == 'push' && format('https://{0}.github.io/{1}/ci/coverage/', github.repository_owner,
+            github.event.repository.name) || '' }}
+        run: node tooling/coverage-summary.ts coverage/coverage-summary.json "$REPORT_URL" >> "$GITHUB_STEP_SUMMARY"
       - if: matrix.os != 'ubuntu-latest' || matrix.node != 26
         run: pnpm test
       - run: pnpm build
