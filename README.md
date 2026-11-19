@@ -53,7 +53,7 @@ Every pull request runs the scenarios (every package, happy-dom, type tests and 
 - [CI report](https://mojo-molotov.github.io/figatellultimate/ci/): every test of the last build on main, with its trend.
 - [Coverage](https://mojo-molotov.github.io/figatellultimate/ci/coverage/): branches included, on the pure code (`pnpm test:coverage`).
 - [Real browsers](https://mojo-molotov.github.io/figatellultimate/browsers/) and [watch lab](https://mojo-molotov.github.io/figatellultimate/watch-lab/): the weekly runs, each with its own history.
-- [Every report](https://mojo-molotov.github.io/figatellultimate/).
+- [figatellultimate test reports](https://mojo-molotov.github.io/figatellultimate/): every report.
 
 Locally: `pnpm test`, `pnpm test:cli` (after `pnpm build`), `pnpm test:coverage`, then `pnpm allure` to open the report.
 
