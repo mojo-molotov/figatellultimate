@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   allureMeta,
+  keptRuns,
   markdownMeta,
   metaOf,
   renderIndex,
@@ -178,7 +179,11 @@ describe('renderIndex', () => {
   });
 
   it("ends with the reports' name, and Bonaparte's approval", () => {
-    expect(renderIndex(REPORTS)).toContain('<address>figatellultimate test reports · Bonaparte approves</address>');
+    // A signature, not contact details: a footer's paragraph, never `<address>`.
+    expect(renderIndex(REPORTS)).toContain(
+      '<footer><p>figatellultimate test reports · Bonaparte approves</p></footer>',
+    );
+    expect(renderIndex(REPORTS)).not.toContain('<address');
   });
 
   it('escapes every text it writes', () => {
@@ -215,5 +220,35 @@ describe('renderMarkdownPage', () => {
     expect(html).toContain('<ul><li>next build: 38.4 s</li><li><code>.figatellultimate/</code>: 65 MB</li></ul>');
     expect(html).toContain('<thead><tr><th>Step</th><th>total</th></tr></thead>');
     expect(html).toContain('<td>open &lt;a&gt; post</td><td><strong>93.6 kB</strong></td>');
+  });
+
+  it('lists the previous runs below the report, newest first: each linked, dated, with its budgets', () => {
+    const html = renderMarkdownPage('Load test', '# Load test', '../', [
+      { name: '17', published: '2026-11-17T06:00:00Z', counts: { passed: 4 } },
+      { name: '16', published: '2026-11-10T06:00:00Z', counts: { passed: 3, failed: 1 } },
+    ]);
+    const previous = html.slice(html.indexOf('<h2>Previous runs</h2>'));
+
+    expect(previous).toContain('<a href="runs/17/">#17/</a>');
+    expect(rowsOf(previous)).toEqual([
+      ['#17/', '2026-11-17 06:00 UTC', '4'],
+      ['#16/', '2026-11-10 06:00 UTC', '3|1'],
+    ]);
+  });
+
+  it('lists no previous run when there is none', () => {
+    expect(renderMarkdownPage('Load test', '# Load test', '../')).not.toContain('Previous runs');
+  });
+});
+
+describe('keptRuns', () => {
+  it('keeps the newest runs by number, not by name, and drops the others', () => {
+    const runs = ['9', '12', '10', '11', '8', '7'];
+
+    expect(keptRuns(runs, 5)).toEqual({ kept: ['12', '11', '10', '9', '8'], dropped: ['7'] });
+  });
+
+  it('drops nothing while there are fewer runs than it keeps', () => {
+    expect(keptRuns(['3', '2'], 5)).toEqual({ kept: ['3', '2'], dropped: [] });
   });
 });

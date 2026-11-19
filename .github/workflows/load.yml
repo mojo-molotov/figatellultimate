@@ -78,7 +78,7 @@ jobs:
         uses: ./.github/actions/reports-publish
         with:
           family: load
-          title: Load test (weekly)
+          title: Load test
           frequency: weekly
           markdown: ${{ steps.report.outputs.path }}
       - if: steps.report.outputs.path != ''

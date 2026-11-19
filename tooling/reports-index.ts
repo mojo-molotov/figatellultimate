@@ -4,13 +4,14 @@
  *
  *     a family publishes ──> its metadata (`_history/<family>.json`: date, counts, coverage, commit, run, frequency)
  *     every publication  ──> renderIndex(every family's metadata) ──> index.html
- *     the load test      ──> renderMarkdownPage(load-report.md) ──> load/index.html
+ *     the load test      ──> renderMarkdownPage(load-report.md) ──> load/runs/<run>/index.html, its own page
+ *                            └─> the newest, with the previous runs listed ──> load/index.html
  *
  *     node tooling/reports-index.ts meta --family ci --title … --frequency push --site .allure-reports
  *                                        [--report <allure report> [--coverage <coverage-summary.json>]]
  *                                        [--markdown <report.md>]
  *     node tooling/reports-index.ts index --site .allure-reports
- *     node tooling/reports-index.ts page --markdown load-report.md --title … --out load/index.html
+ *     node tooling/reports-index.ts page --markdown load-report.md --title … --dir load [--keep 5]
  *
  * Key design decisions:
  *     - Static: written at publication, read from what that publication has (the report's summary, GitHub Actions'
@@ -28,13 +29,17 @@
  *     - The load test's report is Markdown (its job summary): rendered here for its subset (headings, lists,
  *       tables, code, bold), escaped, in the same look; its counts are its budgets, within and over. Rejected: a
  *       Markdown library for one page.
+ *     - The load test keeps its last five runs, as Allure keeps five reports of history: each run its own page
+ *       (`runs/<run number>/`), the newest at `load/` with the previous ones listed below it, linked, dated, with
+ *       their budgets; an older run is deleted. Rejected: one page of every run, which grows without end.
+ *     - The pages are signed in a `<footer>`: an `<address>` holds contact details, which the signature is not.
  *
  * Invariants (`__tests__/reports-index.test.ts`): every text is escaped; families sorted by name; a family without
  * metadata still listed; a report's counts from its summary, the load test's from its budgets; a metadata file
- * read field by field, its older phrased results too.
+ * read field by field, its older phrased results too; the newest runs kept by number, the previous ones listed.
  */
-import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
 /** The kinds of results, in the order they are listed. */
@@ -156,7 +161,7 @@ export function markdownMeta(input: {
   };
 }
 
-/** The pages' address line, as a listing signs its server. */
+/** The pages' signature, as a listing signs its server. */
 const FOOTER = 'figatellultimate test reports · Bonaparte approves';
 
 /** The shared look: Apache's listing, modernized, light and dark. */
@@ -187,7 +192,7 @@ td { padding: 4px 24px 4px 0; vertical-align: top; white-space: nowrap; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 ul { margin: 0; padding-left: 20px; }
 code { font: inherit; }
-address { font-style: normal; color: var(--muted); }
+footer p { margin: 0; color: var(--muted); }
 `;
 
 const page = (title: string, body: string, footer: string): string =>
@@ -203,7 +208,7 @@ const page = (title: string, body: string, footer: string): string =>
 <main>
 ${body}
 <hr>
-<address>${footer}</address>
+<footer><p>${footer}</p></footer>
 </main>
 </body>
 </html>
@@ -295,18 +300,70 @@ const cells = (line: string): string[] =>
     .split('|')
     .map((cell) => cell.trim());
 
+/** A previous run of the load test, listed below the newest: its folder's name (its run number), date and budgets. */
+export interface PreviousRun {
+  readonly name: string;
+  readonly published?: string | undefined;
+  readonly counts?: Counts | undefined;
+}
+
+/**
+ * The runs to keep, the newest first by run number, and the ones to delete.
+ *
+ * @param names - The runs' folder names: their run numbers.
+ * @param keep - How many to keep.
+ * @returns The kept ones, newest first, and the dropped ones.
+ *
+ * @example
+ * keptRuns(['9', '12', '10'], 2); // { kept: ['12', '10'], dropped: ['9'] }
+ */
+export function keptRuns(names: readonly string[], keep: number): { kept: string[]; dropped: string[] } {
+  const sorted = [...names].sort((a, b) => Number(b) - Number(a));
+
+  return { kept: sorted.slice(0, keep), dropped: sorted.slice(keep) };
+}
+
+/** The previous runs, as a listing: each linked to its page, dated, with its budgets. */
+const previousRuns = (runs: readonly PreviousRun[]): string =>
+  runs.length === 0
+    ? ''
+    : `
+<h2>Previous runs</h2>
+<div class="scroll">
+<table>
+<thead><tr><th>Name</th><th>Last modified</th><th>Results</th></tr></thead>
+<tbody>
+${runs
+  .map(
+    (run) => `<tr>
+<td><a href="runs/${escape(run.name)}/">#${escape(run.name)}/</a></td>
+<td>${escape(dateOf(run.published))}</td>
+<td>${countsCell(run.counts, undefined)}</td>
+</tr>`,
+  )
+  .join('\n')}
+</tbody>
+</table>
+</div>`;
+
 /**
  * A Markdown report as a page of the same look: its headings, lists, tables, code spans and bold, escaped.
  *
  * @param title - The page's title.
  * @param markdown - The report.
  * @param back - The index's URL, linked as the parent directory.
+ * @param previous - The previous runs, newest first, listed below the report (the newest run's page only).
  * @returns The page.
  *
  * @example
  * renderMarkdownPage('Load test', '# Load test\n\n- next build: 38 s\n', '../');
  */
-export function renderMarkdownPage(title: string, markdown: string, back: string): string {
+export function renderMarkdownPage(
+  title: string,
+  markdown: string,
+  back: string,
+  previous: readonly PreviousRun[] = [],
+): string {
   const html: string[] = [];
   const lines = markdown.split('\n');
 
@@ -348,7 +405,7 @@ export function renderMarkdownPage(title: string, markdown: string, back: string
 
   return page(
     title,
-    `<p><a href="${escape(back)}">../</a> <span class="muted">Parent Directory</span></p>\n${html.join('\n')}`,
+    `<p><a href="${escape(back)}">../</a> <span class="muted">Parent Directory</span></p>\n${html.join('\n')}${previousRuns(previous)}`,
     escape(FOOTER),
   );
 }
@@ -435,7 +492,8 @@ if (import.meta.main) {
       report: { type: 'string' },
       markdown: { type: 'string' },
       coverage: { type: 'string' },
-      out: { type: 'string' },
+      dir: { type: 'string' },
+      keep: { type: 'string' },
     },
   });
   const now = new Date();
@@ -482,10 +540,38 @@ if (import.meta.main) {
     }
 
     case 'page': {
-      const out = values.out ?? 'index.html';
+      // This run's report, page and budgets under `runs/<run number>/`, the oldest runs deleted, then the newest run
+      // at the root with the previous ones listed.
+      const dir = values.dir ?? '.';
+      const title = values.title ?? '';
+      const markdown = readFileSync(values.markdown ?? '', 'utf8');
+      const runs = join(dir, 'runs');
+      const own = join(runs, process.env['GITHUB_RUN_NUMBER'] ?? '0');
 
-      mkdirSync(dirname(out), { recursive: true });
-      writeFileSync(out, renderMarkdownPage(values.title ?? '', readFileSync(values.markdown ?? '', 'utf8'), '../'));
+      mkdirSync(own, { recursive: true });
+      writeFileSync(join(own, 'report.md'), markdown);
+      writeFileSync(join(own, 'index.html'), renderMarkdownPage(title, markdown, '../../'));
+      writeFileSync(
+        join(own, 'meta.json'),
+        `${JSON.stringify(markdownMeta({ family: 'run', title, markdown, env: process.env, now }), null, 2)}\n`,
+      );
+      const numbered = readdirSync(runs).filter((name) => /^\d+$/.test(name));
+      const { kept, dropped } = keptRuns(numbered, Number(values.keep ?? '5'));
+
+      for (const name of dropped) rmSync(join(runs, name), { recursive: true, force: true });
+
+      const [newest = '', ...older] = kept;
+      const previous = older.map((name): PreviousRun => {
+        const recorded = join(runs, name, 'meta.json');
+        const read = existsSync(recorded) ? metaOf(JSON.parse(readFileSync(recorded, 'utf8')), name) : undefined;
+
+        return { name, published: read?.published, counts: read?.counts };
+      });
+
+      writeFileSync(
+        join(dir, 'index.html'),
+        renderMarkdownPage(title, readFileSync(join(runs, newest, 'report.md'), 'utf8'), '../', previous),
+      );
       break;
     }
 

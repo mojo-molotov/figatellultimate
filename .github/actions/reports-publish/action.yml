@@ -76,9 +76,9 @@ runs:
       shell: bash
       run: |
         family="${{ inputs.family }}"
-        rm -rf ".allure-reports/$family"
+        # Its folder kept: the page keeps the last five runs under runs/<run number>/, the newest at its root.
         node tooling/reports-index.ts page --markdown "${{ inputs.markdown }}" --title "${{ inputs.title }}" \
-          --out ".allure-reports/$family/index.html"
+          --dir ".allure-reports/$family" --keep 5
         node tooling/reports-index.ts meta --site .allure-reports --family "$family" --title "${{ inputs.title }}" \
           --frequency "${{ inputs.frequency }}" --markdown "${{ inputs.markdown }}"
 
