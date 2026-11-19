@@ -1,5 +1,6 @@
-/** The root layout of each locale: the design system's styles, the theme and the effects. */
+/** The root layout of each locale: the design system's styles, the theme, the effects and Vercel's Speed Insights. */
 import { Effects } from '@figatellultimate/effects';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { hasLocale } from 'next-intl';
 import { tocScript } from '@figatellultimate/ui/scripts';
 import { ThemeProvider } from 'next-themes';
@@ -64,6 +65,8 @@ export default async function LocaleLayout(props: LayoutProps<'/[locale]'>): Pro
           {/* The cursor glow and the margins' sparkles, loaded on desktops only. */}
           <Effects />
         </ThemeProvider>
+        {/* The real visitors' Core Web Vitals, sent to Vercel's Speed Insights: its script exists on Vercel only. */}
+        <SpeedInsights />
       </body>
     </html>
   );

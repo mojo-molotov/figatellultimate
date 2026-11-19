@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "@content-collections/mdx": "0.2.2",
-    "@heroicons/react": "2.2.0",
     "@figatellultimate/effects": "workspace:*",
     "@figatellultimate/facets": "workspace:*",
     "@figatellultimate/facets-react": "workspace:*",
@@ -28,7 +27,9 @@
     "@figatellultimate/toc": "workspace:*",
     "@figatellultimate/ui": "workspace:*",
     "@figatellultimate/use-intl": "workspace:*",
+    "@heroicons/react": "2.2.0",
     "@shikijs/rehype": "4.5.0",
+    "@vercel/speed-insights": "2.1.0",
     "icu-minify": "4.15.0",
     "next": "16.4.6",
     "next-intl": "4.14.9",
