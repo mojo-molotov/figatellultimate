@@ -47,6 +47,9 @@ function device(desktop: boolean): SwitchableMediaQueryList {
   return query;
 }
 
+/** An element's transform origin, its zero depth left out: Firefox writes `25% 25% 0px` for `25% 25%`. */
+const originOf = (element: HTMLElement): string => element.style.transformOrigin.replace(/ 0px$/, '');
+
 const trigger = (): HTMLElement => screen.getByRole('button', { name: `«agrandir : ${ALT}»` });
 
 afterEach(() => {
@@ -166,16 +169,16 @@ describe('ImageZoom', () => {
     expect(full().hasAttribute('data-zoomed')).toBe(false);
     await user.pointer({ keys: '[MouseLeft>]', target: frame, coords: { clientX: 200, clientY: 100 } });
     expect(full().hasAttribute('data-zoomed')).toBe(true);
-    expect(full().style.transformOrigin).toBe('25% 25%');
+    expect(originOf(full())).toBe('25% 25%');
     await user.pointer({ target: frame, coords: { clientX: 500, clientY: 250 } });
-    expect(full().style.transformOrigin).toBe('100% 100%');
+    expect(originOf(full())).toBe('100% 100%');
     await user.pointer({ keys: '[/MouseLeft]', target: frame });
     expect(full().hasAttribute('data-zoomed')).toBe(false);
     // The zoom out starts from where the reader was looking: the point stays, the image shrinks around it.
-    expect(full().style.transformOrigin).toBe('100% 100%');
+    expect(originOf(full())).toBe('100% 100%');
     // A new press zooms around its own point.
     await user.pointer({ keys: '[MouseLeft>]', target: frame, coords: { clientX: 300, clientY: 150 } });
-    expect(full().style.transformOrigin).toBe('50% 50%');
+    expect(originOf(full())).toBe('50% 50%');
     await user.pointer({ keys: '[/MouseLeft]', target: frame });
     // Still open: pressing the image never closes the dialog.
     expect(screen.getByRole('dialog', { name: ALT })).toBeTruthy();
