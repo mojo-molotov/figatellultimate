@@ -1,0 +1,1 @@
+{"id":"efe5a5c8f40715d54efe20dded746250.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/declarations/__tests__/taxonomy.test.ts#defineTaxonomy throws InvalidTaxonomyError on an empty term","name":"throws InvalidTaxonomyError on an empty term","status":"passed","testResultsByEnv":{"linux-node-26":"a97e50e5ef849a691f4caef276f3d20e"}}

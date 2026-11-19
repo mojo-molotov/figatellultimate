@@ -1,0 +1,1 @@
+{"id":"390fb0a9588c7d54b0f93a5d1e59f924.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/shared/__tests__/names.test.ts#sanitizeName returns an empty string when nothing can be kept","name":"returns an empty string when nothing can be kept","status":"passed","testResultsByEnv":{"linux-node-26":"0e1e4e435a030acb4061fa69e6bded00"}}

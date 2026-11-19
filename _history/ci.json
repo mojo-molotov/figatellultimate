@@ -1,0 +1,21 @@
+{
+  "family": "ci",
+  "title": "CI (every pull request and push to main)",
+  "frequency": "push",
+  "published": "2026-11-19T22:25:59.939Z",
+  "counts": {
+    "passed": 9058
+  },
+  "coverage": {
+    "lines": 98.82,
+    "href": "ci/coverage/"
+  },
+  "commit": {
+    "sha": "55e25e1",
+    "url": "https://github.com/mojo-molotov/figatellultimate/commit/55e25e1bb763afc3247ae6b2f9a338726ff7c158"
+  },
+  "run": {
+    "number": "38",
+    "url": "https://github.com/mojo-molotov/figatellultimate/actions/runs/44627785472"
+  }
+}

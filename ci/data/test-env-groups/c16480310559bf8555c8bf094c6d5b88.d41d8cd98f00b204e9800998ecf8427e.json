@@ -1,0 +1,1 @@
+{"id":"c16480310559bf8555c8bf094c6d5b88.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/shared/__tests__/suggest.test.ts#suggest returns nothing when no candidate is close enough","name":"returns nothing when no candidate is close enough","status":"passed","testResultsByEnv":{"linux-node-26":"9ea2da68a26543e35361678528fe1e67"}}

@@ -1,0 +1,1 @@
+{"id":"3d0b816f97b7f3579b5c2a2f3e0ee31d.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/shared/__tests__/result.test.ts#Result combine returns every value in order when all succeed","name":"combine returns every value in order when all succeed","status":"passed","testResultsByEnv":{"linux-node-26":"87bcdf8d4d257c590db9f8d5a65bef52"}}

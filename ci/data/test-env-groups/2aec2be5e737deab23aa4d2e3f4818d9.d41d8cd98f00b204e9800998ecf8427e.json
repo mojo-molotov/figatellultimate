@@ -1,0 +1,1 @@
+{"id":"2aec2be5e737deab23aa4d2e3f4818d9.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/messages/src/__tests__/unused.test.ts#findUnusedMessages leaves out the navigation's labels","name":"leaves out the navigation's labels","status":"passed","testResultsByEnv":{"linux-node-26":"34233a9666c5aa55f80723d08fb2a4d9"}}

@@ -1,0 +1,1 @@
+{"id":"212b21cac9b314f45270049e0a7f16cf.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/codegen/src/__tests__/emit.test.ts#emit never writes an absolute path in generated code","name":"never writes an absolute path in generated code","status":"passed","testResultsByEnv":{"linux-node-26":"a2f752baf197b5f56a9b17eb10d74317"}}

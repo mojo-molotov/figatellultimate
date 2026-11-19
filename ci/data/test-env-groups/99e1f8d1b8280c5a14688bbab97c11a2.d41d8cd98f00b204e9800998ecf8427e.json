@@ -1,0 +1,1 @@
+{"id":"99e1f8d1b8280c5a14688bbab97c11a2.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/__tests__/config.test.ts#defineConfig: messages throws InvalidConfigError on an absolute folder","name":"throws InvalidConfigError on an absolute folder","status":"passed","testResultsByEnv":{"linux-node-26":"e672af6e17be9c616e50ea4cbcf58611"}}

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>figatellultimate test reports</title>
+<style>
+:root { color-scheme: light dark; --ink: #1d1f21; --muted: #6a6f75; --rule: #c9ccd1; --link: #0b57d0; --passed: #1a7f37; --failed: #cf222e; --broken: #bc4c00; --skipped: #8c959f; --paper: #fbfbf8; }
+@media (prefers-color-scheme: dark) { :root { --ink: #d7dade; --muted: #8b9097; --rule: #3a3e44; --link: #7cacf8; --passed: #3fb950; --failed: #f85149; --broken: #db6d28; --skipped: #6e7681; --paper: #16181b; } }
+* { box-sizing: border-box; }
+body { margin: 0; padding: 32px 16px; background: var(--paper); color: var(--ink); font: 14px/1.6 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; }
+main { max-width: 1100px; margin: 0 auto; }
+h1 { font-size: 20px; font-weight: 600; margin: 0 0 16px; }
+h2 { font-size: 15px; margin: 28px 0 8px; }
+hr { border: 0; border-top: 1px solid var(--rule); margin: 12px 0; }
+a { color: var(--link); text-decoration: none; }
+a:hover, a:focus-visible { text-decoration: underline; }
+.scroll { overflow-x: auto; margin: 12px 0; }
+table { border-collapse: collapse; width: 100%; }
+th { text-align: left; font-weight: 600; color: var(--muted); padding: 4px 24px 4px 0; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+td { padding: 4px 24px 4px 0; vertical-align: top; white-space: nowrap; }
+.muted { color: var(--muted); }
+.count, .coverage { display: block; }
+.count::before { content: '●'; margin-right: 6px; }
+/* The coverage's mark: a half-filled circle, the dots' width, in grey (it is no test's status). */
+.coverage::before { content: '◑'; margin-right: 6px; color: var(--muted); }
+.count.passed::before { color: var(--passed); }
+.count.failed::before { color: var(--failed); }
+.count.broken::before { color: var(--broken); }
+.count.skipped::before { color: var(--skipped); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+ul { margin: 0; padding-left: 20px; }
+code { font: inherit; }
+footer p { margin: 0; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+<h1>Index of /figatellultimate/</h1>
+<div class="scroll">
+<table>
+<thead><tr><th>Name</th><th>Last modified</th><th>Results</th><th>Commit</th><th>Run</th><th>Frequency</th></tr></thead>
+<tbody>
+<tr>
+<td><a href="browsers/">browsers/</a></td>
+<td>2026-11-19 06:53 UTC</td>
+<td><span class="count passed" title="645 passed">645<span class="sr"> passed</span></span></td>
+<td><a href="https://github.com/mojo-molotov/figatellultimate/commit/6446cdad47dee7141790377cae7ebf4ffc720556">6446cda</a></td>
+<td><a href="https://github.com/mojo-molotov/figatellultimate/actions/runs/44475186197">#7</a></td>
+<td>weekly</td>
+</tr>
+<tr>
+<td><a href="ci/">ci/</a></td>
+<td>2026-11-19 22:25 UTC</td>
+<td><span class="count passed" title="9058 passed">9058<span class="sr"> passed</span></span><span class="coverage"><a href="ci/coverage/">coverage 98.8%</a></span></td>
+<td><a href="https://github.com/mojo-molotov/figatellultimate/commit/55e25e1bb763afc3247ae6b2f9a338726ff7c158">55e25e1</a></td>
+<td><a href="https://github.com/mojo-molotov/figatellultimate/actions/runs/44627785472">#38</a></td>
+<td>push</td>
+</tr>
+<tr>
+<td><a href="load/">load/</a></td>
+<td>2026-11-19 12:06 UTC</td>
+<td><span class="count passed" title="17 passed">17<span class="sr"> passed</span></span></td>
+<td><a href="https://github.com/mojo-molotov/figatellultimate/commit/6c081171fa943bc51d9d561baf060e0af8ee7bfa">6c08117</a></td>
+<td><a href="https://github.com/mojo-molotov/figatellultimate/actions/runs/44520019792">#8</a></td>
+<td>weekly</td>
+</tr>
+<tr>
+<td><a href="watch-lab/">watch-lab/</a></td>
+<td>2026-11-19 06:25 UTC</td>
+<td><span class="count passed" title="45 passed">45<span class="sr"> passed</span></span></td>
+<td><a href="https://github.com/mojo-molotov/figatellultimate/commit/320ce765dce4c8706572ec595bf57bfde0eee8b8">320ce76</a></td>
+<td><a href="https://github.com/mojo-molotov/figatellultimate/actions/runs/44471755832">#5</a></td>
+<td>weekly</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+<footer><p>figatellultimate test reports · Bonaparte approves</p></footer>
+</main>
+</body>
+</html>

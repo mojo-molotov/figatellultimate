@@ -1,0 +1,1 @@
+{"id":"aef94f7e0d27b409b8c41be254afa934.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/shared/__tests__/suggest.test.ts#damerauLevenshtein distance(\"kitten\", \"sitting\") = 3","name":"distance(\"kitten\", \"sitting\") = 3","status":"passed","testResultsByEnv":{"linux-node-26":"492d354fb029b4d47b023cd85b8ee1b0"}}

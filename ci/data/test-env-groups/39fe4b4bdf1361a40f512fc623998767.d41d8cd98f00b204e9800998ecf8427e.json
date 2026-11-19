@@ -1,0 +1,1 @@
+{"id":"39fe4b4bdf1361a40f512fc623998767.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/fs-node/src/__tests__/path-lister.test.ts#PathLister: node lists files only, never directories","name":"lists files only, never directories","status":"passed","testResultsByEnv":{"linux-node-26":"7129dc2a403a77b879b4a174939c4c3f"}}

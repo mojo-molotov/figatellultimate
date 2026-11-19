@@ -1,0 +1,1 @@
+{"id":"fcfea99f67c30dc0398aa44636445077.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/__tests__/config.test.ts#defineConfig: messages throws InvalidConfigError on a parent folder","name":"throws InvalidConfigError on a parent folder","status":"passed","testResultsByEnv":{"linux-node-26":"a6263aa0df6040535c425b68b61960b4"}}

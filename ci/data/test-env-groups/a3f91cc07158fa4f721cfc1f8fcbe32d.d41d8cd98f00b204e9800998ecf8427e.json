@@ -1,0 +1,1 @@
+{"id":"a3f91cc07158fa4f721cfc1f8fcbe32d.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/__tests__/config.test.ts#defineConfig: messages throws InvalidConfigError on an unknown runtime","name":"throws InvalidConfigError on an unknown runtime","status":"passed","testResultsByEnv":{"linux-node-26":"624ce7fc86e019eb0f76e14d1d44b970"}}

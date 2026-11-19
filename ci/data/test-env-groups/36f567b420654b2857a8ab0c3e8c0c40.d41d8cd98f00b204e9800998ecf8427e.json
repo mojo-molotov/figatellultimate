@@ -1,0 +1,1 @@
+{"id":"36f567b420654b2857a8ab0c3e8c0c40.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/facets/src/__tests__/pagination.test.ts#paginationItems clamps the current page into range","name":"clamps the current page into range","status":"passed","testResultsByEnv":{"linux-node-26":"ddf23c4708e29144ce73f1f415330715"}}

@@ -1,0 +1,1 @@
+{"id":"51198b623a29a3442eb540b6704be5c3.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/declarations/__tests__/locales.test.ts#defineLocales throws InvalidLocalesError on duplicate locales","name":"throws InvalidLocalesError on duplicate locales","status":"passed","testResultsByEnv":{"linux-node-26":"cadc929adde9d0e1cb8a67ed141eb56e"}}

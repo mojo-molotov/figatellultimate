@@ -1,0 +1,1 @@
+{"id":"f5102aad248248f294a27cff7afa9e48.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/search/src/__tests__/search.test.ts#createSearch never throws on a missing bundle: status unavailable","name":"never throws on a missing bundle: status unavailable","status":"passed","testResultsByEnv":{"linux-node-26":"996a850f4cbae397359e1443d1c61f16"}}

@@ -1,0 +1,1 @@
+{"id":"4b8a97983a67788601498d20ede5e6e4.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/declarations/__tests__/locales.test.ts#defineLocales throws InvalidLocalesError on a non-code name","name":"throws InvalidLocalesError on a non-code name","status":"passed","testResultsByEnv":{"linux-node-26":"eca589305b059369755929488f115d06"}}

@@ -1,0 +1,1 @@
+{"id":"da2a944c976baa34a5b7b8849f412056.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/shared/__tests__/names.test.ts#sanitizeName \"a__b--c\" → \"a-b-c\"","name":"\"a__b--c\" → \"a-b-c\"","status":"passed","testResultsByEnv":{"linux-node-26":"fb6fd1ed9d2334197c9866f3b3b1a5d4"}}

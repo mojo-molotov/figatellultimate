@@ -1,0 +1,1 @@
+{"id":"0ebde6053492b33a538f97fe1ebf6696.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/facets-react/src/__tests__/hook.test.ts#useFacetedCollection never writes the remembered page in the URL","name":"never writes the remembered page in the URL","status":"passed","testResultsByEnv":{"linux-node-26":"7eec82c6d475333b248b082729d5d90d"}}

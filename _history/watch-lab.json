@@ -1,0 +1,17 @@
+{
+  "family": "watch-lab",
+  "title": "Watch lab (weekly)",
+  "frequency": "weekly",
+  "published": "2026-11-19T06:25:37.697Z",
+  "counts": {
+    "passed": 45
+  },
+  "commit": {
+    "sha": "320ce76",
+    "url": "https://github.com/mojo-molotov/figatellultimate/commit/320ce765dce4c8706572ec595bf57bfde0eee8b8"
+  },
+  "run": {
+    "number": "5",
+    "url": "https://github.com/mojo-molotov/figatellultimate/actions/runs/44471755832"
+  }
+}

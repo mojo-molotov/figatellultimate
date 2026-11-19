@@ -1,0 +1,1 @@
+{"id":"105b72c595dc6f7a65909914f88b58bc.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/search/src/__tests__/search.test.ts#createSearch trims the term before searching","name":"trims the term before searching","status":"passed","testResultsByEnv":{"linux-node-26":"42b83388dadcea7f8197603835ae4de8"}}

@@ -1,0 +1,1 @@
+{"id":"2980eb3a5ac6ae9553be1ae39f302bed.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/declarations/__tests__/locales.test.ts#defineLocales throws InvalidLocalesError on an empty list","name":"throws InvalidLocalesError on an empty list","status":"passed","testResultsByEnv":{"linux-node-26":"f8faec122908efe123e70fe525de3e1d"}}

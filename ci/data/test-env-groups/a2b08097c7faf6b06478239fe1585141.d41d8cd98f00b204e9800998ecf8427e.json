@@ -1,0 +1,1 @@
+{"id":"a2b08097c7faf6b06478239fe1585141.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/__tests__/config.test.ts#defineConfig: navigation throws on menus that is not a boolean","name":"throws on menus that is not a boolean","status":"passed","testResultsByEnv":{"linux-node-26":"a6da10ab12e79f9bd5cc3972e8df5b3a"}}

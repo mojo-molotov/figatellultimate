@@ -1,0 +1,1 @@
+{"id":"81c405b328242ce99e6858ac7bfb9609.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/fs-node/src/__tests__/file-writer.test.ts#createNodeFileWriter leaves no temporary file behind","name":"leaves no temporary file behind","status":"passed","testResultsByEnv":{"linux-node-26":"8fc177d36d338c3b9ba5ee8b973a5757"}}

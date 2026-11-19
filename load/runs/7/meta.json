@@ -1,0 +1,16 @@
+{
+  "family": "run",
+  "title": "Load test",
+  "published": "2026-11-19T11:46:16.296Z",
+  "counts": {
+    "passed": 17
+  },
+  "commit": {
+    "sha": "9dc70e8",
+    "url": "https://github.com/mojo-molotov/figatellultimate/commit/9dc70e8a8dfaf17e7db11d811d6bb7485f599844"
+  },
+  "run": {
+    "number": "7",
+    "url": "https://github.com/mojo-molotov/figatellultimate/actions/runs/44516925440"
+  }
+}
