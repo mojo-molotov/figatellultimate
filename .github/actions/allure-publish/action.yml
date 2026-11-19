@@ -78,6 +78,8 @@ runs:
         git push -q origin allure-reports
 
     - name: Stage the site
-      uses: actions/upload-pages-artifact@v4
+      uses: actions/upload-pages-artifact@v5
       with:
         path: .allure-reports/
+        # As v4 did: every file of the site, `.nojekyll` included.
+        include-hidden-files: true
