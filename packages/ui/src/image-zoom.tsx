@@ -11,6 +11,8 @@
  *       CSS (a 3D spring as `linear()`), a fade with reduced motion; no animation library.
  *     - The lens never stays zoomed once the button is up, even when the release is lost (a move without the button,
  *       the context menu, the window losing focus); Ctrl + click (the Mac's context menu) never starts it.
+ *     - The pointer capture is a comfort, never a condition: a browser refuses a pointer it no longer counts as active
+ *       (Firefox throws), and the zoom starts before it is attempted.
  *     - Closing gives the focus back to the image without scrolling (`preventScroll`): the keyboard finds its place,
  *       and the page stays where the reader left it, never jumping to the image.
  *     - The zoom out keeps the last zoomed point until the image is whole again: it shrinks back where the reader
@@ -149,11 +151,18 @@ function ImageZoomLens({
         // The left button alone: Ctrl + click is the Mac's context menu, whose menu would swallow the release.
         if (event.pointerType !== 'mouse' || event.button !== 0 || event.ctrlKey) return;
 
-        // No native image drag while zooming; the pointer stays ours until released, even outside the frame.
+        // No native image drag while zooming.
         event.preventDefault();
-        event.currentTarget.setPointerCapture(event.pointerId);
         setOrigin(originOf(event));
         setZoomed(true);
+
+        // The pointer stays ours until released, even outside the frame. A comfort, never a condition: a browser
+        // refuses to capture a pointer it no longer counts as active (Firefox throws), and the zoom does not need it.
+        try {
+          event.currentTarget.setPointerCapture(event.pointerId);
+        } catch {
+          // Not active: nothing to capture; the release is still caught on the frame, or by the move without button.
+        }
       }}
       onPointerMove={(event) => {
         // The release may have been lost (a menu, another window): no left button pressed, no zoom.

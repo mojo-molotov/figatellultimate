@@ -196,6 +196,28 @@ describe('ImageZoom', () => {
     expect(document.querySelector('[data-slot="image-zoom-full"][data-zoomed]')).toBeNull();
   });
 
+  it('zooms even when the browser cannot capture the pointer (one it no longer counts as active)', async () => {
+    device(true);
+    const user = userEvent.setup();
+
+    render(<ImageZoom labels={LABELS} src={SRC} alt={ALT} />);
+    await user.click(trigger());
+    const frame = document.querySelector('[data-slot="image-zoom-frame"]');
+
+    if (!(frame instanceof HTMLElement)) throw new Error('no frame');
+
+    // As Firefox does for a pointer it does not count as active: the capture throws.
+    const capture = vi.spyOn(frame, 'setPointerCapture').mockImplementation(() => {
+      throw new DOMException('Element.setPointerCapture: Invalid pointer id', 'NotFoundError');
+    });
+
+    await user.pointer({ keys: '[MouseLeft>]', target: frame });
+
+    // Precondition: the capture was attempted, and threw.
+    expect(capture).toHaveBeenCalled();
+    expect(document.querySelector('[data-slot="image-zoom-full"][data-zoomed]')).not.toBeNull();
+  });
+
   describe('never stays zoomed once the button is up, even when the release is lost', () => {
     /** Opens the image and holds the left button on it. */
     async function held() {
