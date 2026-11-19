@@ -13,7 +13,10 @@ inputs:
     description: The report's folder and history name, e.g. ci, browsers, watch-lab
     required: true
   title:
-    description: The report's name on the index page
+    description: The report's name (its page's title, and the index's when it has no metadata)
+    required: true
+  frequency:
+    description: How often it runs, in a word, shown by the index (push, weekly)
     required: true
   results-dir:
     description: The merged allure-results of the family's jobs (an Allure report)
@@ -56,14 +59,11 @@ runs:
         if [ -f "$history" ]; then gunzip -c "$history" > history.jsonl; fi
         pnpm exec allure generate "${{ inputs.results-dir }}" --output allure-report
         mv allure-report ".allure-reports/$family"
-        extra=()
         if [ -n "${{ inputs.extra-dir }}" ] && [ -d "${{ inputs.extra-dir }}" ]; then
           cp -R "${{ inputs.extra-dir }}" ".allure-reports/$family/${{ inputs.extra-name }}"
-          if [ -f "${{ inputs.extra-dir }}/coverage-summary.json" ]; then extra=(--coverage "${{ inputs.extra-dir }}/coverage-summary.json"); fi
         fi
-        limit=$(node -e "import('./allurerc.mjs').then((m) => console.log(m.default.historyLimit))")
         node tooling/reports-index.ts meta --site .allure-reports --family "$family" --title "${{ inputs.title }}" \
-          --report ".allure-reports/$family" --history history.jsonl --limit "$limit" "${extra[@]}"
+          --frequency "${{ inputs.frequency }}" --report ".allure-reports/$family"
         if [ -f history.jsonl ]; then gzip -9 -c history.jsonl > "$history"; fi
 
     - name: Render the Markdown report as a page
@@ -75,7 +75,7 @@ runs:
         node tooling/reports-index.ts page --markdown "${{ inputs.markdown }}" --title "${{ inputs.title }}" \
           --out ".allure-reports/$family/index.html"
         node tooling/reports-index.ts meta --site .allure-reports --family "$family" --title "${{ inputs.title }}" \
-          --markdown "${{ inputs.markdown }}"
+          --frequency "${{ inputs.frequency }}" --markdown "${{ inputs.markdown }}"
 
     - name: Write the index of every report
       shell: bash

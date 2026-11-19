@@ -136,6 +136,7 @@ jobs:
         with:
           family: ci
           title: CI (every pull request and push to main)
+          frequency: push
           extra-dir: coverage
           extra-name: coverage
       - id: deployment

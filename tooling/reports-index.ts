@@ -2,48 +2,55 @@
  * The index of the published test reports (GitHub Pages' root), in the look of a modernized Apache directory
  * listing, and the load test's own page; the metadata each family records when it publishes.
  *
- *     a family publishes ──> its metadata (`_history/<family>.json`: date, status, results, commit, run, notes)
+ *     a family publishes ──> its metadata (`_history/<family>.json`: date, counts, commit, run, frequency)
  *     every publication  ──> renderIndex(every family's metadata) ──> index.html
  *     the load test      ──> renderMarkdownPage(load-report.md) ──> load/index.html
  *
- *     node tooling/reports-index.ts meta --family ci --title … --site .allure-reports [--report …] [--markdown …]
- *                                        [--history history.jsonl] [--coverage coverage/coverage-summary.json]
+ *     node tooling/reports-index.ts meta --family ci --title … --frequency push --site .allure-reports
+ *                                        [--report <allure report>] [--markdown <report.md>]
  *     node tooling/reports-index.ts index --site .allure-reports
  *     node tooling/reports-index.ts page --markdown load-report.md --title … --out load/index.html
  *
  * Key design decisions:
- *     - Static: written at publication, read from what that publication has (the report's summary, the coverage,
- *       the history, GitHub Actions' variables). Rejected: the workflows' live state through GitHub's API at each
- *       visit, a network call and a rate limit for a page meant to be plain.
+ *     - Static: written at publication, read from what that publication has (the report's summary, GitHub Actions'
+ *       variables). Rejected: the workflows' live state through GitHub's API at each visit, a network call and a
+ *       rate limit for a page meant to be plain.
  *     - Each family records its own metadata: a publication only renders its family, so the index reads the others'
- *       from what they recorded; a family's line is as of its last publication. A family without any (an older
- *       publication) is listed by its title alone.
- *     - Apache's listing, modernized: its title, columns and rules, in a fixed-width font with a dark theme; the
- *       results, the commit and the run as columns, no size (a report's size says nothing of the tests).
+ *       from what they recorded; a family's line is as of its last publication. A family without any is listed by
+ *       its name alone.
+ *     - Apache's listing, modernized and spare: its title, columns and rules, in a fixed-width font with a dark
+ *       theme; Name, Last modified, Results, Commit, Run, Frequency. Results are counts by kind, one per line, each
+ *       a colored dot and a number (the kind's word kept for screen readers and as a tooltip); the run is its number;
+ *       the frequency its shortest word (`push`, `weekly`). No size, no notes, no host: what the reader scans for.
  *     - The load test's report is Markdown (its job summary): rendered here for its subset (headings, lists,
- *       tables, code, bold), escaped, in the same look. Rejected: a Markdown library for one page.
+ *       tables, code, bold), escaped, in the same look; its counts are its budgets, within and over. Rejected: a
+ *       Markdown library for one page.
  *
  * Invariants (`__tests__/reports-index.test.ts`): every text is escaped; families sorted by name; a family without
- * metadata still listed; a report's status and counts from its summary; the load test's from its budgets.
+ * metadata still listed; a report's counts from its summary, the load test's from its budgets; a metadata file
+ * read field by field, its older phrased results too.
  */
 import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { parseArgs } from 'node:util';
 
+/** The kinds of results, in the order they are listed. */
+const KINDS = ['passed', 'failed', 'broken', 'skipped'] as const;
+
+/** Results by kind; a kind absent counts none. */
+export type Counts = Readonly<Partial<Record<(typeof KINDS)[number], number>>>;
+
 /** What a family records when it publishes. */
 export interface ReportMeta {
   readonly family: string;
   readonly title: string;
+  /** How often it runs, in a word: `push`, `weekly`. */
+  readonly frequency?: string | undefined;
   /** ISO date of the publication. */
   readonly published?: string | undefined;
-  readonly status?: 'passed' | 'failed' | undefined;
-  /** The results in a few words: `8512 passed`, `16 budgets within`. */
-  readonly results?: string | undefined;
+  readonly counts?: Counts | undefined;
   readonly commit?: { readonly sha: string; readonly url: string } | undefined;
-  readonly run?:
-    { readonly number: string; readonly url: string; readonly event: string; readonly ref: string } | undefined;
-  /** Short notes, each with an optional link: the coverage, the history kept. */
-  readonly notes?: readonly { readonly text: string; readonly href?: string | undefined }[] | undefined;
+  readonly run?: { readonly number: string; readonly url: string } | undefined;
 }
 
 /** GitHub Actions' variables a publication reads. */
@@ -57,6 +64,8 @@ const field = (value: unknown, key: string): unknown =>
 
 const count = (value: unknown): number => (typeof value === 'number' ? value : 0);
 
+const text = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined);
+
 /** The commit and the run of the publication, from GitHub Actions' variables; none outside them. */
 function contextOf(env: Environment): Pick<ReportMeta, 'commit' | 'run'> {
   const server = env['GITHUB_SERVER_URL'] ?? 'https://github.com';
@@ -68,79 +77,57 @@ function contextOf(env: Environment): Pick<ReportMeta, 'commit' | 'run'> {
 
   return {
     commit: { sha: sha.slice(0, 7), url: `${server}/${repository}/commit/${sha}` },
-    run: {
-      number: env['GITHUB_RUN_NUMBER'] ?? id,
-      url: `${server}/${repository}/actions/runs/${id}`,
-      event: env['GITHUB_EVENT_NAME'] ?? '',
-      ref: env['GITHUB_REF_NAME'] ?? '',
-    },
+    run: { number: env['GITHUB_RUN_NUMBER'] ?? id, url: `${server}/${repository}/actions/runs/${id}` },
   };
 }
 
+/** Counts without their empty kinds. */
+const nonEmpty = (counts: Readonly<Record<string, number>>): Counts =>
+  Object.fromEntries(KINDS.flatMap((kind) => ((counts[kind] ?? 0) > 0 ? [[kind, counts[kind] ?? 0]] : [])));
+
 /**
- * An Allure report's metadata: its status and counts from its summary, the history kept, the coverage (the CI's).
+ * An Allure report's metadata: its counts by kind from its summary.
  *
- * @param input - The family and title, the report's `summary.json` (parsed), the history's runs and limit, the
- *   coverage summary (parsed) and where its report is, GitHub Actions' variables and the publication's date.
+ * @param input - The family, title and frequency, the report's `summary.json` (parsed), GitHub Actions' variables
+ *   and the publication's date.
  * @returns What the family records.
  *
  * @example
- * allureMeta({ family: 'ci', title: 'CI', summary, history: { runs: 3, limit: 5 }, env: process.env, now });
+ * allureMeta({ family: 'ci', title: 'CI', frequency: 'push', summary, env: process.env, now: new Date() });
  */
 export function allureMeta(input: {
   readonly family: string;
   readonly title: string;
+  readonly frequency?: string | undefined;
   readonly summary: unknown;
-  readonly history?: { readonly runs: number; readonly limit: number } | undefined;
-  readonly coverage?: unknown;
-  readonly coverageHref?: string | undefined;
   readonly env: Environment;
   readonly now: Date;
 }): ReportMeta {
   const stats = field(input.summary, 'stats');
-  const failed = count(field(stats, 'failed')) + count(field(stats, 'broken'));
-  const parts = [
-    `${String(count(field(stats, 'passed')))} passed`,
-    ...(failed > 0 ? [`${String(failed)} failed`] : []),
-    ...(count(field(stats, 'skipped')) > 0 ? [`${String(count(field(stats, 'skipped')))} skipped`] : []),
-  ];
-  const lines = field(field(field(input.coverage, 'total'), 'lines'), 'pct');
 
   return {
     family: input.family,
     title: input.title,
+    frequency: input.frequency,
     published: input.now.toISOString(),
-    status: failed > 0 || field(input.summary, 'status') === 'failed' ? 'failed' : 'passed',
-    results: parts.join(', '),
+    counts: nonEmpty(Object.fromEntries(KINDS.map((kind) => [kind, count(field(stats, kind))]))),
     ...contextOf(input.env),
-    notes: [
-      ...(typeof lines === 'number'
-        ? [
-            {
-              text: `coverage ${lines.toFixed(1)}%`,
-              ...(input.coverageHref === undefined ? {} : { href: input.coverageHref }),
-            },
-          ]
-        : []),
-      ...(input.history === undefined
-        ? []
-        : [{ text: `history ${String(input.history.runs)}/${String(input.history.limit)}` }]),
-    ],
   };
 }
 
 /**
- * The load test's metadata: its status and counts from the budgets of its report.
+ * The load test's metadata: its budgets, within (passed) and over (failed), from its report.
  *
- * @param input - The family and title, the report's Markdown, GitHub Actions' variables and the date.
- * @returns What the family records: failed when a budget is over (`✖`).
+ * @param input - The family, title and frequency, the report's Markdown, GitHub Actions' variables and the date.
+ * @returns What the family records.
  *
  * @example
- * markdownMeta({ family: 'load', title: 'Load test', markdown, env: process.env, now });
+ * markdownMeta({ family: 'load', title: 'Load test', frequency: 'weekly', markdown, env: process.env, now });
  */
 export function markdownMeta(input: {
   readonly family: string;
   readonly title: string;
+  readonly frequency?: string | undefined;
   readonly markdown: string;
   readonly env: Environment;
   readonly now: Date;
@@ -151,19 +138,20 @@ export function markdownMeta(input: {
   return {
     family: input.family,
     title: input.title,
+    frequency: input.frequency,
     published: input.now.toISOString(),
-    status: over > 0 ? 'failed' : 'passed',
-    results:
-      over > 0 ? `${String(over)} of ${String(rows.length)} budgets over` : `${String(rows.length)} budgets within`,
+    counts: nonEmpty({ passed: rows.length - over, failed: over }),
     ...contextOf(input.env),
-    notes: [],
   };
 }
 
+/** The pages' address line, as a listing signs its server. */
+const FOOTER = 'figatellultimate test reports · Bonaparte approves';
+
 /** The shared look: Apache's listing, modernized, light and dark. */
 const STYLE = `
-:root { color-scheme: light dark; --ink: #1d1f21; --muted: #6a6f75; --rule: #c9ccd1; --link: #0b57d0; --ok: #1a7f37; --ko: #cf222e; --paper: #fbfbf8; }
-@media (prefers-color-scheme: dark) { :root { --ink: #d7dade; --muted: #8b9097; --rule: #3a3e44; --link: #7cacf8; --ok: #3fb950; --ko: #f85149; --paper: #16181b; } }
+:root { color-scheme: light dark; --ink: #1d1f21; --muted: #6a6f75; --rule: #c9ccd1; --link: #0b57d0; --passed: #1a7f37; --failed: #cf222e; --broken: #bc4c00; --skipped: #8c959f; --paper: #fbfbf8; }
+@media (prefers-color-scheme: dark) { :root { --ink: #d7dade; --muted: #8b9097; --rule: #3a3e44; --link: #7cacf8; --passed: #3fb950; --failed: #f85149; --broken: #db6d28; --skipped: #6e7681; --paper: #16181b; } }
 * { box-sizing: border-box; }
 body { margin: 0; padding: 32px 16px; background: var(--paper); color: var(--ink); font: 14px/1.6 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; }
 main { max-width: 1100px; margin: 0 auto; }
@@ -172,16 +160,18 @@ h2 { font-size: 15px; margin: 28px 0 8px; }
 hr { border: 0; border-top: 1px solid var(--rule); margin: 12px 0; }
 a { color: var(--link); text-decoration: none; }
 a:hover, a:focus-visible { text-decoration: underline; }
-.scroll { overflow-x: auto; }
+.scroll { overflow-x: auto; margin: 12px 0; }
 table { border-collapse: collapse; width: 100%; }
-th { text-align: left; font-weight: 600; color: var(--muted); padding: 4px 16px 4px 0; border-bottom: 1px solid var(--rule); white-space: nowrap; }
-td { padding: 4px 16px 4px 0; vertical-align: top; white-space: nowrap; }
-td.description { white-space: normal; min-width: 18ch; }
-.scroll { margin: 12px 0; }
+th { text-align: left; font-weight: 600; color: var(--muted); padding: 4px 24px 4px 0; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+td { padding: 4px 24px 4px 0; vertical-align: top; white-space: nowrap; }
 .muted { color: var(--muted); }
-.status::before { content: '●'; margin-right: 6px; }
-.status.passed::before { color: var(--ok); }
-.status.failed::before { color: var(--ko); }
+.count { display: block; }
+.count::before { content: '●'; margin-right: 6px; }
+.count.passed::before { color: var(--passed); }
+.count.failed::before { color: var(--failed); }
+.count.broken::before { color: var(--broken); }
+.count.skipped::before { color: var(--skipped); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 ul { margin: 0; padding-left: 20px; }
 code { font: inherit; }
 address { font-style: normal; color: var(--muted); }
@@ -206,70 +196,63 @@ ${body}
 </html>
 `;
 
-/** What started a run, in a word. */
-const EVENTS: Readonly<Record<string, string>> = {
-  push: 'push',
-  schedule: 'weekly',
-  workflow_dispatch: 'manual',
-  pull_request: 'pull request',
-};
-
 /** A date as a listing writes it: `2026-11-19 06:12 UTC`. */
 const dateOf = (iso: string | undefined): string =>
   iso === undefined ? '-' : `${iso.slice(0, 10)} ${iso.slice(11, 16)} UTC`;
 
-const link = (text: string, href: string | undefined): string =>
-  href === undefined ? escape(text) : `<a href="${escape(href)}">${escape(text)}</a>`;
+const link = (label: string, href: string): string => `<a href="${escape(href)}">${escape(label)}</a>`;
+
+const DASH = '<span class="muted">-</span>';
+
+/** A family's counts, one kind a line: a dot of its color and its number, the kind's word for screen readers. */
+function countsCell(counts: Counts | undefined): string {
+  const lines = KINDS.flatMap((kind) => {
+    const n = counts?.[kind] ?? 0;
+
+    return n > 0
+      ? [`<span class="count ${kind}" title="${String(n)} ${kind}">${String(n)}<span class="sr"> ${kind}</span></span>`]
+      : [];
+  });
+
+  return lines.length === 0 ? DASH : lines.join('');
+}
 
 /**
  * The index of every published report.
  *
- * @param reports - Each family's metadata (or its title alone, for a family that recorded none).
- * @param host - The site's host, for the listing's address line.
- * @returns The page: `Index of /figatellultimate/`, one row per family sorted by name, Apache's columns in its
- *   order (the description last): its date, results, commit, run, then its title with its notes.
+ * @param reports - Each family's metadata (or its name alone, for a family that recorded none).
+ * @returns The page: `Index of /figatellultimate/`, one row per family sorted by name: its date, its counts by kind,
+ *   its commit, its run's number and its frequency.
  *
  * @example
- * renderIndex([{ family: 'ci', title: 'CI', status: 'passed', results: '8512 passed' }], 'mojo-molotov.github.io');
+ * renderIndex([{ family: 'ci', title: 'CI', frequency: 'push', counts: { passed: 8512 } }]);
  */
-export function renderIndex(reports: readonly ReportMeta[], host: string): string {
+export function renderIndex(reports: readonly ReportMeta[]): string {
   const rows = [...reports]
     .sort((a, b) => (a.family < b.family ? -1 : a.family > b.family ? 1 : 0))
-    .map((report) => {
-      const results =
-        report.results === undefined
-          ? '<span class="muted">-</span>'
-          : `<span class="status ${report.status ?? ''}">${escape(report.results)}</span>`;
-      const run =
-        report.run === undefined
-          ? '<span class="muted">-</span>'
-          : `${link(`#${report.run.number}`, report.run.url)} <span class="muted">${escape(
-              EVENTS[report.run.event] ?? report.run.event,
-            )}</span>`;
-      const notes = (report.notes ?? []).map((note) => link(note.text, note.href)).join(' · ');
-
-      return `<tr>
+    .map(
+      (report) => `<tr>
 <td><a href="${escape(report.family)}/">${escape(report.family)}/</a></td>
 <td>${escape(dateOf(report.published))}</td>
-<td>${results}</td>
-<td>${report.commit === undefined ? '<span class="muted">-</span>' : link(report.commit.sha, report.commit.url)}</td>
-<td>${run}</td>
-<td class="description">${escape(report.title)}${notes === '' ? '' : ` <span class="muted">· ${notes}</span>`}</td>
-</tr>`;
-    });
+<td>${countsCell(report.counts)}</td>
+<td>${report.commit === undefined ? DASH : link(report.commit.sha, report.commit.url)}</td>
+<td>${report.run === undefined ? DASH : link(`#${report.run.number}`, report.run.url)}</td>
+<td>${report.frequency === undefined ? DASH : escape(report.frequency)}</td>
+</tr>`,
+    );
 
   return page(
     'figatellultimate test reports',
     `<h1>Index of /figatellultimate/</h1>
 <div class="scroll">
 <table>
-<thead><tr><th>Name</th><th>Last modified</th><th>Results</th><th>Commit</th><th>Run</th><th>Description</th></tr></thead>
+<thead><tr><th>Name</th><th>Last modified</th><th>Results</th><th>Commit</th><th>Run</th><th>Frequency</th></tr></thead>
 <tbody>
 ${rows.join('\n')}
 </tbody>
 </table>
 </div>`,
-    `figatellultimate test reports · ${escape(host)}`,
+    escape(FOOTER),
   );
 }
 
@@ -345,11 +328,17 @@ export function renderMarkdownPage(title: string, markdown: string, back: string
   return page(
     title,
     `<p><a href="${escape(back)}">../</a> <span class="muted">Parent Directory</span></p>\n${html.join('\n')}`,
-    'figatellultimate test reports',
+    escape(FOOTER),
   );
 }
 
-const text = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined);
+/** Counts from results phrased the way earlier publications recorded them: `8512 passed, 2 failed`. */
+const phrased = (results: string): Counts =>
+  nonEmpty(
+    Object.fromEntries(
+      [...results.matchAll(/(\d+) (passed|failed|broken|skipped)/g)].map((m) => [m[2] ?? '', Number(m[1])]),
+    ),
+  );
 
 /**
  * A family's recorded metadata, read back field by field (a file of the site, never trusted as is), or `undefined`
@@ -357,44 +346,38 @@ const text = (value: unknown): string | undefined => (typeof value === 'string' 
  *
  * @param recorded - The parsed `_history/<family>.json`.
  * @param family - The family it belongs to.
- * @returns The metadata, every field checked.
+ * @returns The metadata, every field checked; results an earlier publication phrased are read as counts.
  */
 export function metaOf(recorded: unknown, family: string): ReportMeta | undefined {
   const title = text(field(recorded, 'title'));
 
   if (title === undefined) return undefined;
 
-  const status = field(recorded, 'status');
-  const commit = field(recorded, 'commit');
-  const run = field(recorded, 'run');
-  const sha = text(field(commit, 'sha'));
-  const commitUrl = text(field(commit, 'url'));
-  const number = text(field(run, 'number'));
-  const runUrl = text(field(run, 'url'));
-  const notes = field(recorded, 'notes');
+  const recordedCounts = field(recorded, 'counts');
+  const results = text(field(recorded, 'results'));
+  const sha = text(field(field(recorded, 'commit'), 'sha'));
+  const commitUrl = text(field(field(recorded, 'commit'), 'url'));
+  const number = text(field(field(recorded, 'run'), 'number'));
+  const runUrl = text(field(field(recorded, 'run'), 'url'));
+  const counts =
+    typeof recordedCounts === 'object' && recordedCounts !== null
+      ? nonEmpty(Object.fromEntries(KINDS.map((kind) => [kind, count(field(recordedCounts, kind))])))
+      : results === undefined
+        ? undefined
+        : phrased(results);
 
   return {
     family,
     title,
+    frequency: text(field(recorded, 'frequency')),
     published: text(field(recorded, 'published')),
-    status: status === 'passed' || status === 'failed' ? status : undefined,
-    results: text(field(recorded, 'results')),
+    counts,
     commit: sha === undefined || commitUrl === undefined ? undefined : { sha, url: commitUrl },
-    run:
-      number === undefined || runUrl === undefined
-        ? undefined
-        : { number, url: runUrl, event: text(field(run, 'event')) ?? '', ref: text(field(run, 'ref')) ?? '' },
-    notes: Array.isArray(notes)
-      ? notes.flatMap((note: unknown) => {
-          const noteText = text(field(note, 'text'));
-
-          return noteText === undefined ? [] : [{ text: noteText, href: text(field(note, 'href')) }];
-        })
-      : [],
+    run: number === undefined || runUrl === undefined ? undefined : { number, url: runUrl },
   };
 }
 
-/** Every family's metadata in a site: its recorded one, else its title alone. */
+/** Every family's metadata in a site: its recorded one, else its name alone. */
 function siteReports(site: string): ReportMeta[] {
   const history = join(site, '_history');
 
@@ -423,41 +406,38 @@ if (import.meta.main) {
     options: {
       family: { type: 'string' },
       title: { type: 'string' },
+      frequency: { type: 'string' },
       site: { type: 'string' },
       report: { type: 'string' },
       markdown: { type: 'string' },
-      history: { type: 'string' },
-      limit: { type: 'string' },
-      coverage: { type: 'string' },
       out: { type: 'string' },
     },
   });
-  const read = (path: string | undefined): unknown =>
-    path !== undefined && existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : undefined;
   const now = new Date();
 
   switch (positionals[0]) {
     case 'meta': {
-      const { family = '', title = '', site = '.' } = values;
-      const runs =
-        values.history !== undefined && existsSync(values.history)
-          ? readFileSync(values.history, 'utf8')
-              .split('\n')
-              .filter((line) => line.trim() !== '').length
-          : undefined;
+      const { family = '', title = '', frequency, site = '.' } = values;
+      const summary = values.report === undefined ? undefined : join(values.report, 'summary.json');
       const meta =
         values.markdown === undefined
           ? allureMeta({
               family,
               title,
-              summary: read(values.report === undefined ? undefined : join(values.report, 'summary.json')),
-              ...(runs === undefined ? {} : { history: { runs, limit: Number(values.limit ?? runs) } }),
-              coverage: read(values.coverage),
-              ...(values.coverage === undefined ? {} : { coverageHref: `${family}/coverage/` }),
+              frequency,
+              summary:
+                summary !== undefined && existsSync(summary) ? JSON.parse(readFileSync(summary, 'utf8')) : undefined,
               env: process.env,
               now,
             })
-          : markdownMeta({ family, title, markdown: readFileSync(values.markdown, 'utf8'), env: process.env, now });
+          : markdownMeta({
+              family,
+              title,
+              frequency,
+              markdown: readFileSync(values.markdown, 'utf8'),
+              env: process.env,
+              now,
+            });
 
       mkdirSync(join(site, '_history'), { recursive: true });
       writeFileSync(join(site, '_history', `${family}.json`), `${JSON.stringify(meta, null, 2)}\n`);
@@ -467,9 +447,8 @@ if (import.meta.main) {
 
     case 'index': {
       const site = values.site ?? '.';
-      const host = `${(process.env['GITHUB_REPOSITORY_OWNER'] ?? 'localhost').toLowerCase()}.github.io`;
 
-      writeFileSync(join(site, 'index.html'), renderIndex(siteReports(site), host));
+      writeFileSync(join(site, 'index.html'), renderIndex(siteReports(site)));
       break;
     }
 

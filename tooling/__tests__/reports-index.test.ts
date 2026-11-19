@@ -16,48 +16,46 @@ const ENV = {
   GITHUB_SHA: '3342e8cc9a1b2c3d4e5f',
   GITHUB_RUN_ID: '44468643214',
   GITHUB_RUN_NUMBER: '17',
-  GITHUB_EVENT_NAME: 'push',
-  GITHUB_REF_NAME: 'main',
 };
 
-/** The rows of a rendered index, as text, one per family. */
-const rowsOf = (html: string): string[] =>
+/** The cells of each row of a rendered index, as text; a cell's lines joined by `|`. */
+const rowsOf = (html: string): string[][] =>
   [...html.matchAll(/<tr>\n([\s\S]*?)\n<\/tr>/g)].map((m) =>
-    (m[1] ?? '')
-      .replace(/<[^>]+>/g, '')
-      .replace(/\s+/g, ' ')
-      .trim(),
+    [...(m[1] ?? '').matchAll(/<td>([\s\S]*?)<\/td>/g)].map((cell) =>
+      (cell[1] ?? '')
+        .replace(/<span class="sr">[^<]*<\/span>/g, '')
+        .replace(/<\/span><span/g, '</span>|<span')
+        .replace(/<[^>]+>/g, '')
+        .trim(),
+    ),
   );
 
 describe('allureMeta', () => {
-  it("reads a report's status and counts from its summary, the commit, the run, the coverage and the history", () => {
+  it("reads a report's counts by kind from its summary, with the commit, the run and the frequency", () => {
     expect(
       allureMeta({
         family: 'ci',
         title: 'CI',
+        frequency: 'push',
         summary: { stats: { total: 10, passed: 7, failed: 1, broken: 1, skipped: 1 }, status: 'failed' },
-        history: { runs: 3, limit: 5 },
-        coverage: { total: { lines: { pct: 98.815 } } },
-        coverageHref: 'ci/coverage/',
         env: ENV,
         now: NOW,
       }),
     ).toEqual({
       family: 'ci',
       title: 'CI',
+      frequency: 'push',
       published: '2026-11-19T06:12:34.000Z',
-      status: 'failed',
-      results: '7 passed, 2 failed, 1 skipped',
+      counts: { passed: 7, failed: 1, broken: 1, skipped: 1 },
       commit: { sha: '3342e8c', url: 'https://github.com/owner/repo/commit/3342e8cc9a1b2c3d4e5f' },
-      run: { number: '17', url: 'https://github.com/owner/repo/actions/runs/44468643214', event: 'push', ref: 'main' },
-      notes: [{ text: 'coverage 98.8%', href: 'ci/coverage/' }, { text: 'history 3/5' }],
+      run: { number: '17', url: 'https://github.com/owner/repo/actions/runs/44468643214' },
     });
   });
 
-  it('passes a report with every test passed, and has no commit nor run outside GitHub Actions', () => {
+  it('leaves out the kinds it has none of, and has no commit nor run outside GitHub Actions', () => {
     const meta = allureMeta({ family: 'lab', title: 'Lab', summary: { stats: { passed: 45 } }, env: {}, now: NOW });
 
-    expect(meta).toMatchObject({ status: 'passed', results: '45 passed', notes: [] });
+    expect(meta.counts).toEqual({ passed: 45 });
     expect(meta.commit).toBeUndefined();
     expect(meta.run).toBeUndefined();
   });
@@ -73,38 +71,39 @@ describe('markdownMeta', () => {
       ...marks.map((mark, i) => `| b${String(i)} | 1 | 2 | ${mark} |`),
     ].join('\n');
 
-  it.each<[string, readonly string[], string, string]>([
-    ['every budget within', ['✓', '✓', '✓'], 'passed', '3 budgets within'],
-    ['a budget over', ['✓', '✖', '✓'], 'failed', '1 of 3 budgets over'],
-  ])("reads the load test's status from its budgets: %s", (_, marks, status, results) => {
-    expect(markdownMeta({ family: 'load', title: 'Load', markdown: budgets(marks), env: ENV, now: NOW })).toMatchObject(
-      {
-        status,
-        results,
-      },
-    );
+  it.each<[string, readonly string[], object]>([
+    ['every budget within', ['✓', '✓', '✓'], { passed: 3 }],
+    ['a budget over', ['✓', '✖', '✓'], { passed: 2, failed: 1 }],
+  ])("counts the load test's budgets: %s", (_, marks, counts) => {
+    expect(
+      markdownMeta({ family: 'load', title: 'Load', markdown: budgets(marks), env: ENV, now: NOW }).counts,
+    ).toEqual(counts);
   });
 });
 
 describe('metaOf', () => {
   it('reads a recorded file field by field, dropping what is not of its shape', () => {
     expect(
-      metaOf(
-        { title: 'CI', status: 'maybe', results: 5, commit: { sha: 'abc' }, notes: [{ text: 'x' }, { href: 'y' }] },
-        'ci',
-      ),
+      metaOf({ title: 'CI', frequency: 3, counts: { passed: 5, failed: 'x' }, commit: { sha: 'abc' } }, 'ci'),
     ).toEqual({
       family: 'ci',
       title: 'CI',
+      frequency: undefined,
       published: undefined,
-      status: undefined,
-      results: undefined,
+      counts: { passed: 5 },
       commit: undefined,
       run: undefined,
-      notes: [{ text: 'x', href: undefined }],
     });
-    expect(metaOf({ results: '1 passed' }, 'ci')).toBeUndefined();
+    expect(metaOf({ counts: { passed: 1 } }, 'ci')).toBeUndefined();
     expect(metaOf('not an object', 'ci')).toBeUndefined();
+  });
+
+  it('reads the results an earlier publication phrased as counts, so that its row stays filled', () => {
+    expect(metaOf({ title: 'CI', results: '8566 passed, 2 failed, 1 skipped' }, 'ci')?.counts).toEqual({
+      passed: 8566,
+      failed: 2,
+      skipped: 1,
+    });
   });
 });
 
@@ -112,41 +111,59 @@ describe('renderIndex', () => {
   const REPORTS: readonly ReportMeta[] = [
     {
       family: 'watch-lab',
-      title: 'Watch lab (weekly)',
+      title: 'Watch lab',
+      frequency: 'weekly',
       published: '2026-11-19T06:35:00.000Z',
-      status: 'passed',
-      results: '45 passed',
+      counts: { passed: 45 },
       commit: { sha: 'abc1234', url: 'https://github.com/o/r/commit/abc1234' },
-      run: { number: '3', url: 'https://github.com/o/r/actions/runs/3', event: 'workflow_dispatch', ref: 'main' },
-      notes: [{ text: 'history 2/5' }],
+      run: { number: '3', url: 'https://github.com/o/r/actions/runs/3' },
     },
-    // Published before metadata existed: its title alone.
-    { family: 'browsers', title: 'Real browsers <weekly>' },
+    // Published before metadata existed: its name alone.
+    { family: 'browsers', title: 'Real browsers' },
     {
       family: 'ci',
       title: 'CI',
+      frequency: 'push',
       published: '2026-11-19T06:12:34.000Z',
-      status: 'failed',
-      results: '7 passed, 2 failed',
+      counts: { passed: 7, failed: 2, skipped: 1 },
     },
   ];
 
-  it("lists every family by name, Apache's columns, the description last with its notes, a dash where it has none", () => {
-    const html = renderIndex(REPORTS, 'owner.github.io');
+  it('lists every family by name: its date, a line per kind of result, its commit, its run and its frequency', () => {
+    const html = renderIndex(REPORTS);
 
     expect(html).toContain('<h1>Index of /figatellultimate/</h1>');
+    expect(html).toContain(
+      '<th>Name</th><th>Last modified</th><th>Results</th><th>Commit</th><th>Run</th><th>Frequency</th>',
+    );
     expect(rowsOf(html)).toEqual([
-      'browsers/ - - - - Real browsers &lt;weekly&gt;',
-      'ci/ 2026-11-19 06:12 UTC 7 passed, 2 failed - - CI',
-      'watch-lab/ 2026-11-19 06:35 UTC 45 passed abc1234 #3 manual Watch lab (weekly) · history 2/5',
+      ['browsers/', '-', '-', '-', '-', '-'],
+      ['ci/', '2026-11-19 06:12 UTC', '7|2|1', '-', '-', 'push'],
+      ['watch-lab/', '2026-11-19 06:35 UTC', '45', 'abc1234', '#3', 'weekly'],
     ]);
-    expect(html).toContain('<span class="status failed">7 passed, 2 failed</span>');
-    expect(html).toContain('<a href="https://github.com/o/r/actions/runs/3">#3</a>');
-    expect(html).toContain('owner.github.io');
+  });
+
+  it('shows each kind as its colored dot and number only, its word kept for screen readers and as a tooltip', () => {
+    const html = renderIndex(REPORTS);
+
+    expect(html).toContain('<span class="count failed" title="2 failed">2<span class="sr"> failed</span></span>');
+    // What is shown: the table's body, without the words kept for screen readers, the tooltips and the classes.
+    const shown = (/<tbody>([\s\S]*)<\/tbody>/.exec(html)?.[1] ?? '').replace(
+      /<span class="sr">[^<]*<\/span>|title="[^"]*"|class="[^"]*"/g,
+      '',
+    );
+
+    // Precondition: the body was found.
+    expect(shown).toContain('45');
+    expect(shown).not.toMatch(/passed|failed|skipped/);
+  });
+
+  it("ends with the reports' name, and Bonaparte's approval", () => {
+    expect(renderIndex(REPORTS)).toContain('<address>figatellultimate test reports · Bonaparte approves</address>');
   });
 
   it('escapes every text it writes', () => {
-    const html = renderIndex([{ family: 'x"><script>', title: '<b>&</b>', results: '<i>' }], 'h');
+    const html = renderIndex([{ family: 'x"><script>', title: 't', frequency: '<b>&</b>' }]);
 
     expect(html).not.toContain('<script>');
     expect(html).not.toContain('<b>&</b>');

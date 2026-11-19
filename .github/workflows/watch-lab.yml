@@ -67,5 +67,6 @@ jobs:
         with:
           family: watch-lab
           title: Watch lab (weekly)
+          frequency: weekly
       - id: deployment
         uses: actions/deploy-pages@v5

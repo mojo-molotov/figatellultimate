@@ -74,6 +74,7 @@ jobs:
         with:
           family: load
           title: Load test (weekly)
+          frequency: weekly
           markdown: ${{ steps.report.outputs.path }}
       - if: steps.report.outputs.path != ''
         id: deployment
