@@ -4,7 +4,7 @@ import { userEvent } from '@testing-library/user-event';
 import axe from 'axe-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { ImageZoom } from '../index.js';
+import { ImageProvider, ImageZoom, type ImageProps } from '../index.js';
 
 const LABELS = { open: (alt: string) => `«agrandir : ${alt}»`, close: '«fermer»' };
 const ALT = 'Le navbar en mode sombre';
@@ -289,5 +289,32 @@ describe('ImageZoom', () => {
     expect(trigger().textContent).toBe('');
     await user.click(trigger());
     expect(screen.getByRole('dialog').textContent).toBe(ALT);
+  });
+
+  it('preloads the enlarged image as the pointer comes over it, or the keyboard to it: its opening shows at once', async () => {
+    device(true);
+    // An image component as `next/image`: its variants follow `sizes`, so the preload must say the same.
+    const AppImage = (props: ImageProps) => <img data-app="" {...props} />;
+    const user = userEvent.setup();
+
+    render(
+      <ImageProvider component={AppImage}>
+        <ImageZoom labels={LABELS} src="/covers/map.png" alt={ALT} width={1024} height={768} />
+      </ImageProvider>,
+    );
+    const preloads = () => [...document.querySelectorAll('[data-slot="image-zoom-preload"]')];
+    const button = await screen.findByRole('button', { name: `«agrandir : ${ALT}»` });
+
+    // Precondition: nothing fetched before the visitor shows an interest.
+    expect(preloads()).toEqual([]);
+    await user.hover(button);
+    const [preload] = preloads();
+
+    // The enlarged image's own source and sizes: the browser picks, and caches, the very variant the zoom shows.
+    expect(preload?.getAttribute('src')).toBe('/covers/map.png');
+    expect(preload?.getAttribute('sizes')).toBe('90vw');
+    expect(preload?.getAttribute('loading')).toBe('eager');
+    expect(preload?.getAttribute('alt')).toBe('');
+    expect(preload?.closest('[aria-hidden="true"]')).not.toBeNull();
   });
 });

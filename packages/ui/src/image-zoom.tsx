@@ -17,6 +17,9 @@
  *       and the page stays where the reader left it, never jumping to the image.
  *     - The zoom out keeps the last zoomed point until the image is whole again: it shrinks back where the reader
  *       looked, never jumping to the center.
+ *     - The enlarged image preloads once the pointer comes over the image, or the keyboard to it: a hidden copy with
+ *       the lens's source, size and `sizes`, so that the browser caches the very variant the dialog shows. Rejected:
+ *       loading it on the click, which left the entrance animating an empty frame.
  *     - Both images through the app's image component (`ImageProvider`), at the size the content gives (an MDX image
  *       measured at build); the enlarged one at its own size, the screen at most, set from that size: the variant
  *       an image component serves (`next/image`: wider than the file) would otherwise shrink it. An image without its width and
@@ -99,14 +102,51 @@ export function ImageZoom({ labels, ...props }: ImageZoomProps): ReactNode {
       <img {...props} data-slot="image-zoom-image" />
     );
   const alt = props.alt?.trim() ?? '';
+  // Wanted once the pointer comes over the image, or the keyboard to it: the enlarged one then preloads.
+  const [warm, setWarm] = useState(false);
+  const want = (): void => {
+    setWarm(true);
+  };
 
   if (!desktop || alt === '') return image;
 
   return (
     <Dialog.Root>
-      <Dialog.Trigger ref={trigger} data-slot="image-zoom-trigger" aria-label={labels.open(alt)}>
+      <Dialog.Trigger
+        ref={trigger}
+        data-slot="image-zoom-trigger"
+        aria-label={labels.open(alt)}
+        onPointerEnter={want}
+        onFocus={want}
+      >
         {image}
       </Dialog.Trigger>
+      {/* The enlarged image, fetched before its opening: the same source, size and `sizes` as the lens's, so that the
+          browser picks and caches the very variant the dialog shows, and its entrance plays on a loaded image. */}
+      {warm ? (
+        <span aria-hidden="true" hidden>
+          {measured !== undefined ? (
+            <Image
+              src={measured}
+              width={width}
+              height={height}
+              {...(props.srcSet === undefined ? {} : { srcSet: props.srcSet })}
+              sizes="90vw"
+              alt=""
+              loading="eager"
+              data-slot="image-zoom-preload"
+            />
+          ) : (
+            <img
+              src={src}
+              {...(props.srcSet === undefined ? {} : { srcSet: props.srcSet, sizes: '90vw' })}
+              alt=""
+              loading="eager"
+              data-slot="image-zoom-preload"
+            />
+          )}
+        </span>
+      ) : null}
       <Dialog.Portal>
         <Dialog.Overlay data-slot="image-zoom-overlay" />
         <Dialog.Content

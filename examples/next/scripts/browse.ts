@@ -141,6 +141,55 @@ try {
   check(new URL(select.url()).pathname === `${LISTING}/page/4`, `${LISTING}: the page select did not reach page 4`);
   await select.close();
 
+  // A content image's zoom preloads its enlarged image as the mouse comes over it: the dialog opens on a loaded
+  // image, its entrance seen, and no second fetch.
+  {
+    const zoomPage = await open('/blog/maquis/chestnut-grove/tree-of-thousand-git-branches');
+    const fetched: string[] = [];
+
+    zoomPage.on('request', (request) => {
+      if (request.url().includes('/_next/image')) fetched.push(request.url());
+    });
+    await zoomPage.locator('[data-slot="image-zoom-trigger"]').first().hover();
+    // As a visitor does, hovering a moment before clicking: until the preloaded image has loaded.
+    await zoomPage
+      .locator('[data-slot="image-zoom-preload"]')
+      .first()
+      .evaluate(
+        (preload) =>
+          new Promise<void>((resolve) => {
+            if (preload instanceof HTMLImageElement && preload.complete) resolve();
+            else
+              preload.addEventListener('load', () => {
+                resolve();
+              });
+          }),
+      );
+    const preloaded = fetched.length;
+
+    await zoomPage.locator('[data-slot="image-zoom-trigger"]').first().click();
+    const complete = await zoomPage.evaluate(
+      () =>
+        new Promise<boolean>((resolve) => {
+          requestAnimationFrame(() => {
+            const full = document.querySelector('[data-slot="image-zoom-full"]');
+
+            resolve(full instanceof HTMLImageElement && full.complete && full.naturalWidth > 0);
+          });
+        }),
+    );
+
+    check(preloaded > 0, 'a zoomable image: nothing preloaded as the mouse came over it');
+    check(
+      complete && fetched.length === preloaded,
+      `a zoomable image: its dialog opened on an image still loading (${String(complete)}, ${fetched
+        .slice(preloaded)
+        .map((url) => url.slice(-50))
+        .join(' ')})`,
+    );
+    await zoomPage.close();
+  }
+
   // The site's theme picker shows its chosen option from the first paint, before any script: without JavaScript, the
   // default theme's option already has the accent, so that it never fades in once the page is hydrated.
   {
@@ -297,6 +346,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the button under the mouse, the page taller or shorter; a filter in the URL, or chosen early, is applied; the page select reaches its page; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
+    '✓ previous and next keep the button under the mouse, the page taller or shorter; a filter in the URL, or chosen early, is applied; the page select reaches its page; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
   );
 }
