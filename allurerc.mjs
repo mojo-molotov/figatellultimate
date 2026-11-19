@@ -11,6 +11,9 @@
 // - `environments`: one per OS and Node version of the CI matrix, matched by the `os` and `node` labels the
 //   reporter gives every result in CI (`tooling/allure.ts`); a local run has neither, and one environment.
 // - `variables`: the run the report comes from (commit, branch, trigger, its page), from GitHub Actions' variables.
+// - `groupBy`: the tree by behavior, epic (a product domain), feature (a package), story (a describe), as
+//   `tooling/allure-behaviors.ts` labels every test. Without it, the tree follows suites: a whole family whose tests
+//   share one package (the browsers', the watch lab's) was one group.
 // - `charts`: Allure's default charts, the testing pyramid drawn with this repository's four layers, base first
 //   (`tooling/allure-behaviors.ts`). Giving `charts` replaces the defaults, so they are all listed.
 // - `categories`: failures sorted by kind, the way they are read.
@@ -63,6 +66,7 @@ export default {
     awesome: {
       options: {
         reportName: 'figatellultimate',
+        groupBy: ['epic', 'feature', 'story'],
         charts: [
           { type: 'currentStatus', title: 'Current status' },
           { type: 'statusDynamics', title: 'Status dynamics' },

@@ -193,6 +193,10 @@ describe('labelRun', () => {
 });
 
 describe('allurerc.mjs', () => {
+  it('groups the tree by the behaviors the labels give: epic, feature, story', () => {
+    expect(allurerc.plugins.awesome.options.groupBy).toEqual(['epic', 'feature', 'story']);
+  });
+
   it('keeps a bounded history: a CI run weighs megabytes, and GitHub refuses a file over 100 MB', () => {
     expect(allurerc.historyLimit).toBeGreaterThan(0);
     expect(allurerc.historyLimit).toBeLessThanOrEqual(50);

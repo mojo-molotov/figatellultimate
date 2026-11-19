@@ -17,7 +17,10 @@ interface AllureConfig {
   >;
   readonly plugins: {
     readonly awesome: {
-      readonly options: { readonly charts: readonly { readonly type: string; readonly layers?: readonly string[] }[] };
+      readonly options: {
+        readonly groupBy: readonly string[];
+        readonly charts: readonly { readonly type: string; readonly layers?: readonly string[] }[];
+      };
     };
   };
 }
