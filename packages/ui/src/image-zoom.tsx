@@ -18,7 +18,8 @@
  *     - The zoom out keeps the last zoomed point until the image is whole again: it shrinks back where the reader
  *       looked, never jumping to the center.
  *     - Both images through the app's image component (`ImageProvider`), at the size the content gives (an MDX image
- *       measured at build); the enlarged one at most the screen's width (`sizes`). An image without its width and
+ *       measured at build); the enlarged one at its own size, the screen at most, set from that size: the variant
+ *       an image component serves (`next/image`: wider than the file) would otherwise shrink it. An image without its width and
  *       height in pixels (remote, unmeasured) stays a plain `<img>`: an image component such as `next/image` fails
  *       without them.
  *
@@ -229,7 +230,14 @@ function ImageZoomLens({
           draggable={false}
           data-slot="image-zoom-full"
           data-zoomed={zoomed ? '' : undefined}
-          style={origin === null ? undefined : { transformOrigin: `${String(origin.x)}% ${String(origin.y)}%` }}
+          style={{
+            // Its own size, the screen at most: never the size the served variant's density implies (`next/image`
+            // serves a wider file than the image, which the browser would shrink by as much).
+            ...(width === undefined || height === undefined
+              ? {}
+              : { width: `min(90vw, ${String(width)}px, calc(90vh * ${String(width)} / ${String(height)}))` }),
+            ...(origin === null ? {} : { transformOrigin: `${String(origin.x)}% ${String(origin.y)}%` }),
+          }}
         />
       ) : (
         <img

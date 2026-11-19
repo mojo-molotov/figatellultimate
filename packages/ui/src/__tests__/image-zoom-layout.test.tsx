@@ -5,7 +5,9 @@ import '../styles.css';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { ImageZoom } from '../index.js';
+import { userEvent } from '@testing-library/user-event';
+
+import { ImageProvider, ImageZoom, type ImageProps } from '../index.js';
 
 const inBrowser = !navigator.userAgent.includes('HappyDOM');
 const LABELS = { open: (alt: string) => `«agrandir : ${alt}»`, close: '«fermer»' };
@@ -96,6 +98,36 @@ describe('ImageZoom in a content column', () => {
         expect(document.activeElement?.getAttribute('aria-label')).toBe('«agrandir : Une image»');
       });
       expect(window.scrollY).toBe(before);
+    },
+  );
+
+  it.skipIf(!inBrowser)(
+    'opens a measured image at its own size, the screen at most, whatever variant an image component serves',
+    async () => {
+      vi.spyOn(window, 'matchMedia').mockImplementation((media) => new FixedMediaQueryList(true, media));
+      // An image component as `next/image`: a variant wider than the file (1920w for a 400px image), which alone
+      // would make the browser shrink it (400 ÷ 1920 × the 90vw it is told).
+      const AppImage = (props: ImageProps) => <img {...props} srcSet={`${props.src} 1920w`} />;
+      const svg = `data:image/svg+xml,${encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300'/>")}`;
+
+      render(
+        <ImageProvider component={AppImage}>
+          <ImageZoom labels={LABELS} src={svg} alt="Une carte" width={400} height={300} />
+        </ImageProvider>,
+      );
+      await userEvent.setup().click(screen.getByRole('button', { name: '«agrandir : Une carte»' }));
+      // Named by the dialog's title, the enlarged image has no alternative text of its own.
+      const dialog = await screen.findByRole('dialog');
+
+      await waitFor(() => {
+        const box = dialog.querySelector('[data-slot="image-zoom-full"]')?.getBoundingClientRect();
+
+        if (box === undefined) throw new Error('no enlarged image');
+
+        // Its own 400 × 300: below 90% of the screen's width and height, never shrunk by the variant's density.
+        expect(Math.round(box.width)).toBe(400);
+        expect(Math.round(box.height)).toBe(300);
+      });
     },
   );
 });
