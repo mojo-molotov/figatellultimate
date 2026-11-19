@@ -204,6 +204,25 @@ describe('styles.css', () => {
     expect(hovered).toEqual([]);
   });
 
+  it("keeps the search dialog to the screen: its columns shrink, a result's long word breaks", () => {
+    expect(propertiesOf("[data-slot='search-dialog-content']")['grid-template-columns']).toBe('minmax(0, 1fr) auto');
+    expect(CSS).toMatch(
+      /\n\[data-slot='search-box'\] \{\s*display: grid;\s*grid-template-columns: minmax\(0, 1fr\);[^}]*min-width: 0;[^}]*overflow-wrap: anywhere;/,
+    );
+    expect(propertiesOf("[data-slot='search-box-field']")['min-width']).toBe('0');
+  });
+
+  it("gives the search results the dialog's whole width on a narrow screen, the close button at the field's end", () => {
+    const narrow = CSS.slice(
+      CSS.indexOf('@media (max-width: 36rem)', CSS.indexOf("[data-slot='search-dialog-content'] {")),
+    );
+    const block = narrow.slice(0, narrow.indexOf('\n}\n'));
+
+    expect(block).toMatch(/\[data-slot='search-dialog-content'\] \{\s*grid-template-columns: minmax\(0, 1fr\);/);
+    expect(block).toMatch(/\[data-slot='search-dialog-close'\] \{\s*position: absolute;/);
+    expect(block).toMatch(/\[data-slot='search-box-field'\] \{\s*margin-inline-end:/);
+  });
+
   it("sets the navbar's extras at the end of the toggle's line on a narrow screen, the toggle at its start", () => {
     const narrow = CSS.slice(CSS.indexOf('@media (max-width: 48rem)', CSS.indexOf("[data-slot='navbar-extras']")));
 

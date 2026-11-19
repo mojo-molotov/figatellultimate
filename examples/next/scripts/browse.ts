@@ -225,6 +225,41 @@ try {
 
     await phone.goto(`${base}${LISTING}`, { waitUntil: 'networkidle' });
 
+    // The search dialog on the screen, its close button too, once results with long words have come.
+    if (!revealed) {
+      await phone.goto(`${base}/blog`, { waitUntil: 'networkidle' });
+      await phone
+        .getByRole('button', { name: /Rechercher/ })
+        .first()
+        .tap();
+      // Once the dialog's field is there: a keystroke before it would be lost.
+      await phone.locator('[data-slot="search-box-input"]').fill('figatellu');
+      await phone.locator('[data-slot="search-box-result"]').first().waitFor();
+      const fits = await phone.evaluate(() => {
+        const box = (slot: string): DOMRect | undefined =>
+          document.querySelector(`[data-slot="${slot}"]`)?.getBoundingClientRect();
+        const dialog = box('search-dialog-content');
+        const field = box('search-box-field');
+        const close = box('search-dialog-close');
+
+        return (
+          dialog !== undefined &&
+          field !== undefined &&
+          close !== undefined &&
+          dialog.left >= 0 &&
+          dialog.right <= window.innerWidth &&
+          close.right <= dialog.right &&
+          field.right <= close.left &&
+          // The results the dialog's whole width, under the field and the close button alike.
+          [...document.querySelectorAll('[data-slot="search-box-result"]')].every(
+            (result) => result.getBoundingClientRect().right > close.left,
+          )
+        );
+      });
+
+      check(fits, `/blog on ${device}: the search dialog or its close button leaves the screen`);
+    }
+
     // A card's hover effects with a mouse only: on a phone, a tap (a hover) zooms no image and lights no rim.
     await phone.goto(`${base}/blog`, { waitUntil: 'networkidle' });
     await phone.locator('[data-slot="entry-card-media"]').first().hover();
@@ -346,6 +381,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the button under the mouse, the page taller or shorter; a filter in the URL, or chosen early, is applied; the page select reaches its page; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
+    '✓ previous and next keep the button under the mouse, the page taller or shorter; a filter in the URL, or chosen early, is applied; the page select reaches its page; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
   );
 }

@@ -1208,13 +1208,18 @@ a[data-slot='entry-card-author'] {
 /* Search box */
 [data-slot='search-box'] {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--fig-space);
+  min-width: 0;
+  /* A result's long word (`@figatellultimate/content-collections`) breaks rather than widening the box. */
+  overflow-wrap: anywhere;
 }
 
 /* The field's row: the input and the sort select as one box, the select a compact control at its end. */
 [data-slot='search-box-field'] {
   display: flex;
   align-items: center;
+  min-width: 0;
   gap: calc(var(--fig-space) / 2);
   padding-inline-end: calc(var(--fig-space) / 2);
   border: 1px solid var(--fig-border);
@@ -1428,10 +1433,13 @@ a[data-slot='entry-card-author'] {
   left: 50%;
   transform: translateX(-50%);
   display: grid;
-  grid-template-columns: 1fr auto;
+  /* The search's column shrinks to the dialog, never widened by a result's longest word (a package name): the close
+     button stays on the screen. */
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
   gap: var(--fig-space);
   width: min(40rem, calc(100vw - 2rem));
+  box-sizing: border-box;
   max-height: 80vh;
   overflow-y: auto;
   padding: calc(var(--fig-space) * 2);
@@ -1442,6 +1450,28 @@ a[data-slot='entry-card-author'] {
   font-family: var(--fig-font);
   box-shadow: var(--fig-shadow);
   z-index: 61;
+}
+
+/* On a narrow screen, the results the dialog's whole width: the close button out of the grid, at the field's end, the
+   field leaving it its room, rather than a column of its own beside every result. */
+@media (max-width: 36rem) {
+  [data-slot='search-dialog-content'] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  [data-slot='search-dialog-close'] {
+    position: absolute;
+    inset-block-start: calc(var(--fig-space) * 2);
+    inset-inline-end: calc(var(--fig-space) * 2);
+    justify-content: center;
+    inline-size: 2.5rem;
+    min-height: calc(2.5rem + 2px);
+    padding: 0;
+  }
+
+  [data-slot='search-dialog-content'] [data-slot='search-box-field'] {
+    margin-inline-end: calc(2.5rem + var(--fig-space));
+  }
 }
 
 [data-slot='search-dialog-close-icon'],
