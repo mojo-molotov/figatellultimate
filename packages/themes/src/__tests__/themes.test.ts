@@ -131,6 +131,17 @@ describe('base.css', () => {
     expect(motion.slice(0, motion.indexOf('@keyframes fig-blur-away'))).not.toMatch(/animation: /);
   });
 
+  it("centres a compact card's tags on its authors, side by side: the authors' margin above them dropped", () => {
+    const body = rules.find(
+      (rule) => rule.selector === "main[data-folder='category'] [data-slot='entry-card-authors']",
+    )?.body;
+
+    expect(body).toBe('margin-block-start: 0;');
+    expect(
+      rules.find((rule) => rule.selector === "main[data-folder='category'] [data-slot='entry-card-body']")?.body,
+    ).toContain('align-items: center;');
+  });
+
   it("sets a listing's pagination, below its cards, at the end of the line on a narrow screen", () => {
     const narrow = mediaOf(source)
       .filter(({ condition }) => condition === '(max-width: 36rem)')

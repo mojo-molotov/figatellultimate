@@ -376,6 +376,12 @@ main[data-folder='category'] [data-slot='entry-card-description'] {
   --entry-card-description-lines: 1;
 }
 
+/* The tags and the authors side by side, on one centre line: without the margin that sets the authors apart from tags
+   above them, which would put the avatars lower than the tags. */
+main[data-folder='category'] [data-slot='entry-card-authors'] {
+  margin-block-start: 0;
+}
+
 main[data-folder='category'] [data-slot='listing-cards'] {
   gap: var(--fig-space);
 }

@@ -311,6 +311,26 @@ try {
       await phone.goto(`${base}${LISTING}`, { waitUntil: 'networkidle' });
     }
 
+    // On a phone, a compact card's tags on the same centre line as its avatars, side by side.
+    if (!revealed) {
+      await phone.goto(`${base}/blog/academy`, { waitUntil: 'networkidle' });
+      const [tagMiddle, authorMiddle] = await phone.evaluate(() => {
+        const middle = (slot: string): number => {
+          const box = document.querySelector(`[data-slot="entry-card"] [data-slot="${slot}"]`)?.getBoundingClientRect();
+
+          return box === undefined ? Number.NaN : (box.top + box.bottom) / 2;
+        };
+
+        return [middle('entry-card-tag'), middle('entry-card-author')];
+      });
+
+      check(
+        Math.abs(tagMiddle - authorMiddle) < 1,
+        `/blog/academy on ${device}: a card's tags ${String(Math.round(authorMiddle - tagMiddle))}px off its avatars`,
+      );
+      await phone.goto(`${base}${LISTING}`, { waitUntil: 'networkidle' });
+    }
+
     // On a phone, the closed navbar as much room above its controls as below: no empty line for its closed menu.
     if (!revealed) {
       const [above, below] = await phone.evaluate(() => {

@@ -716,6 +716,12 @@
   font-size: 0.8rem;
 }
 
+/* Each author's item as tall as their pill: an inline pill in a plain item would sit on a text line, the line's
+   descender room below it, and the avatars a little higher than what is centred beside them. */
+[data-slot='entry-card-authors'] > li {
+  display: flex;
+}
+
 [data-slot='entry-card-authors'] {
   gap: var(--fig-space);
   /* Apart from the tags above: the people, then what they wrote about. */
