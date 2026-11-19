@@ -190,6 +190,18 @@ describe('styles.css', () => {
     );
   });
 
+  it("shows the pagination's narrow layout on a narrow screen only, and tells its ellipses so", () => {
+    const narrow = CSS.slice(
+      CSS.indexOf('@media (max-width: 36rem)', CSS.indexOf("[data-slot='pagination-item'][data-layout='narrow']")),
+    );
+    const block = narrow.slice(0, narrow.indexOf('\n}\n'));
+
+    expect(propertiesOf("[data-slot='pagination-item'][data-layout='narrow']")).toEqual({ display: 'none' });
+    expect(block).toMatch(/\[data-slot='pagination-content'\] \{\s*--fig-pagination-layout: narrow;/);
+    expect(block).toMatch(/\[data-slot='pagination-item'\]\[data-layout='wide'\] \{\s*display: none;/);
+    expect(block).toMatch(/\[data-slot='pagination-item'\]\[data-layout='narrow'\] \{\s*display: list-item;/);
+  });
+
   it("shows the pagination's step icons alone on a narrow screen, their labels hidden but still read", () => {
     const narrow = CSS.slice(
       CSS.indexOf('@media (max-width: 36rem)', CSS.indexOf("[data-slot='pagination-step-icon']")),

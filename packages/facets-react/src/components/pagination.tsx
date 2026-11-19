@@ -8,6 +8,10 @@
  *       through the binding, without reloading.
  *     - Each ellipsis is a Radix DropdownMenu of the hidden pages; the model is the pure
  *       `paginationItems` of `@figatellultimate/facets`.
+ *     - Both layouts at once, the wide one with its siblings and a narrow one without (`responsivePaginationItems`):
+ *       each item marked `data-layout="wide"` or `"narrow"` when it belongs to one only, an ellipsis's menu listing,
+ *       on a narrow screen (`--fig-pagination-layout: narrow`, read as it opens), the siblings hidden beside it. The stylesheet shows the one the screen has room for, so a
+ *       phone's pagination fits one line; no script picks it, and nothing shifts once hydrated.
  *     - Focus follows a page change made from the pagination: the activated link may be gone.
  *     - The pagination keeps its place on the screen after a page change made from it, so that the pointer stays on
  *       the same button: a last page holding fewer items makes the page shorter or taller above the pagination. Its
@@ -29,12 +33,13 @@
  * Limitation: with two paginations of one listing on a page (above and below it), after a remount the first one
  * mounted takes the place, whichever was clicked.
  */
-import { paginationItems, type Action } from '@figatellultimate/facets';
+import { responsivePaginationItems, type Action } from '@figatellultimate/facets';
 import { Direction, DropdownMenu, Slot } from 'radix-ui';
 import {
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
   type ComponentProps,
   type MouseEvent,
   type ReactNode,
@@ -43,6 +48,12 @@ import {
 
 import type { FacetedCollectionBinding } from '../use-faceted-collection.js';
 import { createPartContext, isPlainClick, numberFormat } from './context.js';
+
+/**
+ * The custom property a stylesheet sets to `narrow` where it shows the narrow layout (`data-layout="narrow"`), read on
+ * an ellipsis as its menu opens: the breakpoint stays the stylesheet's.
+ */
+const LAYOUT_PROPERTY = '--fig-pagination-layout';
 
 /** Every text of the pagination, visible or for assistive technologies: no default, no English. */
 export interface PaginationLabels {
@@ -220,12 +231,20 @@ export function PaginationContent({ children, ...props }: ComponentProps<'ul'>):
           <PaginationItem>
             <PaginationPrevious />
           </PaginationItem>
-          {paginationItems({ page: binding.state.page, pages: binding.view.pages, siblings, boundaries }).map(
-            (item) => (
-              <PaginationItem key={item.type === 'page' ? item.page : `gap-${String(item.pages[0])}`}>
-                {item.type === 'page' ? <PaginationLink page={item.page} /> : <PaginationEllipsis pages={item.pages} />}
-              </PaginationItem>
-            ),
+          {responsivePaginationItems({ page: binding.state.page, pages: binding.view.pages, siblings, boundaries }).map(
+            (item) =>
+              item.type === 'page' ? (
+                <PaginationItem key={item.page} {...(item.narrow ? {} : { 'data-layout': 'wide' })}>
+                  <PaginationLink page={item.page} />
+                </PaginationItem>
+              ) : (
+                <PaginationItem
+                  key={`gap-${item.wide ? '' : 'narrow-'}${String(item.narrowPages[0])}`}
+                  {...(item.wide ? {} : { 'data-layout': 'narrow' })}
+                >
+                  <PaginationEllipsis pages={item.pages} narrowPages={item.narrowPages} />
+                </PaginationItem>
+              ),
           )}
           <PaginationItem>
             <PaginationNext />
@@ -380,20 +399,40 @@ export function PaginationNext(props: LinkProps): ReactNode {
 export interface PaginationEllipsisProps extends ComponentProps<typeof DropdownMenu.Trigger> {
   /** The hidden pages, from `paginationItems`. */
   readonly pages: readonly number[];
+  /**
+   * The pages it hides on a narrow screen, from `responsivePaginationItems`: its own, and the siblings hidden beside
+   * it there; its menu lists them where the stylesheet sets `--fig-pagination-layout: narrow`. Default: `pages`.
+   */
+  readonly narrowPages?: readonly number[] | undefined;
 }
 
 /**
  * An ellipsis: a menu button listing the pages it hides, each a real link.
  *
- * @param props - The hidden pages, and the trigger's props; `children` replace the "…".
+ * @param props - The hidden pages (and those it hides on a narrow screen), and the trigger's props; `children` replace the "…".
  * @returns The menu, named by the labels' `more`.
  */
-export function PaginationEllipsis({ pages, children, ...props }: PaginationEllipsisProps): ReactNode {
+export function PaginationEllipsis({
+  pages,
+  narrowPages = pages,
+  children,
+  ...props
+}: PaginationEllipsisProps): ReactNode {
   const { binding, labels, navigated, go, format } = use('PaginationEllipsis');
+  const trigger = useRef<HTMLButtonElement>(null);
+  // The layout the stylesheet shows, read as the menu opens (after hydration: nothing shifts): on a narrow screen,
+  // the menu also lists the siblings hidden beside it there.
+  const [narrow, setNarrow] = useState(false);
+  const listed = narrow ? narrowPages : pages;
 
   return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger data-slot="pagination-ellipsis" aria-label={labels.more(pages)} {...props}>
+    <DropdownMenu.Root
+      onOpenChange={(open) => {
+        if (open && trigger.current !== null)
+          setNarrow(getComputedStyle(trigger.current).getPropertyValue(LAYOUT_PROPERTY).trim() === 'narrow');
+      }}
+    >
+      <DropdownMenu.Trigger ref={trigger} data-slot="pagination-ellipsis" aria-label={labels.more(listed)} {...props}>
         {children ?? <span aria-hidden>…</span>}
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
@@ -404,7 +443,7 @@ export function PaginationEllipsis({ pages, children, ...props }: PaginationElli
             if (navigated.current) event.preventDefault();
           }}
         >
-          {pages.map((page) => (
+          {listed.map((page) => (
             <DropdownMenu.Item key={page} asChild data-slot="pagination-ellipsis-item">
               <a href={binding.hrefFor({ type: 'page', page })} aria-label={labels.page(page)} onClick={go(page)}>
                 {format(page)}

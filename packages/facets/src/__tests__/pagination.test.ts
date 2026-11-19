@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { paginationItems, type PaginationItem } from '../index.js';
+import { paginationItems, responsivePaginationItems, type PaginationItem } from '../index.js';
 import { engine } from './scenario.js';
 
 /** A compact picture of the items: `1 … 4 [5] 6 … 12`. */
@@ -81,5 +81,60 @@ describe('the engine lists its sorts', () => {
   it('in registry order, the default first', () => {
     expect(engine().sorts).toEqual(['date-desc', 'date-asc', 'title-asc']);
     expect(Object.isFrozen(engine().sorts)).toBe(true);
+  });
+});
+
+describe('responsivePaginationItems', () => {
+  /** The items a layout shows, back in `paginationItems`'s form: the wide one, or the narrow one (no siblings). */
+  const view = (input: Parameters<typeof responsivePaginationItems>[0], narrow: boolean): PaginationItem[] => {
+    const seen = new Set<string>();
+
+    return responsivePaginationItems(input).flatMap((item): PaginationItem[] => {
+      if (item.type === 'page')
+        return !narrow || item.narrow ? [{ type: 'page', page: item.page, current: item.current }] : [];
+
+      if (!narrow) return item.wide ? [{ type: 'gap', pages: item.pages }] : [];
+
+      const key = item.narrowPages.join(',');
+
+      if (seen.has(key)) return [];
+
+      seen.add(key);
+
+      return [{ type: 'gap', pages: item.narrowPages }];
+    });
+  };
+
+  it('shows, on a wide screen, the pagination with its siblings, and on a narrow one, the one without', () => {
+    // Exhaustive over small inputs: both layouts are exactly `paginationItems`'s, whatever page is current.
+    for (let pages = 1; pages <= 30; pages++)
+      for (let page = 1; page <= pages; page++)
+        for (const siblings of [1, 2])
+          for (const boundaries of [0, 1, 2]) {
+            const input = { page, pages, siblings, boundaries };
+
+            expect(view(input, false)).toEqual(paginationItems(input));
+            expect(view(input, true)).toEqual(paginationItems({ ...input, siblings: 0 }));
+          }
+  });
+
+  it.each([
+    // Igor's 21 pages, on a phone: the current page's neighbours hidden, the gaps listing them too.
+    [{ page: 10, pages: 21 }, '1 …(2-8|2-9) 9w [10] 11w …(12-20|11-20) 21'],
+    // Seven pages: no gap on a wide screen, one on a narrow one.
+    [{ page: 1, pages: 7 }, '[1] 2 3 4w 5w 6w …n(4-6) 7'],
+  ])('%j → %s', (input, expected) => {
+    const picture = responsivePaginationItems(input)
+      .map((item) => {
+        if (item.type === 'page')
+          return `${item.current ? `[${String(item.page)}]` : String(item.page)}${item.narrow ? '' : 'w'}`;
+
+        const range = (pages: readonly number[]): string => `${String(pages[0])}-${String(pages.at(-1))}`;
+
+        return item.wide ? `…(${range(item.pages)}|${range(item.narrowPages)})` : `…n(${range(item.narrowPages)})`;
+      })
+      .join(' ');
+
+    expect(picture).toBe(expected);
   });
 });

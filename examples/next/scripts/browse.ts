@@ -176,6 +176,28 @@ try {
 
     await phone.goto(`${base}${LISTING}`, { waitUntil: 'networkidle' });
 
+    // On a phone, an author's many pages fit one line (no sibling around the current page), and an ellipsis's menu
+    // lists the siblings hidden beside it: `1 … 10 … 21`, the first menu reaching 9.
+    if (!revealed) {
+      await phone.goto(`${base}/authors/igor/page/10`, { waitUntil: 'networkidle' });
+      const pagination = phone.getByRole('navigation', { name: 'Pagination' }).last();
+      const lines = await pagination.evaluate((nav) => {
+        const shown = [...nav.querySelectorAll('[data-slot="pagination-item"]')].filter(
+          (item) => getComputedStyle(item).display !== 'none',
+        );
+
+        return new Set(shown.map((item) => Math.round(item.getBoundingClientRect().top))).size;
+      });
+
+      check(lines === 1, `/authors/igor/page/10 on ${device}: its pagination wraps onto ${String(lines)} lines`);
+      await pagination.getByRole('button').first().tap();
+      check(
+        (await phone.getByRole('menuitem', { name: 'Page 9' }).count()) === 1,
+        `/authors/igor/page/10 on ${device}: the ellipsis does not list the hidden page 9`,
+      );
+      await phone.goto(`${base}${LISTING}`, { waitUntil: 'networkidle' });
+    }
+
     // On a phone, the navbar's toggle at the line's start and its extras at its end: never all packed at the start.
     if (!revealed) {
       const edges = await phone.evaluate(() => {
@@ -246,6 +268,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the button under the mouse, the page taller or shorter; a filter in the URL, or chosen early, is applied; the page select reaches its page; the chosen theme shown before hydration; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
+    '✓ previous and next keep the button under the mouse, the page taller or shorter; a filter in the URL, or chosen early, is applied; the page select reaches its page; the chosen theme shown before hydration; the pagination on one line on a phone; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
   );
 }

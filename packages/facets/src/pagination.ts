@@ -8,7 +8,8 @@
  * changes. A pagination that grew and shrank with the current page made every click jump.
  *
  * Invariants (`pagination.test.ts`): every page exactly once, in order, the current one included; gaps of two pages
- * or more; as many items whichever page is current; any input gives a valid list.
+ * or more; as many items whichever page is current; any input gives a valid list. Its responsive form gives each
+ * layout exactly its own items, the narrow one without siblings, so that a phone's pagination fits one line.
  */
 /** One item of a pagination: a page link, or a gap of hidden pages (an ellipsis, e.g. opening a menu of them). */
 export type PaginationItem =
@@ -76,4 +77,64 @@ export function paginationItems(input: PaginationInput): readonly PaginationItem
   flush();
 
   return Object.freeze(items);
+}
+
+/**
+ * One item of a pagination that fits a narrow screen too: a page, shown on a narrow screen or not; or a gap, shown
+ * on a wide screen (`wide`) or on a narrow one only, its menu listing its pages there (`narrowPages`).
+ */
+export type ResponsivePaginationItem =
+  | { readonly type: 'page'; readonly page: number; readonly current: boolean; readonly narrow: boolean }
+  | {
+      readonly type: 'gap';
+      /** The pages it hides on a wide screen (all of them for a gap shown on a narrow screen only). */
+      readonly pages: readonly number[];
+      /** The pages it hides on a narrow screen: its wide pages, and the siblings the narrow layout hides beside it. */
+      readonly narrowPages: readonly number[];
+      readonly wide: boolean;
+    };
+
+/**
+ * A pagination that fits a narrow screen too: the items of both layouts at once, the wide one with its siblings and
+ * the narrow one without (`siblings: 0`), each marked, for a stylesheet to show the one the screen has room for.
+ * No script picks the layout, so nothing shifts once a page is hydrated.
+ *
+ * The narrow layout shows a subset of the wide one's pages, and each wide gap lies inside a narrow one: a gap is one
+ * element in both, its menu listing, on a narrow screen, the siblings hidden beside it; only where the wide layout
+ * shows every page (`1 … 7`) does the narrow one add a gap of its own.
+ *
+ * @param input - The current page, the number of pages, and the siblings and boundaries of the wide layout.
+ * @returns Every item, in order: on a wide screen, exactly `paginationItems(input)`'s; on a narrow one, exactly
+ *   `paginationItems({ ...input, siblings: 0 })`'s.
+ *
+ * @example
+ * responsivePaginationItems({ page: 10, pages: 21 });
+ * // 1, gap [2…8] (narrow [2…9]), 9 (wide only), 10 (current), 11 (wide only), gap [12…20] (narrow [11…20]), 21
+ */
+export function responsivePaginationItems(input: PaginationInput): readonly ResponsivePaginationItem[] {
+  const wide = paginationItems(input);
+  const narrow = paginationItems({ ...input, siblings: 0 });
+  const narrowGaps = narrow.flatMap((item) => (item.type === 'gap' ? [item.pages] : []));
+  const shownNarrow = new Set(narrow.flatMap((item) => (item.type === 'page' ? [item.page] : [])));
+  const containing = (pages: readonly number[]): readonly number[] =>
+    narrowGaps.find((gap) => pages.every((page) => gap.includes(page))) ?? pages;
+  const keyed: { readonly key: number; readonly item: ResponsivePaginationItem }[] = wide.map((item) =>
+    item.type === 'page'
+      ? { key: item.page, item: Object.freeze({ ...item, narrow: shownNarrow.has(item.page) }) }
+      : {
+          key: item.pages[0] ?? 0,
+          item: Object.freeze({ type: 'gap', pages: item.pages, narrowPages: containing(item.pages), wide: true }),
+        },
+  );
+  // A narrow gap no wide gap lies in: the wide layout shows its pages, the narrow one hides them behind it.
+  const covered = (gap: readonly number[]): boolean =>
+    wide.some((item) => item.type === 'gap' && item.pages.every((page) => gap.includes(page)));
+
+  for (const gap of narrowGaps.filter((pages) => !covered(pages)))
+    keyed.push({
+      key: (gap.at(-1) ?? 0) + 0.5,
+      item: Object.freeze({ type: 'gap', pages: gap, narrowPages: gap, wide: false }),
+    });
+
+  return Object.freeze(keyed.sort((a, b) => a.key - b.key).map(({ item }) => item));
 }

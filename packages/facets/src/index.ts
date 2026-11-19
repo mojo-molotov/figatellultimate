@@ -47,7 +47,13 @@ import { readFacets, readPage, readSort, writeState } from './codec.js';
 import { keepReadingPosition } from './reconcile.js';
 import type { Action, Engine, FacetedCollection, SelectionState, View } from './types.js';
 
-export { paginationItems, type PaginationInput, type PaginationItem } from './pagination.js';
+export {
+  paginationItems,
+  responsivePaginationItems,
+  type PaginationInput,
+  type PaginationItem,
+  type ResponsivePaginationItem,
+} from './pagination.js';
 export { isDefaultView, pagedHref, pagedSearch } from './paged.js';
 export { backToFirstPage, keepReadingPosition } from './reconcile.js';
 export type {

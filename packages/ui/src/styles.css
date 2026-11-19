@@ -1057,6 +1057,27 @@ a[data-slot='entry-card-author']:hover {
   border-color: var(--fig-border);
 }
 
+/* Two layouts at once (`responsivePaginationItems`): the wide one with the current page's siblings, and on a narrow
+   screen one without, so that a phone's pagination fits one line; each item marked for one only is hidden in the
+   other. `--fig-pagination-layout` tells an ellipsis which pages its menu lists. */
+[data-slot='pagination-item'][data-layout='narrow'] {
+  display: none;
+}
+
+@media (max-width: 36rem) {
+  [data-slot='pagination-content'] {
+    --fig-pagination-layout: narrow;
+  }
+
+  [data-slot='pagination-item'][data-layout='wide'] {
+    display: none;
+  }
+
+  [data-slot='pagination-item'][data-layout='narrow'] {
+    display: list-item;
+  }
+}
+
 [data-slot='pagination-link'][data-current] {
   border-color: var(--fig-accent);
   background: var(--fig-accent);
