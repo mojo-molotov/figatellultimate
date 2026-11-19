@@ -59,11 +59,16 @@ runs:
         if [ -f "$history" ]; then gunzip -c "$history" > history.jsonl; fi
         pnpm exec allure generate "${{ inputs.results-dir }}" --output allure-report
         mv allure-report ".allure-reports/$family"
+        coverage=()
         if [ -n "${{ inputs.extra-dir }}" ] && [ -d "${{ inputs.extra-dir }}" ]; then
           cp -R "${{ inputs.extra-dir }}" ".allure-reports/$family/${{ inputs.extra-name }}"
+          # The coverage's share of lines, shown by the index and linked to its report.
+          if [ -f "${{ inputs.extra-dir }}/coverage-summary.json" ]; then
+            coverage=(--coverage "${{ inputs.extra-dir }}/coverage-summary.json")
+          fi
         fi
         node tooling/reports-index.ts meta --site .allure-reports --family "$family" --title "${{ inputs.title }}" \
-          --frequency "${{ inputs.frequency }}" --report ".allure-reports/$family"
+          --frequency "${{ inputs.frequency }}" --report ".allure-reports/$family" "${coverage[@]}"
         if [ -f history.jsonl ]; then gzip -9 -c history.jsonl > "$history"; fi
 
     - name: Render the Markdown report as a page

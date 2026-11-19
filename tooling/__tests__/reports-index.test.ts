@@ -38,6 +38,8 @@ describe('allureMeta', () => {
         title: 'CI',
         frequency: 'push',
         summary: { stats: { total: 10, passed: 7, failed: 1, broken: 1, skipped: 1 }, status: 'failed' },
+        coverage: { total: { lines: { pct: 98.815 } } },
+        coverageHref: 'ci/coverage/',
         env: ENV,
         now: NOW,
       }),
@@ -47,6 +49,7 @@ describe('allureMeta', () => {
       frequency: 'push',
       published: '2026-11-19T06:12:34.000Z',
       counts: { passed: 7, failed: 1, broken: 1, skipped: 1 },
+      coverage: { lines: 98.815, href: 'ci/coverage/' },
       commit: { sha: '3342e8c', url: 'https://github.com/owner/repo/commit/3342e8cc9a1b2c3d4e5f' },
       run: { number: '17', url: 'https://github.com/owner/repo/actions/runs/44468643214' },
     });
@@ -56,6 +59,7 @@ describe('allureMeta', () => {
     const meta = allureMeta({ family: 'lab', title: 'Lab', summary: { stats: { passed: 45 } }, env: {}, now: NOW });
 
     expect(meta.counts).toEqual({ passed: 45 });
+    expect(meta.coverage).toBeUndefined();
     expect(meta.commit).toBeUndefined();
     expect(meta.run).toBeUndefined();
   });
@@ -84,13 +88,23 @@ describe('markdownMeta', () => {
 describe('metaOf', () => {
   it('reads a recorded file field by field, dropping what is not of its shape', () => {
     expect(
-      metaOf({ title: 'CI', frequency: 3, counts: { passed: 5, failed: 'x' }, commit: { sha: 'abc' } }, 'ci'),
+      metaOf(
+        {
+          title: 'CI',
+          frequency: 3,
+          counts: { passed: 5, failed: 'x' },
+          coverage: { lines: '90' },
+          commit: { sha: 'abc' },
+        },
+        'ci',
+      ),
     ).toEqual({
       family: 'ci',
       title: 'CI',
       frequency: undefined,
       published: undefined,
       counts: { passed: 5 },
+      coverage: undefined,
       commit: undefined,
       run: undefined,
     });
@@ -126,10 +140,11 @@ describe('renderIndex', () => {
       frequency: 'push',
       published: '2026-11-19T06:12:34.000Z',
       counts: { passed: 7, failed: 2, skipped: 1 },
+      coverage: { lines: 98.815, href: 'ci/coverage/' },
     },
   ];
 
-  it('lists every family by name: its date, a line per kind of result, its commit, its run and its frequency', () => {
+  it('lists every family by name: its date, a line per kind of result then its coverage, its commit, run and frequency', () => {
     const html = renderIndex(REPORTS);
 
     expect(html).toContain('<h1>Index of /figatellultimate/</h1>');
@@ -138,7 +153,7 @@ describe('renderIndex', () => {
     );
     expect(rowsOf(html)).toEqual([
       ['browsers/', '-', '-', '-', '-', '-'],
-      ['ci/', '2026-11-19 06:12 UTC', '7|2|1', '-', '-', 'push'],
+      ['ci/', '2026-11-19 06:12 UTC', '7|2|1|coverage 98.8%', '-', '-', 'push'],
       ['watch-lab/', '2026-11-19 06:35 UTC', '45', 'abc1234', '#3', 'weekly'],
     ]);
   });
@@ -156,6 +171,10 @@ describe('renderIndex', () => {
     // Precondition: the body was found.
     expect(shown).toContain('45');
     expect(shown).not.toMatch(/passed|failed|skipped/);
+  });
+
+  it('ends the results with the coverage, linked to its report, for the family that has one', () => {
+    expect(renderIndex(REPORTS)).toContain('<span class="coverage"><a href="ci/coverage/">coverage 98.8%</a></span>');
   });
 
   it("ends with the reports' name, and Bonaparte's approval", () => {

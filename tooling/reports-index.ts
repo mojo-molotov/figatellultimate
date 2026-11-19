@@ -2,12 +2,13 @@
  * The index of the published test reports (GitHub Pages' root), in the look of a modernized Apache directory
  * listing, and the load test's own page; the metadata each family records when it publishes.
  *
- *     a family publishes ──> its metadata (`_history/<family>.json`: date, counts, commit, run, frequency)
+ *     a family publishes ──> its metadata (`_history/<family>.json`: date, counts, coverage, commit, run, frequency)
  *     every publication  ──> renderIndex(every family's metadata) ──> index.html
  *     the load test      ──> renderMarkdownPage(load-report.md) ──> load/index.html
  *
  *     node tooling/reports-index.ts meta --family ci --title … --frequency push --site .allure-reports
- *                                        [--report <allure report>] [--markdown <report.md>]
+ *                                        [--report <allure report> [--coverage <coverage-summary.json>]]
+ *                                        [--markdown <report.md>]
  *     node tooling/reports-index.ts index --site .allure-reports
  *     node tooling/reports-index.ts page --markdown load-report.md --title … --out load/index.html
  *
@@ -20,7 +21,9 @@
  *       its name alone.
  *     - Apache's listing, modernized and spare: its title, columns and rules, in a fixed-width font with a dark
  *       theme; Name, Last modified, Results, Commit, Run, Frequency. Results are counts by kind, one per line, each
- *       a colored dot and a number (the kind's word kept for screen readers and as a tooltip); the run is its number;
+ *       a colored dot and a number (the kind's word kept for screen readers and as a tooltip); the CI's coverage,
+ *       its share of lines linked to its report, is the last line of its results (no column for one family); the
+ *       run is its number;
  *       the frequency its shortest word (`push`, `weekly`). No size, no notes, no host: what the reader scans for.
  *     - The load test's report is Markdown (its job summary): rendered here for its subset (headings, lists,
  *       tables, code, bold), escaped, in the same look; its counts are its budgets, within and over. Rejected: a
@@ -49,6 +52,8 @@ export interface ReportMeta {
   /** ISO date of the publication. */
   readonly published?: string | undefined;
   readonly counts?: Counts | undefined;
+  /** The share of lines covered (the CI's), in percent, and where its report is. */
+  readonly coverage?: { readonly lines: number; readonly href: string } | undefined;
   readonly commit?: { readonly sha: string; readonly url: string } | undefined;
   readonly run?: { readonly number: string; readonly url: string } | undefined;
 }
@@ -88,8 +93,8 @@ const nonEmpty = (counts: Readonly<Record<string, number>>): Counts =>
 /**
  * An Allure report's metadata: its counts by kind from its summary.
  *
- * @param input - The family, title and frequency, the report's `summary.json` (parsed), GitHub Actions' variables
- *   and the publication's date.
+ * @param input - The family, title and frequency, the report's `summary.json` (parsed), its coverage summary
+ *   (parsed) and where its report is, GitHub Actions' variables and the publication's date.
  * @returns What the family records.
  *
  * @example
@@ -100,10 +105,13 @@ export function allureMeta(input: {
   readonly title: string;
   readonly frequency?: string | undefined;
   readonly summary: unknown;
+  readonly coverage?: unknown;
+  readonly coverageHref?: string | undefined;
   readonly env: Environment;
   readonly now: Date;
 }): ReportMeta {
   const stats = field(input.summary, 'stats');
+  const lines = field(field(field(input.coverage, 'total'), 'lines'), 'pct');
 
   return {
     family: input.family,
@@ -111,6 +119,9 @@ export function allureMeta(input: {
     frequency: input.frequency,
     published: input.now.toISOString(),
     counts: nonEmpty(Object.fromEntries(KINDS.map((kind) => [kind, count(field(stats, kind))]))),
+    ...(typeof lines === 'number' && input.coverageHref !== undefined
+      ? { coverage: { lines, href: input.coverageHref } }
+      : {}),
     ...contextOf(input.env),
   };
 }
@@ -165,8 +176,10 @@ table { border-collapse: collapse; width: 100%; }
 th { text-align: left; font-weight: 600; color: var(--muted); padding: 4px 24px 4px 0; border-bottom: 1px solid var(--rule); white-space: nowrap; }
 td { padding: 4px 24px 4px 0; vertical-align: top; white-space: nowrap; }
 .muted { color: var(--muted); }
-.count { display: block; }
+.count, .coverage { display: block; }
 .count::before { content: '●'; margin-right: 6px; }
+/* The coverage's mark: a half-filled circle, the dots' width, in grey (it is no test's status). */
+.coverage::before { content: '◑'; margin-right: 6px; color: var(--muted); }
 .count.passed::before { color: var(--passed); }
 .count.failed::before { color: var(--failed); }
 .count.broken::before { color: var(--broken); }
@@ -204,8 +217,11 @@ const link = (label: string, href: string): string => `<a href="${escape(href)}"
 
 const DASH = '<span class="muted">-</span>';
 
-/** A family's counts, one kind a line: a dot of its color and its number, the kind's word for screen readers. */
-function countsCell(counts: Counts | undefined): string {
+/**
+ * A family's counts, one kind a line: a dot of its color and its number, the kind's word for screen readers; then,
+ * for the CI alone, its coverage, linked to its report.
+ */
+function countsCell(counts: Counts | undefined, coverage: ReportMeta['coverage']): string {
   const lines = KINDS.flatMap((kind) => {
     const n = counts?.[kind] ?? 0;
 
@@ -214,7 +230,12 @@ function countsCell(counts: Counts | undefined): string {
       : [];
   });
 
-  return lines.length === 0 ? DASH : lines.join('');
+  const covered =
+    coverage === undefined
+      ? []
+      : [`<span class="coverage">${link(`coverage ${coverage.lines.toFixed(1)}%`, coverage.href)}</span>`];
+
+  return lines.length + covered.length === 0 ? DASH : [...lines, ...covered].join('');
 }
 
 /**
@@ -222,7 +243,7 @@ function countsCell(counts: Counts | undefined): string {
  *
  * @param reports - Each family's metadata (or its name alone, for a family that recorded none).
  * @returns The page: `Index of /figatellultimate/`, one row per family sorted by name: its date, its counts by kind,
- *   its commit, its run's number and its frequency.
+ *   its coverage last among them (the CI's), its commit, its run's number and its frequency.
  *
  * @example
  * renderIndex([{ family: 'ci', title: 'CI', frequency: 'push', counts: { passed: 8512 } }]);
@@ -234,7 +255,7 @@ export function renderIndex(reports: readonly ReportMeta[]): string {
       (report) => `<tr>
 <td><a href="${escape(report.family)}/">${escape(report.family)}/</a></td>
 <td>${escape(dateOf(report.published))}</td>
-<td>${countsCell(report.counts)}</td>
+<td>${countsCell(report.counts, report.coverage)}</td>
 <td>${report.commit === undefined ? DASH : link(report.commit.sha, report.commit.url)}</td>
 <td>${report.run === undefined ? DASH : link(`#${report.run.number}`, report.run.url)}</td>
 <td>${report.frequency === undefined ? DASH : escape(report.frequency)}</td>
@@ -359,6 +380,8 @@ export function metaOf(recorded: unknown, family: string): ReportMeta | undefine
   const commitUrl = text(field(field(recorded, 'commit'), 'url'));
   const number = text(field(field(recorded, 'run'), 'number'));
   const runUrl = text(field(field(recorded, 'run'), 'url'));
+  const lines = field(field(recorded, 'coverage'), 'lines');
+  const coverageHref = text(field(field(recorded, 'coverage'), 'href'));
   const counts =
     typeof recordedCounts === 'object' && recordedCounts !== null
       ? nonEmpty(Object.fromEntries(KINDS.map((kind) => [kind, count(field(recordedCounts, kind))])))
@@ -372,6 +395,7 @@ export function metaOf(recorded: unknown, family: string): ReportMeta | undefine
     frequency: text(field(recorded, 'frequency')),
     published: text(field(recorded, 'published')),
     counts,
+    coverage: typeof lines === 'number' && coverageHref !== undefined ? { lines, href: coverageHref } : undefined,
     commit: sha === undefined || commitUrl === undefined ? undefined : { sha, url: commitUrl },
     run: number === undefined || runUrl === undefined ? undefined : { number, url: runUrl },
   };
@@ -410,6 +434,7 @@ if (import.meta.main) {
       site: { type: 'string' },
       report: { type: 'string' },
       markdown: { type: 'string' },
+      coverage: { type: 'string' },
       out: { type: 'string' },
     },
   });
@@ -419,6 +444,7 @@ if (import.meta.main) {
     case 'meta': {
       const { family = '', title = '', frequency, site = '.' } = values;
       const summary = values.report === undefined ? undefined : join(values.report, 'summary.json');
+      const coverage = values.coverage;
       const meta =
         values.markdown === undefined
           ? allureMeta({
@@ -427,6 +453,9 @@ if (import.meta.main) {
               frequency,
               summary:
                 summary !== undefined && existsSync(summary) ? JSON.parse(readFileSync(summary, 'utf8')) : undefined,
+              ...(coverage !== undefined && existsSync(coverage)
+                ? { coverage: JSON.parse(readFileSync(coverage, 'utf8')), coverageHref: `${family}/coverage/` }
+                : {}),
               env: process.env,
               now,
             })

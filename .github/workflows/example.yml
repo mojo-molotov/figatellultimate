@@ -14,10 +14,18 @@ jobs:
   example:
     name: Example app (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    # On Linux, Playwright's own image (see browsers.yml): containers exist on Linux runners only, so macOS and Windows
+    # install their browser, which needs no system package there.
+    container: ${{ matrix.container }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            container:
+              image: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f
+              options: --ipc=host --user 1001
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
@@ -31,5 +39,6 @@ jobs:
       - run: pnpm --filter figatellultimate-example-next example:build
       - run: pnpm --filter figatellultimate-example-next example:verify
       # What only a browser and Next's router show: the screen still on a list's next page, filters applied.
-      - run: pnpm --filter figatellultimate-example-next exec playwright install --with-deps chromium-headless-shell
+      - if: runner.os != 'Linux'
+        run: pnpm --filter figatellultimate-example-next exec playwright install chromium-headless-shell
       - run: pnpm --filter figatellultimate-example-next example:browse

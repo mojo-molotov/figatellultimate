@@ -18,6 +18,12 @@ jobs:
   load:
     name: Load test
     runs-on: ubuntu-latest
+    # Playwright's own image: the browsers and their system packages already installed (installing them took from
+    # one to eleven minutes, Ubuntu's mirror being slow), pinned by digest, the release of the repository's playwright.
+    # Firefox refuses to run as root: the runner's user (1001), who owns the workspace; Chromium needs --ipc=host.
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f
+      options: --ipc=host --user 1001
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
@@ -28,7 +34,6 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # The example consumes the packages as a user would: built.
       - run: pnpm build
-      - run: pnpm exec playwright install --with-deps chromium-headless-shell
       - run: pnpm --filter figatellultimate-example-next example:load --posts ${{ inputs.posts || '2500' }}
       - if: always()
         run: cat .tmp/load-*/load-report.md >> "$GITHUB_STEP_SUMMARY"

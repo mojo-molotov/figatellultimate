@@ -67,4 +67,27 @@ describe('GitHub Actions', () => {
     expect(publish).toContain('--orphan allure-reports');
     expect(publish).toContain('git push -q --force');
   });
+
+  it("runs Playwright's image pinned by digest, of the repository's playwright release, so that its browsers match", () => {
+    const manifest: unknown = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
+    const dependencies: unknown =
+      typeof manifest === 'object' && manifest !== null ? Reflect.get(manifest, 'devDependencies') : undefined;
+    const version: unknown =
+      typeof dependencies === 'object' && dependencies !== null ? Reflect.get(dependencies, 'playwright') : undefined;
+
+    // Precondition: the repository's playwright was read.
+    expect(version).toMatch(/^\d+\.\d+\.\d+$/);
+    const images = files.flatMap((file) => [
+      ...readFileSync(file, 'utf8').matchAll(/image: (mcr\.microsoft\.com\/playwright\S*)/g),
+    ]);
+
+    // Precondition: the workflows running browsers use it.
+    expect(images.length).toBeGreaterThanOrEqual(3);
+
+    for (const [, image] of images) {
+      expect(image).toMatch(
+        new RegExp(`^mcr\\.microsoft\\.com/playwright:v${String(version)}-[a-z]+@sha256:[0-9a-f]{64}$`),
+      );
+    }
+  });
 });
