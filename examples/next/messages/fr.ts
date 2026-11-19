@@ -161,8 +161,8 @@ const ui = {
   },
   pagination: {
     nav: 'Pagination',
-    previous: 'Précédente',
-    next: 'Suivante',
+    previous: 'Précédent',
+    next: 'Suivant',
     page: 'Page {page}',
     current: 'Page {page} sur {pages}, page actuelle',
     more: 'Pages {from} à {to}',

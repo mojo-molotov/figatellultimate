@@ -17,6 +17,11 @@ const check = (condition: boolean, problem: string): void => {
 };
 const LISTING = '/blog/maquis/corsicamon';
 const perPage = findBlogFolderByUrl(LISTING)?.perPage ?? 0;
+const posts = blogIndex.filter((item) => item.locale === 'fr' && item.url.startsWith(`${LISTING}/`)).length;
+// The listing's last page, shorter than the others: going back from it makes the page taller.
+const last = Math.ceil(posts / perPage);
+
+check(posts % perPage !== 0, `${LISTING}: its last page is full, so no page change alters the page's height`);
 
 /** Where the page is scrolled, and where a slot's element sits on the screen. */
 const placeOf = (page: Page, slot: string) =>
@@ -53,13 +58,16 @@ try {
     return page;
   };
 
-  // Previous and next keep the screen still, the button under the mouse: the browser's scroll anchoring once picked
-  // an element of the new page (or the revealed footer) and scrolled to keep it in place.
+  // Previous and next keep the button under the mouse: the browser's scroll anchoring once picked an element of the
+  // new page (or the revealed footer) and scrolled to keep it in place; and from the shorter last page, the taller
+  // page before it once pushed the pagination down the screen, the click landing elsewhere.
   for (const [url, slot, fromBottom] of [
     [LISTING, 'pagination-next', 150],
     [LISTING, 'pagination-next', 50],
     [`${LISTING}/page/3`, 'pagination-previous', 120],
     ['/blog/maquis', 'pagination-next', 120],
+    [`${LISTING}/page/${String(last)}`, 'pagination-previous', 0],
+    [`${LISTING}/page/${String(last - 1)}`, 'pagination-next', 0],
   ] as const) {
     const page = await open(url);
 
@@ -79,8 +87,10 @@ try {
       await page.waitForTimeout(800);
       const after = await placeOf(page, slot);
 
+      // The button's place on the screen: the scroll itself changes when the new page is taller or shorter. Within a
+      // pixel: heights are fractional, the browser's furthest scroll is rounded.
       check(
-        after.scroll === before.scroll && after.top === before.top,
+        Math.abs(after.top - before.top) <= 1,
         `${url}: ${slot} ${String(fromBottom)}px from the bottom moved the screen (${JSON.stringify(before)} → ${JSON.stringify(after)})`,
       );
     }
@@ -140,6 +150,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the screen still; a filter in the URL, or chosen early, is applied; the page select reaches its page.',
+    '✓ previous and next keep the button under the mouse, the page taller or shorter; a filter in the URL, or chosen early, is applied; the page select reaches its page.',
   );
 }

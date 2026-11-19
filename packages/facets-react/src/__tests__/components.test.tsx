@@ -67,8 +67,8 @@ const JUMP: PageSelectLabels = {
 };
 const PAGES: PaginationLabels = {
   nav: '«pagination»',
-  previous: '«précédente»',
-  next: '«suivante»',
+  previous: '«précédent»',
+  next: '«suivant»',
   page: (n) => `«page ${String(n)}»`,
   current: (n, total) => `«page ${String(n)} sur ${String(total)}»`,
   more: (pages) => `«pages ${pages.join(',')}»`,
@@ -410,13 +410,13 @@ describe('pagination', () => {
     const links = within(nav).getAllByRole('link');
 
     expect(links.map((l) => l.getAttribute('aria-label') ?? l.textContent)).toEqual([
-      '«précédente»',
+      '«précédent»',
       '«page 1»',
       '«page 4»',
       '«page 5 sur 10»',
       '«page 6»',
       '«page 10»',
-      '«suivante»',
+      '«suivant»',
     ]);
     expect(within(nav).getByRole('link', { name: '«page 4»' }).getAttribute('href')).toBe('?page=4');
     expect(within(nav).getByRole('link', { name: '«page 5 sur 10»' }).getAttribute('aria-current')).toBe('page');
@@ -446,8 +446,8 @@ describe('pagination', () => {
     ));
 
     for (const [name, icon] of [
-      ['«précédente»', 'left'],
-      ['«suivante»', 'right'],
+      ['«précédent»', 'left'],
+      ['«suivant»', 'right'],
     ] as const) {
       const step = screen.getByRole('link', { name });
 
@@ -458,13 +458,13 @@ describe('pagination', () => {
 
   it('disables previous on the first page and next on the last, without an href', () => {
     renderListing('');
-    const previous = screen.getByRole('link', { name: '«précédente»' });
+    const previous = screen.getByRole('link', { name: '«précédent»' });
 
     expect(previous.getAttribute('aria-disabled')).toBe('true');
     expect(previous.hasAttribute('href')).toBe(false);
     cleanup();
     renderListing('?page=10');
-    expect(screen.getByRole('link', { name: '«suivante»' }).getAttribute('aria-disabled')).toBe('true');
+    expect(screen.getByRole('link', { name: '«suivant»' }).getAttribute('aria-disabled')).toBe('true');
   });
 
   it('keyboard: Enter on a link navigates without reloading, and focus moves to the new current page', async () => {
@@ -475,7 +475,7 @@ describe('pagination', () => {
     expect(history.at(-1)).toBe('?page=6');
     expect(focused()).toBe(screen.getByRole('link', { name: '«page 6 sur 10»' }));
     // "next" stays where it was: focus follows the current page, not the activated link.
-    screen.getByRole('link', { name: '«suivante»' }).focus();
+    screen.getByRole('link', { name: '«suivant»' }).focus();
     await user.keyboard('{Enter}');
     expect(history.at(-1)).toBe('?page=7');
     expect(focused()).toBe(screen.getByRole('link', { name: '«page 7 sur 10»' }));

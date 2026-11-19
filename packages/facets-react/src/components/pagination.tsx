@@ -9,18 +9,30 @@
  *     - Each ellipsis is a Radix DropdownMenu of the hidden pages; the model is the pure
  *       `paginationItems` of `@figatellultimate/facets`.
  *     - Focus follows a page change made from the pagination: the activated link may be gone.
+ *     - The pagination keeps its place on the screen after a page change made from it, so that the pointer stays on
+ *       the same button: a last page holding fewer items makes the page shorter or taller above the pagination. Its
+ *       place is taken on the click and restored before the new page paints, by one instant scroll (never smooth, it
+ *       would be a moving target), on every device. It survives a remount: a router may mount a new page, and a new
+ *       pagination, for each page (Next does, keyed by its path), so the place is kept by the module, for the
+ *       pagination showing the page it was taken for. Rejected: the browser's scroll anchoring, which picks an
+ *       element of its own (a post of the new page, a revealed footer) and is turned off by themes for that reason.
  *     - No style, no text of its own; numbers formatted for the locale (some locales do not use Latin digits).
  *     - No icon of its own either: the app may give previous and next one each (`icons`), shown beside their label
  *       (`pagination-step-icon`, `aria-hidden`; `pagination-step-label`), so that a stylesheet can show the icon alone
  *       on a narrow screen while the label stays the link's accessible name.
  *
  * Invariants (`components.test.tsx`): axe with an ellipsis menu open, keyboard, disabled ends, no pagination for a
- * single page, a modified click left to the browser, the locale's digits, the app's icons beside the steps' names.
+ * single page, a modified click left to the browser, the locale's digits, the app's icons beside the steps' names; its
+ * place on the screen across a page change that changes the page's height, in a real browser
+ * (`pagination-layout.test.tsx`), and across Next's remount on the example (`examples/next/scripts/browse.ts`).
+ *
+ * Limitation: with two paginations of one listing on a page (above and below it), after a remount the first one
+ * mounted takes the place, whichever was clicked.
  */
 import { paginationItems, type Action } from '@figatellultimate/facets';
 import { Direction, DropdownMenu, Slot } from 'radix-ui';
 import {
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   type ComponentProps,
@@ -68,6 +80,12 @@ interface PaginationContext {
 
 const { context: Context, use } = createPartContext<PaginationContext>('Pagination');
 
+/**
+ * The page change made from a pagination, until the pagination showing its page lays out: that page's `href`, and
+ * where the pagination stood on the screen. Kept by the module, so that it survives the remount a router may do.
+ */
+let pending: { readonly href: string; readonly top: number } | undefined;
+
 /** The pagination's props: a `<nav>`'s, plus the binding, the labels, the locale and how many pages to show. */
 export interface PaginationProps extends ComponentProps<'nav'> {
   readonly binding: FacetedCollectionBinding;
@@ -114,19 +132,33 @@ export function Pagination({
   dir,
   icons,
   children,
+  ref,
   ...props
 }: PaginationProps): ReactNode {
+  const nav = useRef<HTMLElement>(null);
   const currentLink = useRef<HTMLAnchorElement>(null);
   const navigated = useRef(false);
   const page = binding.state.page;
+  const href = binding.hrefFor({ type: 'page', page });
   const format = useMemo(() => numberFormat(locale), [locale]);
 
-  useEffect(() => {
-    if (!navigated.current) return;
+  // Before the new page paints: the pagination back in its place on the screen, then focus on the current page.
+  useLayoutEffect(() => {
+    const taken = pending;
+
+    if (taken === undefined) return;
+
+    pending = undefined;
+
+    if (taken.href !== href) return;
+
+    const moved = (nav.current?.getBoundingClientRect().top ?? taken.top) - taken.top;
+
+    if (moved !== 0) window.scrollBy({ top: moved, behavior: 'instant' });
 
     navigated.current = false;
-    currentLink.current?.focus();
-  }, [page]);
+    currentLink.current?.focus({ preventScroll: true });
+  }, [href]);
 
   const go =
     (target: number) =>
@@ -138,6 +170,10 @@ export function Pagination({
       if (target === page) return;
 
       navigated.current = true;
+      pending = {
+        href: binding.hrefFor({ type: 'page', page: target }),
+        top: nav.current?.getBoundingClientRect().top ?? 0,
+      };
       binding.dispatch({ type: 'page', page: target } satisfies Action);
     };
 
@@ -146,7 +182,20 @@ export function Pagination({
 
   const root = (
     <Context value={{ binding, labels, icons, siblings, boundaries, navigated, currentLink, go, format }}>
-      <nav aria-label={labels.nav} data-slot="pagination" {...props}>
+      <nav
+        ref={(element) => {
+          nav.current = element;
+
+          if (typeof ref === 'function') return ref(element);
+
+          if (ref) ref.current = element;
+
+          return undefined;
+        }}
+        aria-label={labels.nav}
+        data-slot="pagination"
+        {...props}
+      >
         {children ?? <PaginationContent />}
       </nav>
     </Context>

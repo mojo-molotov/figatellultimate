@@ -14,8 +14,8 @@ declare const binding: FacetedCollectionBinding;
 
 const pagination: PaginationLabels = {
   nav: 'Pagination',
-  previous: 'Précédente',
-  next: 'Suivante',
+  previous: 'Précédent',
+  next: 'Suivant',
   page: (n) => `Page ${String(n)}`,
   current: (n, total) => `Page ${String(n)} sur ${String(total)}`,
   more: (pages) => `Pages ${pages.join(', ')}`,
