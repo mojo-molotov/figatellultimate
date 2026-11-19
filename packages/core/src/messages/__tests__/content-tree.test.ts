@@ -76,6 +76,22 @@ describe('contentMessageTree', () => {
     expect(Object.isFrozen(result.content['blog']?.children['patch-notes'])).toBe(true);
   });
 
+  it("gives the collection's own page its fields under the collection's `$`, its levels' fields unchanged", () => {
+    const withRoot = defineCollection({
+      entry: 'blogPost',
+      base: 'blog',
+      grammar: [segment('category'), locale({ optional: true }), slug()],
+      messages: { $root: ['description'], category: ['title'] },
+      folderPages: { root: true, levels: ['category'] },
+    });
+    const result = tree({ blog: withRoot }, { blog: ['news/a.mdx'] });
+
+    expect(result.content['blog']).toEqual({
+      fields: ['description'],
+      children: { news: { fields: ['title'], children: {} } },
+    });
+  });
+
   it('a category and a subcategory with the same name never share a key', () => {
     const result = tree({ blog }, { blog: ['news/news/a.mdx', 'news/other/b.mdx'] });
     const news = result.content['blog']?.children['news'];

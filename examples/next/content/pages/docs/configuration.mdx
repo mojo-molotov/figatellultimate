@@ -96,10 +96,10 @@ folderPages: { root: true, levels: ['category', 'subcategory'], preview: 2, imag
 folderPages: { root: true, levels: ['category', 'subcategory'], perPage: { root: 6, subcategory: 5 } },
 ```
 
-Une page de dossier n’a pas de frontmatter : son SEO se déclare comme le `metadata` d’une entrée, mais en nommant un champ des messages du dossier. `metadata.description` donne à chaque page de dossier sa meta description ; chaque niveau qui a des pages doit déclarer ce champ dans ses `messages`, sinon la config est refusée. La page de la collection elle-même n’a pas de messages, donc pas de description.
+Une page de dossier n’a pas de frontmatter : son SEO se déclare comme le `metadata` d’une entrée, mais en nommant un champ des messages du dossier. `metadata.description` donne à chaque page de dossier sa meta description ; chaque niveau qui a des pages doit déclarer ce champ dans ses `messages`, sinon la config est refusée. La page de la collection elle-même déclare ses champs dans `messages.$root`, à `content.blog.$`, et suit la même règle : avec `folderPages.root`, elle doit déclarer ce champ elle aussi.
 
 ```ts
-messages: { category: ['title', 'description'], subcategory: ['title', 'description'] },
+messages: { $root: ['description'], category: ['title', 'description'], subcategory: ['title', 'description'] },
 folderPages: { root: true, levels: ['category', 'subcategory'], metadata: { description: 'description' } },
 ```
 

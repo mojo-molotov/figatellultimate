@@ -34,6 +34,7 @@ export {
   SCHEMA_TYPES,
   type SchemaType,
   type FolderPages,
+  type CollectionMessages,
   type FolderPagesInput as CollectionFolderPagesInput,
 } from './declarations/collection.js';
 export {

@@ -985,7 +985,7 @@ for (const item of mountedUrls) {
 }
 
 // The SEO of pages without frontmatter (`folderPages.metadata`, `pages.metadata`): every category, subcategory and
-// author page, each of its further pages too, in each locale, has a meta description; the blog's own page and its further pages have none.
+// author page, the blog's own page too (`messages.$root`), each of its further pages too, in each locale, has a meta description.
 {
   const descriptionOf = (html: string): string | undefined =>
     /<meta name="description" content="([^"]*)"/.exec(html)?.[1];
@@ -993,7 +993,7 @@ for (const item of mountedUrls) {
   const missing = described.filter((item) => {
     const html = htmlOf(item.url);
 
-    return html !== undefined && !/^\/(en\/)?blog(\/page\/\d+)?$/.test(item.url) && (descriptionOf(html) ?? '') === '';
+    return html !== undefined && (descriptionOf(html) ?? '') === '';
   });
 
   check(described.length > 0, 'no folder or author page to check');
@@ -1004,7 +1004,6 @@ for (const item of mountedUrls) {
       .slice(0, 5)
       .join(', ')}`,
   );
-  check(descriptionOf(htmlOf('/blog') ?? '') === undefined, '/blog: a meta description it has no message for');
 
   // Plain spaces in every meta description and Open Graph's: the French spacing is the page's, never a search result's.
   const typeset = mountedUrls.filter((item) =>

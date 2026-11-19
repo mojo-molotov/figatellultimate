@@ -11,7 +11,7 @@ import type { Taxonomy } from '../declarations/taxonomy.js';
 import type { EntryDescriptor } from '../paths/descriptor.js';
 import { compareText } from '../shared/diagnostics.js';
 
-/** A level of the content namespace: its own required fields (under `$`) and its children by value. */
+/** A level of the content namespace (the collection's own page at its root): its own required fields (under `$`) and its children by value. */
 export interface MessageNode {
   readonly fields: readonly string[];
   readonly children: Readonly<Record<string, MessageNode>>;
@@ -93,11 +93,13 @@ export function contentMessageTree(input: {
     if (collection === undefined) continue;
 
     const depth = depthOf(collection);
-
-    if (depth === 0) continue;
-
     const messages: Readonly<Record<string, readonly string[] | undefined>> = collection.messages;
-    const root: MutableNode = { fields: [], children: new Map() };
+    // The collection's own page's fields (`messages.$root`), under `content.<collection>.$`.
+    const own = Object.freeze([...(messages['$root'] ?? [])]);
+
+    if (depth === 0 && own.length === 0) continue;
+
+    const root: MutableNode = { fields: own, children: new Map() };
 
     for (const entry of input.entries.filter((e) => e.collection === name)) {
       let node = root;

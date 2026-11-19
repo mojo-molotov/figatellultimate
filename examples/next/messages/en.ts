@@ -10,6 +10,10 @@ const nav = { blog: SHARED.blog } as const satisfies AppMessages['nav'];
 const content = {
   pages: { docs: { $: { title: 'Documentation' } } },
   blog: {
+    $: {
+      description:
+        'News from the Empire of Igoristan, from its decrees to its islands, from its academy to the maquis.',
+    },
     court: {
       $: {
         title: 'The imperial court',

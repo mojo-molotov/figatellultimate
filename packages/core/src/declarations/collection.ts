@@ -89,8 +89,11 @@ export interface CollectionInput<E extends string, G extends readonly GrammarPar
   readonly draft?: string | null;
   /** Keys or key prefixes (`'x/*'`) of test-only content, excluded by the environment. */
   readonly testOnly?: readonly string[];
-  /** Fields every value of a segment must have in every locale's messages, per segment name. */
-  readonly messages?: { readonly [K in SegmentNames<G>]?: readonly string[] };
+  /**
+   * Fields every value of a segment must have in every locale's messages, per segment name; `$root`, the fields of
+   * the collection's own page (`folderPages.root`), e.g. its description, at `content.<collection>.$`.
+   */
+  readonly messages?: CollectionMessages<SegmentNames<G>>;
   /** Frontmatter fields read by the site metadata. */
   readonly metadata?: MetadataFields;
   /** Whether the local search indexes this collection. Default: `true`. */
@@ -103,6 +106,11 @@ export interface CollectionInput<E extends string, G extends readonly GrammarPar
   /** Folders with a page of their own, mounted like entries; `null` or absent for none. */
   readonly folderPages?: FolderPagesInput<SegmentNames<G>> | null;
 }
+
+/** The message fields a collection requires: per segment name, and `$root` for its own page. */
+export type CollectionMessages<N extends string = string> = { readonly [K in N]?: readonly string[] } & {
+  readonly $root?: readonly string[];
+};
 
 /** Which folders of a collection have a page. */
 export interface FolderPagesInput<N extends string = string> {
@@ -126,7 +134,7 @@ export interface FolderPagesInput<N extends string = string> {
   /**
    * The folder pages' SEO, as an entry's `metadata` but naming a field of each folder's messages, since a folder has
    * no frontmatter: `description`, its meta description (e.g. `'description'`). Every level with pages must declare
-   * that field in its `messages`; the collection's own page has no messages, and so no description.
+   * that field in its `messages`, and so must the collection's own page (`messages.$root`) when it has one.
    */
   readonly metadata?: { readonly description?: string };
 }
@@ -159,7 +167,7 @@ export interface Collection<E extends string = string, G extends readonly Gramma
   readonly references: Readonly<Record<string, string>>;
   readonly draft: string | null;
   readonly testOnly: readonly string[];
-  readonly messages: { readonly [K in SegmentNames<G>]?: readonly string[] };
+  readonly messages: CollectionMessages<SegmentNames<G>>;
   readonly metadata: MetadataFields;
   readonly searchable: boolean;
   /** `false` when its entries have no page: read through their getters only. */
@@ -343,7 +351,14 @@ export function defineCollection<const E extends string, const G extends readonl
   const known: readonly string[] = segmentNames;
 
   for (const [name, fields] of Object.entries(messages)) {
-    if (!known.includes(name)) fail(entry, `messages references unknown segment "${name}"`);
+    if (name === '$root') {
+      const folderPages: unknown = input.folderPages;
+      const hasRoot =
+        typeof folderPages === 'object' && folderPages !== null && Reflect.get(folderPages, 'root') === true;
+
+      if (!hasRoot)
+        fail(entry, "messages.$root holds the collection's own page's fields: give it a page, with folderPages.root");
+    } else if (!known.includes(name)) fail(entry, `messages references unknown segment "${name}"`);
 
     if (fields === undefined) continue;
 
@@ -411,10 +426,7 @@ function freezeInPlace<T>(value: T): T {
 }
 
 /** The declared message fields, read segment by segment from the grammar's names, frozen. */
-function frozenMessages<N extends string>(
-  names: readonly N[],
-  messages: { readonly [K in N]?: readonly string[] },
-): { readonly [K in N]?: readonly string[] } {
+function frozenMessages<N extends string>(names: readonly N[], messages: CollectionMessages<N>): CollectionMessages<N> {
   const out: { [K in N]?: readonly string[] } = {};
 
   for (const name of names) {
@@ -423,7 +435,9 @@ function frozenMessages<N extends string>(
     if (fields !== undefined) out[name] = Object.freeze([...fields]);
   }
 
-  return Object.freeze(out);
+  const own = messages.$root;
+
+  return Object.freeze(own === undefined ? out : { ...out, $root: Object.freeze([...own]) });
 }
 
 /** `folderPages.images`: folder paths of valid names, no deeper than the named segments, to an image each. */
@@ -539,7 +553,7 @@ function validateFolderPages<E extends string, G extends readonly GrammarPart[]>
     preview: preview,
     images: validateFolderImages(entry, images, segments.length),
     perPage: validatePerPage(entry, perPage, checked, root),
-    metadata: validateFolderMetadata(entry, metadata, checked, input.messages ?? {}),
+    metadata: validateFolderMetadata(entry, metadata, root ? [...checked, '$root'] : checked, input.messages ?? {}),
   });
 }
 
@@ -561,10 +575,14 @@ function validateFolderMetadata(
     fail(entry, 'folderPages.metadata.description must name a messages field, e.g. "description"');
 
   for (const level of levels) {
-    if (!(messages[level] ?? []).includes(description))
+    const read: Readonly<Record<string, readonly string[] | undefined>> = messages;
+
+    if (!(read[level] ?? []).includes(description))
       fail(
         entry,
-        `folderPages.metadata.description reads "${description}", which messages.${level} does not declare: add it there, so that every ${level} page has its description`,
+        level === '$root'
+          ? `folderPages.metadata.description reads "${description}", which messages.$root does not declare: add it there, so that the collection's own page has its description`
+          : `folderPages.metadata.description reads "${description}", which messages.${level} does not declare: add it there, so that every ${level} page has its description`,
       );
   }
 

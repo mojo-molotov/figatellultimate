@@ -43,7 +43,8 @@ export default defineConfig({
       grammar: [segment('category'), segment('subcategory'), locale({ optional: true }), slug()],
       indexForbiddenUnder: ['category', 'subcategory'],
       references: { tags: 'tags', authors: 'authors' },
-      messages: { category: ['title', 'description'], subcategory: ['title', 'description'] },
+      // The blog's own page (`$root`), its categories and its subcategories: each one's title and description.
+      messages: { $root: ['description'], category: ['title', 'description'], subcategory: ['title', 'description'] },
       draft: 'draft',
       metadata: { ...metadata, publishedTime: 'date', tags: 'tags', type: 'article', schema: 'BlogPosting' },
       // The blog, category and subcategory pages, mounted like entries.
@@ -51,7 +52,7 @@ export default defineConfig({
       folderPages: {
         root: true,
         levels: ['category', 'subcategory'],
-        // SEO: each folder page's meta description, read from its messages (the blog's own page has none).
+        // SEO: each folder page's meta description, the blog's own page's too, read from its messages.
         metadata: { description: 'description' },
         preview: 2,
         // A page at a time, each one prerendered with its slice (`/page/N`): categories, subcategories, posts.

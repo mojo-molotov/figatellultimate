@@ -36,7 +36,7 @@ const config = defineConfig({
       base: 'blog',
       grammar: [segment('category'), segment('subcategory'), locale({ optional: true }), slug()],
       metadata: { title: 'title', publishedTime: 'date', image: 'cover' },
-      messages: { category: ['title', 'description'], subcategory: ['title', 'description'] },
+      messages: { $root: ['description'], category: ['title', 'description'], subcategory: ['title', 'description'] },
       folderPages: {
         root: true,
         // Each folder page's meta description, read from its messages.
@@ -189,7 +189,8 @@ describe('generated folder pages, run', () => {
   it('gives a folder the message keys of the fields its level declares', async () => {
     const root = await urls.findByUrl('/blog');
 
-    expect(root?.folder?.messages).toEqual({});
+    // The collection's own page: its own fields (`messages.$root`), under the collection's `$`.
+    expect(root?.folder?.messages).toEqual({ description: 'content.blog.$.description' });
     expect(root?.folder?.subfolders.map((s) => s.messages)).toEqual([
       { title: 'content.blog.news.$.title', description: 'content.blog.news.$.description' },
     ]);
@@ -201,14 +202,14 @@ describe('generated folder pages, run', () => {
     });
   });
 
-  it("gives a folder page its description's message key, for its SEO; none to the collection's own page", async () => {
+  it("gives every folder page its description's message key, for its SEO, the collection's own page too", async () => {
     expect((await urls.findByUrl('/blog/news'))?.folder?.metadata).toEqual({
       description: 'content.blog.news.$.description',
     });
     expect((await urls.findByUrl('/en/blog/news/bot'))?.folder?.metadata).toEqual({
       description: 'content.blog.news.bot.$.description',
     });
-    expect((await urls.findByUrl('/blog'))?.folder?.metadata).toEqual({});
+    expect((await urls.findByUrl('/blog'))?.folder?.metadata).toEqual({ description: 'content.blog.$.description' });
   });
 
   it('mounts a folder page per slice: its own URL, translations and key, the folder found with its page', async () => {

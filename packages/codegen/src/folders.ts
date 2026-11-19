@@ -30,9 +30,9 @@ export interface FolderData {
   readonly segments: Readonly<Record<string, string>>;
   readonly level: string | null;
   readonly label: string | null;
-  /** The message key of each field its level declares; none for the collection's own page. */
+  /** The message key of each field its level declares; the collection's own page, its `messages.$root`. */
   readonly messages: Readonly<Record<string, string>>;
-  /** Its SEO (`folderPages.metadata`): the message key of its description; none for the collection's own page. */
+  /** Its SEO (`folderPages.metadata`): the message key of its description. */
   readonly metadata: { readonly description?: string };
   /** Declared for its path, else its newest entry's image. */
   readonly image?: string;
@@ -84,8 +84,9 @@ export function folderData(
   const images = declared.images;
   // Each declared field of a level, as the folder's message keys.
   const fields: Readonly<Record<string, readonly string[] | undefined>> = collection.messages;
+  // The collection's own page reads `messages.$root`, its keys under the collection's `$`.
   const messagesOf = (level: string | null, values: readonly string[]): Record<string, string> =>
-    level === null ? {} : Object.fromEntries((fields[level] ?? []).map((field) => [field, keyOf(name, values, field)]));
+    Object.fromEntries((fields[level ?? '$root'] ?? []).map((field) => [field, keyOf(name, values, field)]));
   const all = folders.filter((folder) => folder.collection === name);
   // A folder's data once, at its first page; its further pages are slices of it.
   const mine = all.filter((folder) => folder.page === 1);
@@ -178,7 +179,7 @@ export function folderData(
       label: folder.level === null ? null : labelOf(name, values),
       messages: messagesOf(folder.level, values),
       metadata:
-        folder.level === null || declared.metadata.description === undefined
+        declared.metadata.description === undefined
           ? {}
           : { description: keyOf(name, values, declared.metadata.description) },
       ...imageOf(values, inside),

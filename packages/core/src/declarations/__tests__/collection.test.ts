@@ -257,10 +257,20 @@ describe('defineCollection: folderPages', () => {
   it("keeps the SEO description it reads from each folder's messages, frozen", () => {
     const declared = define(
       { root: true, levels: ['category', 'subcategory'], metadata: { description: 'description' } },
-      { messages: { category: ['title', 'description'], subcategory: ['title', 'description'] } },
+      {
+        messages: {
+          $root: ['description'],
+          category: ['title', 'description'],
+          subcategory: ['title', 'description'],
+        },
+      },
     ).folderPages;
 
     expect(declared?.metadata).toEqual({ description: 'description' });
+    expect(
+      define({ root: true, levels: ['category'] }, { messages: { $root: ['description'], category: ['title'] } })
+        .messages,
+    ).toEqual({ $root: ['description'], category: ['title'] });
     expect(Object.isFrozen(declared?.metadata)).toBe(true);
   });
 
@@ -272,6 +282,18 @@ describe('defineCollection: folderPages', () => {
       { levels: ['category', 'subcategory'], metadata: { description: 'description' } },
       { messages: { category: ['title', 'description'], subcategory: ['title'] } },
       /messages\.subcategory/,
+    ],
+    [
+      "a description the collection's own page does not declare",
+      { root: true, levels: ['category'], metadata: { description: 'description' } },
+      { messages: { category: ['title', 'description'] } },
+      /messages\.\$root/,
+    ],
+    [
+      "messages for the collection's own page without its page",
+      { levels: ['category'] },
+      { messages: { $root: ['description'] } },
+      /folderPages\.root/,
     ],
   ])('rejects %s', (_, folderPages, extra, message) => {
     expect(() => define(folderPages, extra)).toThrow(message);
