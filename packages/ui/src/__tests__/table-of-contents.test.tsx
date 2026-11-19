@@ -8,8 +8,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { TableOfContents, type TableOfContentsLabels } from '../index.js';
 
-Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
-
 const HEADINGS: readonly Heading[] = [
   { id: 'titre', text: '«Titre»', depth: 1 },
   { id: 'installer', text: '«Installer»', depth: 2 },

@@ -7,8 +7,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { SearchDialog, type SearchBoxLabels } from '../index.js';
 
-Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
-
 type Collection = 'pages' | 'blog';
 const pagefind = {
   search: () =>

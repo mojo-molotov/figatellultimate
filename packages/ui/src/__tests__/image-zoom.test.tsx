@@ -6,8 +6,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ImageZoom } from '../index.js';
 
-Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
-
 const LABELS = { open: (alt: string) => `«agrandir : ${alt}»`, close: '«fermer»' };
 const ALT = 'Le navbar en mode sombre';
 const SRC = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';

@@ -6,8 +6,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { Breadcrumb, EntryCard, LinkProvider, LocaleSwitcher, Navbar, type LinkProps } from '../index.js';
 
-Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
-
 /** The app's link component: an anchor marked as the router's, e.g. `next/link`. */
 const RouterLink = (props: LinkProps): ReactNode => <a data-router="" {...props} />;
 

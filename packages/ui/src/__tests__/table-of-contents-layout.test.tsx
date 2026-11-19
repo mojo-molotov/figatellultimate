@@ -11,8 +11,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { TableOfContents } from '../index.js';
 import { tocScript } from '../scripts.js';
 
-Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
-
 const inBrowser = !navigator.userAgent.includes('HappyDOM');
 
 /** Twelve sections of a long article, the last one short. */

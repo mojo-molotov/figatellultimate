@@ -7,8 +7,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ImageZoom } from '../index.js';
 
-Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
-
 const inBrowser = !navigator.userAgent.includes('HappyDOM');
 const LABELS = { open: (alt: string) => `«agrandir : ${alt}»`, close: '«fermer»' };
 // A 2×1 PNG: its natural width is far below the column's, so a shrinking button would show.

@@ -6,8 +6,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { LocaleSwitcher, type LocaleLink, type LocaleSwitcherLabels } from '../index.js';
 
-Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
-
 const LINKS: readonly LocaleLink[] = [
   { locale: 'fr', url: '/docs/advanced', kind: 'entry', current: true },
   { locale: 'en', url: '/en/docs', kind: 'ancestor', current: false },

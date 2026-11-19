@@ -4,8 +4,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { Sparkles } from '../sparkles.js';
 
-Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
-
 afterEach(() => {
   cleanup();
 });

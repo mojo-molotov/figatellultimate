@@ -4,8 +4,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Effects } from '../effects.js';
 
-Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
-
 const POINTER = '(hover: hover) and (pointer: fine)';
 const WIDE = `${POINTER} and (min-width: 64rem)`;
 

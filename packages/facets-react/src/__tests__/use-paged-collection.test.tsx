@@ -5,8 +5,6 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { createIndexLoader, usePagedCollection, type PagedSlice } from '../index.js';
 
-Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
-
 interface Post {
   readonly url: string;
   readonly date: string;

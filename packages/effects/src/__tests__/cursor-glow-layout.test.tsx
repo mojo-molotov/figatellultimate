@@ -7,8 +7,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { CursorGlow } from '../cursor-glow.js';
 
-Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
-
 const inBrowser = !navigator.userAgent.includes('HappyDOM');
 
 afterEach(() => {

@@ -9,8 +9,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { Pagination, useFacetedCollection, type PaginationLabels } from '../index.js';
 
-Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
-
 const inBrowser = !navigator.userAgent.includes('HappyDOM');
 
 // Nine posts, four a page: the last page holds one, so it is shorter than the others.

@@ -7,7 +7,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { useSearch, type SearchBinding } from '../index.js';
 
 // The hook's tests need React's act environment.
-Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
 
 type Collection = 'blog' | 'pages';
 const result = (i: number): SearchResult<Collection> => ({

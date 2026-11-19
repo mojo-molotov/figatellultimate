@@ -5,8 +5,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { Pager } from '../index.js';
 
-Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
-
 const LABELS = { nav: '«pages»', previous: '«précédent»', next: '«suivant»' };
 const INSTALLATION = { url: '/docs/installation', title: 'Installation' };
 const CONFIGURATION = { url: '/docs/configuration', title: 'Configuration' };

@@ -7,8 +7,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ThemeToggle } from '../index.js';
 import { themeScript } from '../scripts.js';
 
-Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
-
 const LABELS = { dark: '«thème sombre»' };
 const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 /** happy-dom does not run inline scripts: the script itself is run in real browsers (`pnpm test:browser`). */

@@ -6,8 +6,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { CodeBlock } from '../index.js';
 
-Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
-
 const LABELS = { copy: '«copier le code»', copied: '«copié»' };
 const CODE = 'const a = 1;\nconst b = `<${a}>`;\n';
 

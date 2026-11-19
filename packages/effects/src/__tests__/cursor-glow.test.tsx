@@ -4,8 +4,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { CursorGlow } from '../cursor-glow.js';
 
-Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
-
 const glow = (): HTMLElement => {
   const element = document.querySelector('[data-slot="cursor-glow"]');
 

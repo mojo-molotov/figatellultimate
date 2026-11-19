@@ -6,8 +6,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { Navbar, type NavbarLabels, type NavigationNode } from '../index.js';
 
-Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
-
 const ITEMS: readonly NavigationNode[] = [
   { kind: 'entry', url: '/', title: '«Accueil»', key: '' },
   { kind: 'entry', url: '/about', title: '«À propos»', key: 'about' },

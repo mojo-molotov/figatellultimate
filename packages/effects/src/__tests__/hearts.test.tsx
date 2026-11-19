@@ -5,8 +5,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { HEARTS, Hearts, nextHeart } from '../hearts.js';
 
-Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
-
 const shown = (container: HTMLElement): string | null | undefined =>
   container.querySelector('[data-state="shown"]')?.textContent;
 

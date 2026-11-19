@@ -6,8 +6,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { CodeTabs } from '../index.js';
 
-Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
-
 const LABELS = { list: '«gestionnaire»' };
 
 /** A block of variants, one per label. */

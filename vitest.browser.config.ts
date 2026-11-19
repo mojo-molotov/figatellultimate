@@ -22,7 +22,11 @@ const config: ViteUserConfig = defineConfig({
       // Not `extends: true`: each project repeats what it needs of the root, its timeouts included.
       test: {
         ...TEST_TIMEOUTS,
-        setupFiles: [join(import.meta.dirname, 'tooling', 'async-timeout.setup.ts')],
+        setupFiles: [
+          join(import.meta.dirname, 'tooling', 'async-timeout.setup.ts'),
+          join(import.meta.dirname, 'tooling', 'react-act.setup.ts'),
+          join(import.meta.dirname, 'tooling', 'allure-browser.setup.ts'),
+        ],
         name: `${name} (browser)`,
         root: `packages/${name}`,
         include: ['src/__tests__/**/*.test.tsx'],

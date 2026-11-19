@@ -7,8 +7,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { EntryCard } from '../index.js';
 
-Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
-
 const inBrowser = !navigator.userAgent.includes('HappyDOM');
 const IMAGE = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
 

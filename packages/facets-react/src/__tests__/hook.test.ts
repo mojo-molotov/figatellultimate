@@ -7,7 +7,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { useFacetedCollection, useHistoryUrl, type FacetedCollectionBinding } from '../index.js';
 
 // The hook's tests need React's act environment.
-Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
 
 interface Post {
   readonly url: string;

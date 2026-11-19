@@ -4,8 +4,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { Collector } from '../collector.js';
 
-Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
-
 const box = (): HTMLElement => {
   const element = screen.getByText('card').parentElement;
 

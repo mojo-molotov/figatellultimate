@@ -32,7 +32,11 @@ const config: ViteUserConfig = defineConfig({
   test: {
     reporters: ['default', allureReporter('scenarios')],
     ...TEST_TIMEOUTS,
-    setupFiles: [join(ROOT, 'tooling', 'fast-check.setup.ts'), join(ROOT, 'tooling', 'async-timeout.setup.ts')],
+    setupFiles: [
+      join(ROOT, 'tooling', 'fast-check.setup.ts'),
+      join(ROOT, 'tooling', 'async-timeout.setup.ts'),
+      join(ROOT, 'tooling', 'react-act.setup.ts'),
+    ],
     include: ['**/*.test.{ts,tsx}'],
     // `*.lab.test.ts`: the watch lab, run by `pnpm test:lab` only; `*.cli.test.ts`: the built CLI, `pnpm test:cli`.
     exclude: ['**/node_modules/**', '**/dist/**', '**/fixtures/**', '**/*.lab.test.ts', '**/*.cli.test.ts'],

@@ -27,8 +27,6 @@ import {
   type SortSelectLabels,
 } from '../index.js';
 
-Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
-
 interface Post {
   readonly url: string;
   readonly date: string;

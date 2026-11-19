@@ -7,8 +7,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { SearchBox, SearchBoxInput, SearchBoxResults, type SearchBoxLabels } from '../index.js';
 
-Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
-
 type Collection = 'pages' | 'blog';
 
 // Seven documents: two batches of five and two; the term matches the text, the filter the collection.
