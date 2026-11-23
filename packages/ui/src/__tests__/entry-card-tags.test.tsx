@@ -46,20 +46,27 @@ describe('fittingTags', () => {
   });
 });
 
-describe('EntryCardTags', () => {
-  it('lists every tag, named by its label, before any measure: the prerendered row, its pill hidden', () => {
-    render(
-      <EntryCardTags
-        tags={[
-          { key: 'kalimba', label: 'Kalimba' },
-          { key: 'violin', label: 'Violon' },
-        ]}
-        labels={{ tags: 'Tags', more: 'Autres tags' }}
-        locale="fr"
-      />,
-    );
+/** In a real browser (the browser family), layout runs: the row is measured at once, and no render precedes it. */
+const inBrowser = !navigator.userAgent.includes('HappyDOM');
 
-    expect(screen.getByRole('list', { name: 'Tags' }).textContent).toContain('KalimbaViolon');
-    expect(screen.queryByRole('button', { name: 'Autres tags' })).toBeNull();
-  });
+describe('EntryCardTags', () => {
+  // The state before any measure, the prerendered row's: only happy-dom, without layout, holds it long enough.
+  it.skipIf(inBrowser)(
+    'lists every tag, named by its label, before any measure: the prerendered row, its pill hidden',
+    () => {
+      render(
+        <EntryCardTags
+          tags={[
+            { key: 'kalimba', label: 'Kalimba' },
+            { key: 'violin', label: 'Violon' },
+          ]}
+          labels={{ tags: 'Tags', more: 'Autres tags' }}
+          locale="fr"
+        />,
+      );
+
+      expect(screen.getByRole('list', { name: 'Tags' }).textContent).toContain('KalimbaViolon');
+      expect(screen.queryByRole('button', { name: 'Autres tags' })).toBeNull();
+    },
+  );
 });

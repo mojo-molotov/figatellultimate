@@ -58,6 +58,53 @@ describe('EntryCard, styled', () => {
     );
   });
 
+  it.skipIf(!inBrowser)(
+    'opens the hidden tags on a mouse’s hover, the focus left where it is; leaving closes them',
+    async () => {
+      render(tagsCard('520px'));
+      const user = userEvent.setup();
+      const pill = await screen.findByRole('button', { name: '«Autres tags»' });
+
+      await user.hover(pill);
+      await screen.findByRole('dialog', { name: '«Autres tags»' });
+      expect(document.activeElement).toBe(document.body);
+      await user.unhover(pill);
+      // A boolean, never the element: a failed poll's message would serialize the popover, seconds in a real browser,
+      // and starve the page's timers, the closing one included.
+      await waitFor(() => {
+        expect(document.querySelector('[data-slot="entry-card-tags-more-content"]') === null).toBe(true);
+      });
+      expect(screen.queryByRole('dialog', { name: '«Autres tags»' })).toBeNull();
+    },
+  );
+
+  it.skipIf(!inBrowser)('keeps the hidden tags open once clicked, the pointer gone', async () => {
+    render(tagsCard('520px'));
+    const user = userEvent.setup();
+    const pill = await screen.findByRole('button', { name: '«Autres tags»' });
+
+    await user.hover(pill);
+    await screen.findByRole('dialog', { name: '«Autres tags»' });
+    await user.click(pill);
+    await user.unhover(pill);
+    // Longer than the hover's closing delay: a list pinned by a click stays.
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    expect(screen.getByRole('dialog', { name: '«Autres tags»' })).toBeTruthy();
+  });
+
+  it.skipIf(!inBrowser)('opens nothing on a touch alone: a phone has no hover, its tap opens the list', async () => {
+    render(tagsCard('520px'));
+    const user = userEvent.setup();
+    const pill = await screen.findByRole('button', { name: '«Autres tags»' });
+
+    // A finger down on the pill, not lifted: no tap yet.
+    await user.pointer({ keys: '[TouchA>]', target: pill });
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    expect(screen.queryByRole('dialog', { name: '«Autres tags»' })).toBeNull();
+    await user.pointer({ keys: '[/TouchA]', target: pill });
+    await screen.findByRole('dialog', { name: '«Autres tags»' });
+  });
+
   it.skipIf(!inBrowser)('shows every tag, and no pill, when they all fit', async () => {
     render(tagsCard('1200px'));
     const row = screen.getByRole('list', { name: '«Tags»' });
