@@ -3,8 +3,12 @@
 /**
  * The sort select: the sort registry as a Radix Select (a select-only combobox), every name from the labels.
  *
+ * Key design decision: the trigger shows the current sort's name from its first render, prerendered included
+ * (`labels.sort`), never filled by Radix a render later: its width never changes as it mounts, and a toolbar that
+ * wraps on a narrow screen never moves the page below it (the pagination keeps its place across a page change).
+ *
  * Invariants (`components.test.tsx`): axe open and closed; Enter opens on the current sort, arrows and Enter choose,
- * focus back to the trigger; Escape closes without changing the sort.
+ * focus back to the trigger; Escape closes without changing the sort; the current sort's name in the first render.
  */
 import { Select } from 'radix-ui';
 import type { ComponentProps, ReactNode } from 'react';
@@ -82,13 +86,15 @@ export function SortSelect({ binding, labels, children, ...props }: SortSelectPr
  * @returns The combobox, named by the labels' `trigger`.
  */
 export function SortSelectTrigger({ children, ...props }: ComponentProps<typeof Select.Trigger>): ReactNode {
-  const { labels } = use('SortSelectTrigger');
+  const { binding, labels } = use('SortSelectTrigger');
 
   return (
     <Select.Trigger data-slot="sort-select-trigger" aria-label={labels.trigger} {...props}>
       {children ?? (
         <>
-          <Select.Value data-slot="sort-select-value" />
+          {/* Its text given, not left to Radix, which fills it a render later: the trigger has its width from the
+              first render (the prerendered page's included), and the toolbar never rewraps under the pagination. */}
+          <Select.Value data-slot="sort-select-value">{labels.sort(binding.state.sort)}</Select.Value>
           <SortSelectIcon />
         </>
       )}

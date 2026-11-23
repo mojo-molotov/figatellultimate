@@ -270,6 +270,32 @@ try {
 
     check(unstyled.length === 0, `${LISTING} on ${device}: controls without their box: ${unstyled.join(', ')}`);
 
+    // Next tapped on a phone keeps the pagination in its place, page after page: the sort's name, once filled by Radix a
+    // render after the page's, rewrapped the toolbar above the posts and pushed the pagination 44px down each time.
+    if (!revealed) {
+      await phone.goto(`${base}${LISTING}/page/6`, { waitUntil: 'networkidle' });
+      const steps = phone.locator('[data-slot="pagination"]').first();
+
+      await steps.evaluate((nav) => {
+        window.scrollBy(0, nav.getBoundingClientRect().top - window.innerHeight * 0.6);
+      });
+      await phone.waitForTimeout(300);
+
+      for (const page of [7, 8]) {
+        const before = await steps.evaluate((nav) => nav.getBoundingClientRect().top);
+
+        await phone.locator('[data-slot="pagination-next"]').first().tap();
+        await phone.waitForURL((next) => next.pathname.endsWith(`/page/${String(page)}`));
+        await phone.waitForTimeout(800);
+        const after = await steps.evaluate((nav) => nav.getBoundingClientRect().top);
+
+        check(
+          Math.abs(after - before) <= 1,
+          `${LISTING}/page/${String(page - 1)} on ${device}: next moved the pagination (${String(before)} → ${String(after)})`,
+        );
+      }
+    }
+
     // The search dialog on the screen, its close button too, once results with long words have come.
     if (!revealed) {
       await phone.goto(`${base}/blog`, { waitUntil: 'networkidle' });
@@ -484,6 +510,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the button under the mouse, the page taller or shorter; a filter in the URL, or chosen early, is applied; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
+    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; a filter in the URL, or chosen early, is applied; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
   );
 }

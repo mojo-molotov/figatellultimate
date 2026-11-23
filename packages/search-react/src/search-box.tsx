@@ -387,7 +387,8 @@ export function SearchBoxSort(props: ComponentProps<typeof Select.Trigger>): Rea
         }}
         {...props}
       >
-        <Select.Value data-slot="search-box-sort-value" />
+        {/* Its text from the first render, not filled by Radix a render later: the field never resizes. */}
+        <Select.Value data-slot="search-box-sort-value">{sortBy.labels.sort(sort)}</Select.Value>
         <Select.Icon asChild data-slot="search-box-sort-icon">
           <span />
         </Select.Icon>

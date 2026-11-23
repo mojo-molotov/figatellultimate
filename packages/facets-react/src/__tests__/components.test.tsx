@@ -332,6 +332,21 @@ describe('sort select', () => {
     expect(screen.getByRole('combobox', { name: '«trier»' }).textContent).toContain('«tri date-asc»');
   });
 
+  it('shows the current sort’s name from the first render, the prerendered page’s included', async () => {
+    // Left to Radix, the value fills a render later: the trigger widened as it mounted, and a toolbar wrapping on a
+    // phone pushed the page below it, the pagination included, at every page change.
+    const { renderToString } = await import('react-dom/server');
+
+    function Prerendered(): ReactNode {
+      const binding = useFacetedCollection(engine, { search: '?sort=date-asc', navigate: () => undefined });
+
+      return <SortSelect binding={binding} labels={SORT} />;
+    }
+    const html = renderToString(<Prerendered />);
+
+    expect(html).toMatch(/data-slot="sort-select-value"[^>]*>«tri date-asc»</);
+  });
+
   it('keyboard: Escape closes without changing the sort', async () => {
     const { user, history } = renderListing();
 
