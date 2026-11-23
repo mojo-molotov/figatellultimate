@@ -130,6 +130,16 @@ describe('metadataOf: the title carries the site’s name', () => {
     expect(titled.title).toBe('The bot speaks | RTM, the bot');
   });
 
+  it.each(['$$', '$&', '$`', "$'"])(
+    'keeps %s in a title as written, never read as a replacement pattern',
+    (pattern) => {
+      // `%s · RTM` filled by a replacement string once turned « $$$ » into « $$ », and `$&` into `%s`.
+      const priced = { ...english, data: { ...english.data, title: `Prix ${pattern} fin` } };
+
+      expect(metadataOf(priced, fields, site).title).toBe(`Prix ${pattern} fin · RTM`);
+    },
+  );
+
   it('keeps the page’s title alone when the site has no name', () => {
     const nameless: Site = { origin: site.origin, defaultLocale: site.defaultLocale };
 

@@ -78,7 +78,8 @@ function titleOf(title: string | undefined, entry: SiteEntry, site: Site): strin
 
   if (title === undefined || entry.url === '/' || entry.url === `/${entry.locale}`) return name;
 
-  return (site.titleTemplate ?? `%s · ${name}`).replaceAll('%s', title);
+  // A function, never a string: a replacement string reads `$$` and `$&` in the title as patterns.
+  return (site.titleTemplate ?? `%s · ${name}`).replaceAll('%s', () => title);
 }
 
 /**

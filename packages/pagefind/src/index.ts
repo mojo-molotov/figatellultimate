@@ -34,33 +34,9 @@ import { dirname, join } from 'node:path';
 
 import * as pagefind from 'pagefind';
 
-/** A built page to index: its URL, locale and collection come from figatellultimate (one rule). */
-export interface SearchPage {
-  readonly url: string;
-  readonly locale: string;
-  readonly collection: string;
-  /** The full built HTML, `<html>` included. */
-  readonly html: string;
-  /** What the search sorts it by: its title and publication date, from its collection's metadata fields. */
-  readonly sort?: { readonly title?: string | undefined; readonly date?: string | undefined } | undefined;
-}
+import { withMarkers, type SearchPage } from './markers.js';
 
-/**
- * The sort keys every page gets, read by `@figatellultimate/search`: `title` lowercased without accents (Pagefind
- * compares raw strings), and the date twice, so that undated pages come last both newest and oldest first.
- */
-export const SORT_KEYS = { title: 'title', newest: 'newest', oldest: 'oldest' } as const;
-const UNDATED = { newest: '0000-00-00', oldest: '9999-12-31' } as const;
-
-const titleKey = (title: string): string =>
-  title
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-    .toLocaleLowerCase('en')
-    .trim();
-
-const attribute = (value: string): string =>
-  value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+export { SORT_KEYS, type SearchPage } from './markers.js';
 
 /** Why a page could not be indexed; the CLI turns it into a diagnostic. */
 export interface SearchProblem {
@@ -116,28 +92,6 @@ export function indexableText(html: string): string | undefined {
     .replace(/<[^>]*>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-}
-
-/** The page with its collection as a Pagefind filter, its sort keys and its date, out of the indexed text. */
-function withMarkers(page: SearchPage): string {
-  const keys: [string, string][] = [
-    [SORT_KEYS.title, titleKey(page.sort?.title ?? page.url)],
-    [SORT_KEYS.newest, page.sort?.date ?? UNDATED.newest],
-    [SORT_KEYS.oldest, page.sort?.date ?? UNDATED.oldest],
-  ];
-  const date = page.sort?.date;
-  const marker = [
-    `<span hidden data-pagefind-ignore data-pagefind-filter="collection:${attribute(page.collection)}"></span>`,
-    // Its date, shown by the search's results.
-    ...(date === undefined
-      ? []
-      : [`<span hidden data-pagefind-ignore data-pagefind-meta="date:${attribute(date)}"></span>`]),
-    ...keys.map(
-      ([key, value]) => `<span hidden data-pagefind-ignore data-pagefind-sort="${key}:${attribute(value)}"></span>`,
-    ),
-  ].join('');
-
-  return page.html.includes('</body>') ? page.html.replace('</body>', `${marker}</body>`) : `${page.html}${marker}`;
 }
 
 /**
