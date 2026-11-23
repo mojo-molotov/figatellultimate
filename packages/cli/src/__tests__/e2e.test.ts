@@ -179,6 +179,31 @@ export async function rejected(): Promise<void> {
     expect(await project.exists('.figatellultimate/pages/index.js')).toBe(true);
   });
 
+  it('a missing local image is an error: nothing is written, the closest file is suggested', async () => {
+    await project.create('public/maps/world.png', 'png');
+    await project.create('content/pages/atlas.mdx', '---\ntitle: Atlas\n---\n![The world](/maps/wrold.png)\n');
+
+    try {
+      const missing = await run('build');
+
+      expect(missing.code).toBe(EXIT.content);
+      expect(missing.output).toContain('missing-image');
+      expect(missing.output).toContain('/maps/wrold.png');
+      expect(missing.output).toContain('/maps/world.png');
+      expect(await project.exists('.figatellultimate/pages/entries/fr/atlas.js')).toBe(false);
+
+      await project.create('content/pages/atlas.mdx', '---\ntitle: Atlas\n---\n![The world](/maps/world.png)\n');
+
+      const found = await run('build');
+
+      expect(found.code).toBe(EXIT.ok);
+      expect(await project.exists('.figatellultimate/pages/entries/fr/atlas.js')).toBe(true);
+    } finally {
+      await project.remove('content/pages/atlas.mdx');
+      await project.remove('public');
+    }
+  });
+
   it('never writes an absolute path into the generated modules', async () => {
     const generated = await project.readDir('.figatellultimate');
 

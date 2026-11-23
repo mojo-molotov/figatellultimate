@@ -22,6 +22,7 @@ describe('defineConfig', () => {
     const config = defineConfig(valid);
 
     expect(config.output).toBe('.figatellultimate');
+    expect(config.publicDirectory).toBe('public');
     expect(config.collections).toEqual({ pages, blog });
     expect(Object.isFrozen(config)).toBe(true);
   });
@@ -30,10 +31,12 @@ describe('defineConfig', () => {
     const config = defineConfig({
       ...valid,
       output: 'generated/figatellultimate',
+      publicDirectory: 'static',
       urls: { defaultLocale: 'explicit' },
     });
 
     expect(config.output).toBe('generated/figatellultimate');
+    expect(config.publicDirectory).toBe('static');
     expect(config.urls).toEqual({ defaultLocale: 'explicit' });
   });
 
@@ -46,6 +49,8 @@ describe('defineConfig', () => {
     ['a source without documents()', { ...valid, source: { directories: () => source.directories() } }],
     ['an absolute output folder', { ...valid, output: '/abs' }],
     ['an output folder outside the project', { ...valid, output: '../out' }],
+    ['an absolute public folder', { ...valid, publicDirectory: '/srv/public' }],
+    ['a public folder outside the project', { ...valid, publicDirectory: '../public' }],
     ['a taxonomy not made with defineTaxonomy', { ...valid, taxonomies: { tags: ['a'] } }],
   ])('throws InvalidConfigError on %s', (_, input) => {
     // Runtime validation of what the types already reject: configs are loaded from user files.

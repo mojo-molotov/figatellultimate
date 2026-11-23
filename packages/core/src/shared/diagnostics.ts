@@ -167,6 +167,21 @@ export type CannotListDirectoryDiagnostic = DiagnosticOf<
   { readonly directory: string; readonly reason: string },
   null
 >;
+/**
+ * A local image the content references that is not in the app's public folder: in an entry's frontmatter field or
+ * body (its `sourcePath`), or in a collection's folder images (`sourcePath` `null`); the closest files suggested.
+ */
+export type MissingImageDiagnostic = DiagnosticOf<
+  'missing-image',
+  'error',
+  {
+    readonly image: string;
+    /** The frontmatter field or the declaration (`folderPages.images["news"]`); `null` for the entry's body. */
+    readonly field: string | null;
+    readonly publicDirectory: string;
+  },
+  string | null
+>;
 /** A `testOnly` pattern matching no entry. */
 export type UnusedTestOnlyDiagnostic = DiagnosticOf<'unused-test-only', 'warning', { readonly pattern: string }, null>;
 
@@ -195,7 +210,8 @@ export type ErrorDiagnostic =
   | UnknownTermContentDiagnostic
   | InvalidDraftFlagDiagnostic
   | InvalidMetadataFieldDiagnostic
-  | CannotListDirectoryDiagnostic;
+  | CannotListDirectoryDiagnostic
+  | MissingImageDiagnostic;
 
 /** Every diagnostic reported without failing a build. */
 export type WarningDiagnostic =
@@ -240,6 +256,9 @@ export function compareText(a: string, b: string): number {
  * @param a - A diagnostic.
  * @param b - Another diagnostic.
  * @returns The order: collection, path (declaration-level ones first), code, data.
+ *
+ * @example
+ * [...assembly.diagnostics, ...more].sort(compareDiagnostics);
  */
 export function compareDiagnostics(a: Diagnostic, b: Diagnostic): number {
   return (

@@ -11,7 +11,7 @@
  *       kept. Rejected: measuring in the browser, which shifts the page once the image arrives.
  *     - Local images only, inside the public folder: a remote image, an inline one, a missing file or a path out of
  *       the folder is left unmeasured, and stays a plain `<img>` (the zoom gives an image component no image without
- *       its size). Nothing fails the build: the page still shows the image.
+ *       its size). Measuring never fails: a missing file is `figatellultimate build`'s `missing-image` error.
  *
  * Invariants (`image-sizes.test.ts`): a local image gets its file's size, its URL decoded; an author's size, a
  * remote, inline or missing image and a path out of the public folder are left as they are.

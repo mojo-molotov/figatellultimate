@@ -128,3 +128,11 @@ navigation: [
   { collection: 'blog', depth: 2, label: 'nav.blog' },
 ],
 ```
+
+## Les images
+
+Le build vérifie chaque image locale du contenu : l’image de métadonnées d’une entrée, celles des dossiers (`folderPages.images`) et celles de son texte. Une image absente du dossier public est une erreur, `missing-image`, qui nomme le fichier et son champ, et propose le fichier le plus proche : rien n’est écrit, aucune page ne montre d’image cassée. `publicDirectory` nomme ce dossier, `public` par défaut.
+
+```ts
+export default defineConfig({ publicDirectory: 'static', locales, collections, source });
+```

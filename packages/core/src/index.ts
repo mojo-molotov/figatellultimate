@@ -25,6 +25,7 @@
  */
 export { analyze, hasErrors, type Analysis, type AnalyzeInput, type SourceInput } from './paths/analyze.js';
 export { assemble, type Assembly, type AssembleInput, type Entry } from './content/assemble.js';
+export { localImageReferences, type ImageReference, type ImageSource } from './content/images.js';
 export {
   defineCollection,
   InvalidCollectionError,
@@ -48,6 +49,7 @@ export {
 } from './config.js';
 export type {
   CannotListDirectoryDiagnostic,
+  MissingImageDiagnostic,
   CaseCollisionDiagnostic,
   Diagnostic,
   DiagnosticCode,
@@ -154,6 +156,7 @@ export {
   type WarningOf,
 } from './shared/result.js';
 export { suggest } from './shared/suggest.js';
+export { compareDiagnostics } from './shared/diagnostics.js';
 export {
   defineTaxonomy,
   InvalidTaxonomyError,

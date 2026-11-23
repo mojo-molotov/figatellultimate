@@ -1,5 +1,6 @@
 /**
- * One run: the content (paths listed, structure analyzed, documents joined), the messages, then the code generation
+ * One run: the content (paths listed, structure analyzed, documents joined, local images found on disk), the
+ * messages, then the code generation
  * and the atomic writes when everything is valid; with `unused`, the app's messages no code uses, as warnings.
  *
  * Key design decision: the unused messages are read from the app's types, which import `.figatellultimate/`: `build`
@@ -15,6 +16,7 @@ import { join } from 'node:path';
 import { emit } from '@figatellultimate/codegen';
 import {
   contentMessageTree,
+  compareDiagnostics,
   createUrlBuilder,
   loadContent,
   type Assembly,
@@ -33,6 +35,7 @@ import { createNodeFileWriter, createNodePathLister, type CommitStats } from '@f
 
 import type { Mode } from '../input/args.js';
 import { loadMessageModules } from '../input/load-messages.js';
+import { missingImages } from './images.js';
 import { scanKeyUsage } from './usage.js';
 
 /**
@@ -177,7 +180,7 @@ export async function runOnce(input: RunInput): Promise<RunResult> {
   const { config, directory, mode, write, signal } = input;
   const started = performance.now();
   const directories = await config.source.directories();
-  const assembly = await loadContent({
+  const loaded = await loadContent({
     locales: config.locales,
     collections: config.collections,
     ...(config.taxonomies === undefined ? {} : { taxonomies: config.taxonomies }),
@@ -187,6 +190,12 @@ export async function runOnce(input: RunInput): Promise<RunResult> {
     source: config.source,
     signal,
   });
+  // The content's local images, checked on disk: a missing one is an error, as any other content error.
+  const images = await missingImages(config, directory, loaded.entries);
+  const assembly: Assembly =
+    images.length === 0
+      ? loaded
+      : { ...loaded, diagnostics: [...loaded.diagnostics, ...images].sort(compareDiagnostics) };
   const messages = await analyzeMessagesOf(config, directory, assembly);
   const contentDone = performance.now();
   const messageDiagnostics = messages?.diagnostics ?? [];

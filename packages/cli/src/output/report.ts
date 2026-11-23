@@ -182,6 +182,13 @@ export function explain(diagnostic: Diagnostic): Explanation {
         message: `cannot list ${quote(d.data.directory)} (${d.data.reason})`,
         hint: 'check the collection directory in the content source config',
       };
+    case 'missing-image':
+      return {
+        message: `${quote(d.data.image)}${d.data.field === null ? ', an image of the text,' : ` (${d.data.field})`} is not in ${quote(d.data.publicDirectory)}: the page would show a broken image`,
+        hint:
+          didYouMean(d.suggestions) ??
+          `add the file to ${quote(d.data.publicDirectory)}, or fix the path (from the site's root, e.g. /covers/news.jpeg)`,
+      };
   }
 }
 

@@ -1,5 +1,5 @@
 ---
-featuredPictureUrl: '/covers/post-02.jpeg'
+featuredPictureUrl: '/covers/placeholder-154.jpeg'
 title: 'Configuration'
 metadescription: 'Locales, collections and their grammar, taxonomies and navigation, declared once in figatellultimate.config.ts.'
 order: 3
@@ -127,4 +127,12 @@ navigation: [
   { collection: 'pages', depth: 1, menus: false },
   { collection: 'blog', depth: 2, label: 'nav.blog' },
 ],
+```
+
+## Images
+
+The build checks every local image of the content: an entry’s metadata image, the folders’ (`folderPages.images`) and those of its text. An image missing from the public folder is an error, `missing-image`, naming the file and its field and suggesting the closest file: nothing is written, no page shows a broken image. `publicDirectory` names that folder, `public` by default.
+
+```ts
+export default defineConfig({ publicDirectory: 'static', locales, collections, source });
 ```
