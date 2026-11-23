@@ -75,3 +75,37 @@ describe('localeLinksOf', () => {
     expect(Object.isFrozen(links) && links.every((l) => Object.isFrozen(l))).toBe(true);
   });
 });
+
+describe('localeLinksOf, on a build’s many pages', () => {
+  it('reads the mounted URLs once per array, not once per page: a build is linear, never quadratic', () => {
+    // Scanning every URL for each page once made a build of 11,000 pages spend 14 s on its locale links.
+    let reads = 0;
+    const copy = [...URLS];
+    const counted = new Proxy(copy, {
+      get(target, property, receiver) {
+        if (typeof property === 'string' && /^\d+$/.test(property)) reads += 1;
+
+        const value: unknown = Reflect.get(target, property, receiver);
+
+        return value;
+      },
+    });
+    const first = localeLinksOf('/docs/setup', counted, LOCALES);
+    const once = reads;
+
+    for (const item of URLS) localeLinksOf(item.url, counted, LOCALES);
+
+    // Precondition: the first call did read them, and gave the same links as on the plain array.
+    expect(once).toBeGreaterThanOrEqual(URLS.length);
+    expect(first).toEqual(localeLinksOf('/docs/setup', URLS, LOCALES));
+    expect(reads).toBe(once);
+  });
+
+  it('keeps the first of a URL and of a home, as a search would: a duplicate never takes their place', () => {
+    const twice = [...URLS, item('pages', '', 'en', '/en/other-home'), item('pages', 'docs', 'fr', '/docs')];
+
+    expect(localeLinksOf('/nowhere', twice, ['en'])).toEqual([
+      { locale: 'en', url: '/en', kind: 'home', current: false },
+    ]);
+  });
+});

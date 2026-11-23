@@ -242,6 +242,46 @@ export function catchAllParamsOf<const N extends string>(
   );
 }
 
+/** What `localeLinksOf` looks up in the mounted URLs: each one by its URL, each place, each locale's home. */
+interface LocaleIndex {
+  readonly byUrl: ReadonlyMap<string, MountedUrl>;
+  readonly byPlace: ReadonlyMap<string, string>;
+  readonly homes: ReadonlyMap<string, string>;
+}
+
+/**
+ * Each URL array's index, built once: a page's links are then a few lookups, where scanning every URL for each page
+ * made a build quadratic (14 s at 11,000 pages). The generated `mountedUrls` is a constant array, never mutated.
+ */
+const localeIndexes = new WeakMap<readonly MountedUrl[], LocaleIndex>();
+
+const placeOf = (collection: string, key: string, locale: string): string => `${collection}\u0000${key}\u0000${locale}`;
+
+function localeIndexOf(urls: readonly MountedUrl[]): LocaleIndex {
+  const known = localeIndexes.get(urls);
+
+  if (known !== undefined) return known;
+
+  const byUrl = new Map<string, MountedUrl>();
+  const byPlace = new Map<string, string>();
+  const homes = new Map<string, string>();
+
+  for (const item of urls) {
+    // The first of a URL and of a home, as a search would find it; the last of a place, as a map of them keeps it.
+    if (!byUrl.has(item.url)) byUrl.set(item.url, item);
+
+    if (item.key === '' && !homes.has(item.locale)) homes.set(item.locale, item.url);
+
+    byPlace.set(placeOf(item.collection, item.key, item.locale), item.url);
+  }
+
+  const index = { byUrl, byPlace, homes };
+
+  localeIndexes.set(urls, index);
+
+  return index;
+}
+
 /**
  * Where a locale switcher leads from a URL, for each declared locale.
  *
@@ -265,10 +305,9 @@ export function localeLinksOf(
   urls: readonly MountedUrl[],
   locales: readonly string[],
 ): readonly LocaleLink[] {
-  const current = urls.find((item) => item.url === url);
-  const byPlace = new Map(urls.map((item) => [`${item.collection}\u0000${item.key}\u0000${item.locale}`, item.url]));
-  const homeOf = (locale: string): string | undefined =>
-    urls.find((item) => item.key === '' && item.locale === locale)?.url;
+  const { byUrl, byPlace, homes } = localeIndexOf(urls);
+  const current = byUrl.get(url);
+  const homeOf = (locale: string): string | undefined => homes.get(locale);
   const links = locales.flatMap((locale): LocaleLink[] => {
     const link = (target: string | undefined, kind: LocaleLink['kind']): LocaleLink[] =>
       target === undefined ? [] : [Object.freeze({ locale, url: target, kind, current: target === url })];
@@ -282,7 +321,7 @@ export function localeLinksOf(
     const parts = current.key.split('/');
 
     for (let length = parts.length - 1; length > 0; length--) {
-      const ancestor = byPlace.get(`${current.collection}\u0000${parts.slice(0, length).join('/')}\u0000${locale}`);
+      const ancestor = byPlace.get(placeOf(current.collection, parts.slice(0, length).join('/'), locale));
 
       if (ancestor !== undefined) return link(ancestor, 'ancestor');
     }
