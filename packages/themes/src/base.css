@@ -73,10 +73,17 @@ body > [data-layout] {
   text-decoration: none;
 }
 
-[data-slot='site-footer'] a:hover,
 [data-slot='site-footer'] a:focus-visible {
   color: var(--fig-accent);
   text-decoration: underline;
+}
+
+/* Hovered with a mouse or a trackpad only: a tap would leave the link underlined. */
+@media (hover: hover) and (pointer: fine) {
+  [data-slot='site-footer'] a:hover {
+    color: var(--fig-accent);
+    text-decoration: underline;
+  }
 }
 
 /* The site's theme picker (an app's own slot): its options as quiet pills, the chosen one in the accent. */
@@ -553,11 +560,35 @@ main[data-folder='category'] [data-slot='listing-cards'] {
   text-decoration: none;
 }
 
-:is([data-slot='mdx-h2'], [data-slot='mdx-h3'], [data-slot='mdx-h4']) > [data-slot='mdx-a']:hover::after,
+/*
+ * A section heading's link mark: a link icon (Heroicons' `link`, its outline drawn in the muted color), on keyboard
+ * focus and, with a mouse or a trackpad, on hover. None on a touch screen: a tap on the heading follows its link
+ * already. Decorative: the heading's own text names the link.
+ */
+:is([data-slot='mdx-h2'], [data-slot='mdx-h3'], [data-slot='mdx-h4']) > [data-slot='mdx-a'] {
+  --fig-heading-link-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244'/%3E%3C/svg%3E");
+}
+
 :is([data-slot='mdx-h2'], [data-slot='mdx-h3'], [data-slot='mdx-h4']) > [data-slot='mdx-a']:focus-visible::after {
-  content: '#' / '';
+  content: '';
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
   margin-inline-start: 0.4rem;
-  color: var(--fig-muted);
+  background: var(--fig-muted);
+  mask: var(--fig-heading-link-icon) center / contain no-repeat;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :is([data-slot='mdx-h2'], [data-slot='mdx-h3'], [data-slot='mdx-h4']) > [data-slot='mdx-a']:hover::after {
+    content: '';
+    display: inline-block;
+    width: 0.7em;
+    height: 0.7em;
+    margin-inline-start: 0.4rem;
+    background: var(--fig-muted);
+    mask: var(--fig-heading-link-icon) center / contain no-repeat;
+  }
 }
 
 [data-slot='mdx-p'] {

@@ -72,67 +72,70 @@
   color: var(--fig-fg);
 }
 
-:is(
-  [data-slot='navbar-toggle'],
-  [data-slot='navbar-trigger'],
-  [data-slot='navbar-link'],
-  [data-slot='locale-switcher'],
-  [data-slot='facet-options-trigger'],
-  [data-slot='page-select-trigger'],
-  [data-slot='sort-select-trigger'],
-  [data-slot='search-box-sort'],
-  [data-slot='facets-reset'],
-  [data-slot='pagination-link'],
-  [data-slot='pagination-previous'],
-  [data-slot='pagination-next'],
-  [data-slot='pagination-ellipsis'],
-  [data-slot='search-box-collection'],
-  [data-slot='search-box-more'],
-  [data-slot='theme-toggle'],
-  [data-slot='search-dialog-trigger'],
-  [data-slot='search-dialog-close']
-) {
-  display: inline-flex;
-  align-items: center;
-  gap: calc(var(--fig-space) / 2);
-  min-height: 2.25rem;
-  padding: 0 calc(var(--fig-space) * 1.5);
-  border: 1px solid transparent;
-  border-radius: var(--fig-radius);
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  /* Controls carry the system's font and line height wherever they sit in the page: links would otherwise inherit
-     the page's line height while buttons keep the browser's, and their heights would differ. */
-  font-family: var(--fig-font);
-  line-height: 1.25;
-  /* Buttons are border-box by default, links are not: the same box for both. */
-  box-sizing: border-box;
-  text-decoration: none;
-  cursor: pointer;
-}
+/* The controls' hover, with a mouse or a trackpad only: a touch screen's tap would leave it stuck on the control. */
+@media (hover: hover) and (pointer: fine) {
+  :is(
+    [data-slot='navbar-toggle'],
+    [data-slot='navbar-trigger'],
+    [data-slot='navbar-link'],
+    [data-slot='locale-switcher'],
+    [data-slot='facet-options-trigger'],
+    [data-slot='page-select-trigger'],
+    [data-slot='sort-select-trigger'],
+    [data-slot='search-box-sort'],
+    [data-slot='facets-reset'],
+    [data-slot='pagination-link'],
+    [data-slot='pagination-previous'],
+    [data-slot='pagination-next'],
+    [data-slot='pagination-ellipsis'],
+    [data-slot='search-box-collection'],
+    [data-slot='search-box-more'],
+    [data-slot='theme-toggle'],
+    [data-slot='search-dialog-trigger'],
+    [data-slot='search-dialog-close']
+  ) {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(var(--fig-space) / 2);
+    min-height: 2.25rem;
+    padding: 0 calc(var(--fig-space) * 1.5);
+    border: 1px solid transparent;
+    border-radius: var(--fig-radius);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    /* Controls carry the system's font and line height wherever they sit in the page: links would otherwise inherit
+       the page's line height while buttons keep the browser's, and their heights would differ. */
+    font-family: var(--fig-font);
+    line-height: 1.25;
+    /* Buttons are border-box by default, links are not: the same box for both. */
+    box-sizing: border-box;
+    text-decoration: none;
+    cursor: pointer;
+  }
 
-:is(
-  [data-slot='navbar-toggle'],
-  [data-slot='navbar-trigger'],
-  [data-slot='navbar-link'],
-  [data-slot='locale-switcher'],
-  [data-slot='facet-options-trigger'],
-  [data-slot='page-select-trigger'],
-  [data-slot='sort-select-trigger'],
-  [data-slot='search-box-sort'],
-  [data-slot='facets-reset'],
-  [data-slot='pagination-link'],
-  [data-slot='pagination-previous'],
-  [data-slot='pagination-next'],
-  [data-slot='pagination-ellipsis'],
-  [data-slot='search-box-collection'],
-  [data-slot='search-box-more'],
-  [data-slot='theme-toggle'],
-  [data-slot='search-dialog-trigger'],
-  [data-slot='search-dialog-close']
-):hover {
-  background: var(--fig-surface);
+  :is(
+    [data-slot='navbar-toggle'],
+    [data-slot='navbar-trigger'],
+    [data-slot='navbar-link'],
+    [data-slot='locale-switcher'],
+    [data-slot='facet-options-trigger'],
+    [data-slot='page-select-trigger'],
+    [data-slot='sort-select-trigger'],
+    [data-slot='search-box-sort'],
+    [data-slot='facets-reset'],
+    [data-slot='pagination-link'],
+    [data-slot='pagination-previous'],
+    [data-slot='pagination-next'],
+    [data-slot='pagination-ellipsis'],
+    [data-slot='search-box-collection'],
+    [data-slot='search-box-more'],
+    [data-slot='theme-toggle'],
+    [data-slot='search-dialog-trigger'],
+    [data-slot='search-dialog-close']
+  ):hover {
+    background: var(--fig-surface);
+  }
 }
 
 /* Focus is always visible (WCAG 2.4.7). */
@@ -830,8 +833,10 @@ a[data-slot='entry-card-author'] {
   text-decoration: none;
 }
 
-[data-slot='breadcrumb-link']:hover {
-  text-decoration: underline;
+@media (hover: hover) and (pointer: fine) {
+  [data-slot='breadcrumb-link']:hover {
+    text-decoration: underline;
+  }
 }
 
 [data-slot='breadcrumb-link'][aria-current='page'] {
@@ -1617,9 +1622,16 @@ a[data-slot='entry-card-author'] {
 }
 
 /* Past 200px of scrolling, the collapsed drawer's handle (the one that brings it back) fades out of the reader's
-   way, on every screen; back on hover or focus. The open drawer's handle stays as it is. */
-[data-slot='toc'][data-scrolled][data-open='false'] [data-slot='toc-toggle']:not(:hover, :focus-visible) {
+   way, on every screen; back on keyboard focus, and on hover with a mouse or a trackpad (a tap would leave it
+   back). The open drawer's handle stays as it is. */
+[data-slot='toc'][data-scrolled][data-open='false'] [data-slot='toc-toggle']:not(:focus-visible) {
   opacity: 0.5;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-slot='toc'][data-scrolled][data-open='false'] [data-slot='toc-toggle']:hover {
+    opacity: 1;
+  }
 }
 
 /* Its chevron points where the panel will go: out when open, in when closed. */
@@ -1709,9 +1721,14 @@ a[data-slot='entry-card-author'] {
   --toc-level: 5;
 }
 
-[data-slot='toc-link']:hover,
 [data-slot='toc-link'][data-visible] {
   color: var(--fig-fg);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-slot='toc-link']:hover {
+    color: var(--fig-fg);
+  }
 }
 
 [data-slot='toc-link'][aria-current='location'] {
@@ -1883,15 +1900,23 @@ a[data-slot='entry-card-author'] {
 
 /* Shown while the block is hovered, on keyboard focus, and while it confirms a copy. Letting go (`done`), it keeps
    its check while it fades: a mouse gone meanwhile never sees the clipboard come back first. */
-[data-slot='code-block']:hover [data-slot='code-block-copy'],
 [data-slot='code-block-copy']:focus-visible,
 [data-slot='code-block-copy'][data-state='copied'] {
   opacity: 1;
 }
 
-[data-slot='code-block-copy']:hover,
 [data-slot='code-block-copy']:focus-visible {
   color: var(--fig-accent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-slot='code-block']:hover [data-slot='code-block-copy'] {
+    opacity: 1;
+  }
+
+  [data-slot='code-block-copy']:hover {
+    color: var(--fig-accent);
+  }
 }
 
 @media (hover: none) {
@@ -1953,8 +1978,10 @@ a[data-slot='entry-card-author'] {
   text-decoration: none;
 }
 
-[data-slot='pager-link']:hover {
-  border-color: var(--fig-accent);
+@media (hover: hover) and (pointer: fine) {
+  [data-slot='pager-link']:hover {
+    border-color: var(--fig-accent);
+  }
 }
 
 [data-slot='pager-link'][data-direction='next'] {
@@ -1995,8 +2022,10 @@ a[data-slot='entry-card-author'] {
   cursor: pointer;
 }
 
-[data-slot='code-tabs-trigger']:hover {
-  color: var(--fig-fg);
+@media (hover: hover) and (pointer: fine) {
+  [data-slot='code-tabs-trigger']:hover {
+    color: var(--fig-fg);
+  }
 }
 
 [data-slot='code-tabs-trigger'][data-state='active'] {
@@ -2170,10 +2199,16 @@ a[data-slot='entry-card-author'] {
     center / contain no-repeat;
 }
 
-[data-slot='image-zoom-close']:hover,
 [data-slot='image-zoom-close']:focus-visible {
   color: #ffffff;
   transform: scale(1.1) rotate(3deg);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-slot='image-zoom-close']:hover {
+    color: #ffffff;
+    transform: scale(1.1) rotate(3deg);
+  }
 }
 
 @keyframes fig-zoom-backdrop-in {

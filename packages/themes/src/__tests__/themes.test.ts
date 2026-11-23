@@ -149,6 +149,26 @@ describe('base.css', () => {
     expect(body).toContain('unicode-bidi: isolate;');
   });
 
+  it("hovers with a mouse or a trackpad only; a heading's link icon on hover and on keyboard focus, none on touch", () => {
+    const rest = source.replace(
+      /@media \((?:hover: hover\) and \(pointer: fine|prefers-reduced-motion: reduce)\) \{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g,
+      '',
+    );
+    const hovered = [...rest.matchAll(/([^{}]+)\{/g)]
+      .map(([, selector]) => (selector ?? '').trim())
+      .filter((selector) => selector.includes(':hover'));
+    const mark = (state: string) =>
+      source.includes(
+        `:is([data-slot='mdx-h2'], [data-slot='mdx-h3'], [data-slot='mdx-h4']) > [data-slot='mdx-a']:${state}::after {`,
+      );
+
+    expect(hovered).toEqual([]);
+    // Heroicons' link icon, as a mask: a tap on a touch screen follows the heading's link, no mark needed there.
+    expect(source).toMatch(/--fig-heading-link-icon: url\("data:image\/svg\+xml,[^"]*M13\.19 8\.688/);
+    expect(mark('focus-visible') && mark('hover')).toBe(true);
+    expect(source).not.toContain("content: '#'");
+  });
+
   it("sets a listing's pagination, below its cards, at the end of the line on a narrow screen", () => {
     const narrow = mediaOf(source)
       .filter(({ condition }) => condition === '(max-width: 36rem)')

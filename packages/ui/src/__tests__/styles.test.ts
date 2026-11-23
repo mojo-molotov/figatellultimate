@@ -189,15 +189,16 @@ describe('styles.css', () => {
     expect(propertiesOf("[data-slot='toc-panel']")['overflow-y']).toBe('auto');
   });
 
-  it("keeps a card's hover effects to a mouse or a trackpad: a touch screen's tap would leave them stuck", () => {
-    // Outside the fine pointers' blocks (and the reduced motion's, which only cancels the zoom), no card hovered.
+  it("keeps every hover effect to a mouse or a trackpad: a touch screen's tap would leave it stuck", () => {
+    // Outside the fine pointers' blocks (and the reduced motion's, which only cancels effects), nothing hovered; the
+    // keyboard's focus and the states keep their effects everywhere.
     const rest = SOURCE_NO_COMMENTS.replace(
       /@media \((?:hover: hover\) and \(pointer: fine|prefers-reduced-motion: reduce)\) \{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g,
       '',
     );
     const hovered = [...rest.matchAll(/([^{}]+)\{/g)]
       .map(([, selector]) => (selector ?? '').trim())
-      .filter((selector) => selector.includes(':hover') && /entry-card|collector/.test(selector));
+      .filter((selector) => selector.includes(':hover'));
 
     // Precondition: the stylesheet does have card hover effects, in their block.
     expect(SOURCE_NO_COMMENTS).toMatch(/@media \(hover: hover\) and \(pointer: fine\) \{[^@]*:hover/);
