@@ -72,48 +72,49 @@
   color: var(--fig-fg);
 }
 
+/* Every control's box: a link or a button, the same. */
+:is(
+  [data-slot='navbar-toggle'],
+  [data-slot='navbar-trigger'],
+  [data-slot='navbar-link'],
+  [data-slot='locale-switcher'],
+  [data-slot='facet-options-trigger'],
+  [data-slot='page-select-trigger'],
+  [data-slot='sort-select-trigger'],
+  [data-slot='search-box-sort'],
+  [data-slot='facets-reset'],
+  [data-slot='pagination-link'],
+  [data-slot='pagination-previous'],
+  [data-slot='pagination-next'],
+  [data-slot='pagination-ellipsis'],
+  [data-slot='search-box-collection'],
+  [data-slot='search-box-more'],
+  [data-slot='theme-toggle'],
+  [data-slot='search-dialog-trigger'],
+  [data-slot='search-dialog-close']
+) {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--fig-space) / 2);
+  min-height: 2.25rem;
+  padding: 0 calc(var(--fig-space) * 1.5);
+  border: 1px solid transparent;
+  border-radius: var(--fig-radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  /* Controls carry the system's font and line height wherever they sit in the page: links would otherwise inherit
+     the page's line height while buttons keep the browser's, and their heights would differ. */
+  font-family: var(--fig-font);
+  line-height: 1.25;
+  /* Buttons are border-box by default, links are not: the same box for both. */
+  box-sizing: border-box;
+  text-decoration: none;
+  cursor: pointer;
+}
+
 /* The controls' hover, with a mouse or a trackpad only: a touch screen's tap would leave it stuck on the control. */
 @media (hover: hover) and (pointer: fine) {
-  :is(
-    [data-slot='navbar-toggle'],
-    [data-slot='navbar-trigger'],
-    [data-slot='navbar-link'],
-    [data-slot='locale-switcher'],
-    [data-slot='facet-options-trigger'],
-    [data-slot='page-select-trigger'],
-    [data-slot='sort-select-trigger'],
-    [data-slot='search-box-sort'],
-    [data-slot='facets-reset'],
-    [data-slot='pagination-link'],
-    [data-slot='pagination-previous'],
-    [data-slot='pagination-next'],
-    [data-slot='pagination-ellipsis'],
-    [data-slot='search-box-collection'],
-    [data-slot='search-box-more'],
-    [data-slot='theme-toggle'],
-    [data-slot='search-dialog-trigger'],
-    [data-slot='search-dialog-close']
-  ) {
-    display: inline-flex;
-    align-items: center;
-    gap: calc(var(--fig-space) / 2);
-    min-height: 2.25rem;
-    padding: 0 calc(var(--fig-space) * 1.5);
-    border: 1px solid transparent;
-    border-radius: var(--fig-radius);
-    background: transparent;
-    color: inherit;
-    font: inherit;
-    /* Controls carry the system's font and line height wherever they sit in the page: links would otherwise inherit
-       the page's line height while buttons keep the browser's, and their heights would differ. */
-    font-family: var(--fig-font);
-    line-height: 1.25;
-    /* Buttons are border-box by default, links are not: the same box for both. */
-    box-sizing: border-box;
-    text-decoration: none;
-    cursor: pointer;
-  }
-
   :is(
     [data-slot='navbar-toggle'],
     [data-slot='navbar-trigger'],

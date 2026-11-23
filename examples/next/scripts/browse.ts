@@ -254,6 +254,22 @@ try {
 
     await phone.goto(`${base}${LISTING}`, { waitUntil: 'networkidle' });
 
+    // Every control its own box, a mouse or not: it once sat with its hover, kept to a mouse, and a phone's buttons
+    // fell back to the browser's own look.
+    const unstyled = await phone.evaluate(() =>
+      ['navbar-toggle', 'search-dialog-trigger', 'facet-options-trigger', 'sort-select-trigger', 'pagination-next']
+        .map((slot) => [slot, document.querySelector(`[data-slot="${slot}"]`)] as const)
+        .filter(([, element]) => {
+          const style = element === null ? undefined : getComputedStyle(element);
+
+          // The system's control height, and no background of the browser's own (its buttons are gray).
+          return style === undefined || style.minHeight === 'auto' || style.backgroundColor !== 'rgba(0, 0, 0, 0)';
+        })
+        .map(([slot]) => slot),
+    );
+
+    check(unstyled.length === 0, `${LISTING} on ${device}: controls without their box: ${unstyled.join(', ')}`);
+
     // The search dialog on the screen, its close button too, once results with long words have come.
     if (!revealed) {
       await phone.goto(`${base}/blog`, { waitUntil: 'networkidle' });

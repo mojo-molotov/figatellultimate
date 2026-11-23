@@ -205,6 +205,22 @@ describe('styles.css', () => {
     expect(hovered).toEqual([]);
   });
 
+  it("keeps nothing but hover effects to a mouse or a trackpad: a control's own look shows on a touch screen too", () => {
+    // A control's box once sat in the fine pointers' block with its hover: on a phone, every button lost its style.
+    const blocks = [
+      ...SOURCE_NO_COMMENTS.matchAll(
+        /@media \(hover: hover\) and \(pointer: fine\) \{((?:[^{}]*\{[^{}]*\})*)[^{}]*\}/g,
+      ),
+    ];
+    const selectors = blocks.flatMap(([, body]) =>
+      [...(body ?? '').matchAll(/([^{}]+)\{/g)].map(([, selector]) => (selector ?? '').trim()),
+    );
+
+    // Precondition: the blocks are read, with their rules.
+    expect(selectors.length).toBeGreaterThan(3);
+    expect(selectors.filter((selector) => !selector.includes(':hover'))).toEqual([]);
+  });
+
   it("keeps the search dialog to the screen: its columns shrink, a result's long word breaks", () => {
     expect(propertiesOf("[data-slot='search-dialog-content']")['grid-template-columns']).toBe('minmax(0, 1fr) auto');
     expect(CSS).toMatch(
