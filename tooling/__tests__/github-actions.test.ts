@@ -56,6 +56,12 @@ describe('GitHub Actions', () => {
     for (const file of files) {
       expect(readFileSync(file, 'utf8'), relative(ROOT, file)).not.toMatch(/cancel-in-progress: true/);
     }
+
+    // GitHub keeps one pending run per group, a newer one cancelling it: a run of main waiting behind another (a
+    // rerun) was cancelled by the next commit. Outside a pull request, a group per commit.
+    expect(readFileSync(join(ROOT, '.github', 'workflows', 'ci.yml'), 'utf8')).toMatch(
+      /^concurrency:\n {2}group: ci-\$\{\{ github\.event_name == 'pull_request' && github\.ref \|\| github\.sha \}\}$/m,
+    );
   });
 
   it("keeps the reports branch under GitHub's file limit, and from growing: compressed histories, a size guard, one commit", () => {
