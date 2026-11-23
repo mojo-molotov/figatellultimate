@@ -271,7 +271,8 @@ main:is([data-listing], [data-folder]) {
   align-items: center;
   justify-content: space-between;
   gap: var(--fig-space) calc(var(--fig-space) * 2);
-  margin-bottom: calc(var(--fig-space) * 2);
+  /* Close to the controls below: one header, the heading's line then the count's. */
+  margin-bottom: var(--fig-space);
 }
 
 [data-slot='listing-toolbar'] > :is(h1, h2) {
