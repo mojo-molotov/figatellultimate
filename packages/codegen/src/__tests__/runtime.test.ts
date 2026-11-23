@@ -86,6 +86,7 @@ const UrlsModule = v.looseObject({
       alternates: v.unknown(),
       searchable: v.boolean(),
       key: v.string(),
+      home: v.optional(v.literal(true)),
     }),
   ),
   metadataFields: v.unknown(),
@@ -164,6 +165,15 @@ describe('generated urls module, run', () => {
     ]);
     expect(new Set(mounted).size).toBe(mounted.length);
     expect(await urls.findByUrl('/lp/sign-up')).toBeUndefined();
+  });
+
+  it("marks each locale's home, the route /, and no other page", () => {
+    expect(
+      urls.mountedUrls
+        .filter((item) => item.home === true)
+        .map((item) => item.url)
+        .sort(),
+    ).toEqual(['/', '/en']);
   });
 
   it('carries every entry’s existing translations, in the declared locale order', () => {

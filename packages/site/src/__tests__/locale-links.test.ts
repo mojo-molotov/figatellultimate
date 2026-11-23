@@ -12,8 +12,8 @@ const item = (collection: string, key: string, locale: string, url: string): Mou
 
 /** fr default: the home in both locales, docs in French only, a translated page under docs, a blog post. */
 const URLS: readonly MountedUrl[] = [
-  { ...item('pages', '', 'fr', '/'), alternates: { fr: '/', en: '/en' } },
-  { ...item('pages', '', 'en', '/en'), alternates: { fr: '/', en: '/en' } },
+  { ...item('pages', '', 'fr', '/'), alternates: { fr: '/', en: '/en' }, home: true },
+  { ...item('pages', '', 'en', '/en'), alternates: { fr: '/', en: '/en' }, home: true },
   item('pages', 'docs', 'fr', '/docs'),
   { ...item('pages', 'docs/setup', 'fr', '/docs/setup'), alternates: { fr: '/docs/setup', en: '/en/docs/setup' } },
   { ...item('pages', 'docs/setup', 'en', '/en/docs/setup'), alternates: { fr: '/docs/setup', en: '/en/docs/setup' } },
@@ -102,9 +102,26 @@ describe('localeLinksOf, on a build’s many pages', () => {
   });
 
   it('keeps the first of a URL and of a home, as a search would: a duplicate never takes their place', () => {
-    const twice = [...URLS, item('pages', '', 'en', '/en/other-home'), item('pages', 'docs', 'fr', '/docs')];
+    const twice = [
+      ...URLS,
+      { ...item('pages', '', 'en', '/en/other-home'), home: true as const },
+      item('pages', 'docs', 'fr', '/docs'),
+    ];
 
     expect(localeLinksOf('/nowhere', twice, ['en'])).toEqual([
+      { locale: 'en', url: '/en', kind: 'home', current: false },
+    ]);
+  });
+});
+
+describe('localeLinksOf: the home', () => {
+  it('is the home the build marks, never another page with an empty key, whatever the order', () => {
+    // A collection's own page (the blog's, a folder page) has an empty key too: listed first, it once took the home's
+    // place, and the switcher of an app route led to the blog.
+    const blogFirst = [item('blog', '', 'fr', '/blog'), item('blog', '', 'en', '/en/blog'), ...URLS];
+
+    expect(localeLinksOf('/search', blogFirst, ['fr', 'en'])).toEqual([
+      { locale: 'fr', url: '/', kind: 'home', current: false },
       { locale: 'en', url: '/en', kind: 'home', current: false },
     ]);
   });

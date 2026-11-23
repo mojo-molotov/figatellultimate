@@ -270,7 +270,7 @@ function localeIndexOf(urls: readonly MountedUrl[]): LocaleIndex {
     // The first of a URL and of a home, as a search would find it; the last of a place, as a map of them keeps it.
     if (!byUrl.has(item.url)) byUrl.set(item.url, item);
 
-    if (item.key === '' && !homes.has(item.locale)) homes.set(item.locale, item.url);
+    if (item.home === true && !homes.has(item.locale)) homes.set(item.locale, item.url);
 
     byPlace.set(placeOf(item.collection, item.key, item.locale), item.url);
   }
@@ -286,7 +286,8 @@ function localeIndexOf(urls: readonly MountedUrl[]): LocaleIndex {
  * Where a locale switcher leads from a URL, for each declared locale.
  *
  * Never a 404: the translation when it exists, else the nearest ancestor translated in that locale (same collection,
- * by entry key), else that locale's home. There is no runtime fallback of content, so a reader switching language
+ * by entry key), else that locale's home (the URL the build marks `home`, its route `/`). There is no runtime
+ * fallback of content, so a reader switching language
  * lands on the closest page that exists.
  *
  * @param url - The page being read.

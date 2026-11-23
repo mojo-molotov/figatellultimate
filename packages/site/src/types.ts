@@ -38,6 +38,8 @@ export interface MountedUrl extends SiteEntry {
   readonly collection: string;
   /** The entry key, locale-independent: ancestors are its prefixes. */
   readonly key: string;
+  /** Its locale's home, the route `/` (generated): never guessed from an empty key, which a folder's page has too. */
+  readonly home?: true | undefined;
 }
 
 /** Where the locale switcher leads for one locale. */

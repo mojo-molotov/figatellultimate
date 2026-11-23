@@ -127,6 +127,12 @@ export function urlsFile(
         property('key', 'string'),
         property('modified', 'string', true),
         property('indexed', 'boolean'),
+        {
+          ...property('home', 'true', true),
+          docs: [
+            "The locale's home, its route `/`: where a locale switcher leads from a page with nowhere else to go.",
+          ],
+        },
       ],
     });
     file.addInterface({
@@ -177,6 +183,24 @@ export function urlsFile(
     });
     file.addVariableStatement({
       declarationKind: VariableDeclarationKind.Const,
+      declarations: [
+        {
+          name: 'homes',
+          type: 'ReadonlySet<string>',
+          // The entries at the route `/` of their locale, by collection, locale and key: each locale's home, whatever
+          // the collections' order (a folder's own page or a collection's root index has an empty key too).
+          initializer: `new Set(${literal(
+            mounted.flatMap(({ name, entries }) =>
+              entries
+                .filter((entry) => entry.descriptor.route === '/' && !entry.descriptor.reserved)
+                .map((entry) => `${name}\u0000${entry.descriptor.locale}\u0000${entry.descriptor.key}`),
+            ),
+          )})`,
+        },
+      ],
+    });
+    file.addVariableStatement({
+      declarationKind: VariableDeclarationKind.Const,
       isExported: true,
       docs: ['Every mounted URL, once: reserved entries are left to their dedicated routes.'],
       declarations: [
@@ -186,7 +210,7 @@ export function urlsFile(
           initializer: `[${mounted
             .map(
               ({ name }) =>
-                `...${name}Index.filter((item) => !item.reserved).map((item): UrlItem => { const seo = entrySeo.get(item.url) ?? { indexed: true }; return { kind: 'entry', collection: ${literal(name)}, url: item.url, locale: item.locale, alternates: item.alternates, searchable: ${String(config.collections[name]?.searchable ?? true)} && seo.indexed, key: item.key, ...seo }; })`,
+                `...${name}Index.filter((item) => !item.reserved).map((item): UrlItem => { const seo = entrySeo.get(item.url) ?? { indexed: true }; return { kind: 'entry', collection: ${literal(name)}, url: item.url, locale: item.locale, alternates: item.alternates, searchable: ${String(config.collections[name]?.searchable ?? true)} && seo.indexed, key: item.key, ...seo, ...(homes.has(\`${name}\\u0000\${item.locale}\\u0000\${item.key}\`) ? { home: true as const } : {}) }; })`,
             )
             .concat(folders.length === 0 ? [] : [`...(${literal(folderItems(folders, seo))} as readonly UrlItem[])`])
             .concat(terms.length === 0 ? [] : [`...(${literal(termItems(terms, seo))} as readonly UrlItem[])`])

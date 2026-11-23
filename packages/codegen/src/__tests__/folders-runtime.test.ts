@@ -167,6 +167,8 @@ describe('generated folder pages, run', () => {
       key: 'news/bot',
     });
     expect(urls.mountedUrls.filter((item) => item.kind === 'entry')).toHaveLength(3);
+    // The blog's own page has an empty key, as a home: never marked one, its route being `/blog`.
+    expect(urls.mountedUrls.some((item) => 'home' in item)).toBe(false);
   });
 
   it('findByUrl finds a folder page, its previews and entries resolved to index items, newest first', async () => {
