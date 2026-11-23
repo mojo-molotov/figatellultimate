@@ -9,7 +9,7 @@ import type { AuthorsTermPage } from '#figatellultimate/terms';
 import { Body } from '../components/mdx';
 import { SiteHeader } from '../components/site-header';
 import { cardsOf } from './folder-page';
-import { authorIndexUrlOf, itemsOf, postsOf } from './posts-data';
+import { indexOf, itemsOf, postsOf } from './posts-data';
 import { Listing } from './listing';
 import { listingLabels } from './listing-labels';
 
@@ -67,7 +67,7 @@ export async function AuthorPage({ page }: { readonly page: AuthorsTermPage }): 
             total: page.entries.length,
             perPage,
             first: page.first,
-            index: authorIndexUrlOf(page),
+            index: indexOf(page),
           }}
         />
       </main>

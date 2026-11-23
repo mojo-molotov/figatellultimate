@@ -43,6 +43,8 @@ export interface FolderData {
   readonly pages: number;
   /** Its level's page size, when it has one. */
   readonly perPage?: number;
+  /** Its listing's index URL (`folderPages.index`), shared by its every page; none otherwise. */
+  readonly index?: string;
   /** Its pages after the first: each one's URL, number and translations (a locale may have fewer pages). */
   readonly slices: readonly {
     readonly url: string;
@@ -188,6 +190,7 @@ export function folderData(
       entries: next === undefined ? [...inside].sort(newestFirst).map(url) : [],
       pages: folder.pages,
       ...(perPage === undefined ? {} : { perPage }),
+      ...(folder.index === undefined ? {} : { index: folder.index }),
       slices,
     };
   });

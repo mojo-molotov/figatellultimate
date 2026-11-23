@@ -397,6 +397,12 @@ function addFolders(
       property('pages', 'number'),
       property('first', 'string'),
       property('perPage', 'number', true),
+      {
+        ...property('index', 'string', true),
+        docs: [
+          "Its listing's index URL (`folderPages.index`), shared by its every page: every entry a filter or a sort needs.",
+        ],
+      },
     ],
   });
   file.addVariableStatement({
@@ -434,7 +440,7 @@ function addFolders(
   });
   file.addTypeAlias({
     name: 'FolderData',
-    type: `{ readonly url: string; readonly locale: Locale; readonly segments: Readonly<Record<string, string>>; readonly level: ${[...levels.map(literal), 'null'].join(' | ')}; readonly label: ${key} | null; readonly messages: ${messagesType}; readonly metadata: { readonly description?: ${key} }; readonly image?: string; readonly alternates: Readonly<Partial<Record<Locale, string>>>; readonly subfolders: readonly { readonly segments: Readonly<Record<string, string>>; readonly level: string; readonly label: ${key}; readonly messages: ${messagesType}; readonly url?: string; readonly image?: string; readonly total: number; readonly latest: readonly string[] }[]; readonly entries: readonly string[]; readonly pages: number; readonly perPage?: number }`,
+    type: `{ readonly url: string; readonly locale: Locale; readonly segments: Readonly<Record<string, string>>; readonly level: ${[...levels.map(literal), 'null'].join(' | ')}; readonly label: ${key} | null; readonly messages: ${messagesType}; readonly metadata: { readonly description?: ${key} }; readonly image?: string; readonly alternates: Readonly<Partial<Record<Locale, string>>>; readonly subfolders: readonly { readonly segments: Readonly<Record<string, string>>; readonly level: string; readonly label: ${key}; readonly messages: ${messagesType}; readonly url?: string; readonly image?: string; readonly total: number; readonly latest: readonly string[] }[]; readonly entries: readonly string[]; readonly pages: number; readonly perPage?: number; readonly index?: string }`,
   });
   file.addFunction({
     name: `find${folderType}FolderByUrl`,
@@ -454,4 +460,17 @@ function addFolders(
       'return { ...data, ...page, subfolders: data.subfolders.map((subfolder) => ({ ...subfolder, latest: items(subfolder.latest) })), entries: items(data.entries) };',
     ],
   });
+
+  if (collection.folderPages?.index !== undefined)
+    file.addFunction({
+      name: `${name}ListingIndexes`,
+      isExported: true,
+      docs: [
+        `The ${name} listings with an index (\`folderPages.index\`): each one's first page, its every entry, in each locale; for the route serving the indexes (\`listingIndexRoute\`).`,
+      ],
+      returnType: `readonly ${folderType}Folder[]`,
+      statements: [
+        `return [...folderData.values()].flatMap((data) => (data.index === undefined ? [] : [find${folderType}FolderByUrl(data.url) ?? []].flat()));`,
+      ],
+    });
 }

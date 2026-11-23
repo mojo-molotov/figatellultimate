@@ -13,7 +13,7 @@ import { PostCard } from './cards';
 import { FolderPagination } from './folder-pagination';
 import { Listing } from './listing';
 import { listingLabels } from './listing-labels';
-import { cardDataOf, indexUrlOf, itemsOf, postsOf } from './posts-data';
+import { cardDataOf, indexOf, itemsOf, postsOf } from './posts-data';
 
 /** The cards of some posts, keyed by URL: rendered once on the server, reordered by key on the client. */
 export async function cardsOf(
@@ -91,7 +91,7 @@ export async function BlogFolderPage({ folder }: { readonly folder: BlogFolder }
               total: folder.entries.length,
               perPage: folder.perPage ?? folder.entries.length,
               first: folder.first,
-              index: indexUrlOf(folder),
+              index: indexOf(folder),
             }}
           />
         </main>

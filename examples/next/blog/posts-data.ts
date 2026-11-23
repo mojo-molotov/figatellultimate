@@ -5,11 +5,10 @@
  */
 import { getTranslations } from 'next-intl/server';
 
-import { findBlogPostByUrl, type BlogFolder, type BlogPost } from '#figatellultimate/blog';
+import { findBlogPostByUrl, type BlogPost } from '#figatellultimate/blog';
 import type { Locale } from '#figatellultimate/locales';
 import { taxonomies } from '#figatellultimate/taxonomies';
 import { authorsTermUrl } from '#figatellultimate/terms';
-import { urlOf } from '#figatellultimate/urls';
 
 import type { CardData } from './cards';
 import type { PostItem } from './facets';
@@ -71,10 +70,16 @@ export const itemsOf = (posts: readonly BlogPost[]): PostItem[] =>
     authors: post.terms.authors,
   }));
 
-/** The URL of a listing's index: every post's item and card, fetched on the first filter or sort. */
-export const indexUrlOf = (folder: BlogFolder): string =>
-  urlOf(folder.locale, ['listing', ...Object.values(folder.segments)]);
+/**
+ * A paginated listing's index URL, from the generated data (`folderPages.index`, `pages.index` in the config).
+ *
+ * @param page - A folder or term page.
+ * @returns Its index's URL.
+ * @throws {Error} When it has none: the config does not declare its listing's index.
+ */
+export function indexOf(page: { readonly url: string; readonly index?: string }): string {
+  if (page.index === undefined)
+    throw new Error(`${page.url} has no listing index: declare \`index\` in its folderPages or its taxonomy's pages.`);
 
-/** The URL of an author's index: every post of theirs, as a subcategory's (`app/[locale]/author-listing`). */
-export const authorIndexUrlOf = (page: { readonly locale: Locale; readonly term: string }): string =>
-  urlOf(page.locale, ['author-listing', page.term]);
+  return page.index;
+}

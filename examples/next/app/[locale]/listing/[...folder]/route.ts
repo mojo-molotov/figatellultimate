@@ -6,26 +6,16 @@
  */
 import { listingIndexRoute } from '@figatellultimate/next16/listing-index';
 
-import { findBlogFolderByUrl, type BlogFolder } from '#figatellultimate/blog';
-import { mountedUrls } from '#figatellultimate/urls';
+import { blogListingIndexes } from '#figatellultimate/blog';
 
 import { cardDataOf, itemsOf, postsOf } from '../../../../blog/posts-data';
 
 export const dynamic = 'force-static';
 export const dynamicParams = false;
 
-/** The paged listings: the first page of each folder listing posts, the others share its index. */
-const listings = (): readonly BlogFolder[] =>
-  mountedUrls.flatMap((item) => {
-    const folder = findBlogFolderByUrl(item.url);
-
-    return folder !== undefined && folder.page === 1 && folder.subfolders.length === 0 && folder.perPage !== undefined
-      ? [folder]
-      : [];
-  });
-
 export const { GET, generateStaticParams } = listingIndexRoute({
-  listings,
+  // The paginated subcategories, from the config (`folderPages.index`): their first pages.
+  listings: blogListingIndexes,
   params: (folder) => ({ locale: folder.locale, folder: Object.values(folder.segments) }),
   build: async (folder) => {
     const posts = await postsOf(folder.entries);

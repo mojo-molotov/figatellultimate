@@ -61,6 +61,8 @@ export default defineConfig({
         preview: 2,
         // A page at a time, each one prerendered with its slice (`/page/N`): categories, subcategories, posts.
         perPage: { root: 4, category: 2, subcategory: 5 },
+        // Each subcategory's index, every post a filter or a sort needs: `/listing/<category>/<subcategory>`.
+        index: 'listing',
         images: {
           academy: '/covers/placeholder-132.jpeg',
           court: '/covers/placeholder-81.jpeg',
@@ -136,7 +138,8 @@ export default defineConfig({
       {
         messages: ['name', 'bio'],
         // SEO: each author's page described by their short bio.
-        pages: { base: 'authors', perPage: 10, metadata: { description: 'bio' } },
+        // Each author's index, as a subcategory's: `/author-listing/<author>`.
+        pages: { base: 'authors', perPage: 10, metadata: { description: 'bio' }, index: 'author-listing' },
         content: 'authorBios',
       },
     ),

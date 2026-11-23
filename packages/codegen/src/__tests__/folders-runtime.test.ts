@@ -45,6 +45,8 @@ const config = defineConfig({
         images: { news: '/covers/news.jpeg' },
         // One entry a page in a subcategory: bot has two in French, one in English.
         perPage: { subcategory: 1 },
+        // Its listings' indexes, at `/listing/<segments>`.
+        index: 'listing',
       },
     }),
   },
@@ -65,6 +67,7 @@ const Found = v.optional(
     collection: v.string(),
     folder: v.optional(
       v.looseObject({
+        index: v.optional(v.string()),
         level: v.nullable(v.string()),
         label: v.nullable(v.string()),
         entries: v.array(Item),
@@ -103,6 +106,7 @@ let urls: {
   readonly findByUrl: (url: string) => Promise<v.InferOutput<typeof Found>>;
   readonly mountedUrls: v.InferOutput<typeof UrlsModule>['mountedUrls'];
 };
+let listingIndexes: () => readonly { readonly url: string; readonly index: string }[];
 
 beforeAll(async () => {
   const sources = Object.keys(DATES).map((sourcePath) => ({ collection: 'blog', sourcePath }));
@@ -134,6 +138,13 @@ beforeAll(async () => {
     mountedUrls: module.mountedUrls,
     findByUrl: async (url) => v.parse(Found, await module.findByUrl(url)),
   };
+  const blog = v.parse(
+    v.looseObject({ blogListingIndexes: v.function() }),
+    await import(pathToFileURL(join(folder.basePath, 'blog', 'index.js')).href),
+  );
+
+  listingIndexes = () =>
+    v.parse(v.array(v.looseObject({ url: v.string(), index: v.string() })), blog.blogListingIndexes());
 });
 afterAll(() => folder.cleanup());
 
@@ -169,6 +180,21 @@ describe('generated folder pages, run', () => {
 
     expect(bot?.folder?.entries.map((i) => i.url)).toEqual(['/blog/news/bot/b', '/blog/news/bot/a']);
     expect(bot?.folder?.label).toBe('content.blog.news.bot.$.title');
+  });
+
+  it('gives every page of a paginated listing its index, and lists those listings once, for their route', async () => {
+    const indexes = await Promise.all(
+      ['/blog/news/bot', '/blog/news/bot/page/2', '/en/blog/news/bot', '/blog/news'].map(
+        async (url) => (await urls.findByUrl(url))?.folder?.index,
+      ),
+    );
+
+    // Its every page shares it, in its locale; a level listing subfolders has none.
+    expect(indexes).toEqual(['/listing/news/bot', '/listing/news/bot', '/en/listing/news/bot', undefined]);
+    expect(listingIndexes().map((folder) => [folder.url, folder.index])).toEqual([
+      ['/blog/news/bot', '/listing/news/bot'],
+      ['/en/blog/news/bot', '/en/listing/news/bot'],
+    ]);
   });
 
   it('gives a folder its image: declared for its path, else its newest entry’s', async () => {

@@ -103,6 +103,29 @@ describe('folder-page-collision', () => {
   });
 });
 
+describe('the listings’ indexes', () => {
+  it('gives every page of a paginated listing of entries its index, the same one, in its locale; none above it', () => {
+    const indexed = defineCollection({
+      ...blog,
+      folderPages: { root: true, levels: ['category', 'subcategory'], perPage: { subcategory: 1 }, index: 'listing' },
+    });
+    const analysis = analyze({ locales, collections: { pages, blog: indexed }, sources: SOURCES });
+    const all = folderPagesOf({ locales, collections: { pages, blog: indexed }, entries: analysis.entries });
+
+    expect(
+      all.filter((folder) => folder.url.includes('news/bot')).map((folder) => `${folder.url} ${folder.index ?? '-'}`),
+    ).toEqual([
+      '/blog/news/bot /listing/news/bot',
+      '/blog/news/bot/page/2 /listing/news/bot',
+      '/en/blog/news/bot /en/listing/news/bot',
+    ]);
+    // A level listing subfolders, and the root, have none: they list folders, not entries.
+    expect(all.filter((folder) => folder.level !== 'subcategory').every((folder) => folder.index === undefined)).toBe(
+      true,
+    );
+  });
+});
+
 describe('folder-image-fallback', () => {
   /** The folders reported as taking their image from their entries, and how. */
   const fallbacks = (

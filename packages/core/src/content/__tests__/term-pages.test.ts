@@ -66,6 +66,26 @@ describe('termPagesOf', () => {
     expect(Object.isFrozen(found)).toBe(true);
   });
 
+  it('gives every page of a paginated term its index, the same one, in its locale', () => {
+    const indexed = {
+      authors: defineTaxonomy(['gustave', 'arnaud', 'nadia'], {
+        pages: { base: 'authors', perPage: 1, index: 'author-listing' },
+      }),
+      tags,
+    };
+    const found = termPagesOf({ locales, collections, taxonomies: indexed, entries: kept() });
+
+    expect(found.filter((page) => page.term === 'gustave').map((page) => `${page.url} ${page.index ?? '-'}`)).toEqual([
+      '/authors/gustave /author-listing/gustave',
+      '/authors/gustave/page/2 /author-listing/gustave',
+      '/en/authors/gustave /en/author-listing/gustave',
+    ]);
+    // Without `index`, none.
+    expect(termPagesOf({ locales, collections, taxonomies: { authors, tags }, entries: kept() })[0]).not.toHaveProperty(
+      'index',
+    );
+  });
+
   it('mounts a term page once per slice of its entries, by its page size, its first page at its own URL', () => {
     const paged = {
       authors: defineTaxonomy(['gustave', 'arnaud', 'nadia'], { pages: { base: 'authors', perPage: 1 } }),

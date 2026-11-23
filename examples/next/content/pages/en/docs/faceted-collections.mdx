@@ -82,7 +82,11 @@ const binding = useFacetedCollection(engine, useNextUrl());
 
 The hook gives keys only: the application renders its cards once, on the server, and shows the ones the view holds.
 
-A listing whose pages are prerendered (`perPage` of `folderPages`) passes its first page’s URL: its default pages then live in the path (`/blog/news/page/2`), reached through the router, each with its slice from the server; a filter or a sort stays in the query (`/blog/news?tags=bot`), computed in the browser over every item, loaded on the first filter or sort as a static JSON index. `usePagedCollection` does the orchestration: the page's slice until then, its default pages reached by the URL alone, a filter chosen early applied once the index is here.
+### Paginated listings
+
+A listing whose pages are prerendered (`perPage` of `folderPages`) sends each page with its slice alone: `/blog/news/page/2` holds its five posts, whatever the blog’s size. Its default pages live in the path, reached through the router. A filter or a sort stays in the query (`/blog/news?tags=bot`) and needs every post of the listing, from any page: the browser computes it from the listing’s index, a static JSON fetched on the first filter or sort, never with the page.
+
+`usePagedCollection` passes the listing’s first page’s URL and does the orchestration: the page’s slice until the index is needed, its default pages reached by the URL alone, the index prefetched as the reader heads for a filter (`prefetch`, on the pointer or the focus), a filter chosen early applied once it is here. `createIndexLoader` checks the index by your schema before it is read, and fetches it once per listing.
 
 ```tsx
 const load = createIndexLoader((json) => v.parse(Index, json));
@@ -95,12 +99,25 @@ const { binding, index, prefetch } = usePagedCollection({
 });
 ```
 
-The index is one static route per listing, from `listingIndexRoute` of `@figatellultimate/next16/listing-index`:
+The config declares where the indexes live: `index` in `folderPages` for a collection’s listings, in a taxonomy’s `pages` for its terms. Each page of a paginated listing then carries its index’s URL (`folder.index`, `page.index`), the same on every page, and the generated code lists the listings to index (`blogListingIndexes()`, `authorsListingIndexes()`).
 
 ```ts
+folderPages: { levels: ['category', 'subcategory'], perPage: { subcategory: 5 }, index: 'listing' },
+```
+
+The index is one static route per listing and locale, from `listingIndexRoute` of `@figatellultimate/next16/listing-index`, which takes those listings, each one’s route parameters, and `build`, its content: each post’s item, what the engine filters and sorts, and its card’s data, so that the browser draws the cards of the pages it does not have. Only `build` is the app’s to decide.
+
+```ts
+// app/[locale]/listing/[...folder]/route.ts: /listing/news/bot, /en/listing/news/bot
 export const dynamic = 'force-static';
 export const dynamicParams = false;
-export const { GET, generateStaticParams } = listingIndexRoute({ listings, params, build });
+export const { GET, generateStaticParams } = listingIndexRoute({
+  listings: blogListingIndexes,
+  params: (folder) => ({ locale: folder.locale, folder: Object.values(folder.segments) }),
+  build,
+});
 ```
+
+The example has two: `listing/[...folder]` for a subcategory’s posts, `author-listing/[term]` for an author’s, across every subcategory. An index costs about fifty bytes gzip per post (the load test measures it).
 
 Outside Next, `pagedHref` and `pagedSearch` of `@figatellultimate/facets` map a view to this location and back.

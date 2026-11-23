@@ -32,6 +32,11 @@ export interface FolderPage {
   readonly pages: number;
   /** The URL of the folder's first page: its own. */
   readonly first: string;
+  /**
+   * The URL of its listing's index (`folderPages.index`), shared by every page of a paginated folder listing entries:
+   * `/<index>/<its segments>` in its locale. None otherwise.
+   */
+  readonly index?: string;
 }
 
 /** What `folderPagesOf` reads: the declarations, the URL strategy and the kept entries. */
@@ -133,14 +138,25 @@ function slicesOf(folder: FolderPage, input: FolderPagesInput, urls: UrlBuilder)
   );
   const items = next === undefined ? inside.length : new Set(inside.map((entry) => entry.segments[next] ?? '')).size;
   const pages = Math.max(1, Math.ceil(items / size));
+  const prefix = collection.folderPages?.index;
+  // A listing of entries (no named segment below) has an index, its every page sharing it.
+  const index =
+    prefix === undefined || next !== undefined
+      ? {}
+      : {
+          index: urls.url({
+            locale: folder.locale,
+            route: `/${[prefix, ...Object.values(folder.segments)].join('/')}`,
+          }),
+        };
 
-  return Array.from({ length: pages }, (_, index): FolderPage => {
-    const page = index + 1;
+  return Array.from({ length: pages }, (_, position): FolderPage => {
+    const page = position + 1;
 
-    if (page === 1) return Object.freeze({ ...folder, pages });
+    if (page === 1) return Object.freeze({ ...folder, pages, ...index });
 
     const route = `${folder.route === '/' ? '' : folder.route}/page/${String(page)}`;
 
-    return Object.freeze({ ...folder, route, url: urls.url({ locale: folder.locale, route }), page, pages });
+    return Object.freeze({ ...folder, route, url: urls.url({ locale: folder.locale, route }), page, pages, ...index });
   });
 }

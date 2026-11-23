@@ -84,7 +84,11 @@ const binding = useFacetedCollection(engine, useNextUrl());
 
 Le hook ne donne que des clés : l’application rend ses cartes une fois, côté serveur, et montre celles que la vue contient.
 
-Une liste dont les pages sont prérendues (`perPage` de `folderPages`) passe l’URL de sa première page : ses pages par défaut vivent alors dans le chemin (`/blog/news/page/2`), atteintes par le routeur, chacune avec sa tranche venue du serveur ; un filtre ou un tri reste dans la requête (`/blog/news?tags=bot`), calculé dans le navigateur sur tous les éléments, chargés au premier filtre ou tri sous forme d’un index JSON statique. `usePagedCollection` orchestre le tout : la tranche de la page jusque-là, ses pages par défaut atteintes par la seule URL, un filtre choisi tôt appliqué dès que l’index arrive.
+### Les listes paginées
+
+Une liste dont les pages sont prérendues (`perPage` de `folderPages`) envoie chaque page avec sa seule tranche : `/blog/news/page/2` contient ses cinq articles, quelle que soit la taille du blog. Ses pages par défaut vivent dans le chemin, atteintes par le routeur. Un filtre ou un tri reste dans la requête (`/blog/news?tags=bot`) et a besoin de tous les articles de la liste, de n’importe quelle page : le navigateur le calcule à partir de l’index de la liste, un JSON statique chargé au premier filtre ou tri, jamais avec la page.
+
+`usePagedCollection` passe l’URL de la première page de la liste et orchestre le tout : la tranche de la page tant que l’index n’est pas nécessaire, ses pages par défaut atteintes par la seule URL, l’index préchargé quand le lecteur se dirige vers un filtre (`prefetch`, au pointeur ou au focus), un filtre choisi tôt appliqué dès qu’il arrive. `createIndexLoader` vérifie l’index par votre schéma avant de le lire, et ne le charge qu’une fois par liste.
 
 ```tsx
 const load = createIndexLoader((json) => v.parse(Index, json));
@@ -97,12 +101,25 @@ const { binding, index, prefetch } = usePagedCollection({
 });
 ```
 
-L’index est une route statique par liste, produite par `listingIndexRoute` de `@figatellultimate/next16/listing-index` :
+La configuration déclare où vivent les index : `index` dans `folderPages` pour les listes d’une collection, dans les `pages` d’une taxonomie pour ses termes. Chaque page d’une liste paginée porte alors l’URL de son index (`folder.index`, `page.index`), la même sur toutes ses pages, et le code généré liste les listes à indexer (`blogListingIndexes()`, `authorsListingIndexes()`).
 
 ```ts
+folderPages: { levels: ['category', 'subcategory'], perPage: { subcategory: 5 }, index: 'listing' },
+```
+
+L’index est une route statique par liste et par langue, produite par `listingIndexRoute` de `@figatellultimate/next16/listing-index`, qui prend ces listes, les paramètres de route de chacune, et `build`, son contenu : l’élément de chaque article, ce que le moteur filtre et trie, et les données de sa carte, pour que le navigateur dessine les cartes des pages qu’il n’a pas. Seul `build` revient à l’application.
+
+```ts
+// app/[locale]/listing/[...folder]/route.ts: /listing/news/bot, /en/listing/news/bot
 export const dynamic = 'force-static';
 export const dynamicParams = false;
-export const { GET, generateStaticParams } = listingIndexRoute({ listings, params, build });
+export const { GET, generateStaticParams } = listingIndexRoute({
+  listings: blogListingIndexes,
+  params: (folder) => ({ locale: folder.locale, folder: Object.values(folder.segments) }),
+  build,
+});
 ```
+
+L’exemple en a deux : `listing/[...folder]` pour les articles d’une sous-catégorie, `author-listing/[term]` pour ceux d’un auteur, toutes sous-catégories confondues. Un index coûte une cinquantaine d’octets gzip par article (le test de charge le mesure).
 
 Hors de Next, `pagedHref` et `pagedSearch` de `@figatellultimate/facets` font passer une vue à cet emplacement et inversement.

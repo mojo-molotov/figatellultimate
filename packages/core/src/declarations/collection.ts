@@ -144,6 +144,12 @@ export interface FolderPagesInput<N extends string = string> {
    * that field in its `messages`, and so must the collection's own page (`messages.$root`) when it has one.
    */
   readonly metadata?: { readonly description?: string };
+  /**
+   * The URL segment of the listings' indexes, e.g. `'listing'`: each paginated folder listing entries gets one, at
+   * `/<index>/<its segments>` in each locale (`/listing/news/bot`), every entry a filter or a sort needs, which the
+   * browser fetches instead of the page. Its route is the app's (`listingIndexRoute`). None without it.
+   */
+  readonly index?: string;
 }
 
 /**
@@ -159,6 +165,8 @@ export interface FolderPages<N extends string = string> {
   readonly perPage: Readonly<Record<string, number>>;
   /** The messages field each folder page's SEO reads: its `description`. */
   readonly metadata: { readonly description?: string };
+  /** The URL segment of the listings' indexes; none without it. */
+  readonly index?: string;
 }
 
 /** A validated, frozen collection declaration (plain, serializable data). */
@@ -528,6 +536,7 @@ function validateFolderPages<E extends string, G extends readonly GrammarPart[]>
     images = {},
     perPage = {},
     metadata = {},
+    index,
   }: Readonly<Record<string, unknown>> = { ...folderPages };
 
   if (typeof root !== 'boolean') fail(entry, 'folderPages.root must be a boolean');
@@ -563,14 +572,42 @@ function validateFolderPages<E extends string, G extends readonly GrammarPart[]>
 
   if (!isDefault) fail(entry, 'folderPages needs the default route composition (no custom `route`)');
 
+  const sizes = validatePerPage(entry, perPage, checked, root);
+
   return Object.freeze({
     root: root,
     levels: Object.freeze([...checked]),
     preview: preview,
     images: validateFolderImages(entry, images, segments.length),
-    perPage: validatePerPage(entry, perPage, checked, root),
+    perPage: sizes,
     metadata: validateFolderMetadata(entry, metadata, root ? [...checked, '$root'] : checked, input.messages ?? {}),
+    ...validateFolderIndex(entry, index, segments.at(-1), checked, sizes),
   });
+}
+
+/**
+ * `folderPages.index`: a URL segment, for a level listing entries (the grammar's last named segment) that has pages
+ * and a page size: an index is the entries a filter or a sort needs beyond the page's slice.
+ */
+function validateFolderIndex(
+  entry: string,
+  index: unknown,
+  listing: string | undefined,
+  levels: readonly string[],
+  sizes: Readonly<Record<string, number>>,
+): { readonly index?: string } {
+  if (index === undefined) return {};
+
+  if (typeof index !== 'string' || !isValidName(index))
+    fail(entry, 'folderPages.index must be a lowercase URL segment, e.g. "listing"');
+
+  if (listing === undefined || !levels.includes(listing) || sizes[listing] === undefined)
+    fail(
+      entry,
+      `folderPages.index needs the level listing entries${listing === undefined ? '' : ` ("${listing}")`} among the levels, with a page size in perPage: only a paginated listing has an index`,
+    );
+
+  return { index };
 }
 
 /** `folderPages.metadata`: a messages field every level with pages declares, for its pages' SEO. */

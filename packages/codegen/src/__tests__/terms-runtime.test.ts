@@ -62,7 +62,7 @@ const config = defineConfig({
       // Each author's page described by their bio, for its SEO.
       {
         messages: ['name', 'bio'],
-        pages: { base: 'authors', perPage: 1, metadata: { description: 'bio' } },
+        pages: { base: 'authors', perPage: 1, metadata: { description: 'bio' }, index: 'author-listing' },
         content: 'authorBios',
       },
     ),
@@ -98,6 +98,7 @@ const Found = v.optional(
         pages: v.number(),
         first: v.string(),
         perPage: v.optional(v.number()),
+        index: v.optional(v.string()),
         content: v.optional(v.looseObject({ key: v.string(), locale: v.string() })),
         metadata: v.object({ description: v.optional(v.string()) }),
       }),
@@ -121,6 +122,7 @@ const UrlsModule = v.looseObject({
 
 const folder = new FileSystem(join(import.meta.dirname, '..', '..', '.tmp', randomUUID()));
 let termUrl: (term: string, locale: string) => unknown;
+let listingIndexes: () => readonly { readonly url: string; readonly index: string }[];
 let urls: {
   readonly findByUrl: (url: string) => Promise<v.InferOutput<typeof Found>>;
   readonly mountedUrls: v.InferOutput<typeof UrlsModule>['mountedUrls'];
@@ -152,11 +154,13 @@ beforeAll(async () => {
 
   urls = { mountedUrls: module.mountedUrls, findByUrl: async (url) => v.parse(Found, await module.findByUrl(url)) };
   const terms = v.parse(
-    v.looseObject({ authorsTermUrl: v.function() }),
+    v.looseObject({ authorsTermUrl: v.function(), authorsListingIndexes: v.function() }),
     await import(pathToFileURL(join(folder.basePath, 'terms', 'index.js')).href),
   );
 
   termUrl = (term, locale) => terms.authorsTermUrl(term, locale);
+  listingIndexes = () =>
+    v.parse(v.array(v.looseObject({ url: v.string(), index: v.string() })), terms.authorsListingIndexes());
 });
 afterAll(() => folder.cleanup());
 
@@ -211,6 +215,8 @@ describe('generated term pages, run', () => {
       pages: 2,
       first: '/authors/gustave',
       perPage: 1,
+      // Every page of a term shares its index.
+      index: '/author-listing/gustave',
       // A page's translations are the same page elsewhere: English has one page only.
       alternates: { fr: '/authors/gustave/page/2' },
     });
@@ -220,6 +226,17 @@ describe('generated term pages, run', () => {
     expect(urls.mountedUrls.find((item) => item.url === '/authors/gustave/page/2')?.alternates).toEqual({
       fr: '/authors/gustave/page/2',
     });
+  });
+
+  it('lists the term pages with an index once, each term’s first page in each locale, for their route', () => {
+    expect(listingIndexes().map((page) => [page.url, page.index])).toEqual(
+      listingIndexes()
+        .filter((page) => !page.url.includes('/page/'))
+        .map((page) => [page.url, page.url.replace('/authors/', '/author-listing/')]),
+    );
+    // Precondition: the authors' pages are listed, in both locales.
+    expect(listingIndexes().map((page) => page.url)).toContain('/authors/gustave');
+    expect(listingIndexes().some((page) => page.url.startsWith('/en/'))).toBe(true);
   });
 
   it("gives a term's page its own content in its locale, nothing where it has none, and never mounts it", async () => {

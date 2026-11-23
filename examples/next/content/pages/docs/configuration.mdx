@@ -97,6 +97,8 @@ folderPages: { root: true, levels: ['category', 'subcategory'], preview: 2, imag
 folderPages: { root: true, levels: ['category', 'subcategory'], perPage: { root: 6, subcategory: 5 } },
 ```
 
+`index` donne à chaque liste paginée d’entrées un index, à `/<index>/<ses segments>` dans chaque langue : toutes les entrées dont un filtre ou un tri a besoin, chargées par le navigateur au lieu de la page (voir les collections à facettes). Les `pages` d’une taxonomie le prennent aussi, pour ses termes ; les deux ont besoin d’une taille de page.
+
 Une page de dossier n’a pas de frontmatter : son SEO se déclare comme le `metadata` d’une entrée, mais en nommant un champ des messages du dossier. `metadata.description` donne à chaque page de dossier sa meta description ; chaque niveau qui a des pages doit déclarer ce champ dans ses `messages`, sinon la config est refusée. La page de la collection elle-même déclare ses champs dans `messages.$root`, à `content.blog.$`, et suit la même règle : avec `folderPages.root`, elle doit déclarer ce champ elle aussi.
 
 ```ts

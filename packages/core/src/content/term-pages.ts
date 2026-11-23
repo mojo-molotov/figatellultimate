@@ -31,6 +31,8 @@ export interface TermPage {
   readonly pages: number;
   /** The URL of the term's first page. */
   readonly first: string;
+  /** The URL of its index (`pages.index`), shared by every page of a paginated term: `/<index>/<term>`. */
+  readonly index?: string;
 }
 
 /**
@@ -83,8 +85,12 @@ export function termPagesOf(input: TermPagesInput): readonly TermPage[] {
       for (const term of entry.terms[field] ?? []) {
         const route = `/${declared.base}/${term}`;
         const url = urls.url({ locale: descriptor.locale, route });
+        const index =
+          declared.index === undefined
+            ? {}
+            : { index: urls.url({ locale: descriptor.locale, route: `/${declared.index}/${term}` }) };
         const known = firsts.get(url) ?? {
-          page: { taxonomy, term, locale: descriptor.locale, route, url, page: 1, first: url },
+          page: { taxonomy, term, locale: descriptor.locale, route, url, page: 1, first: url, ...index },
           entries: new Set<string>(),
           ...(declared.perPage === undefined ? {} : { perPage: declared.perPage }),
         };

@@ -45,6 +45,11 @@ export interface TermPages {
    * meta description (e.g. an author's `'bio'`), one of the taxonomy's `messages`.
    */
   readonly metadata?: { readonly description?: string };
+  /**
+   * The URL segment of the term pages' indexes, e.g. `'author-listing'`: each paginated term gets one, at
+   * `/<index>/<term>` in each locale, every entry a filter or a sort needs. Its route is the app's. Needs `perPage`.
+   */
+  readonly index?: string;
 }
 
 function validate(terms: readonly string[]): void {
@@ -113,10 +118,22 @@ function validatePages(pages: unknown, terms: readonly string[], messages: reado
   }
 
   const metadata = validateTermMetadata(Reflect.get(pages ?? {}, 'metadata'), messages);
+  const index: unknown = typeof pages === 'object' && pages !== null ? Reflect.get(pages, 'index') : undefined;
+
+  if (index !== undefined && (typeof index !== 'string' || !isValidName(index))) {
+    throw new InvalidTaxonomyError('Taxonomy pages: `index` must be a lowercase URL segment, e.g. "author-listing".');
+  }
+
+  if (index !== undefined && perPage === undefined) {
+    throw new InvalidTaxonomyError(
+      'Taxonomy pages: `index` needs `perPage`: only a paginated term has an index, its entries beyond the page.',
+    );
+  }
 
   return Object.freeze({
     base,
     ...(typeof perPage === 'number' ? { perPage } : {}),
+    ...(typeof index === 'string' ? { index } : {}),
     ...(metadata === undefined ? {} : { metadata }),
   });
 }

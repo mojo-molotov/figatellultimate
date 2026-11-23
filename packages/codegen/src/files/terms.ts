@@ -27,6 +27,8 @@ export interface TermData {
   readonly pages: number;
   /** Its taxonomy's page size, when it has one. */
   readonly perPage?: number;
+  /** Its index URL (`pages.index`), shared by its every page; none otherwise. */
+  readonly index?: string;
   /** Its SEO (`pages.metadata`): the message key of its description. */
   readonly metadata: { readonly description?: string };
   /** Its pages after the first: each one's URL, number and translations (a locale may have fewer pages). */
@@ -91,6 +93,7 @@ export function termData(
         alternates: alternatesOf(page),
         pages: page.pages,
         ...(perPage === undefined ? {} : { perPage }),
+        ...(page.index === undefined ? {} : { index: page.index }),
         metadata:
           description === undefined
             ? {}
@@ -246,6 +249,10 @@ export function termsFile(
           property('first', 'string'),
           property('perPage', 'number', true),
           {
+            ...property('index', 'string', true),
+            docs: ['Its index URL (`pages.index`), shared by its every page: every entry a filter or a sort needs.'],
+          },
+          {
             ...property('metadata', `{ readonly description?: ${key} }`),
             docs: ['Its SEO (`pages.metadata`): the message key of its description.'],
           },
@@ -261,7 +268,7 @@ export function termsFile(
               ]),
         ],
       });
-      const raw = `{ readonly url: string; readonly locale: Locale; readonly taxonomy: ${literal(name)}; readonly term: ${prefix}Term; readonly alternates: Readonly<Partial<Record<Locale, string>>>; readonly entries: readonly { readonly collection: ${mine.map((model) => literal(model.name)).join(' | ') || 'never'}; readonly url: string }[]; readonly pages: number; readonly perPage?: number; readonly metadata: { readonly description?: ${key} } }`;
+      const raw = `{ readonly url: string; readonly locale: Locale; readonly taxonomy: ${literal(name)}; readonly term: ${prefix}Term; readonly alternates: Readonly<Partial<Record<Locale, string>>>; readonly entries: readonly { readonly collection: ${mine.map((model) => literal(model.name)).join(' | ') || 'never'}; readonly url: string }[]; readonly pages: number; readonly perPage?: number; readonly index?: string; readonly metadata: { readonly description?: ${key} } }`;
       const mineData = data.filter((page) => page.taxonomy === name);
 
       file.addVariableStatement({
@@ -359,6 +366,19 @@ export function termsFile(
             );
         },
       });
+
+      if (config.taxonomies?.[name]?.pages?.index !== undefined)
+        file.addFunction({
+          name: `${name}ListingIndexes`,
+          isExported: true,
+          docs: [
+            `The ${name} term pages with an index (\`pages.index\`): each term's first page, its every entry, in each locale; for the route serving the indexes (\`listingIndexRoute\`).`,
+          ],
+          returnType: `readonly ${prefix}TermPage[]`,
+          statements: [
+            `return [...${name}TermData.values()].flatMap((data) => (data.index === undefined ? [] : [find${prefix}TermByUrl(data.url) ?? []].flat()));`,
+          ],
+        });
     }
   });
 }

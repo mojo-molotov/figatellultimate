@@ -95,6 +95,8 @@ folderPages: { root: true, levels: ['category', 'subcategory'], preview: 2, imag
 folderPages: { root: true, levels: ['category', 'subcategory'], perPage: { root: 6, subcategory: 5 } },
 ```
 
+`index` gives each paginated listing of entries an index, at `/<index>/<its segments>` in each language: every entry a filter or a sort needs, fetched by the browser instead of the page (see the faceted collections). A taxonomy’s `pages` take it too, for its terms; both need a page size.
+
 A folder page has no frontmatter: its SEO is declared like an entry's `metadata`, but naming a field of the folder's messages. `metadata.description` gives every folder page its meta description; each level with pages must declare that field in its `messages`, or the config is refused. The collection's own page declares its fields in `messages.$root`, at `content.blog.$`, and follows the same rule: with `folderPages.root`, it must declare that field too.
 
 ```ts

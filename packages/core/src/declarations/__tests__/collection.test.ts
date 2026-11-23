@@ -262,6 +262,13 @@ describe('defineCollection: folderPages', () => {
     expect(Object.isFrozen(declared?.perPage)).toBe(true);
   });
 
+  it('keeps the segment of its listings’ indexes, for a paginated level listing entries', () => {
+    const declared = define({ levels: ['category', 'subcategory'], perPage: { subcategory: 5 }, index: 'listing' });
+
+    expect(declared.folderPages?.index).toBe('listing');
+    expect(define({ levels: ['category'] }).folderPages).not.toHaveProperty('index');
+  });
+
   it("keeps the SEO description it reads from each folder's messages, frozen", () => {
     const declared = define(
       { root: true, levels: ['category', 'subcategory'], metadata: { description: 'description' } },
@@ -318,6 +325,13 @@ describe('defineCollection: folderPages', () => {
     ['levels that are not a list', { levels: 'category' }, /levels/],
     ['a page size that is not an object', { levels: ['category'], perPage: 5 }, /perPage/],
     ['a page size for a level without pages', { levels: ['category'], perPage: { subcategory: 5 } }, /perPage/],
+    [
+      'an index that is not a URL segment',
+      { levels: ['subcategory'], perPage: { subcategory: 5 }, index: 'List/ing' },
+      /folderPages\.index/,
+    ],
+    ['an index without the level listing entries', { levels: ['category'], index: 'listing' }, /folderPages\.index/],
+    ['an index for a listing without a page size', { levels: ['subcategory'], index: 'listing' }, /folderPages\.index/],
     ['a page size of zero', { levels: ['category'], perPage: { category: 0 } }, /perPage/],
     ['a fractional page size', { levels: ['category'], perPage: { category: 2.5 } }, /perPage/],
     ['a page size for the root without its page', { levels: ['category'], perPage: { root: 3 } }, /perPage/],

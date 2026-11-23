@@ -83,3 +83,17 @@ describe("defineTaxonomy: the term pages' SEO", () => {
     expect(() => defineTaxonomy(['gustave'], options)).toThrow(InvalidTaxonomyError);
   });
 });
+
+describe("defineTaxonomy: the term pages' indexes", () => {
+  it('keeps the segment of its term pages’ indexes, which needs a page size', () => {
+    expect(
+      defineTaxonomy(['gustave'], { pages: { base: 'authors', perPage: 5, index: 'author-listing' } }).pages,
+    ).toEqual({ base: 'authors', perPage: 5, index: 'author-listing' });
+    expect(() => defineTaxonomy(['gustave'], { pages: { base: 'authors', index: 'author-listing' } })).toThrow(
+      /`index` needs `perPage`/,
+    );
+    expect(() =>
+      defineTaxonomy(['gustave'], { pages: { base: 'authors', perPage: 5, index: 'Author listing' } }),
+    ).toThrow(InvalidTaxonomyError);
+  });
+});
