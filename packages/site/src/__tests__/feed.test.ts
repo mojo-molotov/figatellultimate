@@ -1,3 +1,4 @@
+import * as fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
 import { rssOf } from '../index.js';
@@ -82,6 +83,35 @@ describe('rssOf', () => {
       'Q&amp;A &lt;bot&gt; &quot;quotes&quot; ]]&gt; &apos;s',
       'Q&amp;A &lt;bot&gt; &quot;quotes&quot; ]]&gt; &apos;s',
     ]);
+  });
+
+  it('keeps only the characters XML 1.0 allows, so that a pasted control character never breaks the feed', () => {
+    // A character outside XML 1.0's `Char`: a C0 control but tab, newline and carriage return, a lone surrogate, U+FFFE
+    // or U+FFFF. Pasted from a PDF or a word processor, one made the whole feed invalid for its readers.
+    const forbidden =
+      // eslint-disable-next-line no-control-regex -- the control characters XML forbids are what it looks for.
+      /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u;
+
+    fc.assert(
+      fc.property(fc.string({ unit: 'binary' }), (text) => {
+        const xml = rssOf({
+          channel: { ...channel, description: text },
+          entries: [entry('a', { title: text, description: text, date: '2026-01-01' })],
+          fields,
+          site,
+        });
+
+        expect(forbidden.test(xml)).toBe(false);
+      }),
+      { examples: [['Avant\u0008après'], ['\u000B\u000C\u001F\uFFFE\uFFFF'], ['moitié \uD83D seule']] },
+    );
+    // The allowed ones stay: tab, newline, an emoji's surrogate pair.
+    expect(
+      values(
+        rssOf({ channel, entries: [entry('a', { title: 'a\tb\nc 🎉', date: '2026-01-01' })], fields, site }),
+        'title',
+      ),
+    ).toContain('a\tb\nc 🎉');
   });
 
   it('is the same for the same entries, whatever their order', () => {

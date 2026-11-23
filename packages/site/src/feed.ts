@@ -6,8 +6,12 @@
  *       spacing kept: a feed reader shows it to a reader, as the page's previews (`feed.test.ts`).
  *     - Deterministic: no clock, a stable order; a build always writes the same feed for the same content.
  *     - A `noindex` entry is left out, as from the sitemap and the search.
+ *     - What XML 1.0 forbids (a control character pasted from a PDF) is dropped, never written: one such character
+ *       invalidates the whole feed. Rejected: a build diagnostic, the feed being made by the app's route, where this
+ *       silent library reports nothing; the character shows nothing in a page either.
  *
- * Invariants: order, limit, escaping, `noindex` and determinism (`feed.test.ts`).
+ * Invariants: order, limit, escaping, XML 1.0's characters only (a property), `noindex` and determinism
+ * (`feed.test.ts`).
  */
 import { absoluteOn, forbidsIndexing, parseDate, text, texts } from './shared.js';
 import type { MetadataFields, Site, SiteEntryWithData } from './types.js';
@@ -39,8 +43,18 @@ export interface FeedInput {
   readonly limit?: number | undefined;
 }
 
+/**
+ * What XML 1.0 forbids (outside its `Char`), whatever the escaping: the C0 controls but tab, newline and carriage
+ * return, U+FFFE and U+FFFF, and a surrogate without its pair. One makes the whole feed invalid for its readers.
+ */
+const FORBIDDEN =
+  // eslint-disable-next-line no-control-regex -- the control characters XML forbids are exactly what it matches.
+  /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
+
+/** A text for the feed: what XML forbids dropped (a control character pasted from a PDF), then escaped. */
 const escape = (value: string): string =>
   value
+    .replace(FORBIDDEN, '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -57,7 +71,8 @@ const element = (name: string, value: string | undefined): string[] =>
  *   their categories and authors (translated by the app) and how many to keep.
  * @returns The feed's XML: the entries whose robots allow indexing, newest first by publication date (ties in URL
  *   order), up to `limit` (20); absolute links, RFC 822 dates, categories, authors as `dc:creator`, every text
- *   escaped; `lastBuildDate` is the newest entry's date, never the clock, so the same entries give the same feed.
+ *   escaped, what XML 1.0 forbids dropped (a pasted control character); `lastBuildDate` is the newest entry's date,
+ *   never the clock, so the same entries give the same feed.
  *
  * @example
  * const xml = rssOf({ channel, entries: posts, fields: metadataFields.blog, site, authors, categories });
