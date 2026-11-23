@@ -49,7 +49,11 @@ function parameters(search: Search): ReadonlyMap<string, readonly string[]> {
 
     if (name === undefined || value === undefined) continue;
 
-    result.set(name, [...(result.get(name) ?? []), value]);
+    // Added in place: a copy of the values for each repeated name made a long query string quadratic.
+    const values = result.get(name);
+
+    if (values === undefined) result.set(name, [value]);
+    else values.push(value);
   }
 
   return result;
