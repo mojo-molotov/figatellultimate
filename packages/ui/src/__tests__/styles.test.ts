@@ -242,6 +242,26 @@ describe('styles.css', () => {
     expect(unfollowed.map(({ property, value }) => `${property}: ${value}`)).toEqual([]);
   });
 
+  it('keeps a full-width part within its container: its padding and border inside its width', () => {
+    // The facets' filter field, `width: 100%` with a padding and a border, overflowed its own menu by both.
+    const rules = [...SOURCE_NO_COMMENTS.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, selector, body]) => ({
+      selector: (selector ?? '').trim(),
+      body: body ?? '',
+    }));
+    const overflowing = rules.filter(
+      ({ body }) =>
+        /(?:^|[;\s])width:\s*100%/.test(body) &&
+        /(?:^|[;\s])(?:padding|border)(?:-inline)?:\s*(?=\S)(?!0[;\s]|none)/.test(body) &&
+        !/box-sizing:\s*border-box/.test(body),
+    );
+
+    // Precondition: some full-width parts do have a padding or a border.
+    expect(
+      rules.filter(({ body }) => /width:\s*100%/.test(body) && /box-sizing:\s*border-box/.test(body)).length,
+    ).toBeGreaterThan(0);
+    expect(overflowing.map(({ selector }) => selector)).toEqual([]);
+  });
+
   it("keeps the search dialog to the screen: its columns shrink, a result's long word breaks", () => {
     expect(propertiesOf("[data-slot='search-dialog-content']")['grid-template-columns']).toBe('minmax(0, 1fr) auto');
     expect(CSS).toMatch(

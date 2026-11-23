@@ -1088,6 +1088,8 @@ a[data-slot='entry-card-author'] {
 }
 
 [data-slot='facet-options-input'] {
+  /* Its padding and border inside its width: the menu's width, never wider. */
+  box-sizing: border-box;
   width: 100%;
   min-height: 2.25rem;
   margin-bottom: calc(var(--fig-space) / 2);
