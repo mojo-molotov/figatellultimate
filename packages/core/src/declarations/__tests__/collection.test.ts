@@ -69,11 +69,19 @@ describe('defineCollection', () => {
     expect(blog.testOnly).toEqual([]);
   });
 
+  it('keeps the fields translations share, none by default', () => {
+    expect(defineCollection({ ...valid, shared: ['cover', 'date'] }).shared).toEqual(['cover', 'date']);
+    expect(blog.shared).toEqual([]);
+  });
+
   it.each<[string, unknown]>([
     ['an empty reference field', { ...valid, references: { '': 'tags' } }],
     ['an empty referenced taxonomy', { ...valid, references: { tags: '' } }],
     ['an empty draft field', { ...valid, draft: '' }],
     ['an invalid test-only pattern', { ...valid, testOnly: ['Test/*'] }],
+    ['an empty shared field', { ...valid, shared: [''] }],
+    ['the inheritance marker as a shared field', { ...valid, shared: ['inherit'] }],
+    ['a shared field listed twice', { ...valid, shared: ['date', 'date'] }],
   ])('throws InvalidCollectionError on %s', (_, input) => {
     expect(() =>
       // @ts-expect-error -- an untyped (JS or JSON) caller: validated at runtime.

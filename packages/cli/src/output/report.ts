@@ -144,6 +144,26 @@ export function explain(diagnostic: Diagnostic): Explanation {
       return { message: `frontmatter field ${quote(d.data.field)}: ${d.data.message}` };
     case 'invalid-frontmatter':
       return { message: `invalid frontmatter: ${d.data.message}` };
+    case 'unknown-inherit-locale':
+      return {
+        message: `\`inherit: ${d.data.locale}\` names a locale the site does not declare`,
+        hint: didYouMean(d.suggestions) ?? 'name one of the declared locales, or remove `inherit:`',
+      };
+    case 'missing-inherit-source':
+      return {
+        message: `\`inherit: ${d.data.locale}\` has no version to take its fields from: no ${d.data.locale} version of ${quote(d.data.key)}`,
+        hint: `add the ${d.data.locale} version, or write the fields in this file and remove \`inherit:\``,
+      };
+    case 'inherit-cycle':
+      return {
+        message: `the versions inherit from each other in a loop (${d.data.locales.join(' → ')}): no field to start from`,
+        hint: 'remove `inherit:` from one of them',
+      };
+    case 'missing-shared-field':
+      return {
+        message: `required field ${quote(d.data.field)} is shared, but there is no ${d.data.locale} version of ${quote(d.data.key)} to take it from`,
+        hint: `add the ${d.data.locale} version, or write \`${d.data.field}:\` in this file`,
+      };
     case 'unreadable-source':
       return { message: `the content source cannot read this file: ${d.data.message}` };
     case 'missing-document':

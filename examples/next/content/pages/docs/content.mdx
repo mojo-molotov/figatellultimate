@@ -49,6 +49,23 @@ tags: [release]
 # Lancement
 ```
 
+### Les traductions
+
+Une traduction n’écrit que ce qui diffère de l’autre version. La collection liste les champs que ses traductions partagent, `shared` : une traduction qui en omet un prend la valeur de la langue par défaut, et celui qu’elle écrit est le sien. Un fichier peut aussi prendre chaque champ qu’il omet d’une autre langue, avec `inherit:`.
+
+```ts
+blog: defineCollection({ …, shared: ['featuredPictureUrl', 'date', 'authors', 'tags'] }),
+```
+
+```mdx
+---
+title: 'Launch'
+description: 'What the first version brings.'
+---
+```
+
+Le frontmatter complété est vérifié par le schéma, comme celui d’un fichier : un champ partagé requis sans version dans la langue par défaut où le prendre est une erreur, tout comme un `inherit:` qui nomme une langue sans version de la page.
+
 ## Brouillons et contenu de test
 
 Une collection qui déclare `draft: 'draft'` lit ce champ booléen : les brouillons sont construits en développement, exclus de la production. `testOnly` fait de même par clé, pour du contenu dont seuls les tests ont besoin.

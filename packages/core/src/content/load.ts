@@ -12,6 +12,8 @@
  *     - figatellultimate drives: it lists paths and analyzes every file's structure itself, so a file whose frontmatter
  *       fails validation still gets its structural diagnostics.
  *     - Paths and descriptors in memory, documents streamed.
+ *     - A translation completing its frontmatter from another version (`inherit.ts`) waits for every document, then
+ *       is validated again by the source: only those are held, with every version's frontmatter as written (small).
  *
  * Invariant (`load.test.ts`): core never depends on the delegated tool, tested against fake ports.
  */
@@ -30,11 +32,14 @@ import type { Collection } from '../declarations/collection.js';
 import { compareDiagnostics, diagnostic, type Diagnostic } from '../shared/diagnostics.js';
 import type { Locales } from '../declarations/locales.js';
 import type { EntryDescriptor } from '../paths/descriptor.js';
-import type { AbortSignalLike, ContentSource, Environment, PathLister } from './ports.js';
+import type { AbortSignalLike, ContentSource, Environment, PathLister, SourceDocument } from './ports.js';
 import type { Taxonomy } from '../declarations/taxonomy.js';
 import { createUrlBuilder, type UrlBuilder } from '../paths/url.js';
+import { INHERIT_FIELD } from '../shared/inherit-field.js';
+import { err, ok, type Result } from '../shared/result.js';
 import { folderPagesOf } from '../paths/folders.js';
 import { termPageCollisions, termPagesOf, type TermsOf } from './term-pages.js';
+import { completeFrontmatter, type WrittenVersion } from './inherit.js';
 
 /** Thrown when figatellultimate's collections and the delegated tool's do not match (invalid configuration). */
 export class InvalidContentSourceError extends Error {
@@ -149,8 +154,29 @@ export async function* streamContent(input: LoadContentInput): AsyncGenerator<Co
   const excluded: { entry: SourceInput; reason: 'draft' | 'test-content' }[] = [];
   const seen = new Set<string>();
   const failedInSource = new Set<string>();
+  // Every version's frontmatter as written, by collection, key and locale; the documents waiting for them.
+  const versions = new Map<string, WrittenVersion>();
+  const waiting: { descriptor: EntryDescriptor; document: SourceDocument }[] = [];
+  const versionId = (collection: string, key: string, locale: string): string => `${collection}\0${key}\0${locale}`;
   // What term pages need of the kept entries: their place and terms, never their data or body.
   const kept: TermsOf[] = [];
+  /** A join's outcome recorded: the entry kept (and returned), excluded, or its errors reported. */
+  const settle = (outcome: ReturnType<typeof joinEntry>, document: SourceDocument): Entry | undefined => {
+    if (outcome.kind === 'entry') {
+      kept.push({ descriptor: outcome.entry.descriptor, terms: outcome.entry.terms });
+
+      return outcome.entry;
+    }
+
+    if (outcome.kind === 'excluded') {
+      excluded.push({
+        entry: { collection: document.collection, sourcePath: document.sourcePath },
+        reason: outcome.reason,
+      });
+    } else diagnostics.push(...outcome.errors);
+
+    return undefined;
+  };
 
   for await (const event of source.documents({ signal, paths: listing.listed })) {
     // Checkpoint between documents: the only place where cancelling saves real work.
@@ -177,20 +203,58 @@ export async function* streamContent(input: LoadContentInput): AsyncGenerator<Co
     const descriptor = descriptors.get(id);
     const collection = collections[document.collection];
 
-    // A document without a valid structure is dropped: its structural diagnostics are already reported.
-    if (descriptor === undefined || collection === undefined) continue;
+    // A document without a valid structure is dropped: its structural diagnostics are already reported, and its
+    // frontmatter's too when the schema rejects it as written (nothing to complete it from without a place).
+    if (descriptor === undefined || collection === undefined) {
+      if (document.written?.valid === false && source.validate !== undefined) {
+        const validated = await source.validate(document.collection, document.sourcePath, document.written.frontmatter);
 
-    const outcome = joinEntry(descriptor, document, collection, taxonomies, environment);
+        if (!validated.ok) diagnostics.push(...validated.errors);
+      }
 
-    if (outcome.kind === 'entry') {
-      kept.push({ descriptor: outcome.entry.descriptor, terms: outcome.entry.terms });
-      yield { kind: 'entry', entry: outcome.entry };
-    } else if (outcome.kind === 'excluded') {
-      excluded.push({
-        entry: { collection: document.collection, sourcePath: document.sourcePath },
-        reason: outcome.reason,
+      continue;
+    }
+
+    const { written } = document;
+
+    if (written !== undefined) {
+      versions.set(versionId(descriptor.collection, descriptor.key, descriptor.locale), {
+        descriptor,
+        frontmatter: written.frontmatter,
       });
-    } else diagnostics.push(...outcome.errors);
+
+      if (!written.valid || inherits(descriptor, written.frontmatter, collection, locales.default)) {
+        waiting.push({ descriptor, document });
+
+        continue;
+      }
+    }
+
+    const entry = settle(joinEntry(descriptor, document, collection, taxonomies, environment), document);
+
+    if (entry !== undefined) yield { kind: 'entry', entry };
+  }
+
+  // The documents completing their frontmatter from another version, now that every version is known.
+  for (const { descriptor, document } of waiting) {
+    signal?.throwIfAborted();
+    const collection = collections[descriptor.collection];
+
+    if (collection === undefined) continue;
+
+    const completed = await completeDocument(input, descriptor, document, collection, (locale) =>
+      versions.get(versionId(descriptor.collection, descriptor.key, locale)),
+    );
+
+    if (!completed.ok) {
+      diagnostics.push(...completed.errors);
+
+      continue;
+    }
+
+    const entry = settle(joinEntry(descriptor, completed.value, collection, taxonomies, environment), document);
+
+    if (entry !== undefined) yield { kind: 'entry', entry };
   }
 
   for (const descriptor of analysis.entries) {
@@ -259,4 +323,62 @@ function termPagesDiagnostics(
   const folders = folderPagesOf({ locales, collections, urls, entries: kept.map((entry) => entry.descriptor) });
 
   return termPageCollisions(pages, kept, folders, urls);
+}
+
+/** Whether a version takes fields from another one: an `inherit:` marker, or a shared field it leaves out. */
+const inherits = (
+  descriptor: EntryDescriptor,
+  frontmatter: Readonly<Record<string, unknown>>,
+  collection: Collection,
+  defaultLocale: string,
+): boolean =>
+  INHERIT_FIELD in frontmatter ||
+  (descriptor.locale !== defaultLocale && collection.shared.some((field) => !(field in frontmatter)));
+
+/**
+ * A waiting document, its frontmatter completed from the other versions and validated by the source: its data is
+ * the validated frontmatter over what the source's transform added (fields the file does not write).
+ */
+async function completeDocument(
+  input: LoadContentInput,
+  descriptor: EntryDescriptor,
+  document: SourceDocument,
+  collection: Collection,
+  versionOf: (locale: string) => WrittenVersion | undefined,
+): Promise<Result<SourceDocument, Diagnostic>> {
+  const written = document.written?.frontmatter ?? {};
+  const completed = completeFrontmatter({ descriptor, frontmatter: written }, collection, input.locales, versionOf);
+
+  if (!completed.ok) return completed;
+
+  const { frontmatter, changed, unresolvedShared } = completed.value;
+
+  // Unchanged and valid as written: nothing to validate again (an invalid one never is unchanged here).
+  if (!changed && document.written?.valid === true) return ok(document);
+
+  if (input.source.validate === undefined) {
+    throw new InvalidContentSourceError(
+      'The content source delivers frontmatter to complete (`written`) but cannot validate it (`validate`).',
+    );
+  }
+
+  const validated = await input.source.validate(document.collection, document.sourcePath, frontmatter);
+
+  if (!validated.ok) {
+    const errors = validated.errors.map((error): Diagnostic =>
+      error.code === 'missing-frontmatter-field' && unresolvedShared.includes(error.data.field)
+        ? diagnostic({
+            ...error,
+            code: 'missing-shared-field',
+            data: { field: error.data.field, locale: input.locales.default, key: descriptor.key },
+          })
+        : error,
+    );
+
+    return err(errors[0] ?? validated.errors[0], ...errors.slice(1));
+  }
+
+  const added = Object.entries(document.data).filter(([field]) => !(field in written));
+
+  return ok({ ...document, data: Object.freeze({ ...Object.fromEntries(added), ...validated.value }) });
 }

@@ -7,6 +7,7 @@ import { err, ok } from '../../shared/result.js';
 import { authors, blogWithContent, locales, tags } from '../../__tests__/scenarios/collections.js';
 import { defineCollection } from '../../declarations/collection.js';
 import { defineTaxonomy } from '../../declarations/taxonomy.js';
+import { locale, slug } from '../../declarations/grammar.js';
 
 /** In-memory PathLister: a map from directory to the files it contains. */
 function memoryLister(tree: Readonly<Record<string, readonly string[]>>): PathLister & { calls: string[] } {
@@ -203,5 +204,91 @@ describe('loadContent', () => {
     const source = fakeSource({ blog: 'content/blog' }, [doc('cat/sub/a.mdx'), doc('cat/sub/a.mdx')]);
 
     await expect(loadContent({ ...base, paths, source })).rejects.toThrow(TypeError);
+  });
+});
+
+describe('loadContent: frontmatter inherited between translations', () => {
+  const lessons = defineCollection({
+    entry: 'lesson',
+    base: 'lessons',
+    grammar: [locale({ optional: true }), slug()],
+    shared: ['cover', 'date'],
+  });
+  const french = { title: 'La leçon', cover: '/covers/lesson.jpeg', date: '2024-06-15' };
+  /** A version: its frontmatter as written, valid as is or not, and a field the source's transform added. */
+  const version = (sourcePath: string, frontmatter: Record<string, unknown>, valid: boolean): SourceDocument => ({
+    collection: 'lessons',
+    sourcePath,
+    data: { ...frontmatter, compiled: `code of ${sourcePath}` },
+    body: '',
+    written: { frontmatter, valid },
+  });
+  /** A source validating like a schema requiring `title` and `date`, marking what it validated. */
+  const validating = (documents: readonly SourceDocument[]): ContentSource => ({
+    ...fakeSource({ lessons: 'content/lessons' }, documents),
+    validate: (collection, sourcePath, frontmatter) =>
+      Promise.resolve(
+        'date' in frontmatter
+          ? ok({ ...frontmatter, validated: true })
+          : err({
+              code: 'missing-frontmatter-field',
+              severity: 'error',
+              collection,
+              sourcePath,
+              data: { field: 'date' },
+              suggestions: [],
+            } as const),
+      ),
+  });
+  const load = (source: ContentSource, files: readonly string[]) =>
+    loadContent({
+      ...base,
+      collections: { lessons },
+      taxonomies: {},
+      paths: memoryLister({ 'content/lessons': files }),
+      source,
+    });
+
+  it('completes a translation from the default locale, validated again, keeping what the transform added', async () => {
+    const assembly = await load(
+      validating([version('en/lesson.mdx', { title: 'The lesson' }, false), version('lesson.mdx', french, true)]),
+      ['lesson.mdx', 'en/lesson.mdx'],
+    );
+    const english = assembly.entries.find((entry) => entry.descriptor.locale === 'en');
+
+    expect(assembly.diagnostics).toEqual([]);
+    expect(english?.data).toEqual({
+      title: 'The lesson',
+      cover: '/covers/lesson.jpeg',
+      date: '2024-06-15',
+      compiled: 'code of en/lesson.mdx',
+      validated: true,
+    });
+    // The default locale's version, valid as written, is not validated again.
+    expect(assembly.entries.find((entry) => entry.descriptor.locale === 'fr')?.data).not.toHaveProperty('validated');
+  });
+
+  it('reports a required shared field with no default version to take it from, naming the locale and key', async () => {
+    const assembly = await load(validating([version('en/lesson.mdx', { title: 'The lesson' }, false)]), [
+      'en/lesson.mdx',
+    ]);
+
+    expect(assembly.entries).toEqual([]);
+    expect(assembly.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: 'missing-shared-field',
+        sourcePath: 'en/lesson.mdx',
+        data: { field: 'date', locale: 'fr', key: 'lesson' },
+      }),
+    );
+  });
+
+  it('refuses a source delivering frontmatter to complete without a way to validate it', async () => {
+    const source = fakeSource({ lessons: 'content/lessons' }, [
+      version('lesson.mdx', french, true),
+      version('en/lesson.mdx', { title: 'The lesson' }, false),
+    ]);
+
+    await expect(load(source, ['lesson.mdx', 'en/lesson.mdx'])).rejects.toThrow(InvalidContentSourceError);
   });
 });

@@ -3,8 +3,10 @@
  *
  * Architecture:
  *     figatellultimate (core) lists paths ──> source.documents({ paths }) ──> this adapter
- *         ├─ build: createBuilder(config) ──> events ──> diagnostics (schema issues re-validated, schema-issues.ts)
- *         │                                └─> documents, delivered through withFigatellultimate (config.ts)
+ *         ├─ build: createBuilder(config) ──> events ──> diagnostics (unreadable files)
+ *         │                                └─> documents, delivered through withFigatellultimate (config.ts), each
+ *         │                                    with its frontmatter as written and the schema's verdict on it
+ *         ├─ validate(frontmatter completed by core) ──> the user's schema ──> data, or diagnostics (schema-issues.ts)
  *         └─ watch: one native watcher per root (watcher.ts) ──> reported paths
  *                   planSync(listing, reported, held) (sync-plan.ts) ──> sync file by file, or one rescan
  *
@@ -17,7 +19,13 @@
  *       structural diagnostics (with Content Collections driving, it would never reach figatellultimate).
  *     - Documents come through `withFigatellultimate`, never by guessing the names of Content Collections' generated
  *       exports: the adapter stays replaceable, the only package importing Content Collections.
- *     - Schema issues are re-validated on the raw frontmatter: Content Collections flattens them into text.
+ *     - The schema's verdict is deferred (`withFigatellultimate`): a translation may leave out what it inherits from
+ *       another version, so every parsed file is delivered, flagged, and core validates the completed frontmatter
+ *       through `validate`, with the user's own schema (its types stay the schema's). A transform therefore sees a
+ *       file's frontmatter as written, before inheritance, unvalidated when the schema rejects it, and must spread
+ *       the document to keep what figatellultimate reads. Rejected: making shared fields optional in the schema, which
+ *       would type them optional.
+ *     - Schema issues are mapped from the raw frontmatter: Content Collections flattens them into text.
  *     - In watch mode, a single writer: Content Collections' own watcher is not used. Its watcher syncs and rebuilds
  *       concurrently on every event and its sync is not atomic (bulk changes in new folders lost files, a concurrent
  *       sync duplicated one, deleting an unknown file removed another). Before each build, the reported paths and the
@@ -28,23 +36,26 @@
  * Known behaviors of Content Collections 0.15.3:
  *     - A file whose frontmatter cannot be parsed (e.g. unclosed YAML) is dropped silently; figatellultimate still reports
  *       it, as `missing-document`, since it lists paths itself.
- *     - Its validation messages render Standard Schema paths as `[object Object]`, hence the re-validation.
+ *     - Its validation messages render Standard Schema paths as `[object Object]`, hence the mapping of the issues.
  *
  * Invariants: documents through `withFigatellultimate`, directories relative to the project, structured schema diagnostics
- * with valibot and zod, no absolute path in documents or diagnostics (`*.test.ts`); the sync plan
+ * with valibot and zod, a translation completed and validated by the user's schema with both, no absolute path in
+ * documents or diagnostics (`*.test.ts`); the sync plan
  * (`sync-plan.test.ts`); the watch against a build from scratch, on every OS (the CLI's watch lab).
  */
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 
 import { createBuilder } from '@content-collections/core';
 import {
+  err,
   InvalidContentSourceError,
+  ok,
   type ContentSource,
   type FileErrorDiagnostic,
   type SourceDocument,
 } from '@figatellultimate/core';
 
-import { exclusive, type Session } from './config.js';
+import { exclusive, WRITTEN, type Session } from './config.js';
 import { frontmatterDiagnostics, hasStandardSchema } from './schema-issues.js';
 import { planSync, stateAfterBuild, type CollectionFile, type SyncState } from './sync-plan.js';
 import { watchFiles } from './watcher.js';
@@ -67,13 +78,26 @@ function toDocument(collection: string, document: unknown): SourceDocument {
   if (!isRecord(document))
     throw new TypeError(`Content Collections delivered a non-object document in "${collection}"`);
 
-  const { _meta, content, ...data } = document;
+  const { _meta, content, [WRITTEN]: written, ...data } = document;
   const filePath = isRecord(_meta) ? _meta['filePath'] : undefined;
 
   if (typeof filePath !== 'string')
     throw new TypeError(`Content Collections delivered a document without _meta.filePath in "${collection}"`);
 
-  return { collection, sourcePath: toPosix(filePath), data, body: typeof content === 'string' ? content : '' };
+  if (!isRecord(written) || !isRecord(written['frontmatter']) || typeof written['valid'] !== 'boolean') {
+    throw new InvalidContentSourceError(
+      `A document of "${collection}" lost its frontmatter as written: its transform must spread the document ` +
+        '({ ...document, … }), so that figatellultimate can complete and validate it.',
+    );
+  }
+
+  return {
+    collection,
+    sourcePath: toPosix(filePath),
+    data,
+    body: typeof content === 'string' ? content : '',
+    written: { frontmatter: written['frontmatter'], valid: written['valid'] },
+  };
 }
 
 /** Where the user's Content Collections config is, and the project it belongs to. */
@@ -102,8 +126,11 @@ export function createContentCollectionsSource(options: ContentCollectionsSource
   const configDirectory = dirname(options.configPath);
   let builder: Awaited<ReturnType<typeof createBuilder>> | undefined;
   let directories: Readonly<Record<string, string>> | undefined;
-  let collector: { diagnostics: FileErrorDiagnostic[]; pending: Promise<void>[]; invalid: CollectionFile[] } | null =
-    null;
+  let collector: { diagnostics: FileErrorDiagnostic[] } | null = null;
+  /** Each collection's own schema, and the body of each document of the last build: what `validate` needs. */
+  let schemas = new Map<string, unknown>();
+  const bodies = new Map<string, string>();
+  const bodyId = (collection: string, sourcePath: string): string => `${collection}\0${sourcePath}`;
   /** What Content Collections holds after the last build; `undefined` until a build ran with listed paths. */
   let state: SyncState | undefined;
   /** Absolute paths the watcher reported since the last run, and whether the Content Collections config changed. */
@@ -146,22 +173,9 @@ export function createContentCollectionsSource(options: ContentCollectionsSource
         return [name, toPosix(projectRelative)];
       }),
     );
-    created.on('transformer:validation-error', ({ collection, file }) => {
-      if (collector === null) return;
-
-      const schema = hasStandardSchema(collection) ? collection.schema : undefined;
-      // Content Collections types collections loosely (`any` name): narrowed here, at the boundary.
-      const name: unknown = collection.name;
-
-      if (schema === undefined || typeof name !== 'string') return;
-
-      collector.invalid.push({ collection: name, sourcePath: toPosix(file.path) });
-      collector.pending.push(
-        frontmatterDiagnostics(name, toPosix(file.path), schema, file.data).then((diagnostics) => {
-          collector?.diagnostics.push(...diagnostics);
-        }),
-      );
-    });
+    schemas = new Map(session.schemas);
+    // No `transformer:validation-error`: the schemas defer their verdict (`withFigatellultimate`), every file is
+    // delivered with its frontmatter as written, and validated by `validate` once completed.
 
     for (const event of ['collector:parse-error', 'collector:read-error'] as const) {
       created.on(event, ({ filePath, error }) => {
@@ -234,26 +248,22 @@ export function createContentCollectionsSource(options: ContentCollectionsSource
 
         if (listed !== undefined) await reconcile(session, listed);
 
-        const collected: { diagnostics: FileErrorDiagnostic[]; pending: Promise<void>[]; invalid: CollectionFile[] } = {
-          diagnostics: [],
-          pending: [],
-          invalid: [],
-        };
+        const collected: { diagnostics: FileErrorDiagnostic[] } = { diagnostics: [] };
 
         collector = collected;
 
         try {
           await builder?.build();
-          await Promise.all(collected.pending);
         } finally {
           collector = null;
         }
 
         const delivered = [...session.documents];
-        const held = [
-          ...delivered.flatMap(([collection, docs]) => docs.map((doc) => toDocument(collection, doc))),
-          ...collected.invalid,
-        ];
+        const held = delivered.flatMap(([collection, docs]) => docs.map((doc) => toDocument(collection, doc)));
+
+        bodies.clear();
+
+        for (const { collection, sourcePath, body } of held) bodies.set(bodyId(collection, sourcePath), body);
 
         if (listed !== undefined) state = stateAfterBuild(state, listed, held);
 
@@ -295,6 +305,38 @@ export function createContentCollectionsSource(options: ContentCollectionsSource
           return Promise.resolve();
         },
       };
+    },
+
+    async validate(collection, sourcePath, frontmatter) {
+      const schema = schemas.get(collection);
+      const wrapped = { schema };
+
+      if (!hasStandardSchema(wrapped)) {
+        throw new InvalidContentSourceError(`Collection "${collection}" has no Standard Schema to validate with.`);
+      }
+
+      // The body is part of what the schema validates (`content`), never of what figatellultimate reads.
+      const raw = { ...frontmatter, content: bodies.get(bodyId(collection, sourcePath)) ?? '' };
+      const result = await wrapped.schema['~standard'].validate(raw);
+
+      if (result.issues === undefined && 'value' in result && isRecord(result.value)) {
+        const validated = Object.fromEntries(Object.entries(result.value).filter(([field]) => field !== 'content'));
+
+        return ok(validated);
+      }
+
+      const [first, ...more] = await frontmatterDiagnostics(collection, sourcePath, wrapped.schema, raw);
+
+      return first === undefined
+        ? err({
+            code: 'invalid-frontmatter',
+            severity: 'error',
+            collection,
+            sourcePath,
+            data: { message: 'the schema rejects the frontmatter' },
+            suggestions: [],
+          } as const)
+        : err(first, ...more);
     },
 
     typeSource(collection, fromDirectory) {

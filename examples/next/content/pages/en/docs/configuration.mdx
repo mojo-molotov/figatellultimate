@@ -1,8 +1,6 @@
 ---
-featuredPictureUrl: '/covers/placeholder-154.jpeg'
 title: 'Configuration'
 metadescription: 'Locales, collections and their grammar, taxonomies and navigation, declared once in figatellultimate.config.ts.'
-order: 3
 ---
 
 # Configuration
@@ -67,6 +65,7 @@ From `news/releases/first.mdx`, figatellultimate infers the category, the subcat
 | `indexForbiddenUnder`, `indexForbiddenAtRoot` | Where an `index.mdx` is not allowed.                                                      |
 | `draft`                                       | The boolean field marking drafts, left out of production builds.                          |
 | `testOnly`                                    | Keys of test content, left out of production builds.                                      |
+| `shared`                                      | Fields translations take from the default language when they leave them out.              |
 | `references`                                  | Frontmatter fields referencing a taxonomy.                                                |
 | `metadata`                                    | The fields holding the title, description, image, dates, robots, canonical URL and order. |
 | `searchable`                                  | Whether the local search indexes the collection (default `true`).                         |

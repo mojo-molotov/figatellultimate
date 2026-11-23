@@ -10,7 +10,7 @@
  * Key design decision: core does no I/O and knows no tool; the delegated tool stays replaceable behind
  * `ContentSource`, and core needs neither DOM nor Node types (`AbortSignalLike`).
  */
-import type { Diagnostic } from '../shared/diagnostics.js';
+import type { Diagnostic, FileErrorDiagnostic } from '../shared/diagnostics.js';
 import type { Result } from '../shared/result.js';
 
 /**
@@ -43,6 +43,12 @@ export interface SourceDocument {
   /** Validated (and possibly transformed) frontmatter; figatellultimate only reads the fields it is told about. */
   readonly data: Readonly<Record<string, unknown>>;
   readonly body: string;
+  /**
+   * The frontmatter as written, for a translation to complete it from another version (`content/inherit.ts`), and
+   * whether it passed the schema as is: when not, `data` is unvalidated and core validates the completed frontmatter
+   * (`ContentSource.validate`) before reading it. Absent: the source validated `data` and inherits nothing.
+   */
+  readonly written?: { readonly frontmatter: Readonly<Record<string, unknown>>; readonly valid: boolean } | undefined;
 }
 
 /** One item of the delegated tool's stream: a document, or a diagnostic about a file. */
@@ -78,6 +84,17 @@ export interface ContentSource {
     readonly signal?: AbortSignalLike | undefined;
     readonly paths?: Readonly<Record<string, readonly string[]>> | undefined;
   }): AsyncIterable<SourceEvent>;
+  /**
+   * Validates a frontmatter by its collection's schema: required when documents carry `written`, for the
+   * frontmatter a translation completed from another version.
+   *
+   * @returns The validated (and possibly transformed) frontmatter, or one diagnostic per schema issue.
+   */
+  validate?(
+    collection: string,
+    sourcePath: string,
+    frontmatter: Readonly<Record<string, unknown>>,
+  ): Promise<Result<Readonly<Record<string, unknown>>, FileErrorDiagnostic>>;
   /** Optional: calls `onChange` after each content change, until stopped. */
   watch?(onChange: () => void): Promise<{ stop(): Promise<void> }>;
   /**

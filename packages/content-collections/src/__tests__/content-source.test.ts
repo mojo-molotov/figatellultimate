@@ -44,6 +44,9 @@ const CONTENT: Readonly<Record<string, string>> = {
   'content/blog/cat/sub/bad-type.mdx': '---\ntitle: 42\n---\nTitle is a number.\n',
   'content/blog/cat/sub/broken-yaml.mdx': '---\ntitle: [unclosed\n---\nBroken YAML.\n',
   'content/blog/cat/sub/drafts/x.mdx': '---\ndraft: true\n---\nNo title, unknown locale folder.\n',
+  // A translation writing only its body: every field from the French version.
+  'content/blog/cat/sub/lesson.mdx': '---\ntitle: Lesson\ntags: [cello]\n---\nLeçon.\n',
+  'content/blog/cat/sub/en/lesson.mdx': '---\ninherit: fr\n---\nLesson.\n',
 };
 
 const SCHEMAS = {
@@ -101,30 +104,75 @@ describe.each(['valibot', 'zod'])('createContentCollectionsSource (%s schema)', 
     expect(await source().directories()).toEqual({ blog: 'content/blog' });
   });
 
-  it('delivers valid documents without guessing generated export names', async () => {
-    const { documents } = await load(source());
+  it('delivers every parsed document with its frontmatter as written, flagged when the schema rejects it', async () => {
+    const { documents, diagnostics } = await load(source());
 
-    expect(documents.map((d) => [d.collection, d.sourcePath])).toEqual([
-      ['blog', 'cat/sub/en/ok.mdx'],
-      ['blog', 'cat/sub/ok.mdx'],
+    // Content Collections drops a file with unparsable YAML silently (no event, no document): figatellultimate reports
+    // it as `missing-document` because it lists paths itself, see the loadContent test below.
+    expect(diagnostics).toEqual([]);
+    expect(documents.map((d) => [d.sourcePath, d.written?.valid]).sort()).toEqual([
+      ['cat/sub/bad-type.mdx', false],
+      ['cat/sub/drafts/x.mdx', false],
+      ['cat/sub/en/lesson.mdx', false],
+      ['cat/sub/en/ok.mdx', true],
+      ['cat/sub/lesson.mdx', true],
+      ['cat/sub/no-title.mdx', false],
+      ['cat/sub/ok.mdx', true],
     ]);
     const ok = documents.find((d) => d.sourcePath === 'cat/sub/ok.mdx');
 
     expect(ok?.data).toEqual({ title: 'OK', tags: ['cello'], draft: false });
+    expect(ok?.written?.frontmatter).toEqual({ title: 'OK', tags: ['cello'] });
     expect(ok?.body).toContain('Body of ok.');
   });
 
-  it('maps errors to figatellultimate diagnostics: missing fields established by figatellultimate, others field by field', async () => {
-    const { diagnostics } = await load(source());
+  it('validates a frontmatter: missing fields established by figatellultimate, others field by field', async () => {
+    const instance = source();
+    const { documents } = await load(instance);
+    const rejected = documents.filter((d) => d.written?.valid === false && d.sourcePath !== 'cat/sub/en/lesson.mdx');
+    const diagnostics: Diagnostic[] = [];
 
-    // Content Collections drops a file with unparsable YAML silently (no event, no document): figatellultimate reports it
-    // as `missing-document` because it lists paths itself, see the loadContent test below.
-    expect(summarize(diagnostics)).toEqual([
+    for (const { collection, sourcePath, written } of rejected) {
+      const result = await instance.validate?.(collection, sourcePath, written?.frontmatter ?? {});
+
+      if (result?.ok === false) diagnostics.push(...result.errors);
+    }
+
+    expect(summarize(diagnostics).sort()).toEqual([
       ['cat/sub/bad-type.mdx', 'invalid-frontmatter-field', 'title'],
       ['cat/sub/drafts/x.mdx', 'missing-frontmatter-field', 'title'],
       ['cat/sub/no-title.mdx', 'missing-frontmatter-field', 'title'],
     ]);
     expect(diagnostics.every((d) => d.collection === 'blog' && d.severity === 'error')).toBe(true);
+    // Valid, validated: the schema's output, without the body.
+    expect(await instance.validate?.('blog', 'cat/sub/ok.mdx', { title: 'OK' })).toMatchObject({
+      ok: true,
+      value: { title: 'OK', tags: [], draft: false },
+    });
+  });
+
+  it('completes a translation from its other versions, validated by the user’s schema', async () => {
+    const assembly = await loadContent({
+      locales: defineLocales({ list: ['fr', 'en'], default: 'fr' }),
+      collections: {
+        blog: defineCollection({
+          entry: 'blogPost',
+          base: 'blog',
+          grammar: [segment('category'), segment('subcategory'), locale({ optional: true }), slug()],
+          shared: ['tags'],
+        }),
+      },
+      environment: { drafts: 'include', testContent: 'include' },
+      paths: createNodePathLister(FIXTURES),
+      source: source(),
+    });
+    const english = (key: string) =>
+      assembly.entries.find((e) => e.descriptor.key === key && e.descriptor.locale === 'en')?.data;
+
+    // `inherit: fr`: every field from the French version, the schema's defaults applied, the marker gone.
+    expect(english('cat/sub/lesson')).toEqual({ title: 'Lesson', tags: ['cello'], draft: false });
+    // `shared: ['tags']`: the tags it leaves out, its own title kept.
+    expect(english('cat/sub/ok')).toEqual({ title: 'OK (en)', tags: ['cello'], draft: false });
   });
 
   it('gives generated types the data type of a collection, at type level only, with a relative import', async () => {
@@ -182,6 +230,8 @@ describe('loadContent with Content Collections and the Node lister', () => {
       ['cat/sub/broken-yaml.mdx', 'missing-document', null],
     ]);
     expect(assembly.entries.map((e) => [e.descriptor.key, e.descriptor.locale, e.terms])).toEqual([
+      ['cat/sub/lesson', 'en', { tags: ['cello'] }],
+      ['cat/sub/lesson', 'fr', { tags: ['cello'] }],
       ['cat/sub/ok', 'en', { tags: [] }],
       ['cat/sub/ok', 'fr', { tags: ['cello'] }],
     ]);

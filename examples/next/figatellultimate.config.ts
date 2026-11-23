@@ -36,6 +36,8 @@ export default defineConfig({
       draft: 'draft',
       // `order`: a documentation's reading order, in the navigation, its section's list and its previous and next links.
       metadata: { ...metadata, order: 'order' },
+      // Written once, in French: a translation takes what it leaves out of these from the French version.
+      shared: ['featuredPictureUrl', 'order'],
     }),
     blog: defineCollection({
       entry: 'blogPost',
@@ -47,6 +49,8 @@ export default defineConfig({
       messages: { $root: ['description'], category: ['title', 'description'], subcategory: ['title', 'description'] },
       draft: 'draft',
       metadata: { ...metadata, publishedTime: 'date', tags: 'tags', type: 'article', schema: 'BlogPosting' },
+      // Written once, in French: a translation writes its title and description, the rest comes from the French post.
+      shared: ['featuredPictureUrl', 'date', 'authors', 'tags', 'updated'],
       // The blog, category and subcategory pages, mounted like entries.
       // Each folder's image for its previews and Open Graph: declared, else its newest post's.
       folderPages: {

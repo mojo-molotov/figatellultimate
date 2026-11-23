@@ -12,12 +12,14 @@
  *     - Metadata fields are named, never hard-coded: the site's metadata, sitemap, structured data and feeds read
  *       them.
  *     - Folder pages are declared per level, with an optional image per folder path.
+ *     - `shared` names the fields a translation takes from the default locale's version (`content/inherit.ts`).
  *
  * Invariants (`collection.test.ts`, `collection.test-d.ts`): every invalid declaration throws; segment names
  * inferred.
  */
 import type { GrammarPart, RouteNames, RoutePart, SegmentNames } from './grammar.js';
 import { isValidName } from '../shared/names.js';
+import { INHERIT_FIELD } from '../shared/inherit-field.js';
 
 /** Thrown by `defineCollection` on an invalid declaration (invalid configuration is the only case where core throws). */
 export class InvalidCollectionError extends Error {
@@ -89,6 +91,11 @@ export interface CollectionInput<E extends string, G extends readonly GrammarPar
   readonly draft?: string | null;
   /** Keys or key prefixes (`'x/*'`) of test-only content, excluded by the environment. */
   readonly testOnly?: readonly string[];
+  /**
+   * Frontmatter fields a translation takes from the default locale's version when it leaves them out (a cover, a
+   * date, the authors, the tags): written once. A field the translation writes is its own.
+   */
+  readonly shared?: readonly string[];
   /**
    * Fields every value of a segment must have in every locale's messages, per segment name; `$root`, the fields of
    * the collection's own page (`folderPages.root`), e.g. its description, at `content.<collection>.$`.
@@ -167,6 +174,7 @@ export interface Collection<E extends string = string, G extends readonly Gramma
   readonly references: Readonly<Record<string, string>>;
   readonly draft: string | null;
   readonly testOnly: readonly string[];
+  readonly shared: readonly string[];
   readonly messages: CollectionMessages<SegmentNames<G>>;
   readonly metadata: MetadataFields;
   readonly searchable: boolean;
@@ -341,6 +349,13 @@ export function defineCollection<const E extends string, const G extends readonl
     }
   }
 
+  const shared = input.shared ?? [];
+
+  if (shared.some((field) => typeof field !== 'string' || field === '' || field === INHERIT_FIELD))
+    fail(entry, `shared must list non-empty frontmatter fields, never "${INHERIT_FIELD}" (the inheritance marker)`);
+
+  if (new Set(shared).size !== shared.length) fail(entry, 'shared lists a field twice');
+
   const references = input.references ?? {};
 
   for (const [field, taxonomy] of Object.entries(references)) {
@@ -410,6 +425,7 @@ export function defineCollection<const E extends string, const G extends readonl
     references: Object.freeze({ ...references }),
     draft,
     testOnly: Object.freeze([...testOnly]),
+    shared: Object.freeze([...shared]),
     metadata: Object.freeze({ ...(input.metadata ?? {}) }),
     searchable,
     mounted,

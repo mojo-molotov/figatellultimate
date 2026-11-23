@@ -1,8 +1,6 @@
 ---
-featuredPictureUrl: '/covers/placeholder-196.jpeg'
 title: 'Writing content'
 metadescription: 'Folders, file names, languages, frontmatter, drafts and the diagnostics that keep the content right.'
-order: 4
 ---
 
 # Writing content
@@ -48,6 +46,23 @@ tags: [release]
 
 # Launch
 ```
+
+### Translations
+
+A translation writes only what differs from the other version. The collection lists the fields its translations share, `shared`: a translation that leaves one of them out takes the default language’s value, and one it writes is its own. A file can also take every field it leaves out from another language, with `inherit:`.
+
+```ts
+blog: defineCollection({ …, shared: ['featuredPictureUrl', 'date', 'authors', 'tags'] }),
+```
+
+```mdx
+---
+title: 'Launch'
+description: 'What the first version brings.'
+---
+```
+
+The completed frontmatter is checked by the schema, as a file’s: a required shared field with no version in the default language to take it from is an error, as is an `inherit:` naming a language with no version of the page.
 
 ## Drafts and test content
 

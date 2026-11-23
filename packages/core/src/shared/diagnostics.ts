@@ -123,6 +123,26 @@ export type InvalidFrontmatterFieldDiagnostic = DiagnosticOf<
 export type InvalidFrontmatterDiagnostic = DiagnosticOf<'invalid-frontmatter', 'error', { readonly message: string }>;
 /** A file the content source could not read. */
 export type UnreadableSourceDiagnostic = DiagnosticOf<'unreadable-source', 'error', { readonly message: string }>;
+/** `inherit:` names a locale the site does not declare; the closest locales suggested. */
+export type UnknownInheritLocaleDiagnostic = DiagnosticOf<
+  'unknown-inherit-locale',
+  'error',
+  { readonly locale: string }
+>;
+/** `inherit:` names a locale with no version of this entry (same key) to take its fields from. */
+export type MissingInheritSourceDiagnostic = DiagnosticOf<
+  'missing-inherit-source',
+  'error',
+  { readonly locale: string; readonly key: string }
+>;
+/** Versions inheriting from each other in a loop (`fr` from `en`, `en` from `fr`): no field to start from. */
+export type InheritCycleDiagnostic = DiagnosticOf<'inherit-cycle', 'error', { readonly locales: readonly string[] }>;
+/** A required `shared` field a translation leaves out, with no version in the default locale to take it from. */
+export type MissingSharedFieldDiagnostic = DiagnosticOf<
+  'missing-shared-field',
+  'error',
+  { readonly field: string; readonly locale: string; readonly key: string }
+>;
 /** A listed file for which the content source produced no document (often unclosed YAML). */
 export type MissingDocumentDiagnostic = DiagnosticOf<'missing-document', 'error', Readonly<Record<string, never>>>;
 /** A reference to a term the taxonomy does not declare; the closest terms suggested. */
@@ -202,6 +222,10 @@ export type ErrorDiagnostic =
   | MissingFrontmatterFieldDiagnostic
   | InvalidFrontmatterFieldDiagnostic
   | InvalidFrontmatterDiagnostic
+  | UnknownInheritLocaleDiagnostic
+  | MissingInheritSourceDiagnostic
+  | InheritCycleDiagnostic
+  | MissingSharedFieldDiagnostic
   | UnreadableSourceDiagnostic
   | MissingDocumentDiagnostic
   | UnknownTaxonomyTermDiagnostic
