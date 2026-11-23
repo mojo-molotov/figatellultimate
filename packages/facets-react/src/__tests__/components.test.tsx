@@ -58,6 +58,8 @@ const FACET: FacetOptionsLabels = {
   term: (term) => `«terme ${term}»`,
   clear: '«effacer»',
 };
+/** The browser family runs these tests in real browsers, where `react-dom/server` does not run. */
+const inBrowser = !navigator.userAgent.includes('HappyDOM');
 const SORT: SortSelectLabels = { trigger: '«trier»', sort: (sort) => `«tri ${sort}»` };
 const JUMP: PageSelectLabels = {
   trigger: '«aller à la page»',
@@ -332,20 +334,24 @@ describe('sort select', () => {
     expect(screen.getByRole('combobox', { name: '«trier»' }).textContent).toContain('«tri date-asc»');
   });
 
-  it('shows the current sort’s name from the first render, the prerendered page’s included', async () => {
-    // Left to Radix, the value fills a render later: the trigger widened as it mounted, and a toolbar wrapping on a
-    // phone pushed the page below it, the pagination included, at every page change.
-    const { renderToString } = await import('react-dom/server');
+  // Server rendering: `react-dom/server` runs in Node (happy-dom), not in the browser family's pages.
+  it.skipIf(inBrowser)(
+    'shows the current sort’s name from the first render, the prerendered page’s included',
+    async () => {
+      // Left to Radix, the value fills a render later: the trigger widened as it mounted, and a toolbar wrapping on a
+      // phone pushed the page below it, the pagination included, at every page change.
+      const { renderToString } = await import('react-dom/server');
 
-    function Prerendered(): ReactNode {
-      const binding = useFacetedCollection(engine, { search: '?sort=date-asc', navigate: () => undefined });
+      function Prerendered(): ReactNode {
+        const binding = useFacetedCollection(engine, { search: '?sort=date-asc', navigate: () => undefined });
 
-      return <SortSelect binding={binding} labels={SORT} />;
-    }
-    const html = renderToString(<Prerendered />);
+        return <SortSelect binding={binding} labels={SORT} />;
+      }
+      const html = renderToString(<Prerendered />);
 
-    expect(html).toMatch(/data-slot="sort-select-value"[^>]*>«tri date-asc»</);
-  });
+      expect(html).toMatch(/data-slot="sort-select-value"[^>]*>«tri date-asc»</);
+    },
+  );
 
   it('keyboard: Escape closes without changing the sort', async () => {
     const { user, history } = renderListing();
