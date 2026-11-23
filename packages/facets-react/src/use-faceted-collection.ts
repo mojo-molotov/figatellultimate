@@ -24,6 +24,8 @@ export interface FacetedCollectionBinding {
   readonly dispatch: (action: Action) => void;
   /** A real `href` for an action, e.g. pagination links (`?` when the state is the default one). */
   readonly hrefFor: (action: Action) => string;
+  /** Loads ahead what an action's navigation would fetch (the URL adapter's `prefetch`), e.g. the next page's. */
+  readonly prefetchFor: (action: Action) => void;
   /** The sort registry's names, the default first: what a sort select offers. */
   readonly sorts: readonly string[];
 }
@@ -54,7 +56,7 @@ const modeOf = (
  * @param options - `mode`: how actions navigate, for every action or per kind; default `push` for a page change,
  *   `replace` for a filter, a clear or a sort (Back returns to the previous page, but leaves the list instead of
  *   undoing each filter).
- * @returns The state read from the URL, the view (keys only), `dispatch`, `hrefFor` and the sorts. The page
+ * @returns The state read from the URL, the view (keys only), `dispatch`, `hrefFor`, `prefetchFor` and the sorts. The page
  *   remembered before the first selection is kept here, never in the URL.
  *
  * @example
@@ -83,17 +85,33 @@ export function useFacetedCollection<I>(
     },
     [engine, state, url, option],
   );
+  // A page change's query string, written at once: whatever the strategy, a page change goes to the page asked for,
+  // clamped, and forgets the remembered page (`reconcile.ts`). A transition would order the list twice for it, and a
+  // pagination asks for one per page it links to, or lists in an ellipsis' menu.
+  const searchOf = useCallback(
+    (action: Action): string =>
+      action.type === 'page'
+        ? engine.write({ facets: state.facets, sort: state.sort, page: Math.min(Math.max(1, action.page), view.pages) })
+        : engine.transition(state, action).search,
+    [engine, state, view.pages],
+  );
   const hrefFor = useCallback(
     (action: Action) => {
-      const search = engine.transition(state, action).search;
+      const search = searchOf(action);
 
       // The adapter's own href when it has one (a listing paginated in its path); else the query, `?` for none.
       return url.href?.(search) ?? (search === '' ? '?' : search);
     },
-    [engine, state, url],
+    [searchOf, url],
+  );
+  const prefetchFor = useCallback(
+    (action: Action) => {
+      url.prefetch?.(searchOf(action));
+    },
+    [searchOf, url],
   );
 
-  return { state, view, dispatch, hrefFor, sorts: engine.sorts };
+  return { state, view, dispatch, hrefFor, prefetchFor, sorts: engine.sorts };
 }
 
 const subscribe = (onChange: () => void): (() => void) => {

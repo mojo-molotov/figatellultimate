@@ -148,6 +148,10 @@ export function usePagedCollection<T, I extends { readonly items: readonly T[] }
 
         return url.href?.(search) ?? (search === '' ? '?' : search);
       },
+      // A prerendered page loaded ahead; a selection has nothing to load but the index (`prefetch`).
+      prefetchFor: (action) => {
+        if (action.type === 'page') url.prefetch?.(searchOf(action.page));
+      },
       sorts: engine.sorts,
     };
   }, [paged, index, live, engine, selecting, url, prefetch]);

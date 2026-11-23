@@ -12,6 +12,9 @@
  *       each item marked `data-layout="wide"` or `"narrow"` when it belongs to one only, an ellipsis's menu listing,
  *       on a narrow screen (`--fig-pagination-layout: narrow`, read as it opens), the siblings hidden beside it. The stylesheet shows the one the screen has room for, so a
  *       phone's pagination fits one line; no script picks it, and nothing shifts once hydrated.
+ *     - The pages beside the current one are loaded ahead once it shows, and a page as the pointer or the focus
+ *       reaches its link (`prefetchFor`, the URL adapter's `prefetch`): a reader moving through the list never waits
+ *       for the network, not even on the first visit after a deployment, when no cache holds a page yet.
  *     - Focus follows a page change made from the pagination: the activated link may be gone.
  *     - The pagination keeps its place on the screen after a page change made from it, so that the pointer stays on
  *       the same button: a last page holding fewer items makes the page shorter or taller above the pagination. Its
@@ -26,7 +29,8 @@
  *       on a narrow screen while the label stays the link's accessible name.
  *
  * Invariants (`components.test.tsx`): axe with an ellipsis menu open, keyboard, disabled ends, no pagination for a
- * single page, a modified click left to the browser, the locale's digits, the app's icons beside the steps' names; its
+ * single page, the neighbours and the hovered or focused page loaded ahead, never past an end, a modified click left
+ * to the browser, the locale's digits, the app's icons beside the steps' names; its
  * place on the screen across a page change that changes the page's height, in a real browser
  * (`pagination-layout.test.tsx`), and across Next's remount on the example (`examples/next/scripts/browse.ts`).
  *
@@ -36,12 +40,15 @@
 import { responsivePaginationItems, type Action } from '@figatellultimate/facets';
 import { Direction, DropdownMenu, Slot } from 'radix-ui';
 import {
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
   type ComponentProps,
+  type FocusEvent,
   type MouseEvent,
+  type PointerEvent,
   type ReactNode,
   type RefObject,
 } from 'react';
@@ -171,6 +178,16 @@ export function Pagination({
     currentLink.current?.focus({ preventScroll: true });
   }, [href]);
 
+  // The pages beside this one loaded ahead once it shows, previous and next: a reader moving through the list
+  // never waits for the network, even on the first visit after a deployment (a cold cache).
+  const pages = binding.view.pages;
+  const { prefetchFor } = binding;
+
+  useEffect(() => {
+    for (const neighbour of [page - 1, page + 1])
+      if (neighbour >= 1 && neighbour <= pages) prefetchFor({ type: 'page', page: neighbour });
+  }, [page, pages, prefetchFor]);
+
   const go =
     (target: number) =>
     (event: MouseEvent<HTMLAnchorElement>): void => {
@@ -282,7 +299,15 @@ export interface PaginationLinkProps extends LinkProps {
  * @returns The link, followed without reloading (a modified click is the browser's); the current page's carries
  *   `aria-current="page"` and `data-current`.
  */
-export function PaginationLink({ page, asChild, children, onClick, ...props }: PaginationLinkProps): ReactNode {
+export function PaginationLink({
+  page,
+  asChild,
+  children,
+  onClick,
+  onPointerEnter,
+  onFocus,
+  ...props
+}: PaginationLinkProps): ReactNode {
   const { binding, labels, go, format, currentLink } = use('PaginationLink');
   const current = page === binding.state.page;
   const Element = asChild === true ? Slot.Root : 'a';
@@ -298,6 +323,17 @@ export function PaginationLink({ page, asChild, children, onClick, ...props }: P
       onClick={(event: MouseEvent<HTMLAnchorElement>) => {
         onClick?.(event);
         go(page)(event);
+      }}
+      // The page loaded ahead as the pointer or the focus reaches it: its click shows it at once.
+      onPointerEnter={(event: PointerEvent<HTMLAnchorElement>) => {
+        onPointerEnter?.(event);
+
+        if (!current) binding.prefetchFor({ type: 'page', page });
+      }}
+      onFocus={(event: FocusEvent<HTMLAnchorElement>) => {
+        onFocus?.(event);
+
+        if (!current) binding.prefetchFor({ type: 'page', page });
       }}
       {...props}
     >
@@ -315,6 +351,8 @@ function Step({
   asChild,
   children,
   onClick,
+  onPointerEnter,
+  onFocus,
   ...props
 }: LinkProps & {
   readonly stepSlot: string;
@@ -335,6 +373,14 @@ function Step({
             onClick: (event: MouseEvent<HTMLAnchorElement>) => {
               onClick?.(event);
               go(stepPage)(event);
+            },
+            onPointerEnter: (event: PointerEvent<HTMLAnchorElement>) => {
+              onPointerEnter?.(event);
+              binding.prefetchFor({ type: 'page', page: stepPage });
+            },
+            onFocus: (event: FocusEvent<HTMLAnchorElement>) => {
+              onFocus?.(event);
+              binding.prefetchFor({ type: 'page', page: stepPage });
             },
           }
         : { role: 'link', 'aria-disabled': true, 'data-disabled': '' })}
@@ -407,6 +453,22 @@ export interface PaginationEllipsisProps extends ComponentProps<typeof DropdownM
 }
 
 /**
+ * An ellipsis' menu items, built only as the menu opens: rendered inside its content, which Radix mounts while open,
+ * so that a closed menu of hundreds of hidden pages computes none of their links.
+ */
+function EllipsisItems({ pages }: { readonly pages: readonly number[] }): ReactNode {
+  const { binding, labels, go, format } = use('PaginationEllipsis');
+
+  return pages.map((page) => (
+    <DropdownMenu.Item key={page} asChild data-slot="pagination-ellipsis-item">
+      <a href={binding.hrefFor({ type: 'page', page })} aria-label={labels.page(page)} onClick={go(page)}>
+        {format(page)}
+      </a>
+    </DropdownMenu.Item>
+  ));
+}
+
+/**
  * An ellipsis: a menu button listing the pages it hides, each a real link.
  *
  * @param props - The hidden pages (and those it hides on a narrow screen), and the trigger's props; `children` replace the "…".
@@ -418,7 +480,7 @@ export function PaginationEllipsis({
   children,
   ...props
 }: PaginationEllipsisProps): ReactNode {
-  const { binding, labels, navigated, go, format } = use('PaginationEllipsis');
+  const { labels, navigated } = use('PaginationEllipsis');
   const trigger = useRef<HTMLButtonElement>(null);
   // The layout the stylesheet shows, read as the menu opens (after hydration: nothing shifts): on a narrow screen,
   // the menu also lists the siblings hidden beside it there.
@@ -443,13 +505,7 @@ export function PaginationEllipsis({
             if (navigated.current) event.preventDefault();
           }}
         >
-          {listed.map((page) => (
-            <DropdownMenu.Item key={page} asChild data-slot="pagination-ellipsis-item">
-              <a href={binding.hrefFor({ type: 'page', page })} aria-label={labels.page(page)} onClick={go(page)}>
-                {format(page)}
-              </a>
-            </DropdownMenu.Item>
-          ))}
+          <EllipsisItems pages={listed} />
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>

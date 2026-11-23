@@ -39,6 +39,7 @@ const INDEX: Index = { items: POSTS, cards: Object.fromEntries(POSTS.map((post) 
 /** The hook over an in-memory URL: `navigated` records each navigation, `load` counts the index's fetches. */
 function setup(search: string, options: { readonly paged?: PagedSlice; readonly fail?: boolean } = {}) {
   const navigated: { readonly search: string; readonly mode: string }[] = [];
+  const prefetched: string[] = [];
   let resolve: (index: Index) => void = () => undefined;
   let reject: (error: Error) => void = () => undefined;
   const load = vi.fn(
@@ -54,6 +55,9 @@ function setup(search: string, options: { readonly paged?: PagedSlice; readonly 
     navigate(next, { mode }) {
       navigated.push({ search: next, mode });
       at.search = next;
+    },
+    prefetch(next) {
+      prefetched.push(next);
     },
   });
   const hook = renderHook(
@@ -71,6 +75,7 @@ function setup(search: string, options: { readonly paged?: PagedSlice; readonly 
   return {
     ...hook,
     navigated,
+    prefetched,
     load,
     /** The URL changed: the hook reads it again, as a router would make it. */
     follow: () => {
@@ -114,6 +119,15 @@ describe('usePagedCollection', () => {
       result.current.binding.dispatch({ type: 'page', page: 3 });
     });
     expect(navigated).toEqual([{ search: '?page=3', mode: 'push' }]);
+    expect(load).not.toHaveBeenCalled();
+  });
+
+  it('loads a default page ahead by its URL alone, a selection asking for nothing but the index', () => {
+    const { result, prefetched, load } = setup('', { paged: PAGED });
+
+    result.current.binding.prefetchFor({ type: 'page', page: 3 });
+    result.current.binding.prefetchFor({ type: 'toggle', facet: 'tags', value: 'harp' });
+    expect(prefetched).toEqual(['?page=3']);
     expect(load).not.toHaveBeenCalled();
   });
 

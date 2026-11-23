@@ -118,6 +118,19 @@ try {
   );
   await filtered.close();
 
+  // The next page loaded ahead once a listing shows, before any click: its payload, through Next's router.
+  {
+    const ahead = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+    const asked: string[] = [];
+
+    ahead.on('request', (request) => {
+      if (request.headers()['rsc'] !== undefined) asked.push(new URL(request.url()).pathname);
+    });
+    await ahead.goto(`${base}${LISTING}`, { waitUntil: 'networkidle' });
+    check(asked.includes(`${LISTING}/page/2`), `${LISTING}: its next page not loaded ahead (${JSON.stringify(asked)})`);
+    await ahead.close();
+  }
+
   // A filter chosen before the index arrives is applied once it is here, never lost.
   const early = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 
@@ -565,6 +578,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
+    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next page loaded ahead; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
   );
 }

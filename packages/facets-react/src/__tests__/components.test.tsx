@@ -88,6 +88,8 @@ function renderListing(
   locale = 'fr',
 ) {
   const history: string[] = [];
+  // What the pagination asked to load ahead, in order.
+  const prefetched: string[] = [];
   let latest: FacetedCollectionBinding | undefined;
 
   function Listing(): ReactNode {
@@ -97,6 +99,9 @@ function renderListing(
       navigate(next) {
         history.push(next);
         setSearch(next);
+      },
+      prefetch(next) {
+        prefetched.push(next);
       },
     });
 
@@ -121,6 +126,7 @@ function renderListing(
   return {
     user,
     history,
+    prefetched,
     binding: (): FacetedCollectionBinding => {
       if (latest === undefined) throw new Error('not rendered');
 
@@ -420,6 +426,82 @@ describe('page select', () => {
 });
 
 describe('pagination', () => {
+  it('loads the pages beside the current one ahead, again after each change, and a page under the pointer or the focus', async () => {
+    const { user, prefetched } = renderListing('?page=5');
+
+    // Once shown: the previous and the next page.
+    expect(prefetched).toEqual(['?page=4', '?page=6']);
+    prefetched.length = 0;
+    await user.hover(screen.getByRole('link', { name: '«page 10»' }));
+    expect(prefetched).toEqual(['?page=10']);
+    prefetched.length = 0;
+    screen.getByRole('link', { name: '«précédent»' }).focus();
+    expect(prefetched).toEqual(['?page=4']);
+    prefetched.length = 0;
+    await user.click(screen.getByRole('link', { name: '«suivant»' }));
+    // Page 6 now: its neighbours, the first page having none before it.
+    expect(prefetched).toEqual(expect.arrayContaining(['?page=5', '?page=7']));
+  });
+
+  it.each(['', '?tags=bot', '?tags=bot&page=3', '?page=7&sort=date-asc'])(
+    'links each page to what the engine would navigate to, out of bounds included (%s)',
+    (search) => {
+      const { binding } = renderListing(search);
+      const pages = binding().view.pages;
+
+      for (let page = -1; page <= pages + 2; page++) {
+        const { search: expected } = engine.transition(binding().state, { type: 'page', page });
+
+        expect(binding().hrefFor({ type: 'page', page }), String(page)).toBe(expected === '' ? '?' : expected);
+      }
+    },
+  );
+
+  it('runs no transition to render a pagination of hundreds of pages, its ellipsis menus closed or open', async () => {
+    // A transition once ran for every page a link or a closed menu named: half a second a render at 500 pages.
+    let transitions = 0;
+    const big = defineFacetedCollection<number>({
+      items: Array.from({ length: 1000 }, (_, i) => i),
+      key: String,
+      facets: { parity: { values: (n) => [n % 2 === 0 ? 'even' : 'odd'] } },
+      sorts: { given: () => 0 },
+      perPage: 2,
+    });
+    const counted: Engine<number> = {
+      ...big,
+      transition: (state, action) => {
+        transitions += 1;
+
+        return big.transition(state, action);
+      },
+    };
+
+    function Big(): ReactNode {
+      const [search, setSearch] = useState('?page=250');
+      const binding = useFacetedCollection(counted, { search, navigate: setSearch });
+
+      return <Pagination binding={binding} labels={PAGES} locale="fr" />;
+    }
+
+    render(<Big />);
+    const user = userEvent.setup();
+
+    // Precondition: hundreds of pages, behind ellipses.
+    expect(screen.getAllByRole('button', { name: /«pages/ }).length).toBeGreaterThan(0);
+    await user.click(screen.getAllByRole('button', { name: /«pages/ })[0] ?? document.body);
+    expect(screen.getAllByRole('menuitem').length).toBeGreaterThan(100);
+    expect(transitions).toBe(0);
+  });
+
+  it('loads nothing ahead past either end, nor the current page itself', async () => {
+    const { user, prefetched } = renderListing('');
+
+    expect(prefetched).toEqual(['?page=2']);
+    prefetched.length = 0;
+    await user.hover(screen.getByRole('link', { name: '«page 1 sur 10»' }));
+    expect(prefetched).toEqual([]);
+  });
+
   it('passes axe, closed and with an ellipsis menu open', async () => {
     const { user } = renderListing('?page=5');
 

@@ -20,6 +20,7 @@ afterEach(() => {
   vi.restoreAllMocks();
   router.push.mockClear();
   router.replace.mockClear();
+  router.prefetch.mockClear();
 });
 
 describe('useNextUrl', () => {
@@ -64,6 +65,19 @@ describe('useNextUrl', () => {
     result.current.navigate('?tags=bot&page=2', { mode: 'push' });
     expect(push).toHaveBeenCalledWith(null, '', '/blog/news?tags=bot&page=2');
     expect(router.push).toHaveBeenCalledTimes(1);
+  });
+
+  it('loads a default page ahead through the router, never a view in the query, which fetches nothing', () => {
+    at.pathname = '/blog/news/page/2';
+    at.search = '';
+    const { result } = renderHook(() => useNextUrl({ first: '/blog/news' }));
+
+    result.current.prefetch?.('?page=3');
+    result.current.prefetch?.('');
+    result.current.prefetch?.('?tags=bot');
+    expect(router.prefetch.mock.calls).toEqual([['/blog/news/page/3'], ['/blog/news']]);
+    // Without a listing paginated in its path, every view is in the query: nothing to load ahead.
+    expect('prefetch' in renderHook(() => useNextUrl()).result.current).toBe(false);
   });
 
   it.each([

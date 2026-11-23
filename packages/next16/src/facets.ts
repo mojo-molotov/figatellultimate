@@ -6,15 +6,17 @@
  *       (`useSearchParams` follows), so a filter, a sort or a page change sends no request, where the router would
  *       fetch the same static page's payload again for every click.
  *     - A listing paginated in its path (`first`, its own URL): its default pages are prerendered pages
- *       (`/blog/news/page/2`), reached through the router, which fetches the page with its slice; any other view
+ *       (`/blog/news/page/2`), reached through the router, which fetches the page with its slice, and loaded ahead
+ *       through it (`prefetch`, the pagination's neighbours and the link under the pointer); any other view
  *       stays in the query on the listing's URL, through the History API (`pagedHref`, `pagedSearch` of
  *       `@figatellultimate/facets`). A location it never writes (`/blog/news/page/3?tags=bot`, `/blog/news?page=2`) is
  *       replaced, once read, by the view's own: the address shows what the page shows, and a default page gets its
  *       slice from the server.
  *
  * Invariants (`facets.test.ts`): the History API for any view in the query, never the router; with `first`, the
- * router for a default page, its number read from the path, its links in the path; a location it never writes
- * corrected, the others left alone.
+ * router for a default page, its number read from the path, its links in the path, a default page loaded ahead
+ * through the router and nothing for a view in the query; a location it never writes corrected, the others left
+ * alone.
  */
 'use client';
 
@@ -74,6 +76,12 @@ export function useNextUrl(options: NextUrlOptions = {}): UrlAdapter {
         else history(href, mode);
       },
       href: (next) => pagedHref(first, next),
+      // A default page's payload loaded ahead through the router, which keeps it; a view in the query fetches nothing.
+      prefetch(next) {
+        const href = pagedHref(first, next);
+
+        if (!href.includes('?')) router.prefetch(href);
+      },
     };
   }, [raw, pathname, first, router]);
 
