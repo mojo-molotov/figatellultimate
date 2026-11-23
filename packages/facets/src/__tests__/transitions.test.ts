@@ -142,3 +142,16 @@ describe('backToFirstPage', () => {
     expect(first.transition(before, { type: 'sort', sort: 'date-asc' }).state.page).toBe(1);
   });
 });
+
+describe('a page change, whatever the strategy', () => {
+  it('goes to the page asked for, clamped: a strategy only decides filters and sorts', () => {
+    // A strategy sending every transition to page 1 once sent a page change there too: the pagination went nowhere.
+    const firstPage = engine(() => ({ page: 1 }));
+    const before = firstPage.read('');
+
+    expect(firstPage.transition(before, { type: 'page', page: 2 }).state.page).toBe(2);
+    expect(firstPage.transition(before, { type: 'page', page: 99 }).search).toBe('?page=3');
+    // Its filters still follow it.
+    expect(firstPage.transition(firstPage.read('?page=2'), { type: 'sort', sort: 'date-asc' }).state.page).toBe(1);
+  });
+});

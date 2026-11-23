@@ -68,7 +68,8 @@ export interface ReconcileInput {
 }
 
 /**
- * Chooses the page after a transition, and what to remember. Pure.
+ * Chooses the page after a filter, a clear or a sort, and what to remember. Pure. Never asked about a page change,
+ * which the engine settles itself: the page asked for, clamped.
  *
  * @param input - The state before and after the action, the keys visible before, every key after, the page size.
  * @returns The page (the engine clamps it) and, optionally, the page to remember while a selection lasts.
@@ -140,6 +141,11 @@ export interface UrlAdapter {
    * page. A listing paginated in its path gives `/…/page/N` for a default page (`pagedHref`).
    */
   href?(search: string): string;
+  /**
+   * Loads ahead what navigating to a query string would fetch, e.g. a prerendered page's payload through the router
+   * (`/…/page/N`), so that its click shows it at once. Nothing to do when navigating fetches nothing (the History API).
+   */
+  prefetch?(search: string): void;
 }
 
 /** What a selection shows. */

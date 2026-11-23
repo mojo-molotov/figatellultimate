@@ -225,19 +225,37 @@ export function defineFacetedCollection<I>(definition: FacetedCollection<I>): En
         sort = action.sort;
       }
 
+      // A page change, the engine's own: the page asked for, clamped; the remembered page kept while no selection
+      // asks for it (as `keepReadingPosition` keeps it), whatever the strategy, which only decides filters and sorts.
+      if (action.type === 'page') {
+        const selected = Object.values(state.facets).some((values) => values.length > 0);
+        const paged: SelectionState = Object.freeze({
+          facets: state.facets,
+          sort: state.sort,
+          page: Math.min(Math.max(1, Math.trunc(action.page)), pagesOf(order(state).length)),
+          ...(selected || state.remembered === undefined ? {} : { remembered: state.remembered }),
+        });
+
+        return { state: paged, search: writeState(paged, facetNames, defaultSort) };
+      }
+
       const after: SelectionState = { facets, sort, page: state.page };
+      // The visible slice before, without the view's counts (a count per facet value, the whole list filtered for
+      // each): a transition only needs its keys. The order after, once.
+      const before = order(state);
+      const nextOrder = order(after);
       const { page, remembered } = reconcile({
         before: state,
         after,
         action,
-        previousKeys: view(state).keys,
-        nextOrder: order(after),
+        previousKeys: sliceOf(before, Math.min(Math.max(1, state.page), pagesOf(before.length))),
+        nextOrder,
         perPage,
       });
       const next: SelectionState = Object.freeze({
         facets: Object.freeze(facets),
         sort,
-        page: Math.min(Math.max(1, page), pagesOf(order(after).length)),
+        page: Math.min(Math.max(1, page), pagesOf(nextOrder.length)),
         ...(remembered === undefined ? {} : { remembered }),
       });
 

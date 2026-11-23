@@ -5,7 +5,8 @@
  * Decision table of `keepReadingPosition` (replayed by `transitions.test.ts`):
  *     action              selection after   page
  *     ─────────────────   ───────────────   ─────────────────────────────────────────────────────
- *     page                any               the page asked for (clamped); forgets the remembered page
+ *     page                any               the page asked for (clamped), settled by the engine for every
+ *                                           strategy; the remembered page kept while no selection
  *     sort                some              follows the first visible element
  *     add a value         some              follows the first visible element; remembers the page
  *                                           before the first selection

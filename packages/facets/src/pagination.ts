@@ -115,9 +115,11 @@ export function responsivePaginationItems(input: PaginationInput): readonly Resp
   const wide = paginationItems(input);
   const narrow = paginationItems({ ...input, siblings: 0 });
   const narrowGaps = narrow.flatMap((item) => (item.type === 'gap' ? [item.pages] : []));
+  // Each narrow gap's pages as a set: whether a gap lies in another is then linear, not quadratic.
+  const narrowSets = new Map(narrowGaps.map((gap) => [gap, new Set(gap)]));
   const shownNarrow = new Set(narrow.flatMap((item) => (item.type === 'page' ? [item.page] : [])));
   const containing = (pages: readonly number[]): readonly number[] =>
-    narrowGaps.find((gap) => pages.every((page) => gap.includes(page))) ?? pages;
+    narrowGaps.find((gap) => pages.every((page) => narrowSets.get(gap)?.has(page) === true)) ?? pages;
   const keyed: { readonly key: number; readonly item: ResponsivePaginationItem }[] = wide.map((item) =>
     item.type === 'page'
       ? { key: item.page, item: Object.freeze({ ...item, narrow: shownNarrow.has(item.page) }) }
@@ -128,7 +130,7 @@ export function responsivePaginationItems(input: PaginationInput): readonly Resp
   );
   // A narrow gap no wide gap lies in: the wide layout shows its pages, the narrow one hides them behind it.
   const covered = (gap: readonly number[]): boolean =>
-    wide.some((item) => item.type === 'gap' && item.pages.every((page) => gap.includes(page)));
+    wide.some((item) => item.type === 'gap' && item.pages.every((page) => narrowSets.get(gap)?.has(page) === true));
 
   for (const gap of narrowGaps.filter((pages) => !covered(pages)))
     keyed.push({
