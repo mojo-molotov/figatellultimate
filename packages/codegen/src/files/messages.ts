@@ -168,7 +168,8 @@ export function messageTypesFile(
           Object.keys(args).length === 0
             ? 'undefined'
             : Writers.objectType({
-                properties: Object.entries(args).map(([name, type]) => property(name, argumentType(type))),
+                // Quoted as the key is: ICU accepts names TypeScript does not take bare (`1st`, an emoji).
+                properties: Object.entries(args).map(([name, type]) => property(literal(name), argumentType(type))),
               }),
         ),
       ),

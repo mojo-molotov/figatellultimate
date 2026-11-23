@@ -53,6 +53,8 @@ const FR: Module = {
   home: {
     posts: '{count, plural, one {# billet} many {# billets} other {# billets}}',
     greeting: '{gender, select, female {Bienvenue} other {Bienvenu}} {name}, le {day, date}',
+    // Argument names ICU accepts, TypeScript not as a bare property name: a digit first, an emoji, a number.
+    badge: '{1st} {🎉} {0}',
     title: 'Accueil',
   },
 };
@@ -62,6 +64,7 @@ const EN: Module = {
   home: {
     posts: '{count, plural, one {# post} other {# posts}}',
     greeting: '{gender, select, female {Welcome} other {Welcome}} {name}, on {day, date}',
+    badge: '{1st} {🎉} {0}',
     title: 'Home',
   },
 };
@@ -184,6 +187,9 @@ const taxonomy: MessageKey = 'taxonomies.tags.bot.label';
 const posts: MessageTable['home.posts'] = { count: 3 };
 const greeting: MessageTable['home.greeting'] = { gender: 'female', name: 'Ada', day: new Date() };
 const open: MessageTable['home.greeting'] = { gender: 'anything', name: 2, day: 0 };
+const badge: MessageTable['home.badge'] = { '1st': 'gold', '🎉': 'party', 0: 'zero' };
+// @ts-expect-error every argument, whatever its name
+const half: MessageTable['home.badge'] = { '1st': 'gold' };
 const dir: 'ltr' | 'rtl' = localeInfo.en.dir;
 export async function load(): Promise<Messages> {
   return loadMessages('en');
@@ -195,7 +201,7 @@ const wrong: MessageTable['home.posts'] = { count: 'three' };
 const none: MessageTable['home.title'] = undefined; // no argument
 // @ts-expect-error 'home.title' takes no argument
 const extra: MessageTable['home.title'] = { name: 'x' };
-void [key, taxonomy, posts, greeting, open, dir, typo, wrong, none, extra];
+void [key, taxonomy, posts, greeting, open, badge, half, dir, typo, wrong, none, extra];
 `;
 
     expect(typecheck({ app })).toEqual([]);
@@ -224,7 +230,7 @@ describe('emit: the message skeleton', () => {
 const _ = '';
 export const schema = {
   ...skeleton,
-  home: { posts: _, greeting: _, title: _ },
+  home: { posts: _, greeting: _, badge: _, title: _ },
 } as const satisfies MessageSchema;
 
 export type AppMessages = MessagesOf<typeof schema>;

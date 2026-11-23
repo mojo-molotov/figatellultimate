@@ -92,6 +92,7 @@ export type Messages = {
   readonly "home": {
     readonly "posts": string;
     readonly "greeting": string;
+    readonly "badge": string;
     readonly "title": string;
   };
 };
@@ -104,12 +105,17 @@ export interface MessageTable {
   readonly "content.blog.patch-notes.bot.$.title": undefined;
   readonly "taxonomies.tags.bot.label": undefined;
   readonly "home.posts": {
-    readonly count: number;
+    readonly "count": number;
   };
   readonly "home.greeting": {
-    readonly gender: "female" | (string & {});
-    readonly name: string | number;
-    readonly day: Date | number;
+    readonly "gender": "female" | (string & {});
+    readonly "name": string | number;
+    readonly "day": Date | number;
+  };
+  readonly "home.badge": {
+    readonly "0": string | number;
+    readonly "1st": string | number;
+    readonly "🎉": string | number;
   };
   readonly "home.title": undefined;
 }
