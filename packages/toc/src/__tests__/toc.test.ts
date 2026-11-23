@@ -1,3 +1,4 @@
+import * as fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
 import { activeHeading, scrollFor, tocTree, visibleSections, type Heading, type ReadingState } from '../index.js';
@@ -301,5 +302,82 @@ describe('visibleSections', () => {
   it('the reading offset (a sticky header) hides what is under it', () => {
     expect(sections([-500, 40, 600], { offset: 60 })).toEqual([1, 2]);
     expect(sections([-500, 40, 600], { offset: 0 })).toEqual([0, 1, 2]);
+  });
+});
+
+describe('total, whatever it is given', () => {
+  /** Any number, the ones a caller should never pass included: what an anchor, a target or a previous may hold. */
+  const anything = fc.oneof(
+    fc.integer({ min: -5, max: 45 }),
+    fc.double({ noNaN: false }),
+    fc.constantFrom(Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, 0.5),
+  );
+  /** A page as the browser measures it: finite tops, a screen, a scroll within its range (none when it cannot scroll). */
+  const page = fc
+    .record({
+      tops: fc.array(fc.double({ min: -5000, max: 20_000, noNaN: true }), { maxLength: 40 }),
+      zone: fc.double({ min: 0, max: 200, noNaN: true }),
+      viewport: fc.double({ min: 100, max: 2000, noNaN: true }),
+      maxScroll: fc.oneof(fc.constant(0), fc.double({ min: 0, max: 20_000, noNaN: true })),
+      at: fc.double({ min: 0, max: 1, noNaN: true }),
+      anchor: fc.option(fc.record({ index: anything, scroll: anything }), { nil: undefined }),
+    })
+    .map(({ at, ...measured }) => ({ ...measured, scroll: measured.maxScroll * at }));
+
+  it('scrolls a click to a finite place within the page, for any heading and any anchor', () => {
+    fc.assert(
+      fc.property(page, anything, (measured, index) => {
+        const y = scrollFor(measured, index);
+
+        expect(Number.isFinite(y) && y >= 0 && y <= measured.maxScroll).toBe(true);
+      }),
+      // An anchor's index or scroll not a number once gave NaN: the anchor is now ignored, as the reading ignores it.
+      {
+        examples: [
+          [
+            {
+              tops: [0, 500],
+              zone: 0,
+              viewport: 800,
+              maxScroll: 400,
+              scroll: 100,
+              anchor: { index: Number.NaN, scroll: 0 },
+            },
+            1,
+          ],
+          [
+            {
+              tops: [0, 500],
+              zone: 0,
+              viewport: 800,
+              maxScroll: 400,
+              scroll: 100,
+              anchor: { index: 0, scroll: Number.NaN },
+            },
+            1,
+          ],
+        ],
+      },
+    );
+  });
+
+  it('reads a heading within the headings, -1 only without any, whatever the phase and the previous state', () => {
+    fc.assert(
+      fc.property(
+        page,
+        fc.constantFrom<ReadingState['phase']>('scroll', 'land', 'settle'),
+        fc.constantFrom<'up' | 'down'>('up', 'down'),
+        fc.record({ previous: anything, target: anything, baseline: anything }),
+        (measured, phase, direction, held) => {
+          const { active } = activeHeading({ ...measured, ...held, phase, direction });
+
+          expect(
+            measured.tops.length === 0
+              ? active === -1
+              : Number.isInteger(active) && active >= 0 && active < measured.tops.length,
+          ).toBe(true);
+        },
+      ),
+    );
   });
 });

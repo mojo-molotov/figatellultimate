@@ -32,7 +32,9 @@
  *       node; `index` is `0..n-1`; frozen.
  *     - `activeHeading` is total, `-1` only without headings; it moves one heading at a time while scrolling; every
  *       section near the end of a page is current over a share of the scroll.
- *     - `scrollFor` lands where `activeHeading` gives the clicked heading.
+ *     - `scrollFor` lands where `activeHeading` gives the clicked heading; it is total too, a finite scroll within
+ *       `[0, maxScroll]` for any page and any anchor, an unusable anchor ignored as `activeHeading` ignores it (a
+ *       property).
  *     - `visibleSections`: the sections overlapping the screen.
  *     - No DOM, framework, Node builtin or dependency (the `runtime` role's boundary rules).
  */
@@ -185,6 +187,20 @@ interface Page {
 }
 
 /**
+ * An anchor the headings can use: a heading's index (an integer within them) and a finite scroll; `undefined`
+ * otherwise, as if none. The library makes its anchors; any other one is ignored, never spread to a reading or a scroll.
+ */
+function usableAnchor(anchor: Anchor | undefined, count: number): Anchor | undefined {
+  return anchor !== undefined &&
+    Number.isInteger(anchor.index) &&
+    anchor.index >= 0 &&
+    anchor.index < count &&
+    Number.isFinite(anchor.scroll)
+    ? anchor
+    : undefined;
+}
+
+/**
  * Where each heading becomes current, as a scroll position: when its top reaches the reading line, which sweeps down
  * to the bottom of the screen over the last screen of scroll (`turns`). A slow scroll gives each its turn.
  *
@@ -285,7 +301,8 @@ export function scrollFor(page: Page, index: number): number {
 
   if (top === undefined) return page.scroll;
 
-  const at = activations(page);
+  const anchor = usableAnchor(page.anchor, page.tops.length);
+  const at = activations(anchor === undefined ? { ...page, anchor: undefined } : page);
   const own = top + page.scroll - page.zone;
   const turn = at[index] ?? own;
   const next = at[index + 1];
@@ -330,7 +347,7 @@ export function activeHeading(state: ReadingState): Reading {
   const valid = (index: number | undefined): index is number =>
     index !== undefined && Number.isInteger(index) && index >= 0 && index <= last;
   // Settling (load, resize) measures a new layout: an earlier landing's scroll means nothing there.
-  const anchor = phase !== 'settle' && valid(state.anchor?.index) ? state.anchor : undefined;
+  const anchor = phase !== 'settle' ? usableAnchor(state.anchor, tops.length) : undefined;
   const candidate = reading({ ...state, anchor });
   const target = valid(state.target) ? state.target : undefined;
 
