@@ -79,8 +79,8 @@ export async function BlogFolderPage({ folder }: { readonly folder: BlogFolder }
       <>
         {header}
         <main data-listing={Object.values(folder.segments).join('/')}>
-          <h1>{title}</h1>
           <Listing
+            heading={<h1>{title}</h1>}
             labels={labels}
             items={itemsOf(posts)}
             locale={locale}

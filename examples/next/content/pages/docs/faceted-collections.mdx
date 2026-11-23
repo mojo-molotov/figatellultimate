@@ -78,7 +78,7 @@ const binding = useFacetedCollection(engine, useNextUrl());
 
 `PageSelect` est une pagination compacte, les pages en liste déroulante, pour une barre d’outils ; la `Pagination` complète garde les liens. Chacune prend `icons` pour les liens précédent et suivant, seules affichées sur un écran étroit.
 
-`ListingOptions` range les facettes et le tri derrière un seul bouton, l’icône de l’application (une roue crantée) et le nombre de termes choisis : son panneau garde les widgets tels quels, pour qu’une barre d’outils tienne sur une ligne sur tout écran, le `PageSelect` à côté.
+`ListingOptions` range les facettes derrière un seul bouton, l’icône de l’application (une roue crantée) et le nombre de termes choisis : son panneau garde les widgets tels quels, ↑ et ↓ passant de l’un à l’autre, pour que les contrôles d’une liste tiennent sur une ligne sur tout écran, le tri à côté de la roue.
 
 `useNextUrl` change l’URL par l’API History, intégrée par le routeur de Next : aucune requête serveur par filtre. Hors de Next, `useHistoryUrl` fait de même.
 

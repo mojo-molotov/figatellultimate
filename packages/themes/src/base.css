@@ -263,16 +263,43 @@ main:is([data-listing], [data-folder]) {
   overflow-anchor: none;
 }
 
+/* A listing's heading and its compact pagination on one line, the pagination at its end; below the heading when they
+   do not fit, as a folder's heading and its pagination. */
 [data-slot='listing-toolbar'] {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fig-space) calc(var(--fig-space) * 2);
+  margin-bottom: calc(var(--fig-space) * 2);
+}
+
+[data-slot='listing-toolbar'] > :is(h1, h2) {
+  margin: 0;
+}
+
+/* The compact pagination at the toolbar's end. */
+[data-slot='listing-toolbar'] > [data-slot='page-select-trigger'] {
+  margin-inline-start: auto;
+}
+
+/* A single page: no compact pagination, and no empty line in its place. */
+[data-slot='listing-toolbar']:empty {
+  display: none;
+}
+
+/* The list's controls: its count at the start, the sort then the gear holding the filters at the end of the line. */
+[data-slot='listing-controls'] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: var(--fig-space);
   margin-bottom: calc(var(--fig-space) * 2);
 }
 
-/* The compact pagination at the toolbar's other end, apart from the filters and the sort. */
-[data-slot='listing-toolbar'] > [data-slot='page-select-trigger'] {
-  margin-inline-start: auto;
+[data-slot='listing-controls'] > [data-slot='listing-total'] {
+  margin: 0;
+  margin-inline-end: auto;
 }
 
 [data-slot='listing-cards'] {
@@ -783,6 +810,7 @@ main :is(h1, h2, h3, h4, h5, h6) {
 
   [data-slot='reveal']:has([data-slot='site-footer']),
   [data-slot='listing-toolbar'],
+  [data-slot='listing-controls'],
   [data-slot='listing-total'] {
     display: none;
   }

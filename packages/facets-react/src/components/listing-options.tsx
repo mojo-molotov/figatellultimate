@@ -1,8 +1,8 @@
 'use client';
 
 /**
- * A listing's options behind one button: the facets and the sort in a panel, opened by a gear, so that a toolbar
- * keeps one line whatever the screen and the sort's name, its compact pagination beside the gear.
+ * A listing's filters behind one button: the facets in a panel, opened by a gear, so that a listing's controls keep
+ * one line whatever the screen.
  *
  *     [data-slot='listing-options-trigger']   the button: the app's icon, then the count of selected terms
  *       ├─ [data-slot='listing-options-icon']   the app's icon (`icon`), hidden from assistive technologies
@@ -12,19 +12,21 @@
  * Key design decisions, as chosen with the user:
  *     - On every screen: one toolbar, never wrapping, rather than a row on a desktop and a gear on a phone (two
  *       instances of every widget).
- *     - The panel holds the widgets as they are (`FacetOptions`, `SortSelect`, `FacetsReset`): each opens its own list
- *       over the panel, a nested layer that never closes it. Rejected: lists unfolded in the panel, new components
- *       for the same choices.
+ *     - The panel holds the widgets as they are (`FacetOptions`, `FacetsReset`): each opens its own list over the
+ *       panel, a nested layer that never closes it. Rejected: lists unfolded in the panel, new components for the
+ *       same choices. The sort stays beside the gear, the app's to place: what the list shows, always in view.
+ *     - ↑ ↓ (Home, End) move from a widget to the next, as in a menu, wrapping around; a key inside a widget's own
+ *       list (its filter, its options) stays the widget's.
  *     - The count of selected terms on the gear, its name saying it too (`labels.trigger`): the filters hidden, the
  *       reader still sees some are on.
  *     - No icon and no text of its own: the app gives the gear (`icon`) and every text.
  *
  * Invariants (`components.test.tsx`): axe closed and open; the count of selected terms, absent without any, in the
- * name; a widget's list opened inside never closes the panel; Escape closes it, focus back on the gear; no text of its
- * own.
+ * name; a widget's list opened inside never closes the panel; ↑ ↓ Home End between its widgets, a widget's own keys
+ * left to it; Escape closes it, focus back on the gear; no text of its own.
  */
 import { Direction, Popover } from 'radix-ui';
-import type { ComponentProps, ReactNode } from 'react';
+import { useRef, type ComponentProps, type KeyboardEvent, type ReactNode } from 'react';
 
 import type { FacetedCollectionBinding } from '../use-faceted-collection.js';
 import { numberFormat } from './context.js';
@@ -47,12 +49,12 @@ export interface ListingOptionsProps extends Omit<ComponentProps<typeof Popover.
   readonly icon?: ReactNode;
   /** The reading direction, for the widgets' arrow keys. */
   readonly dir?: 'ltr' | 'rtl' | undefined;
-  /** The widgets the panel holds: the facets, the sort, the reset. */
+  /** The widgets the panel holds: the facets and their reset. */
   readonly children: ReactNode;
 }
 
 /**
- * The facets and the sort behind a gear: a button showing how many terms are selected, opening a panel of the widgets.
+ * The facets behind a gear: a button showing how many terms are selected, opening a panel of the widgets.
  *
  * @param props - The binding, the labels, the locale, the app's icon, the reading direction, and the widgets.
  * @returns The gear and its panel; the widgets inside keep their own lists, opened over the panel.
@@ -60,7 +62,7 @@ export interface ListingOptionsProps extends Omit<ComponentProps<typeof Popover.
  * @example
  * <ListingOptions binding={binding} labels={labels.options} locale="fr" icon={<Cog6ToothIcon />}>
  *   <FacetOptions binding={binding} facet="tags" labels={labels.tags} locale="fr" />
- *   <SortSelect binding={binding} labels={labels.sort} />
+ *   <FacetsReset binding={binding} labels={labels.reset} />
  * </ListingOptions>
  */
 export function ListingOptions({
@@ -73,6 +75,33 @@ export function ListingOptions({
   ...props
 }: ListingOptionsProps): ReactNode {
   const selected = Object.values(binding.state.facets).reduce((sum, values) => sum + values.length, 0);
+  const content = useRef<HTMLDivElement>(null);
+  // ↑ ↓ (Home, End) move from a widget to the next, as in a menu, wrapping around; a key in a widget's own list
+  // (its filter, its options), which bubbles here through React's tree, is the widget's.
+  const move = (event: KeyboardEvent<HTMLDivElement>): void => {
+    const panel = content.current;
+    const steps: Readonly<Record<string, (index: number, count: number) => number>> = {
+      ArrowDown: (index, count) => (index + 1) % count,
+      ArrowUp: (index, count) => (index - 1 + count) % count,
+      Home: () => 0,
+      End: (_, count) => count - 1,
+    };
+    const step = steps[event.key];
+
+    if (panel === null || step === undefined || !(event.target instanceof HTMLElement)) return;
+
+    if (event.target.parentElement !== panel) return;
+
+    const items = [...panel.children].filter(
+      (child): child is HTMLElement => child instanceof HTMLElement && child.tabIndex >= 0 && !child.hidden,
+    );
+    const index = items.indexOf(event.target);
+
+    if (index === -1) return;
+
+    event.preventDefault();
+    items[step(index, items.length)]?.focus();
+  };
   const panel = (
     <Popover.Root {...props}>
       <Popover.Trigger data-slot="listing-options-trigger" aria-label={labels.trigger(selected)}>
@@ -88,7 +117,14 @@ export function ListingOptions({
         )}
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content data-slot="listing-options-content" aria-label={labels.content} align="start" sideOffset={4}>
+        <Popover.Content
+          ref={content}
+          data-slot="listing-options-content"
+          aria-label={labels.content}
+          align="end"
+          sideOffset={4}
+          onKeyDown={move}
+        >
           {children}
         </Popover.Content>
       </Popover.Portal>

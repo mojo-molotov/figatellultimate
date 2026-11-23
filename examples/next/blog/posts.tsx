@@ -56,6 +56,8 @@ interface PostsProps {
   readonly facets?: readonly ('tags' | 'authors')[] | undefined;
   /** Paginated in its path: the page holds its slice only. */
   readonly paged?: Paged | undefined;
+  /** The page's heading, on the compact pagination's line when both fit (its own line otherwise). */
+  readonly heading?: ReactNode;
 }
 
 /** The interactive list: its state from the URL. */
@@ -88,6 +90,7 @@ function PostsView({
   facets = ['tags', 'authors'],
   labels,
   paged,
+  heading,
   url,
 }: PostsProps & { readonly url: UrlAdapter }): ReactNode {
   // The page's slice, then every post once a filter or a sort needs them (`usePagedCollection`).
@@ -118,9 +121,32 @@ function PostsView({
 
   return (
     <section data-listing="interactive">
-      {/* The index, fetched ahead as the reader heads for a filter or a sort. */}
-      <div data-slot="listing-toolbar" onPointerEnter={prefetch} onFocus={prefetch}>
-        {/* The facets and the sort behind a gear, its count the selected terms: one line on every screen. */}
+      {/* The page's heading and the compact pagination at the end of its line, below it when they do not fit; the
+          full pagination follows the cards. */}
+      <div data-slot="listing-toolbar">
+        {heading}
+        <PageSelect
+          binding={binding}
+          labels={{
+            trigger: labels.pagination.jump,
+            current: (page, pages) => formatPrecompiled(labels.pagination.short, locale, { page, pages }),
+          }}
+          locale={locale}
+          dir={dir}
+        />
+      </div>
+      {/* The count on the left; the sort, then the gear holding the filters, on the right. The index, fetched ahead
+          as the reader heads for a filter or a sort. */}
+      <div data-slot="listing-controls" onPointerEnter={prefetch} onFocus={prefetch}>
+        {/* How many posts the filters give, announced when they change: not to be mistaken for the selected tags' count. */}
+        <p data-slot="listing-total" role="status" aria-busy={paged !== undefined && index === undefined && selecting}>
+          {formatPrecompiled(labels.total, locale, { count: binding.view.total })}
+        </p>
+        <SortSelect
+          binding={binding}
+          labels={{ trigger: labels.sort.trigger, sort: (name) => labels.sort.names[name] ?? name }}
+          dir={dir}
+        />
         <ListingOptions
           binding={binding}
           labels={{
@@ -143,29 +169,10 @@ function PostsView({
               dir={dir}
             />
           ) : null}
-          <SortSelect
-            binding={binding}
-            labels={{ trigger: labels.sort.trigger, sort: (name) => labels.sort.names[name] ?? name }}
-            dir={dir}
-          />
           {/* Every facet cleared at once, the sort kept. */}
           <FacetsReset binding={binding} labels={{ reset: labels.reset }} />
         </ListingOptions>
-        {/* The compact pagination, at the toolbar's other end; the full one follows the cards. */}
-        <PageSelect
-          binding={binding}
-          labels={{
-            trigger: labels.pagination.jump,
-            current: (page, pages) => formatPrecompiled(labels.pagination.short, locale, { page, pages }),
-          }}
-          locale={locale}
-          dir={dir}
-        />
       </div>
-      {/* How many posts the filters give, announced when they change: not to be mistaken for the selected tags' count. */}
-      <p data-slot="listing-total" role="status" aria-busy={paged !== undefined && index === undefined && selecting}>
-        {formatPrecompiled(labels.total, locale, { count: binding.view.total })}
-      </p>
       <ol data-slot="listing-cards">
         {binding.view.keys.map((key) => (
           <li key={key}>{cardOf(key)}</li>

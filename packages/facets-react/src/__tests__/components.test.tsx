@@ -574,12 +574,15 @@ describe('pagination', () => {
 });
 
 describe('listing options', () => {
-  /** The facets and the sort behind the gear, as a toolbar holds them. */
+  /** The facets and their reset behind the gear, the sort beside it, as a listing holds them. */
   const options = (binding: FacetedCollectionBinding) => (
-    <ListingOptions binding={binding} labels={OPTIONS} locale="fr" icon={<svg data-test="gear" />}>
-      <FacetOptions binding={binding} facet="tags" labels={FACET} locale="fr" />
+    <>
       <SortSelect binding={binding} labels={SORT} />
-    </ListingOptions>
+      <ListingOptions binding={binding} labels={OPTIONS} locale="fr" icon={<svg data-test="gear" />}>
+        <FacetOptions binding={binding} facet="tags" labels={FACET} locale="fr" />
+        <FacetsReset binding={binding} labels={{ reset: '«réinitialiser»' }} />
+      </ListingOptions>
+    </>
   );
 
   it('passes axe, closed and open, the app’s icon hidden from assistive technologies', async () => {
@@ -622,6 +625,38 @@ describe('listing options', () => {
     // Precondition: the panel and its widgets rendered their texts.
     expect(texts()).toContain('«options de la liste»');
     expect(texts().filter((text) => !allowed(text))).toEqual([]);
+  });
+
+  it('keyboard: ↑ ↓ Home End move from a widget to the next, wrapping; a key in a widget’s list is the list’s', async () => {
+    const { user } = renderListing('?tags=bot', options);
+
+    screen.getByRole('button', { name: '«options 1»' }).focus();
+    await user.keyboard('{Enter}');
+    const tags = screen.getByRole('button', { name: '«déclencheur 1»' });
+    const reset = screen.getByRole('button', { name: '«réinitialiser»' });
+
+    expect(focused()).toBe(tags);
+
+    for (const [key, expected] of [
+      ['{ArrowDown}', reset],
+      ['{ArrowDown}', tags],
+      ['{ArrowUp}', reset],
+      ['{Home}', tags],
+      ['{End}', reset],
+    ] as const) {
+      await user.keyboard(key);
+      expect(focused(), key).toBe(expected);
+    }
+
+    // Inside the tags' list, ↓ moves through its options: the panel's focus stays where the list put it.
+    reset.focus();
+    tags.focus();
+    await user.keyboard('{Enter}');
+    const input = screen.getByRole('combobox', { name: '«filtrer»' });
+
+    expect(focused()).toBe(input);
+    await user.keyboard('{ArrowDown}');
+    expect(focused()).toBe(input);
   });
 
   it('keyboard: Enter opens the panel, Escape closes it, focus back on the gear', async () => {

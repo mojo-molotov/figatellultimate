@@ -259,7 +259,14 @@ try {
     // Every control its own box, a mouse or not: it once sat with its hover, kept to a mouse, and a phone's buttons
     // fell back to the browser's own look.
     const unstyled = await phone.evaluate(() =>
-      ['navbar-toggle', 'search-dialog-trigger', 'listing-options-trigger', 'page-select-trigger', 'pagination-next']
+      [
+        'navbar-toggle',
+        'search-dialog-trigger',
+        'sort-select-trigger',
+        'listing-options-trigger',
+        'page-select-trigger',
+        'pagination-next',
+      ]
         .map((slot) => [slot, document.querySelector(`[data-slot="${slot}"]`)] as const)
         .filter(([, element]) => {
           const style = element === null ? undefined : getComputedStyle(element);
@@ -272,19 +279,49 @@ try {
 
     check(unstyled.length === 0, `${LISTING} on ${device}: controls without their box: ${unstyled.join(', ')}`);
 
-    // The toolbar on one line on a phone, whatever the sort's name: the gear and the page select, the filters and the
-    // sort behind the gear (the longest sort's name once pushed the page select onto a line of its own).
-    if (!revealed) {
-      await phone.goto(`${base}${LISTING}?sort=title-asc`, { waitUntil: 'networkidle' });
-      const tops = await phone.evaluate(() =>
-        [...(document.querySelector('[data-slot="listing-toolbar"]')?.children ?? [])].map((child) =>
-          Math.round(child.getBoundingClientRect().top),
-        ),
-      );
+    // The heading and the compact pagination on one line when they fit (a desktop, and a phone for a short heading),
+    // the pagination below when they do not: always at the end of its line.
+    {
+      await phone.goto(`${base}${LISTING}`, { waitUntil: 'networkidle' });
+      const placed = await phone.evaluate(() => {
+        const row = document.querySelector('[data-slot="listing-toolbar"]')?.getBoundingClientRect();
+        const heading = document.querySelector('[data-slot="listing-toolbar"] > h1')?.getBoundingClientRect();
+        const select = document.querySelector('[data-slot="page-select-trigger"]')?.getBoundingClientRect();
+
+        return row === undefined || heading === undefined || select === undefined
+          ? undefined
+          : {
+              sameLine: Math.abs(heading.top + heading.height / 2 - (select.top + select.height / 2)) < 2,
+              below: select.top >= heading.bottom,
+              end: Math.round(row.right - select.right),
+            };
+      });
 
       check(
-        tops.length === 2 && new Set(tops).size === 1,
-        `${LISTING}?sort=title-asc on ${device}: the toolbar is not one line of the gear and the page select (${JSON.stringify(tops)})`,
+        placed !== undefined && placed.end === 0 && (revealed ? placed.sameLine : placed.sameLine || placed.below),
+        `${LISTING} on ${device}: the heading and the compact pagination not as expected (${JSON.stringify(placed)})`,
+      );
+    }
+
+    // The list's controls on one line on a phone, whatever the sort's name: the count at the start, the sort and the
+    // gear holding the filters at the end (the longest sort's name once pushed the page select onto a line of its own).
+    if (!revealed) {
+      await phone.goto(`${base}${LISTING}?sort=title-asc`, { waitUntil: 'networkidle' });
+      const line = await phone.evaluate(() => {
+        const row = document.querySelector('[data-slot="listing-controls"]')?.getBoundingClientRect();
+        const box = (slot: string) => document.querySelector(`[data-slot="${slot}"]`)?.getBoundingClientRect();
+        const parts = ['listing-total', 'sort-select-trigger', 'listing-options-trigger'].map(box);
+
+        return {
+          centres: parts.map((part) => (part === undefined ? -1 : Math.round(part.top + part.height / 2))),
+          start: Math.round((parts[0]?.left ?? -1) - (row?.left ?? 0)),
+          end: Math.round((row?.right ?? 0) - (parts[2]?.right ?? -1)),
+        };
+      });
+
+      check(
+        new Set(line.centres).size === 1 && !line.centres.includes(-1) && line.start === 0 && line.end === 0,
+        `${LISTING}?sort=title-asc on ${device}: the count, the sort and the gear are not one line, end to end (${JSON.stringify(line)})`,
       );
     }
 
@@ -528,6 +565,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; a filter in the URL, or chosen early, is applied; the toolbar on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
+    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
   );
 }

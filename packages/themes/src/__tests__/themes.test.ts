@@ -261,7 +261,11 @@ describe('base.css', () => {
   it('prints the article alone: no footer, no listing controls, no transition caught halfway', () => {
     const print = source.slice(source.indexOf('@media print'));
 
-    for (const hidden of ["[data-slot='site-footer']", "[data-slot='listing-toolbar']"])
+    for (const hidden of [
+      "[data-slot='site-footer']",
+      "[data-slot='listing-toolbar']",
+      "[data-slot='listing-controls']",
+    ])
       expect(print).toContain(hidden);
 
     expect(print).toMatch(/transition: none/);
