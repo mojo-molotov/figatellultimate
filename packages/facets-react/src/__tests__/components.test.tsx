@@ -429,8 +429,8 @@ describe('pagination', () => {
   it('loads the pages beside the current one ahead, again after each change, and a page under the pointer or the focus', async () => {
     const { user, prefetched } = renderListing('?page=5');
 
-    // Once shown: the previous and the next page.
-    expect(prefetched).toEqual(['?page=4', '?page=6']);
+    // Once shown: three pages on each side, nearest first, so that a burst of clicks never outruns them.
+    expect(prefetched).toEqual(['?page=6', '?page=4', '?page=7', '?page=3', '?page=8', '?page=2']);
     prefetched.length = 0;
     await user.hover(screen.getByRole('link', { name: '«page 10»' }));
     expect(prefetched).toEqual(['?page=10']);
@@ -439,8 +439,8 @@ describe('pagination', () => {
     expect(prefetched).toEqual(['?page=4']);
     prefetched.length = 0;
     await user.click(screen.getByRole('link', { name: '«suivant»' }));
-    // Page 6 now: its neighbours, the first page having none before it.
-    expect(prefetched).toEqual(expect.arrayContaining(['?page=5', '?page=7']));
+    // Page 6 now (reached through the link, itself loaded ahead under the pointer): its own three on each side.
+    expect(prefetched.slice(-6)).toEqual(['?page=7', '?page=5', '?page=8', '?page=4', '?page=9', '?page=3']);
   });
 
   it.each(['', '?tags=bot', '?tags=bot&page=3', '?page=7&sort=date-asc'])(
@@ -496,7 +496,8 @@ describe('pagination', () => {
   it('loads nothing ahead past either end, nor the current page itself', async () => {
     const { user, prefetched } = renderListing('');
 
-    expect(prefetched).toEqual(['?page=2']);
+    // Page 1: nothing before it, three after.
+    expect(prefetched).toEqual(['?page=2', '?page=3', '?page=4']);
     prefetched.length = 0;
     await user.hover(screen.getByRole('link', { name: '«page 1 sur 10»' }));
     expect(prefetched).toEqual([]);

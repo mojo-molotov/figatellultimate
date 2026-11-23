@@ -12,9 +12,11 @@
  *       each item marked `data-layout="wide"` or `"narrow"` when it belongs to one only, an ellipsis's menu listing,
  *       on a narrow screen (`--fig-pagination-layout: narrow`, read as it opens), the siblings hidden beside it. The stylesheet shows the one the screen has room for, so a
  *       phone's pagination fits one line; no script picks it, and nothing shifts once hydrated.
- *     - The pages beside the current one are loaded ahead once it shows, and a page as the pointer or the focus
- *       reaches its link (`prefetchFor`, the URL adapter's `prefetch`): a reader moving through the list never waits
- *       for the network, not even on the first visit after a deployment, when no cache holds a page yet.
+ *     - The pages around the current one (three on each side, nearest first) are loaded ahead once it shows, and a
+ *       page as the pointer, the focus or a finger reaches its link (`prefetchFor`, the URL adapter's `prefetch`): a
+ *       reader moving through the list, even clicking next in a burst, never waits for the network, not even on the
+ *       first visit after a deployment, when no cache holds a page yet. Rejected: the next page alone, which a burst
+ *       of clicks outran.
  *     - Focus follows a page change made from the pagination: the activated link may be gone.
  *     - The pagination keeps its place on the screen after a page change made from it, so that the pointer stays on
  *       the same button: a last page holding fewer items makes the page shorter or taller above the pagination. Its
@@ -29,7 +31,7 @@
  *       on a narrow screen while the label stays the link's accessible name.
  *
  * Invariants (`components.test.tsx`): axe with an ellipsis menu open, keyboard, disabled ends, no pagination for a
- * single page, the neighbours and the hovered or focused page loaded ahead, never past an end, a modified click left
+ * single page, three pages on each side and the hovered or focused page loaded ahead, never past an end, a modified click left
  * to the browser, the locale's digits, the app's icons beside the steps' names; its
  * place on the screen across a page change that changes the page's height, in a real browser
  * (`pagination-layout.test.tsx`), and across Next's remount on the example (`examples/next/scripts/browse.ts`).
@@ -61,6 +63,13 @@ import { createPartContext, isPlainClick, numberFormat } from './context.js';
  * an ellipsis as its menu opens: the breakpoint stays the stylesheet's.
  */
 const LAYOUT_PROPERTY = '--fig-pagination-layout';
+
+/**
+ * How far around the current page the pagination loads pages ahead: three on each side, so that clicking next in a
+ * burst keeps two clicks' lead over the network. A router keeps what it fetched: each page change asks for a page or
+ * two more, a few kilobytes each.
+ */
+const AHEAD = [1, 2, 3] as const;
 
 /** Every text of the pagination, visible or for assistive technologies: no default, no English. */
 export interface PaginationLabels {
@@ -178,13 +187,14 @@ export function Pagination({
     currentLink.current?.focus({ preventScroll: true });
   }, [href]);
 
-  // The pages beside this one loaded ahead once it shows, previous and next: a reader moving through the list
-  // never waits for the network, even on the first visit after a deployment (a cold cache).
+  // The pages around this one loaded ahead once it shows, nearest first: a reader moving through the list, even
+  // clicking next as fast as the pages come, never waits for the network, even on the first visit after a
+  // deployment, when a page takes a third of a second to arrive (a cold cache).
   const pages = binding.view.pages;
   const { prefetchFor } = binding;
 
   useEffect(() => {
-    for (const neighbour of [page - 1, page + 1])
+    for (const neighbour of AHEAD.flatMap((distance) => [page + distance, page - distance]))
       if (neighbour >= 1 && neighbour <= pages) prefetchFor({ type: 'page', page: neighbour });
   }, [page, pages, prefetchFor]);
 
