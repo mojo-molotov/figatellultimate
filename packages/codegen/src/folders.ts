@@ -106,7 +106,9 @@ export function folderData(
   // A folder's image: declared for its path, else its newest entry's (the collection's image field).
   const imageField = collection.metadata.image;
   const imageOf = (path: readonly string[], folderEntries: readonly Entry[]): { image?: string } => {
-    const chosen = path.length === 0 ? undefined : images[path.join('/')];
+    const at = path.join('/');
+    // Its own key only: a folder named `constructor` would find `Object.prototype`'s, a function, otherwise.
+    const chosen = path.length === 0 || !Object.hasOwn(images, at) ? undefined : images[at];
 
     if (chosen !== undefined) return { image: chosen };
 

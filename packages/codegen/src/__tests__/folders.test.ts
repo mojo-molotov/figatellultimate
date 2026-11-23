@@ -100,3 +100,40 @@ describe('folderData', () => {
     expect(folders.get('/en/blog')?.subfolders.map((s) => s.label)).toEqual(['content.blog.news.$.title']);
   });
 });
+
+describe('folderData: a folder named after an object property', () => {
+  it('takes its newest entry’s image when it declares none, even named `constructor`', () => {
+    // A plain object's lookup found `Object.prototype.constructor` for a folder of that name: its image was a function,
+    // dropped once written, and the folder had none.
+    const withImages = defineCollection({
+      ...blog,
+      metadata: { ...blog.metadata, image: 'cover' },
+      folderPages: { root: true, levels: ['category', 'subcategory'], images: { news: '/news.jpeg' } },
+    });
+    const sources = [{ collection: 'blog', sourcePath: 'constructor/sub/post.mdx' }];
+    const analysis = analyze({ locales, collections: { blog: withImages }, sources });
+    const assembly = assemble({
+      analysis,
+      documents: sources.map((s) => ({
+        ...s,
+        data: { title: 'Post', date: '2026-01-01', cover: '/post.jpeg' },
+        body: '',
+      })),
+      sourceDiagnostics: [],
+      collections: { blog: withImages },
+      taxonomies: {},
+      environment: { drafts: 'include', testContent: 'include' },
+    });
+    const folders = folderPagesOf({
+      locales,
+      collections: { blog: withImages },
+      urls,
+      entries: assembly.entries.map((e) => e.descriptor),
+    });
+    const data = folderData('blog', withImages, assembly.entries, folders, (entry: Entry) =>
+      urls.url(entry.descriptor),
+    );
+
+    expect(data.find((folder) => folder.url === '/blog/constructor')?.image).toBe('/post.jpeg');
+  });
+});

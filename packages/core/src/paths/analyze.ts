@@ -232,19 +232,22 @@ function folderImageFallbacks(
     );
     const fallback = collection.metadata.image === undefined ? 'none' : 'newest-entry';
 
-    return [...folders]
-      .filter((path) => !(path in pages.images) && shown(path.split('/').length))
-      .sort(compare)
-      .map((path) =>
-        diagnostic({
-          code: 'folder-image-fallback',
-          severity: 'info',
-          collection: name,
-          sourcePath: null,
-          data: { path, fallback },
-          suggestions: [],
-        }),
-      );
+    return (
+      [...folders]
+        // Its own key only: `in` would find `Object.prototype`'s for a folder named `constructor`.
+        .filter((path) => !Object.hasOwn(pages.images, path) && shown(path.split('/').length))
+        .sort(compare)
+        .map((path) =>
+          diagnostic({
+            code: 'folder-image-fallback',
+            severity: 'info',
+            collection: name,
+            sourcePath: null,
+            data: { path, fallback },
+            suggestions: [],
+          }),
+        )
+    );
   });
 }
 

@@ -164,6 +164,24 @@ describe('folder-image-fallback', () => {
     expect(fallbacks(folderPages, 'cover')).toEqual(expected.map((path) => ['info', path, 'newest-entry']));
   });
 
+  it('informs about a folder named after an object property, never taken for a declared one', () => {
+    // `'constructor' in images` once found `Object.prototype.constructor`: the folder seemed to declare an image.
+    const declared = defineCollection({
+      ...blog,
+      metadata: { image: 'cover' },
+      folderPages: { root: true, levels: ['category'], images: { news: '/n.jpeg' } },
+    });
+    const analysis = analyze({
+      locales,
+      collections: { pages, blog: declared },
+      sources: [...SOURCES, { collection: 'blog', sourcePath: 'constructor/sub/post.mdx' }],
+    });
+
+    expect(analysis.diagnostics.filter((d) => d.code === 'folder-image-fallback').map((d) => d.data.path)).toContain(
+      'constructor',
+    );
+  });
+
   it('says a folder shows no image when the entries have no image field', () => {
     expect(fallbacks({ root: true, levels: ['category'], images: { news: '/n.jpeg' } })).toEqual(
       ['guides', 'guides/start', 'news/bot', 'news/site'].map((path) => ['info', path, 'none']),
