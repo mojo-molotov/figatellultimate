@@ -15,6 +15,7 @@ import { isDefaultView, pagedHref } from '@figatellultimate/facets';
 import {
   FacetOptions,
   FacetsReset,
+  ListingOptions,
   PageSelect,
   Pagination,
   SortSelect,
@@ -22,6 +23,7 @@ import {
 } from '@figatellultimate/facets-react';
 import { useNextUrl } from '@figatellultimate/next16/facets';
 import { formatPrecompiled } from '@figatellultimate/use-intl/format';
+import { Cog6ToothIcon } from '@heroicons/react/24/outline';
 import { useCallback, useMemo, type ReactNode } from 'react';
 
 import { localeInfo, type Locale } from '#figatellultimate/locales';
@@ -118,25 +120,37 @@ function PostsView({
     <section data-listing="interactive">
       {/* The index, fetched ahead as the reader heads for a filter or a sort. */}
       <div data-slot="listing-toolbar" onPointerEnter={prefetch} onFocus={prefetch}>
-        {facets.includes('tags') ? (
-          <FacetOptions binding={binding} facet="tags" labels={facet(labels.facets.tags)} locale={locale} dir={dir} />
-        ) : null}
-        {facets.includes('authors') ? (
-          <FacetOptions
+        {/* The facets and the sort behind a gear, its count the selected terms: one line on every screen. */}
+        <ListingOptions
+          binding={binding}
+          labels={{
+            trigger: (count) => formatPrecompiled(labels.options.trigger, locale, { count }),
+            content: labels.options.content,
+          }}
+          locale={locale}
+          icon={<Cog6ToothIcon />}
+          dir={dir}
+        >
+          {facets.includes('tags') ? (
+            <FacetOptions binding={binding} facet="tags" labels={facet(labels.facets.tags)} locale={locale} dir={dir} />
+          ) : null}
+          {facets.includes('authors') ? (
+            <FacetOptions
+              binding={binding}
+              facet="authors"
+              labels={facet(labels.facets.authors)}
+              locale={locale}
+              dir={dir}
+            />
+          ) : null}
+          <SortSelect
             binding={binding}
-            facet="authors"
-            labels={facet(labels.facets.authors)}
-            locale={locale}
+            labels={{ trigger: labels.sort.trigger, sort: (name) => labels.sort.names[name] ?? name }}
             dir={dir}
           />
-        ) : null}
-        <SortSelect
-          binding={binding}
-          labels={{ trigger: labels.sort.trigger, sort: (name) => labels.sort.names[name] ?? name }}
-          dir={dir}
-        />
-        {/* Every facet cleared at once, the sort kept. */}
-        <FacetsReset binding={binding} labels={{ reset: labels.reset }} />
+          {/* Every facet cleared at once, the sort kept. */}
+          <FacetsReset binding={binding} labels={{ reset: labels.reset }} />
+        </ListingOptions>
         {/* The compact pagination, at the toolbar's other end; the full one follows the cards. */}
         <PageSelect
           binding={binding}

@@ -126,6 +126,8 @@ try {
     await route.continue();
   });
   await early.goto(`${base}${LISTING}`, { waitUntil: 'networkidle' });
+  // The facets behind the gear: its panel first, then the tags' list.
+  await early.getByRole('button', { name: /^Filtres et tri/ }).click();
   await early.getByRole('button', { name: /^Tags/ }).click();
   await early.getByRole('option').first().click();
   await early.waitForURL(/tags=/, { timeout: 5000 }).catch(() => undefined);
@@ -257,7 +259,7 @@ try {
     // Every control its own box, a mouse or not: it once sat with its hover, kept to a mouse, and a phone's buttons
     // fell back to the browser's own look.
     const unstyled = await phone.evaluate(() =>
-      ['navbar-toggle', 'search-dialog-trigger', 'facet-options-trigger', 'sort-select-trigger', 'pagination-next']
+      ['navbar-toggle', 'search-dialog-trigger', 'listing-options-trigger', 'page-select-trigger', 'pagination-next']
         .map((slot) => [slot, document.querySelector(`[data-slot="${slot}"]`)] as const)
         .filter(([, element]) => {
           const style = element === null ? undefined : getComputedStyle(element);
@@ -269,6 +271,22 @@ try {
     );
 
     check(unstyled.length === 0, `${LISTING} on ${device}: controls without their box: ${unstyled.join(', ')}`);
+
+    // The toolbar on one line on a phone, whatever the sort's name: the gear and the page select, the filters and the
+    // sort behind the gear (the longest sort's name once pushed the page select onto a line of its own).
+    if (!revealed) {
+      await phone.goto(`${base}${LISTING}?sort=title-asc`, { waitUntil: 'networkidle' });
+      const tops = await phone.evaluate(() =>
+        [...(document.querySelector('[data-slot="listing-toolbar"]')?.children ?? [])].map((child) =>
+          Math.round(child.getBoundingClientRect().top),
+        ),
+      );
+
+      check(
+        tops.length === 2 && new Set(tops).size === 1,
+        `${LISTING}?sort=title-asc on ${device}: the toolbar is not one line of the gear and the page select (${JSON.stringify(tops)})`,
+      );
+    }
 
     // Next tapped on a phone keeps the pagination in its place, page after page: the sort's name, once filled by Radix a
     // render after the page's, rewrapped the toolbar above the posts and pushed the pagination 44px down each time.
@@ -510,6 +528,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; a filter in the URL, or chosen early, is applied; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
+    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; a filter in the URL, or chosen early, is applied; the toolbar on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
   );
 }

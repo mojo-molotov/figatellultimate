@@ -267,6 +267,11 @@ const ui = {
   },
   listing: { total: '{count, plural, =0 {No posts} one {# post} other {# posts}}' },
   reset: 'Reset filters',
+  options: {
+    trigger:
+      '{count, plural, =0 {Filters and sort} one {Filters and sort, # filter on} other {Filters and sort, # filters on}}',
+    content: 'Filters and sort',
+  },
   sort: {
     trigger: 'Sort posts',
     'date-desc': 'Newest',

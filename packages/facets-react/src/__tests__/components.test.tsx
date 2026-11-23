@@ -13,6 +13,7 @@ import {
   FacetOptionsList,
   FacetOptionsTrigger,
   FacetsReset,
+  ListingOptions,
   Pagination,
   PaginationContent,
   PaginationItem,
@@ -22,6 +23,7 @@ import {
   useFacetedCollection,
   type FacetOptionsLabels,
   type FacetedCollectionBinding,
+  type ListingOptionsLabels,
   type PageSelectLabels,
   type PaginationLabels,
   type SortSelectLabels,
@@ -60,6 +62,10 @@ const FACET: FacetOptionsLabels = {
 };
 /** The browser family runs these tests in real browsers, where `react-dom/server` does not run. */
 const inBrowser = !navigator.userAgent.includes('HappyDOM');
+const OPTIONS: ListingOptionsLabels = {
+  trigger: (n) => `«options ${String(n)}»`,
+  content: '«options de la liste»',
+};
 const SORT: SortSelectLabels = { trigger: '«trier»', sort: (sort) => `«tri ${sort}»` };
 const JUMP: PageSelectLabels = {
   trigger: '«aller à la page»',
@@ -564,6 +570,72 @@ describe('pagination', () => {
 
     await user.click(screen.getByRole('button', { name: '«pages 7,8,9»' }));
     expect(screen.getByRole('menu').getAttribute('dir')).toBe('rtl');
+  });
+});
+
+describe('listing options', () => {
+  /** The facets and the sort behind the gear, as a toolbar holds them. */
+  const options = (binding: FacetedCollectionBinding) => (
+    <ListingOptions binding={binding} labels={OPTIONS} locale="fr" icon={<svg data-test="gear" />}>
+      <FacetOptions binding={binding} facet="tags" labels={FACET} locale="fr" />
+      <SortSelect binding={binding} labels={SORT} />
+    </ListingOptions>
+  );
+
+  it('passes axe, closed and open, the app’s icon hidden from assistive technologies', async () => {
+    const { user } = renderListing('', options);
+    const gear = screen.getByRole('button', { name: '«options 0»' });
+
+    expect(await violations()).toEqual([]);
+    expect(gear.querySelector('[data-test="gear"]')?.closest('[aria-hidden]')).not.toBeNull();
+    await user.click(gear);
+    expect(await violations(screen.getByRole('dialog', { name: '«options de la liste»' }))).toEqual([]);
+  });
+
+  it('shows how many terms are selected, in its name too, and no count without any', () => {
+    renderListing('?tags=bot&tags=guide', options);
+    const gear = screen.getByRole('button', { name: '«options 2»' });
+
+    expect(gear.querySelector('[data-slot="listing-options-count"]')?.textContent).toBe('2');
+    cleanup();
+    renderListing('', options);
+    expect(document.querySelector('[data-slot="listing-options-count"]')).toBeNull();
+  });
+
+  it('keeps the panel open while a widget’s list opened in it chooses a term', async () => {
+    const { user, history } = renderListing('', options);
+
+    await user.click(screen.getByRole('button', { name: '«options 0»' }));
+    const panel = screen.getByRole('dialog', { name: '«options de la liste»' });
+
+    await user.click(within(panel).getByRole('button', { name: '«déclencheur 0»' }));
+    await user.click(screen.getByRole('option', { name: /«terme bot»/ }));
+    expect(history.at(-1)).toBe('?tags=bot');
+    expect(screen.getByRole('dialog', { name: '«options de la liste»' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: '«options 1»' })).toBeTruthy();
+  });
+
+  it('renders no text of its own, open with a selection: its texts the labels’, its count digits', async () => {
+    const { user } = renderListing('?tags=bot', options);
+
+    await user.click(screen.getByRole('button', { name: '«options 1»' }));
+    // Precondition: the panel and its widgets rendered their texts.
+    expect(texts()).toContain('«options de la liste»');
+    expect(texts().filter((text) => !allowed(text))).toEqual([]);
+  });
+
+  it('keyboard: Enter opens the panel, Escape closes it, focus back on the gear', async () => {
+    const { user } = renderListing('', options);
+    const gear = screen.getByRole('button', { name: '«options 0»' });
+
+    gear.focus();
+    await user.keyboard('{Enter}');
+    const panel = screen.getByRole('dialog', { name: '«options de la liste»' });
+
+    expect(panel.contains(focused())).toBe(true);
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog', { name: '«options de la liste»' })).toBeNull();
+    expect(focused()).toBe(gear);
   });
 });
 

@@ -257,6 +257,11 @@ const ui = {
   },
   listing: { total: '{count, plural, =0 {Aucun article} one {# article} many {# articles} other {# articles}}' },
   reset: 'Réinitialiser les filtres',
+  options: {
+    trigger:
+      '{count, plural, =0 {Filtres et tri} one {Filtres et tri, # filtre actif} many {Filtres et tri, # filtres actifs} other {Filtres et tri, # filtres actifs}}',
+    content: 'Filtres et tri',
+  },
   sort: {
     trigger: 'Trier les articles',
     'date-desc': 'Plus récents',

@@ -83,6 +83,7 @@
   [data-slot='sort-select-trigger'],
   [data-slot='search-box-sort'],
   [data-slot='facets-reset'],
+  [data-slot='listing-options-trigger'],
   [data-slot='pagination-link'],
   [data-slot='pagination-previous'],
   [data-slot='pagination-next'],
@@ -125,6 +126,7 @@
     [data-slot='sort-select-trigger'],
     [data-slot='search-box-sort'],
     [data-slot='facets-reset'],
+    [data-slot='listing-options-trigger'],
     [data-slot='pagination-link'],
     [data-slot='pagination-previous'],
     [data-slot='pagination-next'],
@@ -148,8 +150,10 @@
 /* Popups: menus, popovers, the select. */
 :is(
   [data-slot='navbar-content'],
+  [data-slot='listing-options-content'],
   [data-slot='locale-switcher-content'],
   [data-slot='facet-options-content'],
+  [data-slot='listing-options-content'],
   [data-slot='page-select-content'],
   [data-slot='sort-select-content'],
   [data-slot='search-box-sort-content'],
@@ -1034,6 +1038,41 @@ a[data-slot='entry-card-author'] {
 
 [data-slot='locale-switcher-item'][data-current] {
   font-weight: 600;
+}
+
+/* Listing options: a gear and the count of selected terms, opening a column of the facets and the sort. */
+[data-slot='listing-options-trigger'] {
+  border-color: var(--fig-border);
+}
+
+[data-slot='listing-options-trigger']:has([data-slot='listing-options-count']) {
+  border-color: var(--fig-accent);
+  color: var(--fig-accent);
+}
+
+[data-slot='listing-options-icon'] {
+  display: inline-flex;
+}
+
+[data-slot='listing-options-icon'] > svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+[data-slot='listing-options-count'] {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+[data-slot='listing-options-content'] {
+  display: grid;
+  gap: calc(var(--fig-space) / 2);
+}
+
+/* Each widget the panel's width, its name at the start and its arrow at the end. */
+[data-slot='listing-options-content'] > :is(button, [role='combobox']) {
+  justify-content: space-between;
+  width: 100%;
 }
 
 /* Facet options */
@@ -2331,6 +2370,7 @@ a[data-slot='entry-card-author'] {
   [data-slot='pager'],
   [data-slot='facet-options-trigger'],
   [data-slot='facets-reset'],
+  [data-slot='listing-options-trigger'],
   [data-slot='page-select-trigger'],
   [data-slot='sort-select-trigger'] {
     display: none;

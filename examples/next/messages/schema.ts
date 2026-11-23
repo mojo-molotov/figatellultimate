@@ -42,6 +42,7 @@ export const schema = {
       authors: { trigger: _, filter: _, list: _, empty: _, clear: _ },
     },
     reset: _,
+    options: { trigger: _, content: _ },
     sort: { trigger: _, 'date-desc': _, 'date-asc': _, 'title-asc': _, 'title-desc': _ },
     listing: { total: _ },
     pagination: { nav: _, previous: _, next: _, page: _, current: _, more: _, jump: _, short: _ },

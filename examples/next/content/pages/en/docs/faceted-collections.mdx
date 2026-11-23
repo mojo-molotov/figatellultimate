@@ -76,6 +76,8 @@ const binding = useFacetedCollection(engine, useNextUrl());
 
 `PageSelect` is a compact pagination, the pages as a select, for a toolbar; the full `Pagination` keeps the links. Each takes `icons` for previous and next, shown alone on a narrow screen.
 
+`ListingOptions` puts the facets and the sort behind one button, the app’s icon (a gear) and the count of selected terms: its panel holds the widgets as they are, so that a toolbar keeps one line on any screen, the `PageSelect` beside it.
+
 `useNextUrl` changes the URL through the History API, integrated by Next’s router: no server request per filter. Outside Next, `useHistoryUrl` does the same.
 
 The hook gives keys only: the application renders its cards once, on the server, and shows the ones the view holds.

@@ -27,6 +27,8 @@ export interface ListingLabels {
   readonly facets: { readonly tags: FacetLabels<'tags'>; readonly authors: FacetLabels<'authors'> };
   readonly sort: { readonly trigger: string; readonly names: Readonly<Record<string, string>> };
   readonly reset: string;
+  /** The gear holding the facets and the sort: its name takes the count of selected terms; its panel's name. */
+  readonly options: { readonly trigger: Precompiled<'ui.options.trigger'>; readonly content: string };
   /** How many posts the filters give. */
   readonly total: Precompiled<'ui.listing.total'>;
   readonly pagination: {
@@ -75,6 +77,7 @@ export async function listingLabels(locale: Locale): Promise<ListingLabels> {
       names: Object.fromEntries(SORTS.map((sort) => [sort, t(`ui.sort.${sort}`)])),
     },
     reset: t('ui.reset'),
+    options: { trigger: await compiled(locale, 'ui.options.trigger'), content: t('ui.options.content') },
     total: await compiled(locale, 'ui.listing.total'),
     pagination: {
       nav: t('ui.pagination.nav'),

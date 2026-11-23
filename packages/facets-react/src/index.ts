@@ -10,6 +10,7 @@
 export * from './components/facet-options.js';
 export * from './components/facet-options-parts.js';
 export * from './components/facets-reset.js';
+export * from './components/listing-options.js';
 export * from './components/page-select.js';
 export * from './components/pagination.js';
 export * from './components/sort-select.js';

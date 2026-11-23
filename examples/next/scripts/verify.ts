@@ -185,18 +185,21 @@ const indexed =
 
 check(indexed.length === decrees.length, "/listing/empire/decrees: the listing's index does not hold every post");
 
-// The unstyled components are prerendered: the pagination's real links, the facets and the sort.
-for (const slot of ['facet-options-trigger', 'sort-select-trigger', 'pagination', 'pagination-link'])
+// The unstyled components are prerendered: the pagination's real links, the gear holding the facets and the sort.
+for (const slot of ['listing-options-trigger', 'page-select-trigger', 'pagination', 'pagination-link'])
   check(french.includes(`data-slot="${slot}"`), `/blog/empire/decrees: no prerendered ${slot}`);
 
 check(
   french.includes(`aria-label="Page 1 sur ${String(last)}, page actuelle"`),
   '/blog/empire/decrees: pagination not in French',
 );
-check(french.includes('aria-label="Trier les articles"'), '/blog/empire/decrees: sort select not in French');
+check(french.includes('aria-label="Filtres et tri"'), '/blog/empire/decrees: the filters and sort gear not in French');
 const english = htmlOf('/en/blog/empire/decrees') ?? '';
 
-check(english.includes('aria-label="Sort posts"'), '/en/blog/empire/decrees: sort select not in English');
+check(
+  english.includes('aria-label="Filters and sort"'),
+  '/en/blog/empire/decrees: the filters and sort gear not in English',
+);
 check(
   english.includes(`aria-label="Page 1 of ${String(englishLast)}, current page"`),
   '/en/blog/empire/decrees: pagination not in English',
