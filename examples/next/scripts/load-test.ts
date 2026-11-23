@@ -1,6 +1,7 @@
 // Load test (`pnpm example:load [--posts N]`): the example copied to `.tmp/load-<N>/` (gitignored), with N generated
-// posts per locale spread over the blog's four subcategories, then timed (figatellultimate build, typecheck, next build,
-// search index) and measured (JavaScript, HTML, generated code, navigation in Chromium). Plain Node, as `verify.ts`.
+// posts per locale spread over the blog's four subcategories, each read through its strictly typed getter by a module
+// of the copy, then timed (figatellultimate build, typecheck, next build, search index) and measured (JavaScript,
+// HTML, generated code, navigation in Chromium). Plain Node, as `verify.ts`.
 import { spawn, spawnSync } from 'node:child_process';
 import {
   cpSync,
@@ -95,6 +96,47 @@ for (let i = 0; i < posts; i++) {
   }
 }
 
+// --- The strictly typed getters, under load ------------------------------------------------------------------------
+// Every generated post read through `getBlogPost`, its query literal: the type that checks it (`BlogPostTree`, a leaf
+// per post and its locales) grows with the content, so the timed typecheck measures it at this size. Wrong queries
+// under `@ts-expect-error`: a type accepting anything would fail the typecheck, never pass it for nothing.
+const typedCalls: string[] = [];
+
+for (let i = 0; i < posts; i++) {
+  const [category, subcategory] = (SUBCATEGORIES[i % SUBCATEGORIES.length] ?? '').split('/');
+  const slug = `load-${String(i).padStart(5, '0')}`;
+
+  for (const locale of ['fr', 'en'])
+    typedCalls.push(
+      `  void getBlogPost({ locale: '${locale}', category: '${category ?? ''}', subcategory: '${subcategory ?? ''}', slug: '${slug}' });`,
+    );
+}
+
+if (posts > 0) {
+  mkdirSync(join(target, 'lib'), { recursive: true });
+  writeFileSync(
+    join(target, 'lib', 'load-typed-getters.ts'),
+    [
+      '// Written by the load test: every generated post through its strictly typed getter, checked by the typecheck.',
+      "import { getBlogPost } from '#figatellultimate/blog';",
+      '',
+      'export function readEveryPost(): void {',
+      ...typedCalls,
+      '}',
+      '',
+      'export function rejectWrongQueries(): void {',
+      '  // @ts-expect-error a slug the content does not have',
+      `  void getBlogPost({ locale: 'fr', category: 'empire', subcategory: 'decrees', slug: 'load-${String(posts).padStart(5, '0')}' });`,
+      '  // @ts-expect-error a post of another subcategory',
+      "  void getBlogPost({ locale: 'fr', category: 'empire', subcategory: 'chronicles', slug: 'load-00000' });",
+      '  // @ts-expect-error a locale the site does not declare',
+      "  void getBlogPost({ locale: 'de', category: 'empire', subcategory: 'decrees', slug: 'load-00000' });",
+      '}',
+      '',
+    ].join('\n'),
+  );
+}
+
 // --- Timed steps -------------------------------------------------------------------------------------------------
 const bin = (name: string): string => join(target, 'node_modules/.bin', name);
 const timings: Record<string, number> = {};
@@ -159,6 +201,7 @@ const report: string[] = [
   '',
   '## Sizes',
   '',
+  `- Strictly typed getter calls typechecked: ${String(typedCalls.length)} (\`getBlogPost\`, a literal query per generated post and locale)`,
   `- Content: ${String(readdirSync(join(target, 'content/blog'), { recursive: true }).filter((name) => String(name).endsWith('.mdx')).length)} blog files`,
   `- \`.figatellultimate/\`: ${kb(sizeOf(join(target, '.figatellultimate')))}`,
   `- All client JavaScript (\`.next/static\`): ${String(allJs.length)} files, ${kb(allJs.reduce((sum, file) => sum + statSync(file).size, 0))}`,
