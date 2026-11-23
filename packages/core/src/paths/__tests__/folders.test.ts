@@ -103,6 +103,51 @@ describe('folder-page-collision', () => {
   });
 });
 
+describe('folder-image-fallback', () => {
+  /** The folders reported as taking their image from their entries, and how. */
+  const fallbacks = (
+    folderPages: {
+      readonly root: boolean;
+      readonly levels: readonly ('category' | 'subcategory')[];
+      readonly images: Readonly<Record<string, string>>;
+    },
+    image?: string,
+  ) => {
+    const declared = defineCollection({ ...blog, metadata: image === undefined ? {} : { image }, folderPages });
+    const analysis = analyze({ locales, collections: { pages, blog: declared }, sources: SOURCES });
+
+    return analysis.diagnostics
+      .filter((d) => d.code === 'folder-image-fallback')
+      .map((d) => [d.severity, d.data.path, d.data.fallback]);
+  };
+
+  it.each([
+    [
+      'every shown folder without a declared image, the root aside',
+      { root: true, levels: ['category', 'subcategory'], images: { news: '/n.jpeg', 'news/bot': '/b.jpeg' } },
+      ['guides', 'guides/start', 'news/site'],
+    ],
+    [
+      'a subcategory previewed on its category’s page, though it has no page of its own',
+      { root: false, levels: ['category'], images: { guides: '/g.jpeg', news: '/n.jpeg' } },
+      ['guides/start', 'news/bot', 'news/site'],
+    ],
+    [
+      'no category when nothing shows it: no page of its own, no page of the collection',
+      { root: false, levels: ['subcategory'], images: { 'news/bot': '/b.jpeg' } },
+      ['guides/start', 'news/site'],
+    ],
+  ] as const)('informs about %s', (_, folderPages, expected) => {
+    expect(fallbacks(folderPages, 'cover')).toEqual(expected.map((path) => ['info', path, 'newest-entry']));
+  });
+
+  it('says a folder shows no image when the entries have no image field', () => {
+    expect(fallbacks({ root: true, levels: ['category'], images: { news: '/n.jpeg' } })).toEqual(
+      ['guides', 'guides/start', 'news/bot', 'news/site'].map((path) => ['info', path, 'none']),
+    );
+  });
+});
+
 describe('unused-folder-image', () => {
   it('warns about an image declared for a folder the content does not have, suggesting the closest', () => {
     const withImages = defineCollection({

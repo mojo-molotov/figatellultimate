@@ -56,7 +56,7 @@ describe('report', () => {
       '    → give the file a regular name',
       '  ✖ field "draft" must be true or false  [invalid-draft-flag]',
     ]);
-    expect(countDiagnostics(diagnostics)).toEqual({ errors: 5, warnings: 0, files: 4 });
+    expect(countDiagnostics(diagnostics)).toEqual({ errors: 5, warnings: 0, infos: 0, files: 4 });
   });
 });
 
@@ -68,6 +68,25 @@ describe('report: messages', () => {
     key: 'content.blog.patch-notes.dashboard',
     data: { expected: 'group' },
     suggestions: [],
+  });
+
+  it('marks an info apart from the problems, counted on its own: a folder shows its newest entry’s image', () => {
+    const info = (path: string, fallback: 'newest-entry' | 'none'): Diagnostic => ({
+      code: 'folder-image-fallback',
+      severity: 'info',
+      collection: 'blog',
+      sourcePath: null,
+      data: { path, fallback },
+      suggestions: [],
+    });
+    const diagnostics = [info('maquis/corsicamon', 'newest-entry'), info('news', 'none')];
+
+    expect(reportLines(diagnostics, { blog: 'content/blog' })).toEqual([
+      'blog (collection)',
+      '  ℹ the folder "maquis/corsicamon" shows its newest entry\'s image: none declared in folderPages.images  [folder-image-fallback]',
+      '  ℹ the folder "news" shows no image: none declared in folderPages.images, and its entries have no image field  [folder-image-fallback]',
+    ]);
+    expect(countDiagnostics(diagnostics)).toEqual({ errors: 0, warnings: 0, infos: 2, files: 1 });
   });
 
   it('explains message diagnostics, with content-specific advice', () => {
@@ -100,6 +119,6 @@ describe('report: messages', () => {
       'content/blog/x.mdx',
       '  ✖ field "draft" must be true or false  [invalid-draft-flag]',
     ]);
-    expect(countDiagnostics([content], messages.diagnostics)).toEqual({ errors: 4, warnings: 0, files: 4 });
+    expect(countDiagnostics([content], messages.diagnostics)).toEqual({ errors: 4, warnings: 0, infos: 0, files: 4 });
   });
 });

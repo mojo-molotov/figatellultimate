@@ -130,7 +130,7 @@ navigation: [
 
 ## Images
 
-The build checks every local image of the content: an entry’s metadata image, the folders’ (`folderPages.images`) and those of its text. An image missing from the public folder is an error, `missing-image`, naming the file and its field and suggesting the closest file: nothing is written, no page shows a broken image. `publicDirectory` names that folder, `public` by default.
+The build checks every local image of the content: an entry’s metadata image, the folders’ (`folderPages.images`) and those of its text. An image missing from the public folder is an error, `missing-image`, naming the file and its field and suggesting the closest file: nothing is written, no page shows a broken image. `publicDirectory` names that folder, `public` by default. A folder shown with an image that declares none in `folderPages.images` shows its newest entry’s: the build lists each one, as an info.
 
 ```ts
 export default defineConfig({ publicDirectory: 'static', locales, collections, source });

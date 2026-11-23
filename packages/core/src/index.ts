@@ -80,6 +80,8 @@ export type {
   UnknownTermContentDiagnostic,
   UnreadableSourceDiagnostic,
   UnusedFolderImageDiagnostic,
+  FolderImageFallbackDiagnostic,
+  InfoDiagnostic,
   UnusedReservationDiagnostic,
   UnusedTestOnlyDiagnostic,
   UrlCollisionDiagnostic,

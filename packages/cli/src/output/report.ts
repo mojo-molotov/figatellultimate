@@ -125,6 +125,13 @@ export function explain(diagnostic: Diagnostic): Explanation {
         message: `an image is declared for the folder "${d.data.path}", which holds no entry`,
         hint: didYouMean(d.suggestions) ?? 'fix the folder path in folderPages.images, or remove it',
       };
+    case 'folder-image-fallback':
+      return {
+        message:
+          d.data.fallback === 'newest-entry'
+            ? `the folder "${d.data.path}" shows its newest entry's image: none declared in folderPages.images`
+            : `the folder "${d.data.path}" shows no image: none declared in folderPages.images, and its entries have no image field`,
+      };
     case 'unused-reservation':
       return {
         message: `the reservation ${quote(d.data.pattern)} matches no entry`,
@@ -347,7 +354,8 @@ export function reportLines(
   }
 
   const summarized = new Set([...groups.values()].filter((g) => g.length >= GROUPING_THRESHOLD).flat());
-  const mark = (d: Reported): string => (d.severity === 'error' ? style.red('✖') : style.yellow('▲'));
+  const mark = (d: Reported): string =>
+    d.severity === 'error' ? style.red('✖') : d.severity === 'warning' ? style.yellow('▲') : style.cyan('ℹ');
   const lines: string[] = [];
 
   for (const group of groups.values()) {
@@ -387,6 +395,8 @@ export function reportLines(
 export interface Counts {
   readonly errors: number;
   readonly warnings: number;
+  /** What the build chose on its own: never a problem. */
+  readonly infos: number;
   readonly files: number;
 }
 
@@ -406,6 +416,7 @@ export function countDiagnostics(
   return {
     errors: all.filter((d) => d.severity === 'error').length,
     warnings: all.filter((d) => d.severity === 'warning').length,
+    infos: all.filter((d) => d.severity === 'info').length,
     files: new Set([
       ...diagnostics.map((d) => `${d.collection}\u0000${d.sourcePath ?? ''}`),
       ...messageDiagnostics.map((d) => `\u0000messages\u0000${d.file}`),

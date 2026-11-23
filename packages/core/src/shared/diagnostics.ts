@@ -3,12 +3,13 @@
  *
  * Key design decisions:
  *     - Data only, no message text: the CLI formats each code in English (where, why, how to fix); tests compare data.
- *     - A fixed severity per code: an error or a warning, never configurable.
+ *     - A fixed severity per code, never configurable: an error fails the build, a warning points at a probable
+ *       mistake, an info tells what the build chose on its own (a folder's image taken from its newest entry).
  *     - Paths are collection-relative POSIX paths, never absolute: nothing of the machine leaks into a report.
  *     - "Did you mean" suggestions travel with the diagnostic.
  *     - A deterministic order (`compareDiagnostics`), whatever the input's.
  */
-interface DiagnosticOf<C extends string, S extends 'error' | 'warning', D, P extends string | null = string> {
+interface DiagnosticOf<C extends string, S extends 'error' | 'warning' | 'info', D, P extends string | null = string> {
   readonly code: C;
   readonly severity: S;
   readonly collection: string;
@@ -95,6 +96,16 @@ export type UnusedFolderImageDiagnostic = DiagnosticOf<
   'unused-folder-image',
   'warning',
   { readonly path: string },
+  null
+>;
+/**
+ * A folder shown with an image (its page, or its preview on its parent's page) that declares none: it shows its
+ * newest entry's (`newest-entry`), or none when the collection has no image field (`none`).
+ */
+export type FolderImageFallbackDiagnostic = DiagnosticOf<
+  'folder-image-fallback',
+  'info',
+  { readonly path: string; readonly fallback: 'newest-entry' | 'none' },
   null
 >;
 /** A `reserved` pattern matching no entry: a typo, or a route that no longer needs it. */
@@ -241,8 +252,11 @@ export type ErrorDiagnostic =
 export type WarningDiagnostic =
   UglyIndexDiagnostic | UnusedReservationDiagnostic | UnusedTestOnlyDiagnostic | UnusedFolderImageDiagnostic;
 
+/** Every diagnostic telling what the build chose on its own: never a problem. */
+export type InfoDiagnostic = FolderImageFallbackDiagnostic;
+
 /** Every diagnostic, discriminated by `code`. Severities are fixed per code. */
-export type Diagnostic = ErrorDiagnostic | WarningDiagnostic;
+export type Diagnostic = ErrorDiagnostic | WarningDiagnostic | InfoDiagnostic;
 
 /** Every diagnostic code, e.g. `url-collision`. */
 export type DiagnosticCode = Diagnostic['code'];

@@ -196,6 +196,58 @@ function unusedReservations(
   });
 }
 
+/**
+ * Folders shown with an image that declare none: each folder with a page of its own, or previewed on its parent's
+ * page (the collection's own page for the first level), and no `folderPages.images` entry. The collection's own page
+ * has no path to declare an image for: never reported.
+ */
+function folderImageFallbacks(
+  collections: Readonly<Record<string, Collection>>,
+  entries: readonly EntryDescriptor[],
+): Diagnostic[] {
+  return Object.entries(collections).flatMap(([name, collection]) => {
+    const pages = collection.folderPages;
+
+    if (pages === null) return [];
+
+    const named = collection.grammar.flatMap((part) => (part.kind === 'segment' ? [part.name] : []));
+    const levels: readonly string[] = pages.levels;
+    const shown = (depth: number): boolean => {
+      const own = named[depth - 1];
+      const parent = named[depth - 2];
+
+      return (
+        (own !== undefined && levels.includes(own)) ||
+        (depth === 1 ? pages.root : parent !== undefined && levels.includes(parent))
+      );
+    };
+    const folders = new Set(
+      entries
+        .filter((entry) => entry.collection === name)
+        .flatMap((entry) => {
+          const values = named.map((segment) => entry.segments[segment] ?? '');
+
+          return values.map((_, depth) => values.slice(0, depth + 1).join('/'));
+        }),
+    );
+    const fallback = collection.metadata.image === undefined ? 'none' : 'newest-entry';
+
+    return [...folders]
+      .filter((path) => !(path in pages.images) && shown(path.split('/').length))
+      .sort(compare)
+      .map((path) =>
+        diagnostic({
+          code: 'folder-image-fallback',
+          severity: 'info',
+          collection: name,
+          sourcePath: null,
+          data: { path, fallback },
+          suggestions: [],
+        }),
+      );
+  });
+}
+
 /** Folder images declared for a folder no entry is in: a typo, or a folder renamed. */
 function unusedFolderImages(
   collections: Readonly<Record<string, Collection>>,
@@ -307,6 +359,7 @@ export function analyze(input: AnalyzeInput): Analysis {
     ...uglyIndexes(entries, sources),
     ...unusedReservations(collections, parsed),
     ...unusedFolderImages(collections, parsed),
+    ...folderImageFallbacks(collections, parsed),
   );
 
   return Object.freeze({

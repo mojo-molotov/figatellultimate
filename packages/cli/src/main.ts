@@ -98,7 +98,8 @@ async function runAndReport(ui: Ui, loaded: LoadedConfig, command: Command, sign
   else phase.done(summary);
 
   if (assembly.diagnostics.length + result.messageDiagnostics.length > 0) {
-    const title = `${String(counts.errors)} error${counts.errors === 1 ? '' : 's'}, ${String(counts.warnings)} warning${counts.warnings === 1 ? '' : 's'} in ${String(counts.files)} file${counts.files === 1 ? '' : 's'}`;
+    const infos = counts.infos === 0 ? '' : `, ${String(counts.infos)} info`;
+    const title = `${String(counts.errors)} error${counts.errors === 1 ? '' : 's'}, ${String(counts.warnings)} warning${counts.warnings === 1 ? '' : 's'}${infos} in ${String(counts.files)} file${counts.files === 1 ? '' : 's'}`;
     const messages = {
       diagnostics: result.messageDiagnostics,
       directory: loaded.config.messages?.directory ?? 'messages',
