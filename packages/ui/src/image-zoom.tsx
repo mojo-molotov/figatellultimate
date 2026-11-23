@@ -270,12 +270,14 @@ function ImageZoomLens({
           draggable={false}
           data-slot="image-zoom-full"
           data-zoomed={zoomed ? '' : undefined}
+          data-sized={width === undefined || height === undefined ? undefined : ''}
           style={{
             // Its own size, the screen at most: never the size the served variant's density implies (`next/image`
-            // serves a wider file than the image, which the browser would shrink by as much).
+            // serves a wider file than the image, which the browser would shrink by as much). The formula is the
+            // stylesheet's (`[data-sized]`), which can fall back from the visible screen's height to the tallest's.
             ...(width === undefined || height === undefined
               ? {}
-              : { width: `min(90vw, ${String(width)}px, calc(90vh * ${String(width)} / ${String(height)}))` }),
+              : { '--fig-zoom-width': `${String(width)}px`, '--fig-zoom-ratio': String(width / height) }),
             ...(origin === null ? {} : { transformOrigin: `${String(origin.x)}% ${String(origin.y)}%` }),
           }}
         />

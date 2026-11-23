@@ -1457,7 +1457,10 @@ a[data-slot='entry-card-author'] {
 
 [data-slot='search-dialog-content'] {
   position: fixed;
+  /* The visible screen's height (`dvh`), not the tallest one (`vh`): a phone's address bar, shown at the bottom, would
+     otherwise cover the dialog's end, its last results out of reach. `vh` first, for a browser without `dvh`. */
   top: 10vh;
+  top: 10dvh;
   left: 50%;
   transform: translateX(-50%);
   display: grid;
@@ -1469,6 +1472,7 @@ a[data-slot='entry-card-author'] {
   width: min(40rem, calc(100vw - 2rem));
   box-sizing: border-box;
   max-height: 80vh;
+  max-height: 80dvh;
   overflow-y: auto;
   padding: calc(var(--fig-space) * 2);
   border: 1px solid var(--fig-border);
@@ -1759,7 +1763,9 @@ a[data-slot='entry-card-author'] {
     inset-block: auto;
     top: 0;
     height: 100vh;
+    height: 100dvh;
     margin-block-end: -100vh;
+    margin-block-end: -100dvh;
   }
 
   [data-slot='toc']:not([data-open]) {
@@ -2155,8 +2161,16 @@ a[data-slot='entry-card-author'] {
   width: auto;
   height: auto;
   max-width: 90vw;
+  /* The visible screen, a phone's address bar aside (`vh` for a browser without `dvh`). */
   max-height: 90vh;
+  max-height: 90dvh;
   user-select: none;
+}
+
+/* Its own size, the screen at most, its height included (`ImageZoom` gives its width and ratio). */
+[data-slot='image-zoom-full'][data-sized] {
+  width: min(90vw, var(--fig-zoom-width), calc(90vh * var(--fig-zoom-ratio)));
+  width: min(90vw, var(--fig-zoom-width), calc(90dvh * var(--fig-zoom-ratio)));
 }
 
 /* Held: ×2.5 around the pressed point, which follows the mouse (`transform-origin`, set by the component). */

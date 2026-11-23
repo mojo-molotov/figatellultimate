@@ -221,6 +221,27 @@ describe('styles.css', () => {
     expect(selectors.filter((selector) => !selector.includes(':hover'))).toEqual([]);
   });
 
+  it("sizes by the visible screen (`dvh`), `vh` only before it for an older browser: a phone's address bar hides none", () => {
+    // The search dialog once sat in `80vh` from `10vh`: on an iPhone, the address bar at the bottom covered its last
+    // results, out of reach.
+    const declarations = [...SOURCE_NO_COMMENTS.matchAll(/([\w-]+):\s*([^;{}]*);/g)].map(([, property, value]) => ({
+      property: property ?? '',
+      value: value ?? '',
+    }));
+    const unfollowed = declarations.filter(
+      ({ property, value }, index) =>
+        /\d(?:\.\d+)?vh\b/.test(value) &&
+        !(
+          declarations[index + 1]?.property === property &&
+          declarations[index + 1]?.value === value.replaceAll(/(\d(?:\.\d+)?)vh\b/g, '$1dvh')
+        ),
+    );
+
+    // Precondition: the stylesheet does size by the screen's height.
+    expect(declarations.filter(({ value }) => value.includes('dvh')).length).toBeGreaterThan(2);
+    expect(unfollowed.map(({ property, value }) => `${property}: ${value}`)).toEqual([]);
+  });
+
   it("keeps the search dialog to the screen: its columns shrink, a result's long word breaks", () => {
     expect(propertiesOf("[data-slot='search-dialog-content']")['grid-template-columns']).toBe('minmax(0, 1fr) auto');
     expect(CSS).toMatch(
