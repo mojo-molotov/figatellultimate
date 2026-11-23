@@ -25,7 +25,11 @@
  *     - The values a view allows are the ones present in its items: anything else in a URL is dropped on reading.
  *     - Indexes (facet → value → keys) are built once per engine: from precomputed ones when given, restricted to
  *       the view's items, from the items otherwise. A listing passes its own items, never a whole site's index.
- *     - The page after a change is an injected strategy (`reconcile`), `keepReadingPosition` by default.
+ *     - The page after a filter, a clear or a sort is an injected strategy (`reconcile`), `keepReadingPosition` by
+ *       default; a page change is the engine's own, the page asked for, so that no strategy can break a pagination.
+ *     - Counts in one pass over the items, each adding to its own values (items × their values, never items × every
+ *       value: a facet of hundreds of values on thousands of items once took a third of a second a view); a transition
+ *       reads the visible keys without them.
  *     - The page remembered before the first selection belongs to the state, never to the URL: a shared link stays
  *       canonical and carries no personal navigation detail.
  *
@@ -34,8 +38,8 @@
  *       (`engine.test.ts`: a seeded batch of random strings).
  *     - `read(write(state))` is the state, and `write` is canonical (`engine.test.ts`).
  *     - Adding a term never changes an existing URL's meaning (`engine.test.ts`).
- *     - Each value's count is what the view would hold with it checked too, the other facets applied
- *       (`engine.test.ts`).
+ *     - Each value's count is what the view would hold with it checked too, the other facets applied, in `any` and
+ *       `all` alike (`engine.test.ts`: a property against that definition, one value at a time).
  *     - Transitions replay `keepReadingPosition`'s table and never mutate their input (`transitions.test.ts`).
  *     - No framework, router, DOM or Node type (the `runtime` role's boundary rules).
  *
@@ -131,6 +135,23 @@ export function defineFacetedCollection<I>(definition: FacetedCollection<I>): En
   const allowed = new Map<string, ReadonlySet<string>>(
     [...members].map(([facet, byValue]) => [facet, new Set(byValue.keys())]),
   );
+  // Each item's values, per facet, from the same index (generated or computed): the counts read an item's own values
+  // instead of testing every value against every item.
+  const valuesOf = new Map<string, ReadonlyMap<string, readonly string[]>>(
+    [...members].map(([facet, byValue]) => {
+      const byKey = new Map<string, string[]>();
+
+      for (const [value, keys] of byValue)
+        for (const key of keys) {
+          const values = byKey.get(key);
+
+          if (values === undefined) byKey.set(key, [value]);
+          else values.push(value);
+        }
+
+      return [facet, byKey];
+    }),
+  );
 
   /** Whether an item passes a facet's selection (no selection passes). */
   const passes = (itemKey: string, facet: string, selected: readonly string[]): boolean => {
@@ -142,10 +163,18 @@ export function defineFacetedCollection<I>(definition: FacetedCollection<I>): En
     return definition.facets[facet]?.mode === 'all' ? selected.every(has) : selected.some(has);
   };
 
-  /** Every key passing the selection, except `ignoring` (for counts), sorted by the state's comparator. */
-  const order = (state: SelectionState, ignoring?: string): string[] => {
+  /** Every key passing the selection's other facets than `ignoring`, unsorted: what a facet's counts range over. */
+  const passing = (state: SelectionState, ignoring: string): string[] =>
+    pairs.flatMap((pair) =>
+      facetNames.every((facet) => facet === ignoring || passes(pair.key, facet, state.facets[facet] ?? []))
+        ? [pair.key]
+        : [],
+    );
+
+  /** Every key passing the selection, sorted by the state's comparator. */
+  const order = (state: SelectionState): string[] => {
     const filtered = pairs.filter((pair) =>
-      facetNames.every((facet) => facet === ignoring || passes(pair.key, facet, state.facets[facet] ?? [])),
+      facetNames.every((facet) => passes(pair.key, facet, state.facets[facet] ?? [])),
     );
     const compare = definition.sorts[state.sort] ?? definition.sorts[defaultSort];
 
@@ -166,24 +195,34 @@ export function defineFacetedCollection<I>(definition: FacetedCollection<I>): En
     // Per value, what the view would hold with that value checked too, which is how a reader reads a count ("what do I
     // get if I click"): the other facets applied, this facet's selection with the value added (a union for `any`, an
     // intersection for `all`); a checked value gives the current total.
+    //
+    // One pass over those items, each one adding to its own values (items × their values, not items × every value). With
+    // P the items already passing this facet's selection: `any`, an item passes with a value when it passes or has it,
+    // so a value counts P and the items outside P that have it; `all`, an item passes when it passes and has it, so a
+    // value counts the items of P that have it. With nothing selected, P is empty for `any` (a value counts its items)
+    // and every item for `all` (the same).
     const counts = Object.fromEntries(
       facetNames.map((facet) => {
-        const others = order(state, facet);
         const selected = state.facets[facet] ?? [];
-        const byValue = members.get(facet) ?? new Map<string, Set<string>>();
+        const all = definition.facets[facet]?.mode === 'all';
+        const own = valuesOf.get(facet);
+        const tally = new Map<string, number>([...(members.get(facet)?.keys() ?? [])].map((value) => [value, 0]));
+        let base = 0;
 
-        return [
-          facet,
-          Object.freeze(
-            Object.fromEntries(
-              [...byValue.keys()].map((value) => {
-                const withValue = selected.includes(value) ? selected : [...selected, value];
+        for (const key of passing(state, facet)) {
+          const inSelection = selected.length > 0 && passes(key, facet, selected);
 
-                return [value, others.filter((key) => passes(key, facet, withValue)).length];
-              }),
-            ),
-          ),
-        ];
+          if (!all && inSelection) {
+            base += 1;
+            continue;
+          }
+
+          if (all && selected.length > 0 && !inSelection) continue;
+
+          for (const value of own?.get(key) ?? []) tally.set(value, (tally.get(value) ?? 0) + 1);
+        }
+
+        return [facet, Object.freeze(Object.fromEntries([...tally].map(([value, count]) => [value, count + base])))];
       }),
     );
 

@@ -105,6 +105,8 @@ describe('reading the URL', () => {
         ['?page=1.5'],
         ['?%E0%A4%A&&&==tags=%ZZ'],
         [`?tags=${'x'.repeat(10_000)}`],
+        // A name repeated thousands of times: its values once copied for each, the reading was quadratic.
+        [`?${'tags=bot&'.repeat(20_000)}page=2`],
       ],
     });
   });
@@ -204,6 +206,56 @@ describe('the view', () => {
     const state = engine().read('?tags=bot&page=3');
 
     expect(state.page).toBe(1);
+  });
+});
+
+describe('the counts, against their definition', () => {
+  /** An item: its tags (an `any` facet) and its colors (an `all` facet), from small pools so that they overlap. */
+  const item = fc.record({
+    tags: fc.uniqueArray(fc.constantFrom<string>('a', 'b', 'c', 'd'), { maxLength: 3 }),
+    colors: fc.uniqueArray(fc.constantFrom<string>('red', 'green', 'blue'), { maxLength: 3 }),
+  });
+
+  it('equal, per value, the items passing the other facets and this one with the value checked too', () => {
+    fc.assert(
+      fc.property(
+        fc.array(item, { maxLength: 40 }),
+        fc.subarray(['a', 'b', 'c', 'd']),
+        fc.subarray(['red', 'green', 'blue']),
+        (items, tags, colors) => {
+          const keyed = items.map((values, index) => ({ ...values, key: String(index) }));
+          const engine = defineFacetedCollection({
+            items: keyed,
+            key: (post) => post.key,
+            facets: { tags: { values: (post) => post.tags }, colors: { values: (post) => post.colors, mode: 'all' } },
+            sorts: { given: () => 0 },
+            perPage: 5,
+          });
+          const facets = { tags, colors };
+          const passes = (post: (typeof keyed)[number], facet: 'tags' | 'colors', selected: readonly string[]) =>
+            selected.length === 0 ||
+            (facet === 'colors'
+              ? selected.every((value) => post.colors.includes(value))
+              : selected.some((value) => post.tags.includes(value)));
+          // The definition, one value at a time: the other facet applied, this one with the value added.
+          const reference = (facet: 'tags' | 'colors', other: 'tags' | 'colors') =>
+            Object.fromEntries(
+              [...new Set(keyed.flatMap((post) => post[facet]))].map((value) => {
+                const withValue = facets[facet].includes(value) ? facets[facet] : [...facets[facet], value];
+
+                return [
+                  value,
+                  keyed.filter((post) => passes(post, other, facets[other]) && passes(post, facet, withValue)).length,
+                ];
+              }),
+            );
+          const { counts } = engine.view({ facets, sort: 'given', page: 1 });
+
+          expect(counts['tags']).toEqual(reference('tags', 'colors'));
+          expect(counts['colors']).toEqual(reference('colors', 'tags'));
+        },
+      ),
+    );
   });
 });
 
