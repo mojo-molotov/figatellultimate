@@ -4,7 +4,13 @@
  * sections alike (`SectionData`, rendered by `folder-sections.tsx`).
  */
 import { Collector } from '@figatellultimate/effects';
-import { EntryCard, type EntryAuthor, type EntryCardLabels, type EntryTag } from '@figatellultimate/ui';
+import {
+  EntryCard,
+  type EntryAuthor,
+  type EntryCardHeadingLevel,
+  type EntryCardLabels,
+  type EntryTag,
+} from '@figatellultimate/ui';
 import type { ReactNode } from 'react';
 
 /** What a post's card shows, its texts already translated: what `EntryCard` takes. */
@@ -36,13 +42,20 @@ export interface SectionData {
 /**
  * A post's preview: its Open Graph image, title, localized date, description, tags, and authors.
  *
- * @param props - The card's data.
+ * @param props - The card's data, and its title's heading level: 2 (default) right under the page's title, 3 under a
+ *   section's heading.
  * @returns The card, standing out while its link is hovered (the site's own effect).
  */
-export function PostCard({ card }: { readonly card: CardData }): ReactNode {
+export function PostCard({
+  card,
+  headingLevel = 2,
+}: {
+  readonly card: CardData;
+  readonly headingLevel?: EntryCardHeadingLevel;
+}): ReactNode {
   return (
     <Collector>
-      <EntryCard data-key={card.href} {...card} />
+      <EntryCard data-key={card.href} headingLevel={headingLevel} {...card} />
     </Collector>
   );
 }

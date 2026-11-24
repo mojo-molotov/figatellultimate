@@ -34,6 +34,40 @@ describe('EntryCard, styled', () => {
     </div>
   );
 
+  it.skipIf(!inBrowser)('looks the same whatever its heading level', () => {
+    const levels = [2, 3, 4, 5, 6] as const;
+    const looks = (element: Element): string => {
+      const style = getComputedStyle(element);
+
+      return [style.fontSize, style.fontWeight, style.lineHeight, style.margin, style.fontFamily].join(' ');
+    };
+
+    render(
+      <div style={{ width: '520px' }}>
+        {/* Precondition: the browser's own headings differ by level, so a look left to the element would show. */}
+        <h2 data-testid="bare-2">a</h2>
+        <h6 data-testid="bare-6">a</h6>
+        {levels.map((level) => (
+          <EntryCard
+            key={level}
+            href={`/blog/${String(level)}`}
+            title={`«Niveau ${String(level)}»`}
+            headingLevel={level}
+            locale="fr"
+            labels={{ tags: '«Tags»', authors: '«Auteurs»', more: '«Autres tags»' }}
+          />
+        ))}
+      </div>,
+    );
+
+    expect(looks(screen.getByTestId('bare-2'))).not.toBe(looks(screen.getByTestId('bare-6')));
+    const titles = levels.map((level) =>
+      looks(screen.getByRole('heading', { level, name: `«Niveau ${String(level)}»` })),
+    );
+
+    expect(new Set(titles).size).toBe(1);
+  });
+
   it.skipIf(!inBrowser)('shows the tags that fit whole, then a « +N » pill opening the others', async () => {
     render(tagsCard('520px'));
     const row = screen.getByRole('list', { name: '«Tags»' });
