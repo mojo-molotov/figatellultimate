@@ -44,11 +44,13 @@ jobs:
       - name: No generated artifact is committed
         run: git diff --exit-code
       - run: pnpm lint:packages
+      # Not for Dependabot's pull requests: they change packages without a changeset (none before the first release),
+      # and their commits' bodies quote release notes over commitlint's line length.
       - name: Changesets
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
         run: pnpm changeset status --since=origin/${{ github.base_ref }}
       - name: Conventional commits
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
         run: pnpm exec commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
 
   test:

@@ -122,6 +122,24 @@ describe('GitHub Actions', () => {
     }
   });
 
+  it('keeps the dependencies and the pinned actions up to date with Dependabot, its pull requests let through', () => {
+    const dependabot = readFileSync(join(ROOT, '.github', 'dependabot.yml'), 'utf8');
+    const ci = readFileSync(join(ROOT, '.github', 'workflows', 'ci.yml'), 'utf8');
+
+    // The packages (pnpm, from the root's lockfile) and the actions, the composite ones included, weekly, each commit a
+    // Conventional one.
+    expect(dependabot).toMatch(/package-ecosystem: npm\n\s+directory: \/\n\s+schedule:\n\s+interval: weekly/);
+    expect(dependabot).toMatch(
+      /package-ecosystem: github-actions\n\s+directories:\n\s+- \/\n\s+- \/\.github\/actions\/\*/,
+    );
+    expect(dependabot.match(/commit-message:\n\s+prefix: (build|ci)\n\s+include: scope/g)).toHaveLength(2);
+    // Its pull requests change packages without a changeset (none before the first release), their bodies quote
+    // release notes over commitlint's line length: those two checks are skipped for them alone.
+    expect(ci.match(/if: github\.event_name == 'pull_request' && github\.actor != 'dependabot\[bot\]'/g)).toHaveLength(
+      2,
+    );
+  });
+
   it("runs Playwright's image pinned by digest, of the repository's playwright release, so that its browsers match", () => {
     const manifest: unknown = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
     const dependencies: unknown =

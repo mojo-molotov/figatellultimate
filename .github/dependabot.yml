@@ -1,0 +1,23 @@
+# Dependabot keeps the dependencies up to date, weekly, each update a Conventional commit (commitlint): the packages,
+# through pnpm's lockfile at the root, and the actions, the composite ones included, pinned by commit SHA with their
+# version beside it, which Dependabot updates together. Checked by tooling/__tests__/github-actions.test.ts.
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: build
+      include: scope
+
+  - package-ecosystem: github-actions
+    directories:
+      - /
+      - /.github/actions/*
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
+      include: scope
