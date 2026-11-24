@@ -1,17 +1,21 @@
 'use client';
 
 /**
- * A folder page's sections and its pagination: the blog's categories, or a category's subcategories with their latest
- * posts. Its landed page from the server (the HTML prerendered with them); the pages around it from its batches
+ * A folder page's sections and its pagination, as a listing's: the compact one (a select) on the heading's line, the
+ * full one (previous and next) below the sections. The blog's categories, or a category's subcategories with their
+ * latest posts. Its landed page from the server (the HTML prerendered with them); the pages around it from its batches
  * (`<folder.batches>/pages/<n>`, `listing-index.ts`), loaded on idle, so that a page they hold is shown here at once,
  * only the address moving. `usePagedCollection` of `@figatellultimate/facets-react` does the orchestration, with no
  * index: a folder of folders has nothing to filter.
  *
- * Key design decision, as chosen with the user: the sections are data rendered alike on both sides (`SectionData`),
- * rather than rendered on the server only, so that a batch can show a page the server never sent.
+ * Key design decisions, as chosen with the user:
+ *     - The sections are data rendered alike on both sides (`SectionData`), rather than rendered on the server only,
+ *       so that a batch can show a page the server never sent.
+ *     - The pagination as a listing's: a select on the heading's line, at its end on a phone too, and previous and next
+ *       below the sections (checked by `scripts/browse.ts`).
  */
 import { batchPath, defineFacetedCollection, type Engine, type UrlAdapter } from '@figatellultimate/facets';
-import { Pagination, usePagedCollection } from '@figatellultimate/facets-react';
+import { PageSelect, Pagination, usePagedCollection } from '@figatellultimate/facets-react';
 import { NextUrlBoundary } from '@figatellultimate/next16/facets';
 import { Collector } from '@figatellultimate/effects';
 import { EntryCard, type EntryCardLabels } from '@figatellultimate/ui';
@@ -117,18 +121,28 @@ function SectionsView({
       icons={PAGINATION_ICONS}
     />
   );
-  // A heading and the pagination on one line, the pagination at its end; below the heading when they do not fit.
-  const withPagination = (heading: ReactNode): ReactNode => (
+  // As a listing's: the compact pagination on the heading's line, at its end (a phone's included), the full one below
+  // the sections.
+  const withPageSelect = (heading: ReactNode): ReactNode => (
     <div data-slot="folder-heading">
       {heading}
-      {pagination}
+      <PageSelect
+        binding={binding}
+        labels={{
+          trigger: labels.jump,
+          current: (page, pages) => formatPrecompiled(labels.short, locale, { page, pages }),
+          spoken: (page, pages) => formatPrecompiled(labels.spoken, locale, { page, pages }),
+        }}
+        locale={locale}
+        dir={localeInfo[locale].dir}
+      />
     </div>
   );
 
   if (level === null)
     return (
       <>
-        {withPagination(<h1>{title}</h1>)}
+        {withPageSelect(<h1>{title}</h1>)}
         {/* Each category as a post's preview: its image, its title, its description. */}
         <ul data-slot="folder-list">
           {shown.map(({ key, section }) => (
@@ -146,6 +160,7 @@ function SectionsView({
             </li>
           ))}
         </ul>
+        {pagination}
       </>
     );
 
@@ -161,8 +176,8 @@ function SectionsView({
 
         return (
           <section key={key} data-slot="folder-section">
-            {/* The pagination on the first section's heading: the page's own title stands alone above them. */}
-            {index === 0 ? withPagination(heading) : heading}
+            {/* The compact pagination on the first section's heading: the page's own title stands alone above them. */}
+            {index === 0 ? withPageSelect(heading) : heading}
             <ol data-slot="listing-cards">
               {section.posts.map((card) => (
                 <li key={card.href}>
@@ -178,6 +193,7 @@ function SectionsView({
           </section>
         );
       })}
+      {pagination}
     </>
   );
 }

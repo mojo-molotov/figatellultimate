@@ -334,23 +334,25 @@ header > [data-slot='breadcrumb'] {
   list-style: none;
 }
 
-/* The blog's and a category's pages: a heading (the blog's title, a category's first section) and the pagination on
-   one line, the pagination at its end; when they do not fit, and always on a narrow screen, it wraps below the
-   heading, still at the end of the line. */
+/* The blog's and a category's pages, as a listing's: a heading (the blog's title, a category's first section) and the
+   compact pagination (a select) on one line, the select at its end, a phone's included: the title wraps within its
+   room rather than push the select below it. The full pagination follows the sections. */
 [data-slot='folder-heading'] {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--fig-space) calc(var(--fig-space) * 2);
+  gap: calc(var(--fig-space) * 2);
   margin-block-end: calc(var(--fig-space) * 2);
 }
 
 [data-slot='folder-heading'] > :is(h1, h2) {
+  min-width: 0;
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
-[data-slot='folder-heading'] > [data-slot='pagination'] {
+[data-slot='folder-heading'] > [data-slot='page-select-trigger'] {
+  flex: none;
   margin-inline-start: auto;
 }
 
@@ -364,17 +366,20 @@ header > [data-slot='breadcrumb'] {
   font-size: 1em;
 }
 
-[data-slot='folder-section'] > [data-slot='folder-heading'] > [data-slot='pagination'] {
+[data-slot='folder-section'] > [data-slot='folder-heading'] > [data-slot='page-select-trigger'] {
   font-size: 1rem;
 }
 
-/* On a narrow screen, always below the title, at the end of the line. */
-@media (max-width: 36rem) {
-  [data-slot='folder-heading'] > [data-slot='pagination'] {
-    flex-basis: 100%;
-  }
+/* The full pagination below the sections, apart from them; on a narrow screen at the end of the line, under the
+   thumb, as a listing's below its cards. */
+:is([data-slot='folder-list'], [data-slot='folder-section']) ~ [data-slot='pagination'] {
+  margin-block-start: calc(var(--fig-space) * 2);
+}
 
-  [data-slot='folder-heading'] > [data-slot='pagination'] [data-slot='pagination-content'] {
+@media (max-width: 36rem) {
+  :is([data-slot='folder-list'], [data-slot='folder-section'])
+    ~ [data-slot='pagination']
+    [data-slot='pagination-content'] {
     justify-content: flex-end;
   }
 }

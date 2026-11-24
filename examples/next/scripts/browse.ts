@@ -536,6 +536,35 @@ try {
       );
     }
 
+    // A category's pages as a listing's: the compact pagination on its first section's heading line, at its end, a
+    // phone's included; the full pagination below the sections.
+    {
+      await phone.goto(`${base}/blog/maquis`, { waitUntil: 'networkidle' });
+      const placed = await phone.evaluate(() => {
+        const row = document.querySelector('[data-slot="folder-heading"]')?.getBoundingClientRect();
+        const heading = document.querySelector('[data-slot="folder-heading"] > h2')?.getBoundingClientRect();
+        const select = document.querySelector('[data-slot="folder-heading"] > [data-slot="page-select-trigger"]');
+        const box = select?.getBoundingClientRect();
+        const sections = [...document.querySelectorAll('[data-slot="folder-section"]')];
+        const pagination = document.querySelector('main > [data-slot="pagination"]');
+
+        return row === undefined || heading === undefined || box === undefined
+          ? undefined
+          : {
+              sameLine: Math.abs(heading.top + heading.height / 2 - (box.top + box.height / 2)) < 2,
+              end: Math.round(row.right - box.right),
+              below:
+                pagination !== null &&
+                (sections.at(-1)?.getBoundingClientRect().bottom ?? Infinity) <= pagination.getBoundingClientRect().top,
+            };
+      });
+
+      check(
+        placed !== undefined && placed.sameLine && placed.end === 0 && placed.below,
+        `/blog/maquis on ${device}: its compact pagination not on its heading's line at its end, or its full one not below (${JSON.stringify(placed)})`,
+      );
+    }
+
     // The list's controls on one line on a phone, whatever the sort's name: the count at the start, the sort and the
     // gear holding the filters at the end (the longest sort's name once pushed the page select onto a line of its own).
     if (!revealed) {
@@ -798,6 +827,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, those of a category too, a listing reached from its category at once, the switcher following, Back restoring; Tab straight to the copy buttons, a region a stop only while it overflows; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
+    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, those of a category too, a listing reached from its category at once, the switcher following, Back restoring; Tab straight to the copy buttons, a region a stop only while it overflows; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit, always for a category; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
   );
 }

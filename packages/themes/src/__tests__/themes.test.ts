@@ -202,26 +202,33 @@ describe('base.css', () => {
     );
   });
 
-  it("sets a folder page's pagination on its title's line, at its end, below it when they do not fit or on a phone", () => {
+  it("sets a folder page's compact pagination on its title's line, at its end, a phone's included", () => {
     const body = (selector: string) => rules.find((rule) => rule.selector === selector)?.body ?? '';
 
-    expect(body("[data-slot='folder-heading']")).toMatch(
-      /display: flex; flex-wrap: wrap;.*justify-content: space-between;/,
+    // One line, never wrapping: the title wraps within its room, the select keeps its own.
+    expect(body("[data-slot='folder-heading']")).toMatch(/display: flex;.*justify-content: space-between;/);
+    expect(body("[data-slot='folder-heading']")).not.toMatch(/flex-wrap: wrap/);
+    expect(body("[data-slot='folder-heading'] > :is(h1, h2)")).toBe(
+      'min-width: 0; margin: 0; overflow-wrap: anywhere;',
     );
-    expect(body("[data-slot='folder-heading'] > [data-slot='pagination']")).toBe('margin-inline-start: auto;');
-    // A narrow screen: always below the title.
+    expect(body("[data-slot='folder-heading'] > [data-slot='page-select-trigger']")).toBe(
+      'flex: none; margin-inline-start: auto;',
+    );
+    // The full pagination below the sections, at the end of the line on a phone, under the thumb.
     expect(source).toMatch(
-      /@media \(max-width: 36rem\) \{\s*\[data-slot='folder-heading'\] > \[data-slot='pagination'\] \{\s*flex-basis: 100%;/,
+      /@media \(max-width: 36rem\) \{\s*:is\(\[data-slot='folder-list'\], \[data-slot='folder-section'\]\)\s+~ \[data-slot='pagination'\]\s+\[data-slot='pagination-content'\] \{\s*justify-content: flex-end;/,
     );
   });
 
-  it("keeps a section's heading its h2's spacing when the pagination shares its line", () => {
+  it("keeps a section's heading its h2's spacing when the compact pagination shares its line", () => {
     const body = (selector: string) => rules.find((rule) => rule.selector === selector)?.body;
 
     expect(body("[data-slot='folder-section'] > [data-slot='folder-heading']")).toBe(
       'margin-block: 0.83em; font-size: 1.5em;',
     );
-    expect(body("[data-slot='folder-heading'] > :is(h1, h2)")).toBe('margin: 0;');
+    expect(
+      body("[data-slot='folder-section'] > [data-slot='folder-heading'] > [data-slot='page-select-trigger']"),
+    ).toBe('font-size: 1rem;');
   });
 
   it("sets the compact pagination at the toolbar's other end, apart from the filters", () => {
