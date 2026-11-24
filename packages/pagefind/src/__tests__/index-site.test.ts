@@ -116,6 +116,11 @@ describe('indexableText', () => {
     expect(indexableText(html)).toBe('Un billet sur le bot');
   });
 
+  it("reads from the body's very first tag, its attribute last and without a value", () => {
+    // The attribute once ended the pattern on the next tag's `>`: the body's first tag was swallowed.
+    expect(indexableText('<main data-pagefind-body><script>var x = 1;</script>Texte</main>')).toBe('Texte');
+  });
+
   it('is undefined without a marked element, and empty for an empty one', () => {
     expect(indexableText('<html><body><main>Texte</main></body></html>')).toBeUndefined();
     expect(indexableText('<html><body><main data-pagefind-body><h1></h1></main></body></html>')).toBe('');

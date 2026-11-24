@@ -52,7 +52,7 @@ export interface IndexedSite {
   readonly problems: readonly SearchProblem[];
 }
 
-const BODY = /<([a-zA-Z][\w-]*)\b[^>]*\sdata-pagefind-body(?:[\s=>]|\/>)[^>]*>/;
+const BODY = /<([a-zA-Z][\w-]*)\b[^>]*\sdata-pagefind-body(?=[\s=>]|\/>)[^>]*>/;
 
 /**
  * The text Pagefind would index in a built page.
