@@ -11,6 +11,12 @@ updates:
     commit-message:
       prefix: build
       include: scope
+    ignore:
+      # Playwright 1.65's Chromium (159) crashes the renderer on a view transition in an iframe, where vitest runs the
+      # browser tests, once a named element has a child running a CSS animation (the theme toggle's orbit); 1.64's
+      # Chromium (156) and Chrome 158 do not. Lifted once a Playwright release ships a Chromium that does not crash.
+      - dependency-name: playwright
+        versions: ['1.65.x']
 
   - package-ecosystem: github-actions
     directories:
