@@ -236,8 +236,8 @@ importers:
         specifier: 1.64.1
         version: 1.64.1
       prettier:
-        specifier: 3.9.10
-        version: 3.9.10
+        specifier: 3.10.1
+        version: 3.10.1
       publint:
         specifier: 0.3.25
         version: 0.3.25
@@ -400,8 +400,8 @@ importers:
         specifier: 4.0.0
         version: 4.0.0(vitest@5.1.0)
       use-intl:
-        specifier: 4.14.9
-        version: 4.14.9(@types/react@19.3.0)(react@19.3.1)
+        specifier: 4.15.1
+        version: 4.15.1(@types/react@19.3.0)(react@19.3.1)
       valibot:
         specifier: 1.5.0
         version: 1.5.0(typescript@6.0.3)
@@ -705,8 +705,8 @@ importers:
         specifier: 19.3.1
         version: 19.3.1(react@19.3.1)
       use-intl:
-        specifier: 4.14.9
-        version: 4.14.9(@types/react@19.3.0)(react@19.3.1)
+        specifier: 4.15.1
+        version: 4.15.1(@types/react@19.3.0)(react@19.3.1)
 
 packages:
 
@@ -5573,8 +5573,8 @@ packages:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
 
-  prettier@3.9.10:
-    resolution: {integrity: sha512-skGHTH1Yb9QvaTC4hWnRTzEYtCpApF0UMBPz+t/0ZPzP8ihefo/btKd+QA7pUE0fEwA1SbS/NmhyEcstdXOIdA==}
+  prettier@3.10.1:
+    resolution: {integrity: sha512-70vp3ZUYoPlFbF9uiTdXHUUCGEIp7d4+6p+8DYbkm2jP7x/3i/paXVF6dopSI3zd/CEitrZN1rc4i85xWmmXlg==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -6229,15 +6229,6 @@ packages:
     peerDependencies:
       '@types/react': '*'
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0 || ^19.0.0-rc
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-
-  use-intl@4.14.9:
-    resolution: {integrity: sha512-37ktvdCCz+6JY2VFPl/GV69Ds4ahiUT2c2xEZZRZYxdgGLxFsUbdxzjQVRm3YMIOUU0VPs6zvlifb4Yjk4IxIg==}
-    peerDependencies:
-      '@types/react': ^17.0.0 || ^18.0.0 || ^19.0.0
-      react: ^17.0.0 || ^18.0.0 || >=19.0.0-rc <19.0.0 || ^19.0.0
     peerDependenciesMeta:
       '@types/react':
         optional: true
@@ -11797,7 +11788,7 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  prettier@3.9.10: {}
+  prettier@3.10.1: {}
 
   pretty-format@27.5.1:
     dependencies:
@@ -12594,16 +12585,6 @@ snapshots:
     dependencies:
       react: 19.3.1
       tslib: 2.9.1
-    optionalDependencies:
-      '@types/react': 19.3.0
-
-  use-intl@4.14.9(@types/react@19.3.0)(react@19.3.1):
-    dependencies:
-      '@formatjs/fast-memoize': 3.1.7
-      '@schummar/icu-type-parser': 1.21.5
-      icu-minify: 4.15.0
-      intl-messageformat: 11.2.15
-      react: 19.3.1
     optionalDependencies:
       '@types/react': 19.3.0
 
