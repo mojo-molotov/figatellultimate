@@ -116,6 +116,57 @@ describe('EntryCard, styled', () => {
     expect(screen.queryByRole('button', { name: '«Autres tags»' })).toBeNull();
   });
 
+  it.skipIf(!inBrowser)(
+    'from the keyboard, rings the whole card and lights it as a hover does; its image zooms for a mouse only',
+    async () => {
+      render(
+        <>
+          <button type="button">«avant»</button>
+          <EntryCard
+            href="/blog/a"
+            title="«Un article»"
+            image={IMAGE}
+            locale="fr"
+            labels={{ tags: '«Tags»', authors: '«Auteurs»', more: '«Autres tags»' }}
+          />
+        </>,
+      );
+      const user = userEvent.setup();
+      const link = screen.getByRole('link', { name: '«Un article»' });
+      const card = link.closest('[data-slot="entry-card"]');
+      const image = card?.querySelector('[data-slot="entry-card-image"]');
+
+      if (!(card instanceof HTMLElement) || !(image instanceof HTMLElement)) throw new Error('no card');
+
+      const accent = getComputedStyle(document.documentElement).getPropertyValue('--fig-accent').trim();
+      // The accent as the browser computes a color: a probe's.
+      const probe = document.createElement('span');
+
+      probe.style.color = accent;
+      document.body.append(probe);
+      const color = getComputedStyle(probe).color;
+
+      probe.remove();
+      screen.getByRole('button', { name: '«avant»' }).focus();
+      await user.tab();
+      // Precondition: the title's link has the keyboard's focus.
+      expect(link.matches(':focus-visible')).toBe(true);
+      // Once the colors' transitions end.
+      await waitFor(() => {
+        // The ring around the card, never the clipped title's: the link itself draws none.
+        expect(getComputedStyle(card).outlineStyle).toBe('solid');
+        expect(getComputedStyle(card).outlineColor).toBe(color);
+        expect(getComputedStyle(link).outlineStyle).toBe('none');
+        // Lit as a hovered card: its border and its title in the accent, the title underlined.
+        expect(getComputedStyle(card).borderTopColor).toBe(color);
+        expect(getComputedStyle(link).color).toBe(color);
+        expect(getComputedStyle(link).textDecorationLine).toBe('underline');
+      });
+      // The image keeps its size: its zoom is a pointer's effect.
+      expect(getComputedStyle(image).transform).toBe('none');
+    },
+  );
+
   it.skipIf(!inBrowser)("animates its image's zoom: no generic transition replaces it", () => {
     render(
       <EntryCard
@@ -174,7 +225,8 @@ describe('EntryCard, styled', () => {
       // Precondition: the long text would take more room than the short one if nothing reserved it.
       expect(long.length).toBeGreaterThan(200);
       expect(heights).toHaveLength(2);
-      expect(heights[0]).toBe(heights[1]);
+      // Equal within a float's rounding: Firefox lays out in sixtieths of a pixel (187.33333 against 187.33334).
+      expect(heights[0]).toBeCloseTo(heights[1] ?? Number.NaN, 2);
     },
   );
 

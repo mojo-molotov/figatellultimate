@@ -163,10 +163,8 @@ describe('styles.css', () => {
     expect(motion.slice(0, motion.indexOf('@keyframes fig-theme-rise'))).not.toMatch(/animation: /);
   });
 
-  it("zooms a card's image on its title's keyboard focus, and on hover with a mouse only, never with reduced motion", () => {
-    expect(CSS).toMatch(
-      /\[data-slot='entry-card'\]:has\(\[data-slot='entry-card-link'\]:focus-visible\) \[data-slot='entry-card-image'\] \{\s*transform: scale\(1\.08\);/,
-    );
+  it("zooms a card's image on hover with a mouse only, never from the keyboard nor with reduced motion", () => {
+    expect(CSS).not.toMatch(/:focus-visible\) \[data-slot='entry-card-image'\]/);
     expect(CSS).toMatch(
       /@media \(hover: hover\) and \(pointer: fine\) \{\s*\[data-slot='entry-card-media'\]:hover \[data-slot='entry-card-image'\] \{\s*transform: scale\(1\.08\);/,
     );

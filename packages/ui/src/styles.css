@@ -536,6 +536,14 @@
   }
 }
 
+/* The title's link from the keyboard: the whole card is what it opens, so the ring goes around the card (the title,
+   clamped, would clip a ring of its own), lit as a hovered card. Focus stays visible (WCAG 2.4.7). */
+[data-slot='entry-card']:has([data-slot='entry-card-link']:focus-visible) {
+  border-color: var(--fig-accent);
+  outline: 2px solid var(--fig-accent);
+  outline-offset: 2px;
+}
+
 [data-slot='entry-card-media'] {
   display: block;
   /* The image fills the card's whole height beside the text (and keeps its ratio when stacked). */
@@ -564,12 +572,8 @@
   }
 }
 
-/* The image zooms in while hovered (with a mouse or a trackpad), and while the card's title link has the keyboard's
-   focus; the frame clips it. */
-[data-slot='entry-card']:has([data-slot='entry-card-link']:focus-visible) [data-slot='entry-card-image'] {
-  transform: scale(1.08);
-}
-
+/* The image zooms in while hovered, with a mouse or a trackpad only: a pointer's effect, never the keyboard's. The
+   frame clips it. */
 @media (hover: hover) and (pointer: fine) {
   [data-slot='entry-card-media']:hover [data-slot='entry-card-image'] {
     transform: scale(1.08);
@@ -577,8 +581,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-slot='entry-card-media']:hover [data-slot='entry-card-image'],
-  [data-slot='entry-card']:has([data-slot='entry-card-link']:focus-visible) [data-slot='entry-card-image'] {
+  [data-slot='entry-card-media']:hover [data-slot='entry-card-image'] {
     transform: none;
   }
 }
@@ -616,6 +619,12 @@
     color: var(--fig-accent);
     text-decoration: underline;
   }
+}
+
+[data-slot='entry-card-link']:focus-visible {
+  outline: none;
+  color: var(--fig-accent);
+  text-decoration: underline;
 }
 
 [data-slot='entry-card-date'] {

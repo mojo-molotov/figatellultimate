@@ -305,8 +305,9 @@ describe('ImageZoom', () => {
     const preloads = () => [...document.querySelectorAll('[data-slot="image-zoom-preload"]')];
     const button = await screen.findByRole('button', { name: `«agrandir : ${ALT}»` });
 
-    // Precondition: nothing fetched before the visitor shows an interest.
-    expect(preloads()).toEqual([]);
+    // Precondition: nothing fetched before the visitor shows an interest. A count, not the elements: a failure
+    // serializing DOM nodes overflows the report's string.
+    expect(preloads().length).toBe(0);
     await user.hover(button);
     const [preload] = preloads();
 
