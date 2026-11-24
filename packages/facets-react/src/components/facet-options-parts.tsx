@@ -4,20 +4,29 @@
  * The facet options' parts that hold the cmdk list: the content, the filter, the terms and "clear". Their own module
  * (and chunk), loaded when the popover opens: a listing page ships the trigger alone until the reader filters.
  *
+ * Key design decision: no term active on opening, as chosen with the user. cmdk makes the first one active as its
+ * list mounts, highlighted without the field telling it (no `aria-activedescendant`): a screen reader said nothing of
+ * it, and Enter toggled a term never heard. Its value is held here, from one no term has (`NONE`): ↓, typing (the
+ * first match) or the pointer make a term active, told to assistive technologies.
+ *
  * Invariants (`components.test.tsx`, in happy-dom and in real browsers): axe, keyboard (Enter opens and focuses the
- * filter, arrows move, Enter toggles, Escape closes back to the trigger), no text of its own, slots and props.
+ * filter, none active, arrows move, Enter toggles, Escape closes back to the trigger), no text of its own, slots and
+ * props.
  */
 import { Command } from 'cmdk';
 import { Popover, VisuallyHidden } from 'radix-ui';
-import type { ComponentProps, ReactNode } from 'react';
+import { useState, type ComponentProps, type ReactNode } from 'react';
 
 import { selectedOf, useFacetOptions as use } from './facet-options-context.js';
+
+/** No term's value (term keys never start with a control character): no term active. */
+const NONE = '\u0000none';
 
 /**
  * The popover's content: a cmdk list, the filter field first.
  *
  * @param props - The Radix content's props; `children` replace the default filter, list and "clear".
- * @returns The content, labelled by the trigger.
+ * @returns The content, labelled by the trigger; no term active until ↓, typing or the pointer makes one.
  *
  * @example
  * <FacetOptions binding={binding} facet="tags" labels={labels.tags} locale="fr">
@@ -33,6 +42,8 @@ import { selectedOf, useFacetOptions as use } from './facet-options-context.js';
  */
 export function FacetOptionsContent({ children, ...props }: ComponentProps<typeof Popover.Content>): ReactNode {
   const context = use('FacetOptionsContent');
+  // Unmounted with the popover: none active again on each opening.
+  const [active, setActive] = useState(NONE);
 
   return (
     <Popover.Portal>
@@ -44,7 +55,12 @@ export function FacetOptionsContent({ children, ...props }: ComponentProps<typeo
         {...props}
       >
         {/* cmdk names the filter field by the command's label, and the list by its own (default: English). */}
-        <Command label={context.labels.filter} data-slot="facet-options-command">
+        <Command
+          label={context.labels.filter}
+          value={active}
+          onValueChange={setActive}
+          data-slot="facet-options-command"
+        >
           {children ?? (
             <>
               <FacetOptionsInput />

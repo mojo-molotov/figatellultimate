@@ -214,7 +214,7 @@ describe('facet options', () => {
     expect(await violations()).toEqual([]);
   });
 
-  it('keyboard: Enter opens and focuses the filter, ↓ moves, Enter toggles and keeps the list open, Escape closes back to the trigger', async () => {
+  it('keyboard: Enter opens and focuses the filter, none active, ↓ moves, Enter toggles and keeps the list open, Escape closes back to the trigger', async () => {
     const { user, history, binding } = renderListing();
     const trigger = screen.getByRole('button', { name: '«déclencheur 0»' });
 
@@ -224,7 +224,19 @@ describe('facet options', () => {
     await waitFor(() => {
       expect(focused()?.getAttribute('aria-label')).toBe('«filtrer»');
     });
-    // The first term is active; ↓ moves to the second.
+    // None active: nothing highlighted that a screen reader was not told of, and Enter toggles nothing.
+    const field = screen.getByRole('combobox', { name: '«filtrer»' });
+
+    expect(screen.getAllByRole('option').filter((o) => o.getAttribute('aria-selected') === 'true')).toEqual([]);
+    expect(field.hasAttribute('aria-activedescendant')).toBe(false);
+    await user.keyboard('{Enter}');
+    expect(binding().state.facets['tags'] ?? []).toEqual([]);
+    // ↓ makes the first term active, told to assistive technologies; ↓ again, the second.
+    await user.keyboard('{ArrowDown}');
+    const first = screen.getAllByRole('option')[0];
+
+    expect(first?.getAttribute('aria-selected')).toBe('true');
+    expect(field.getAttribute('aria-activedescendant')).toBe(first?.id);
     await user.keyboard('{ArrowDown}{Enter}');
     expect(history.at(-1)).toBe('?tags=release');
     expect(binding().state.facets['tags']).toEqual(['release']);
@@ -247,6 +259,8 @@ describe('facet options', () => {
     const options = screen.getAllByRole('option');
 
     expect(options.map((o) => o.getAttribute('data-value'))).toEqual(['release']);
+    // Typing makes the first match active.
+    expect(options[0]?.getAttribute('aria-selected')).toBe('true');
     await user.clear(screen.getByRole('combobox', { name: '«filtrer»' }));
     await user.keyboard('{End}');
     expect(screen.getAllByRole('option').at(-1)?.getAttribute('aria-selected')).toBe('true');
