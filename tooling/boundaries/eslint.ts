@@ -14,6 +14,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import { configs as tsConfigs } from 'typescript-eslint';
 
 import { airy } from './airy.ts';
+import { fragments } from './fragments.ts';
 import { discoverPackages, forbiddenPackagesFor, NODE_BUILTINS, UNIVERSAL_ROLES } from './roles.ts';
 
 /**
@@ -139,6 +140,8 @@ export function createEslintConfig(root: string, ignores: readonly string[] = []
     },
     // Airy code: blank lines before a return, after declarations, around control flow.
     airy(['**/*.{ts,tsx}']),
+    // No fragment holding a single child.
+    fragments(['**/*.tsx']),
     {
       // React's rules of hooks and compiler-backed checks, wherever React code lives.
       name: 'figatellultimate/react-hooks',
