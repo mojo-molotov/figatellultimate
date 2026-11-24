@@ -236,6 +236,7 @@ const ui = {
     placeholder: 'Rechercher…',
     results: 'Résultats',
     more: 'Voir plus',
+    pause: ', ',
     tooShort: 'Tapez au moins {minimum} caractères.',
     searching: 'Recherche…',
     unavailable: 'La recherche est indisponible (lancez figatellultimate search après le build).',
@@ -257,8 +258,8 @@ const ui = {
       empty: 'Aucun auteur',
       clear: 'Réinitialiser les auteurs',
     },
-  },
     unit: '{count, plural, one {article} many {articles} other {articles}}',
+  },
   listing: { total: '{count, plural, =0 {Aucun article} one {# article} many {# articles} other {# articles}}' },
   reset: 'Réinitialiser les filtres',
   options: {

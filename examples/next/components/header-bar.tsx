@@ -31,6 +31,8 @@ export interface HeaderLabels {
     readonly searching: string;
     readonly unavailable: string;
     readonly more: string;
+    /** Heard between a result's title, place and date: a pause. */
+    readonly pause: string;
     readonly sortTrigger: string;
     readonly sorts: Readonly<Record<string, string>>;
     /** The sorts whose name reads badly aloud (an arrow), as a screen reader says them. */
@@ -96,7 +98,8 @@ export function HeaderBar(props: {
           search={search}
           dir={dir}
           // Each result's breadcrumb, put on its page as Pagefind metadata; its collection when it has none.
-          trail={(result) => result.meta['breadcrumb']}
+          // Its steps, the chevrons the meta joined them with (`trail.ts`) left to the box, seen and not heard.
+          trail={(result) => result.meta['breadcrumb']?.split(/ [›‹] /)}
           // The page being read: its own result is dimmed.
           current={url}
           // Each dated result shows its date, in the page's language.
@@ -123,6 +126,7 @@ export function HeaderBar(props: {
               found: (count) => formatPrecompiled(text.found, locale, { count }),
             },
             more: text.more,
+            pause: text.pause,
           }}
           onNavigate={(target) => {
             router.push(target);

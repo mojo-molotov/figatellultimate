@@ -36,6 +36,7 @@ async function headerLabels(locale: Locale): Promise<HeaderLabels> {
       searching: ui('search.searching'),
       unavailable: ui('search.unavailable'),
       more: ui('search.more'),
+      pause: ui('search.pause'),
       sortTrigger: ui('search.sort.trigger'),
       // Relevance is the search's own; the other sorts are named as the listings name them, shown and read alike.
       sorts: Object.fromEntries(

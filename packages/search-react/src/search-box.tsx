@@ -12,16 +12,19 @@
  *     - No style, no text of its own: every label required, dates formatted for the given locale.
  *
  * Invariants (`search-box.test.tsx`, in happy-dom and in real browsers): axe empty and with results, the keyboard
- * flow, new tabs, the sort, its spoken names, dates, the highlight announced once per change, no text of its own.
+ * flow, new tabs, the sort, its spoken names, dates, the highlight announced once per change, no text of its own; a
+ * result named by its title, place and date, its excerpt its description, a trail's chevrons not heard.
  */
 import type { Search, SearchResult, SearchSort } from '@figatellultimate/search';
 import { Command } from 'cmdk';
 import { Direction, Select, ToggleGroup, VisuallyHidden } from 'radix-ui';
 import {
   createContext,
+  Fragment,
   useContext,
   useEffect,
   useEffectEvent,
+  useId,
   useRef,
   useState,
   type ComponentProps,
@@ -50,6 +53,11 @@ export interface SearchBoxLabels<C extends string> {
     /** Results found, 0 included. */
     readonly found: (total: number) => string;
   };
+  /**
+   * Heard between a result's title, its place's steps and its date, never seen: a screen reader's pause, e.g. ", ".
+   * None: they run on.
+   */
+  readonly pause?: string | undefined;
   /** The "see more" button. */
   readonly more: string;
 }
@@ -61,7 +69,7 @@ interface SearchBoxContext {
   /** The URL of the page being read: its own result is marked. */
   readonly current: string | undefined;
   /** A result's trail (e.g. its breadcrumb), by URL; `undefined` shows its collection instead. */
-  readonly trailOf: (url: string) => string | undefined;
+  readonly trailOf: (url: string) => string | readonly string[] | undefined;
   readonly filter: SearchBoxFilter<string> | undefined;
   readonly sortBy: SearchBoxSort | undefined;
   /** A result's date for the box's locale, `undefined` without a locale or a valid date. */
@@ -132,9 +140,10 @@ export interface SearchBoxProps<C extends string> extends Omit<
   readonly labels: SearchBoxLabels<C>;
   /**
    * Where a result sits, shown under its title instead of its collection: e.g. its breadcrumb, from the page's
-   * metadata (`result.meta`). `undefined` for a result keeps its collection; absent, every result shows it.
+   * metadata (`result.meta`). Its steps, drawn with chevrons (the reading way's) a screen reader does not say, or a
+   * text shown as is. `undefined` for a result keeps its collection; absent, every result shows it.
    */
-  readonly trail?: ((result: SearchResult<C>) => string | undefined) | undefined;
+  readonly trail?: ((result: SearchResult<C>) => string | readonly string[] | undefined) | undefined;
   /** The URL of the page being read: its result is marked (`aria-current="page"`, `data-current`), dimmed by the stylesheet. */
   readonly current?: string | undefined;
   /** Opens a result (Enter or a click); default: `location.assign`. E.g. Next's `router.push`. */
@@ -569,15 +578,25 @@ export interface SearchBoxResultProps extends Omit<ComponentProps<typeof Command
   readonly result: SearchResult<string>;
 }
 
+/** The labels' pause, heard and not seen; nothing without one. */
+function Pause(): ReactNode {
+  const { labels } = use('SearchBoxResult');
+
+  return labels.pause === undefined ? null : <VisuallyHidden.Root>{labels.pause}</VisuallyHidden.Root>;
+}
+
 /**
- * One result: its title, where it sits (its trail, or its collection) and its date, then Pagefind's excerpt.
+ * One result: its title, where it sits (its trail, or its collection) and its date, then Pagefind's excerpt. Named
+ * by the first three, as chosen with the user, short as the arrows move through them; the excerpt its description,
+ * heard after a pause.
  *
  * @param props - The result, and cmdk's item props; `children` replace the default content.
  * @returns An option: Enter or a click opens it, a modified or middle click opens it in a new tab; the page being
  *   read is marked `aria-current="page"`.
  */
 export function SearchBoxResult({ result, children, ...props }: SearchBoxResultProps): ReactNode {
-  const { navigate, openInNewTab, collectionLabel, trailOf, current, dateOf } = use('SearchBoxResult');
+  const { navigate, openInNewTab, collectionLabel, trailOf, current, dateOf, dir } = use('SearchBoxResult');
+  const excerptId = useId();
   const trail = trailOf(result.url);
   const date = result.date === undefined ? undefined : dateOf(result.date);
   const here = result.url === current;
@@ -606,27 +625,55 @@ export function SearchBoxResult({ result, children, ...props }: SearchBoxResultP
       data-collection={result.collection}
       // The page being read: still a result to open, told apart (dimmed by the stylesheet).
       aria-current={here ? 'page' : undefined}
+      // The default content's excerpt; composed parts describe it themselves.
+      {...(children === undefined ? { 'aria-describedby': excerptId } : {})}
       data-current={here ? '' : undefined}
       {...props}
     >
       {children ?? (
         <>
           <span data-slot="search-box-result-title">{result.title}</span>
-          {/* Where it sits, then its date, on one line. */}
+          {/* Where it sits, then its date, on one line; heard after a comma, the chevrons only seen. */}
           <span data-slot="search-box-result-line">
+            <Pause />
             {trail === undefined ? (
               <span data-slot="search-box-result-collection">{collectionLabel(result.collection)}</span>
             ) : (
-              <span data-slot="search-box-result-trail">{trail}</span>
+              <span data-slot="search-box-result-trail">
+                {typeof trail === 'string'
+                  ? trail
+                  : trail.map((step, index) => (
+                      <Fragment key={index}>
+                        {index === 0 ? null : (
+                          <>
+                            <span data-slot="search-box-result-separator" aria-hidden>
+                              {dir === 'rtl' ? ' ‹ ' : ' › '}
+                            </span>
+                            <Pause />
+                          </>
+                        )}
+                        {step}
+                      </Fragment>
+                    ))}
+              </span>
             )}
             {date === undefined || result.date === undefined ? null : (
-              <time data-slot="search-box-result-date" dateTime={result.date}>
-                {date}
-              </time>
+              <>
+                <Pause />
+                <time data-slot="search-box-result-date" dateTime={result.date}>
+                  {date}
+                </time>
+              </>
             )}
           </span>
-          {/* Pagefind escapes the page's text and only adds <mark> around the matches. */}
-          <span data-slot="search-box-result-excerpt" dangerouslySetInnerHTML={{ __html: result.excerpt }} />
+          {/* Pagefind escapes the page's text and only adds <mark> around the matches. Out of the name, which stays
+              short: its description, heard after a pause, which moving on cuts. */}
+          <span
+            id={excerptId}
+            data-slot="search-box-result-excerpt"
+            aria-hidden
+            dangerouslySetInnerHTML={{ __html: result.excerpt }}
+          />
         </>
       )}
     </Command.Item>

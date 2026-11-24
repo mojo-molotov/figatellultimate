@@ -39,6 +39,8 @@ export const schema = {
       placeholder: _,
       results: _,
       more: _,
+      // Heard between a result's title, place and date, never seen.
+      pause: _,
       tooShort: _,
       searching: _,
       unavailable: _,
@@ -49,10 +51,10 @@ export const schema = {
     facets: {
       tags: { trigger: _, filter: _, list: _, empty: _, clear: _ },
       authors: { trigger: _, filter: _, list: _, empty: _, clear: _ },
-    },
-    reset: _,
       // What a term's count counts, heard after it ("Harpe, 17 articles"), not seen.
       unit: _,
+    },
+    reset: _,
     options: { trigger: _, content: _ },
     // Each sort's name as shown, and, where it reads badly aloud (an arrow), as a screen reader says it.
     sort: {

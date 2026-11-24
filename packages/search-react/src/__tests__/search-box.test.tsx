@@ -50,6 +50,7 @@ const pagefind = {
 
 const LABELS: SearchBoxLabels<Collection> = {
   input: '«rechercher»',
+  pause: '«, »',
   placeholder: '«tapez»',
   collection: (c) => `«collection ${c}»`,
   results: '«résultats»',
@@ -470,6 +471,50 @@ describe('SearchBox', () => {
     const page = screen.getAllByRole('option').find((option) => option.getAttribute('data-collection') === 'pages');
 
     expect(page?.querySelector('[data-slot="search-box-result-collection"]')?.textContent).toBe('«collection pages»');
+  });
+
+  it('names a result by its title, place and date, its excerpt its description, a trail read without separators', async () => {
+    const search = createSearch<Collection>({
+      collections: ['pages', 'blog'],
+      locale: 'fr',
+      debounce: 0,
+      load: () => Promise.resolve(pagefind),
+    });
+    const user = userEvent.setup();
+
+    render(
+      <SearchBox
+        search={search}
+        labels={LABELS}
+        locale="fr"
+        trail={(result) => result.meta['breadcrumb']?.split(' › ')}
+      />,
+    );
+    await user.type(screen.getByRole('combobox'), 'chevaux');
+    await waitFor(() => {
+      expect(screen.getAllByRole('option').length).toBeGreaterThan(0);
+    });
+    const first = screen.getAllByRole('option')[0];
+    const title = first?.querySelector('[data-slot="search-box-result-title"]')?.textContent ?? '';
+    const date = first?.querySelector('[data-slot="search-box-result-date"]')?.textContent ?? '';
+    const description = document.getElementById(first?.getAttribute('aria-describedby') ?? '')?.textContent;
+
+    // Precondition: a dated post with a trail.
+    expect(title !== '' && date !== '').toBe(true);
+    // Short: what it is and where it sits, as a list's item; the excerpt heard after a pause, as its description.
+    expect(first?.textContent).toContain('«, »');
+    // Spaces aside: happy-dom spaces out elements a browser runs together.
+    const spaced = (text: string): string => text.replaceAll(/\s+/g, '');
+    const name = `${title}«, »«blog«, »/doc/0»«, »${date}`;
+
+    expect(screen.getByRole('option', { name: (given) => spaced(given) === spaced(name) })).toBe(first);
+    expect(description).toBe('«extrait chevaux»');
+    // The trail's separators are seen, not heard.
+    expect(
+      [...(first?.querySelectorAll('[data-slot="search-box-result-separator"]') ?? [])].map((separator) =>
+        separator.getAttribute('aria-hidden'),
+      ),
+    ).toEqual(['true']);
   });
 
   it('marks the result of the page being read (`current`), and only it', async () => {

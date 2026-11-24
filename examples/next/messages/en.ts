@@ -246,6 +246,7 @@ const ui = {
     placeholder: 'Search…',
     results: 'Results',
     more: 'See more',
+    pause: ', ',
     tooShort: 'Type at least {minimum} characters.',
     searching: 'Searching…',
     unavailable: 'Search is unavailable (run figatellultimate search after the build).',
@@ -267,8 +268,8 @@ const ui = {
       empty: 'No author',
       clear: 'Clear authors',
     },
-  },
     unit: '{count, plural, one {post} other {posts}}',
+  },
   listing: { total: '{count, plural, =0 {No posts} one {# post} other {# posts}}' },
   reset: 'Reset filters',
   options: {
