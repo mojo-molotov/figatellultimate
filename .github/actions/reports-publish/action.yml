@@ -118,7 +118,14 @@ runs:
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git add -A
         git commit -q -m "chore: reports, ${{ inputs.family }} last (run #${{ github.run_number }})"
-        git push -q --force "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" allure-reports
+        remote="https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+        # A push GitHub refuses on its side (`fatal error in commit_refs_rules`) is tried again after a pause, twice:
+        # the same single commit, replaced, so a second push is harmless.
+        for pause in 15 60; do
+          if git push -q --force "$remote" allure-reports; then exit 0; fi
+          sleep "$pause"
+        done
+        git push -q --force "$remote" allure-reports
 
     - name: Stage the site
       uses: actions/upload-pages-artifact@v5

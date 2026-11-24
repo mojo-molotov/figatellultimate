@@ -72,6 +72,11 @@ describe('GitHub Actions', () => {
     expect(publish).toMatch(/-size \+90M/);
     expect(publish).toContain('--orphan allure-reports');
     expect(publish).toContain('git push -q --force');
+    // A push GitHub refuses on its side (`fatal error in commit_refs_rules`) is tried again after a pause: the same
+    // single commit, replaced, so a second push is harmless.
+    expect(publish).toMatch(
+      /for pause in [\d ]+; do\n\s+if git push -q --force [^\n]+; then exit 0; fi\n\s+sleep "\$pause"\n\s+done/,
+    );
   });
 
   it('deploys the reports from the publication, again after a failure: the listing it reads lags the upload', () => {
