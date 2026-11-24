@@ -506,6 +506,22 @@ for (const item of mountedUrls.filter(
   );
 }
 
+// The headings' outline, on every page: a single h1, and never a level skipped on the way down (a card's title right
+// under the page's is an h2, under a section's heading an h3).
+for (const item of mountedUrls) {
+  const html = htmlOf(item.url);
+
+  if (html === undefined) continue;
+
+  const levels = [...html.matchAll(/<h([1-6])[\s>]/g)].map((m) => Number(m[1]));
+  const skips = levels.some((level, index) => level > (index === 0 ? 1 : (levels[index - 1] ?? 0) + 1));
+
+  check(
+    levels.filter((level) => level === 1).length === 1 && !skips,
+    `${item.url}: headings h${levels.join(', h')}, not one h1 then no level skipped`,
+  );
+}
+
 // Authors' pages: one per author in every locale where they wrote a post, and nowhere else, a page per slice of
 // their posts (`perPage`), each prerendered with its slice only (an author's page once held every post, megabytes);
 // every card's author links their page in the card's locale.
