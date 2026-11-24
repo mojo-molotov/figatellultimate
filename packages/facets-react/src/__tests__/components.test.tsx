@@ -43,7 +43,11 @@ const POSTS: readonly Post[] = Array.from({ length: 20 }, (_, i) => ({
 const engine: Engine<Post> = defineFacetedCollection<Post>({
   items: POSTS,
   key: (post) => post.url,
-  facets: { tags: { values: (post) => post.tags } },
+  // A second facet, so that the listing options hold two (`kind`: one tag or several).
+  facets: {
+    tags: { values: (post) => post.tags },
+    kind: { values: (post) => [post.tags.length > 1 ? 'mixed' : 'single'] },
+  },
   sorts: {
     'date-desc': (a, b) => (a.date < b.date ? 1 : -1),
     'date-asc': (a, b) => (a.date < b.date ? -1 : 1),
@@ -62,6 +66,7 @@ const FACET: FacetOptionsLabels = {
 };
 /** The browser family runs these tests in real browsers, where `react-dom/server` does not run. */
 const inBrowser = !navigator.userAgent.includes('HappyDOM');
+const KIND: FacetOptionsLabels = { ...FACET, trigger: (n) => `«genre ${String(n)}»`, filter: '«filtrer les genres»' };
 const OPTIONS: ListingOptionsLabels = {
   trigger: (n) => `«options ${String(n)}»`,
   content: '«options de la liste»',
@@ -679,10 +684,27 @@ describe('listing options', () => {
       <SortSelect binding={binding} labels={SORT} />
       <ListingOptions binding={binding} labels={OPTIONS} locale="fr" icon={<svg data-test="gear" />}>
         <FacetOptions binding={binding} facet="tags" labels={FACET} locale="fr" />
+        <FacetOptions binding={binding} facet="kind" labels={KIND} locale="fr" />
         <FacetsReset binding={binding} labels={{ reset: '«réinitialiser»' }} />
       </ListingOptions>
     </>
   );
+
+  it('shows a single facet in place of the gear: nothing to group, its own list clearing it', async () => {
+    const { user, history } = renderListing('?tags=bot', (binding) => (
+      <ListingOptions binding={binding} labels={OPTIONS} locale="fr" icon={<svg data-test="gear" />}>
+        <FacetOptions binding={binding} facet="tags" labels={FACET} locale="fr" />
+        {null}
+        <FacetsReset binding={binding} labels={{ reset: '«réinitialiser»' }} />
+      </ListingOptions>
+    ));
+
+    expect(screen.queryByRole('button', { name: /«options/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: '«réinitialiser»' })).toBeNull();
+    await user.click(screen.getByRole('button', { name: '«déclencheur 1»' }));
+    await user.click(screen.getByRole('option', { name: /«terme guide»/ }));
+    expect(history.at(-1)).toMatch(/^\?tags=bot&tags=guide/);
+  });
 
   it('passes axe, closed and open, the app’s icon hidden from assistive technologies', async () => {
     const { user } = renderListing('', options);
@@ -732,11 +754,13 @@ describe('listing options', () => {
     screen.getByRole('button', { name: '«options 1»' }).focus();
     await user.keyboard('{Enter}');
     const tags = screen.getByRole('button', { name: '«déclencheur 1»' });
+    const kind = screen.getByRole('button', { name: '«genre 0»' });
     const reset = screen.getByRole('button', { name: '«réinitialiser»' });
 
     expect(focused()).toBe(tags);
 
     for (const [key, expected] of [
+      ['{ArrowDown}', kind],
       ['{ArrowDown}', reset],
       ['{ArrowDown}', tags],
       ['{ArrowUp}', reset],

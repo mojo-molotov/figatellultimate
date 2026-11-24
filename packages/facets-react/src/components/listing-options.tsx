@@ -20,16 +20,20 @@
  *     - The count of selected terms on the gear, its name saying it too (`labels.trigger`): the filters hidden, the
  *       reader still sees some are on.
  *     - No icon and no text of its own: the app gives the gear (`icon`) and every text.
+ *     - A gear from two facets on: a single one is shown in place of the gear, as chosen with the user (a panel holding
+ *       one list is a click for nothing); its own list's "clear" stands for the reset, left out. The facets are its
+ *       `FacetOptions` children: one wrapped in an app's component is not counted, the gear kept.
  *
- * Invariants (`components.test.tsx`): axe closed and open; the count of selected terms, absent without any, in the
- * name; a widget's list opened inside never closes the panel; ↑ ↓ Home End between its widgets, a widget's own keys
+ * Invariants (`components.test.tsx`): axe closed and open; a single facet in place of the gear, without the reset;
+ * the count of selected terms, absent without any, in the name; a widget's list opened inside never closes the panel; ↑ ↓ Home End between its widgets, a widget's own keys
  * left to it; Escape closes it, focus back on the gear; no text of its own.
  */
 import { Direction, Popover } from 'radix-ui';
-import { useRef, type ComponentProps, type KeyboardEvent, type ReactNode } from 'react';
+import { Children, isValidElement, useRef, type ComponentProps, type KeyboardEvent, type ReactNode } from 'react';
 
 import type { FacetedCollectionBinding } from '../use-faceted-collection.js';
 import { numberFormat } from './context.js';
+import { FacetOptions } from './facet-options.js';
 
 /** Every text of the listing's options: no default, no English. */
 export interface ListingOptionsLabels {
@@ -76,6 +80,7 @@ export function ListingOptions({
 }: ListingOptionsProps): ReactNode {
   const selected = Object.values(binding.state.facets).reduce((sum, values) => sum + values.length, 0);
   const content = useRef<HTMLDivElement>(null);
+  const facets = Children.toArray(children).filter((child) => isValidElement(child) && child.type === FacetOptions);
   // ↑ ↓ (Home, End) move from a widget to the next, as in a menu, wrapping around; a key in a widget's own list
   // (its filter, its options), which bubbles here through React's tree, is the widget's.
   const move = (event: KeyboardEvent<HTMLDivElement>): void => {
@@ -130,6 +135,9 @@ export function ListingOptions({
       </Popover.Portal>
     </Popover.Root>
   );
+
+  // A single facet: nothing to group, shown in place of the gear; its own list clears it, no reset needed.
+  if (facets.length === 1) return facets[0];
 
   return dir === undefined ? panel : <Direction.Provider dir={dir}>{panel}</Direction.Provider>;
 }
