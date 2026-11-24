@@ -15,6 +15,10 @@
  *       nudged back up a little (`NUDGE`) and lands there anew, still current: at the very bottom, no scroll down is
  *       left to give the next headings their turns, and the reader's attempts (an overscroll's bounce) fire no scroll
  *       event.
+ *     - The disclosure button sits inside the landmark it controls, first in reading order, as chosen with the user:
+ *       focused from outside, a screen reader names the landmark (its title, « On this page ») before the button's
+ *       own label (« Contents »), once on entering it, as it does for any landmark. Rejected: the button before the
+ *       `<nav>`, and one name for both, which says the same word twice.
  *
  * Invariants (`table-of-contents.test.tsx`, `table-of-contents-layout.test.tsx` in Chromium, Firefox and WebKit):
  * reading, the bottom of the page, a hash on load, a click locking the followed heading, the range line, the panel's
