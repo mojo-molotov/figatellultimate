@@ -311,12 +311,10 @@ main:is([data-listing], [data-folder]) {
   list-style: none;
 }
 
-/* A listing's pagination, below its cards (an author's page, a subcategory): on a narrow screen, at the end of the
-   line, under the thumb, as a folder's beside its heading. */
-@media (max-width: 36rem) {
-  [data-slot='listing-cards'] ~ [data-slot='pagination'] [data-slot='pagination-content'] {
-    justify-content: flex-end;
-  }
+/* A listing's pagination, below its cards (an author's page, a subcategory): at the end of the line on every screen,
+   under the thumb on a phone, as a category's on its last line. */
+[data-slot='listing-cards'] ~ [data-slot='pagination'] [data-slot='pagination-content'] {
+  justify-content: flex-end;
 }
 
 header > [data-slot='breadcrumb'] {
@@ -371,11 +369,13 @@ header > [data-slot='breadcrumb'] {
 }
 
 /* A category's last section ends the page: its "see more" and the full pagination on one line, the pagination at its
-   end; on a narrow screen, the pagination below it, at the end of its line, under the thumb. */
+   end; on a narrow screen, the pagination below it, at the end of its line, under the thumb. Both at the line's top:
+   the link, a line of its own (`folder-end-more`), sits as in every other section, the taller pagination beside it
+   moving it not. */
 [data-slot='folder-end'] {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: calc(var(--fig-space) * 2);
 }
@@ -394,18 +394,16 @@ header > [data-slot='breadcrumb'] {
   }
 }
 
-/* The blog's full pagination below its categories, apart from them; on a narrow screen at the end of the line, under
-   the thumb, as a listing's below its cards. */
+/* The blog's full pagination below its categories, apart from them, at the end of the line on every screen, as a
+   listing's below its cards. */
 :is([data-slot='folder-list'], [data-slot='folder-section']) ~ [data-slot='pagination'] {
   margin-block-start: calc(var(--fig-space) * 2);
 }
 
-@media (max-width: 36rem) {
-  :is([data-slot='folder-list'], [data-slot='folder-section'])
-    ~ [data-slot='pagination']
-    [data-slot='pagination-content'] {
-    justify-content: flex-end;
-  }
+:is([data-slot='folder-list'], [data-slot='folder-section'])
+  ~ [data-slot='pagination']
+  [data-slot='pagination-content'] {
+  justify-content: flex-end;
 }
 
 /* A category's previews, compact: a narrower image, one line of title and of description. A listing's cards keep

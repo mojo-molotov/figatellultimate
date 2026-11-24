@@ -198,7 +198,8 @@ function SectionsView({
                 its end (below it on a phone, the theme's). */}
             {index === shown.length - 1 ? (
               <div data-slot="folder-end">
-                {more(section)}
+                {/* The link on a line of its own, as in every section: the pagination beside it moves it not. */}
+                <div data-slot="folder-end-more">{more(section)}</div>
                 {pagination}
               </div>
             ) : (
