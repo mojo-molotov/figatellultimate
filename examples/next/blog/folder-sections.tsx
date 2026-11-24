@@ -191,7 +191,8 @@ function SectionsView({
             <ol data-slot="listing-cards">
               {section.posts.map((card) => (
                 <li key={card.href}>
-                  <PostCard card={card} />
+                  {/* Under the section's own heading. */}
+                  <PostCard card={card} headingLevel={3} />
                 </li>
               ))}
             </ol>
