@@ -25,7 +25,12 @@ export interface FacetLabels<N extends 'tags' | 'authors' = 'tags' | 'authors'> 
 /** Every text of a listing. */
 export interface ListingLabels {
   readonly facets: { readonly tags: FacetLabels<'tags'>; readonly authors: FacetLabels<'authors'> };
-  readonly sort: { readonly trigger: string; readonly names: Readonly<Record<string, string>> };
+  /** Each sort's name as shown, and as a screen reader says it where they differ (an arrow). */
+  readonly sort: {
+    readonly trigger: string;
+    readonly names: Readonly<Record<string, string>>;
+    readonly spoken: Readonly<Record<string, string>>;
+  };
   readonly reset: string;
   /** The gear holding the facets and the sort: its name takes the count of selected terms; its panel's name. */
   readonly options: { readonly trigger: Precompiled<'ui.options.trigger'>; readonly content: string };
@@ -75,6 +80,7 @@ export async function listingLabels(locale: Locale): Promise<ListingLabels> {
     sort: {
       trigger: t('ui.sort.trigger'),
       names: Object.fromEntries(SORTS.map((sort) => [sort, t(`ui.sort.${sort}`)])),
+      spoken: { 'title-asc': t('ui.sort.spoken.title-asc'), 'title-desc': t('ui.sort.spoken.title-desc') },
     },
     reset: t('ui.reset'),
     options: { trigger: await compiled(locale, 'ui.options.trigger'), content: t('ui.options.content') },

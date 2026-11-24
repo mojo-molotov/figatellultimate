@@ -20,7 +20,10 @@
  *     - On a desktop only (a mouse or a trackpad): on a touch screen, or with `prefers-reduced-motion`, no orbit, no
  *       sunset and never disabled; the theme simply changes.
  *
- * Invariants (`theme-toggle.test.tsx`, `theme-toggle-layout.test.tsx` in real browsers): its state, its storage
+ *     - An action, named by the theme on and the one a press gives, as chosen with the user: a screen reader says
+ *       both, rather than a pressed "Dark theme". Rejected: `aria-pressed`, which says the state but not the action.
+ *
+ * Invariants (`theme-toggle.test.tsx`, `theme-toggle-layout.test.tsx` in real browsers): its name for each theme, its storage
  * wrapped (a page without storage still works), controlled mode, the icon before hydration, the orbit played and
  * the presses ignored while it runs, the page's sunset or sunrise, none of them with reduced motion.
  */
@@ -149,10 +152,16 @@ function choose(theme: Theme): void {
   for (const listener of listeners) listener();
 }
 
-/** The toggle's own text. */
+/**
+ * The toggle's own text: its accessible name, saying the theme on and the one a press gives.
+ */
 export interface ThemeToggleLabels {
-  /** The button's accessible name, e.g. "Dark theme": pressed when the dark theme is on. */
+  /** While the light theme is on, e.g. "Light theme, switch to the dark theme". */
+  readonly light: string;
+  /** While the dark theme is on, e.g. "Dark theme, switch to the light theme". */
   readonly dark: string;
+  /** While the theme is not known yet (on the server, before a theme library knows it), e.g. "Switch the theme". */
+  readonly unknown: string;
 }
 
 interface ThemeToggleBase extends Omit<ComponentProps<'button'>, 'children' | 'onClick'> {
@@ -176,15 +185,14 @@ export type ThemeToggleProps =
  *
  * @param props - The labels; optionally `theme` and `onThemeChange` together, to be controlled by a theme library
  *   (e.g. next-themes); and a button's props.
- * @returns A toggle button (`aria-pressed` in the dark theme). On its own, it starts from the system's preference,
+ * @returns A button named by the theme on and the one a press gives (`labels`). On its own, it starts from the system's preference,
  *   sets `<html data-theme>` and remembers the choice (with `themeScript` in the `<head>`, from the first paint);
  *   controlled, the library does both. Its icon is what a click gives (the sun in the dark theme), chosen by the
  *   stylesheet from the page's theme, right before hydration. A click swaps the icons along an orbit while the page
  *   follows as a sunset or a sunrise, the button `aria-disabled` until both end (neither on a touch screen nor with reduced motion).
  *
  * @example
- * <ThemeToggle labels={{ dark: 'Thème sombre' }} />
- * <ThemeToggle labels={{ dark: 'Dark theme' }} theme={resolvedTheme} onThemeChange={setTheme} />
+ * <ThemeToggle labels={{ light: 'Light theme, switch to dark', dark: 'Dark theme, switch to light', unknown: 'Switch theme' }} />
  */
 export function ThemeToggle({
   labels,
@@ -193,7 +201,7 @@ export function ThemeToggle({
   onAnimationEnd,
   ...props
 }: ThemeToggleProps): ReactNode {
-  // The server cannot know the theme: the button renders unpressed, then follows the page once hydrated.
+  // The server cannot know the theme: the button renders with its neutral name, then follows the page once hydrated.
   const own = useSyncExternalStore<Theme | undefined>(subscribe, currentTheme, () => undefined);
   const theme = onThemeChange === undefined ? own : given;
   // While the orbit and the page's transition play: presses are ignored, so that none cuts the page's short.
@@ -217,8 +225,7 @@ export function ThemeToggle({
     <button
       type="button"
       data-slot="theme-toggle"
-      aria-label={labels.dark}
-      aria-pressed={theme === 'dark'}
+      aria-label={theme === undefined ? labels.unknown : labels[theme]}
       data-theme={theme}
       {...(switching ? { 'aria-disabled': true, 'data-switching': '' } : {})}
       onClick={() => {

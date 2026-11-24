@@ -370,6 +370,24 @@ describe('sort select', () => {
     },
   );
 
+  it('reads each sort by its spoken name when given one, its shown text left to sight (an arrow, read as is)', async () => {
+    const { user } = renderListing('', (binding) => (
+      <SortSelect binding={binding} labels={{ ...SORT, spoken: (sort) => `«nom ${sort}»` }} />
+    ));
+    const trigger = screen.getByRole('combobox', { name: '«trier»' });
+
+    // Shown: the short text, hidden from assistive technologies; read: the spoken name, visually hidden.
+    expect(trigger.querySelector('[aria-hidden="true"]')?.textContent).toBe('«tri date-desc»');
+    expect(trigger.textContent).toContain('«nom date-desc»');
+    await user.click(trigger);
+    expect(screen.getAllByRole('option').map((option) => option.getAttribute('aria-labelledby') === null)).toEqual([
+      false,
+      false,
+    ]);
+    expect(screen.getByRole('option', { name: '«nom date-asc»' }).textContent).toContain('«tri date-asc»');
+    expect(await violations(screen.getByRole('listbox'))).toEqual([]);
+  });
+
   it('keyboard: Escape closes without changing the sort', async () => {
     const { user, history } = renderListing();
 

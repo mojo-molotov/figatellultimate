@@ -7,10 +7,14 @@
  * (`labels.sort`), never filled by Radix a render later: its width never changes as it mounts, and a toolbar that
  * wraps on a narrow screen never moves the page below it (the pagination keeps its place across a page change).
  *
+ * Key design decision, as chosen with the user: a sort may have a spoken name (`labels.spoken`) apart from its display
+ * name, shown short (`A → Z`) and read whole ("alphabetical order"), in the trigger and in its list alike.
+ *
  * Invariants (`components.test.tsx`): axe open and closed; Enter opens on the current sort, arrows and Enter choose,
- * focus back to the trigger; Escape closes without changing the sort; the current sort's name in the first render.
+ * focus back to the trigger; Escape closes without changing the sort; the current sort's name in the first render;
+ * each sort read by its spoken name, shown by its display name.
  */
-import { Select } from 'radix-ui';
+import { Select, VisuallyHidden } from 'radix-ui';
 import type { ComponentProps, ReactNode } from 'react';
 
 import type { FacetedCollectionBinding } from '../use-faceted-collection.js';
@@ -22,6 +26,26 @@ export interface SortSelectLabels {
   readonly trigger: string;
   /** A sort's display name, from its name in the registry. */
   readonly sort: (sort: string) => string;
+  /**
+   * A sort's spoken name, when its display name reads badly aloud (`A → Z`, read "A right arrow Z"): the screen
+   * reader's, its display name the screen's. Default: the display name.
+   */
+  readonly spoken?: ((sort: string) => string) | undefined;
+}
+
+/** A sort's text: its display name shown, its spoken name read, when they differ. */
+function SortText({ labels, sort }: { readonly labels: SortSelectLabels; readonly sort: string }): ReactNode {
+  const shown = labels.sort(sort);
+  const spoken = labels.spoken?.(sort) ?? shown;
+
+  return spoken === shown ? (
+    shown
+  ) : (
+    <>
+      <span aria-hidden>{shown}</span>
+      <VisuallyHidden.Root>{spoken}</VisuallyHidden.Root>
+    </>
+  );
 }
 
 interface SortSelectContext {
@@ -94,7 +118,9 @@ export function SortSelectTrigger({ children, ...props }: ComponentProps<typeof 
         <>
           {/* Its text given, not left to Radix, which fills it a render later: the trigger has its width from the
               first render (the prerendered page's included), and the toolbar never rewraps under the pagination. */}
-          <Select.Value data-slot="sort-select-value">{labels.sort(binding.state.sort)}</Select.Value>
+          <Select.Value data-slot="sort-select-value">
+            <SortText labels={labels} sort={binding.state.sort} />
+          </Select.Value>
           <SortSelectIcon />
         </>
       )}
@@ -147,7 +173,7 @@ export function SortSelectItem({ children, value, ...props }: ComponentProps<typ
 
   return (
     <Select.Item data-slot="sort-select-item" value={value} {...props}>
-      <Select.ItemText>{children ?? labels.sort(value)}</Select.ItemText>
+      <Select.ItemText>{children ?? <SortText labels={labels} sort={value} />}</Select.ItemText>
       <Select.ItemIndicator data-slot="sort-select-indicator" />
     </Select.Item>
   );

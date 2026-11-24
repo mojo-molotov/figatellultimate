@@ -208,7 +208,16 @@ const ui = {
   card: { tags: 'Tags', authors: 'Auteurs', more: 'Autres tags' },
   navbar: { nav: 'Navigation principale', menu: 'Menu' },
   locales: { language: 'Langue :' },
-  theme: { dark: 'Thème sombre', site: 'Thème du site', maquis: 'Maquis', paper: 'Papier' },
+  theme: {
+    toggle: {
+      light: 'Thème clair, passer au thème sombre',
+      dark: 'Thème sombre, passer au thème clair',
+      unknown: 'Changer de thème',
+    },
+    site: 'Thème du site',
+    maquis: 'Maquis',
+    paper: 'Papier',
+  },
   footer: { nav: 'Plan du site', made: 'Made with', love: 'amour' },
   pager: { nav: 'Pages précédente et suivante', previous: 'Précédent', next: 'Suivant' },
   notFound: {
@@ -230,14 +239,7 @@ const ui = {
     searching: 'Recherche…',
     unavailable: 'La recherche est indisponible (lancez figatellultimate search après le build).',
     found: '{count, plural, =0 {Aucun résultat} one {# résultat} many {# de résultats} other {# résultats}}',
-    sort: {
-      trigger: 'Trier les résultats',
-      relevance: 'Pertinence',
-      'title-asc': 'A → Z',
-      'title-desc': 'Z → A',
-      'date-desc': 'Plus récents',
-      'date-asc': 'Plus anciens',
-    },
+    sort: { trigger: 'Trier les résultats', relevance: 'Pertinence' },
   },
   facets: {
     tags: {
@@ -266,8 +268,9 @@ const ui = {
     trigger: 'Trier les articles',
     'date-desc': 'Plus récents',
     'date-asc': 'Plus anciens',
-    'title-asc': 'Titre A–Z',
-    'title-desc': 'Titre Z–A',
+    'title-asc': 'A → Z',
+    'title-desc': 'Z → A',
+    spoken: { 'title-asc': 'Ordre alphabétique', 'title-desc': 'Ordre antialphabétique' },
   },
   pagination: {
     nav: 'Pagination',

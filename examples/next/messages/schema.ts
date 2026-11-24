@@ -17,7 +17,7 @@ export const schema = {
     card: { tags: _, authors: _, more: _ },
     navbar: { nav: _, menu: _ },
     locales: { language: _ },
-    theme: { dark: _, site: _, maquis: _, paper: _ },
+    theme: { toggle: { light: _, dark: _, unknown: _ }, site: _, maquis: _, paper: _ },
     footer: { nav: _, made: _, love: _ },
     pager: { nav: _, previous: _, next: _ },
     feed: { title: _, description: _ },
@@ -35,7 +35,8 @@ export const schema = {
       searching: _,
       unavailable: _,
       found: _,
-      sort: { trigger: _, relevance: _, 'title-asc': _, 'title-desc': _, 'date-desc': _, 'date-asc': _ },
+      // The other sorts' names are the listings' (`ui.sort`): one text, shown and read alike everywhere.
+      sort: { trigger: _, relevance: _ },
     },
     facets: {
       tags: { trigger: _, filter: _, list: _, empty: _, clear: _ },
@@ -43,7 +44,15 @@ export const schema = {
     },
     reset: _,
     options: { trigger: _, content: _ },
-    sort: { trigger: _, 'date-desc': _, 'date-asc': _, 'title-asc': _, 'title-desc': _ },
+    // Each sort's name as shown, and, where it reads badly aloud (an arrow), as a screen reader says it.
+    sort: {
+      trigger: _,
+      'date-desc': _,
+      'date-asc': _,
+      'title-asc': _,
+      'title-desc': _,
+      spoken: { 'title-asc': _, 'title-desc': _ },
+    },
     listing: { total: _ },
     pagination: { nav: _, previous: _, next: _, page: _, current: _, more: _, jump: _, short: _ },
   },

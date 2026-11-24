@@ -8,7 +8,7 @@ import { createSearch, SEARCH_SORTS, type SearchSort } from '@figatellultimate/s
 import { SearchDialog } from '@figatellultimate/search-react';
 import { usePagedLocaleLinks } from '@figatellultimate/next16/facets';
 import type { ListingLocales, LocaleLink } from '@figatellultimate/site';
-import { LocaleSwitcher, Navbar, ThemeToggle, type NavigationNode } from '@figatellultimate/ui';
+import { LocaleSwitcher, Navbar, ThemeToggle, type NavigationNode, type ThemeToggleLabels } from '@figatellultimate/ui';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
@@ -33,12 +33,15 @@ export interface HeaderLabels {
     readonly more: string;
     readonly sortTrigger: string;
     readonly sorts: Readonly<Record<string, string>>;
+    /** The sorts whose name reads badly aloud (an arrow), as a screen reader says them. */
+    readonly spoken: Readonly<Record<string, string>>;
     readonly collections: Readonly<Record<'pages' | 'blog', string>>;
     readonly tooShort: Precompiled<'ui.search.tooShort'>;
     readonly found: Precompiled<'ui.search.found'>;
   };
   readonly language: string;
-  readonly dark: string;
+  /** The theme toggle's name for each theme on, and while it is not known yet. */
+  readonly theme: ThemeToggleLabels;
 }
 
 /** A locale's own name, for any code the switcher receives. */
@@ -101,7 +104,11 @@ export function HeaderBar(props: {
           // Relevance first, then by title or date, chosen in the field.
           sort={{
             sorts: SEARCH_SORTS,
-            labels: { trigger: text.sortTrigger, sort: (sort: SearchSort) => text.sorts[sort] ?? sort },
+            labels: {
+              trigger: text.sortTrigger,
+              sort: (sort: SearchSort) => text.sorts[sort] ?? sort,
+              spoken: (sort: SearchSort) => text.spoken[sort] ?? text.sorts[sort] ?? sort,
+            },
           }}
           labels={{ trigger: text.trigger, title: text.title, close: text.close }}
           boxLabels={{
@@ -127,7 +134,7 @@ export function HeaderBar(props: {
         />
         <LocaleSwitcher links={links} locale={locale} names={nameOf} labels={{ language: labels.language }} dir={dir} />
         <ThemeToggle
-          labels={{ dark: labels.dark }}
+          labels={labels.theme}
           theme={mounted && (resolvedTheme === 'dark' || resolvedTheme === 'light') ? resolvedTheme : undefined}
           onThemeChange={setTheme}
         />

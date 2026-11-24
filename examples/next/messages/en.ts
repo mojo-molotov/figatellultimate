@@ -218,7 +218,16 @@ const ui = {
   card: { tags: 'Tags', authors: 'Authors', more: 'More tags' },
   navbar: { nav: 'Main navigation', menu: 'Menu' },
   locales: { language: 'Language:' },
-  theme: { dark: 'Dark theme', site: 'Site theme', maquis: 'Maquis', paper: 'Paper' },
+  theme: {
+    toggle: {
+      light: 'Light theme, switch to the dark theme',
+      dark: 'Dark theme, switch to the light theme',
+      unknown: 'Switch the theme',
+    },
+    site: 'Site theme',
+    maquis: 'Maquis',
+    paper: 'Paper',
+  },
   footer: { nav: 'Site map', made: 'Made with', love: 'love' },
   pager: { nav: 'Previous and next pages', previous: 'Previous', next: 'Next' },
   notFound: {
@@ -240,14 +249,7 @@ const ui = {
     searching: 'Searching…',
     unavailable: 'Search is unavailable (run figatellultimate search after the build).',
     found: '{count, plural, =0 {No result} one {# result} other {# results}}',
-    sort: {
-      trigger: 'Sort results',
-      relevance: 'Relevance',
-      'title-asc': 'A → Z',
-      'title-desc': 'Z → A',
-      'date-desc': 'Newest',
-      'date-asc': 'Oldest',
-    },
+    sort: { trigger: 'Sort results', relevance: 'Relevance' },
   },
   facets: {
     tags: {
@@ -276,8 +278,9 @@ const ui = {
     trigger: 'Sort posts',
     'date-desc': 'Newest',
     'date-asc': 'Oldest',
-    'title-asc': 'Title A–Z',
-    'title-desc': 'Title Z–A',
+    'title-asc': 'A → Z',
+    'title-desc': 'Z → A',
+    spoken: { 'title-asc': 'Alphabetical order', 'title-desc': 'Reverse alphabetical order' },
   },
   pagination: {
     nav: 'Pagination',

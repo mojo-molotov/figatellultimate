@@ -68,7 +68,7 @@ const SORT = {
 } as const;
 
 function renderBox(
-  options: { search?: Search<Collection>; dir?: 'ltr' | 'rtl'; sort?: boolean; locale?: string } = {},
+  options: { search?: Search<Collection>; dir?: 'ltr' | 'rtl'; sort?: boolean | 'spoken'; locale?: string } = {},
 ) {
   const opened: string[] = [];
   const highlighted: string[] = [];
@@ -93,6 +93,9 @@ function renderBox(
         onOpenInNewTab={(url) => tabs.push(url)}
         onHighlight={(url) => highlighted.push(url)}
         {...(options.sort === true ? { sort: SORT } : {})}
+        {...(options.sort === 'spoken'
+          ? { sort: { ...SORT, labels: { ...SORT.labels, spoken: (sort: string) => `«nom ${sort}»` } } }
+          : {})}
         {...(options.locale === undefined ? {} : { locale: options.locale })}
         dir={options.dir}
       />
@@ -251,6 +254,16 @@ describe('SearchBox', () => {
     expect(sorts.at(-1)).toEqual({ title: 'desc' });
     expect(select.textContent).toBe('«tri title-desc»');
     expect(await violations()).toEqual([]);
+  });
+
+  it('reads each sort by its spoken name when given one, its shown text left to sight', async () => {
+    const { user } = renderBox({ sort: 'spoken' });
+    const select = screen.getByRole('combobox', { name: '«trier»' });
+
+    expect(select.querySelector('[aria-hidden="true"]')?.textContent).toBe('«tri relevance»');
+    expect(select.textContent).toContain('«nom relevance»');
+    await user.click(select);
+    expect(screen.getByRole('option', { name: '«nom title-asc»' }).textContent).toContain('«tri title-asc»');
   });
 
   it('closes its sort on a tap on its trigger while open, never reopening at once (a touch screen)', async () => {

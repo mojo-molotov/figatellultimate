@@ -12,11 +12,11 @@
  *     - No style, no text of its own: every label required, dates formatted for the given locale.
  *
  * Invariants (`search-box.test.tsx`, in happy-dom and in real browsers): axe empty and with results, the keyboard
- * flow, new tabs, the sort, dates, the highlight announced once per change, no text of its own.
+ * flow, new tabs, the sort, its spoken names, dates, the highlight announced once per change, no text of its own.
  */
 import type { Search, SearchResult, SearchSort } from '@figatellultimate/search';
 import { Command } from 'cmdk';
-import { Direction, Select, ToggleGroup } from 'radix-ui';
+import { Direction, Select, ToggleGroup, VisuallyHidden } from 'radix-ui';
 import {
   createContext,
   useContext,
@@ -108,6 +108,11 @@ export interface SearchBoxSort {
     readonly trigger: string;
     /** A sort's display name. */
     readonly sort: (sort: SearchSort) => string;
+    /**
+     * A sort's spoken name, when its display name reads badly aloud (`A → Z`, read "A right arrow Z"). Default: the
+     * display name.
+     */
+    readonly spoken?: ((sort: SearchSort) => string) | undefined;
   };
 }
 
@@ -357,6 +362,27 @@ export function SearchBoxSpinner(props: ComponentProps<'span'>): ReactNode {
   return <span data-slot="search-box-spinner" aria-hidden {...props} />;
 }
 
+/** A sort's text: its display name shown, its spoken name read, when they differ. */
+function SortText({
+  labels,
+  sort,
+}: {
+  readonly labels: SearchBoxSort['labels'];
+  readonly sort: SearchSort;
+}): ReactNode {
+  const shown = labels.sort(sort);
+  const spoken = labels.spoken?.(sort) ?? shown;
+
+  return spoken === shown ? (
+    shown
+  ) : (
+    <>
+      <span aria-hidden>{shown}</span>
+      <VisuallyHidden.Root>{spoken}</VisuallyHidden.Root>
+    </>
+  );
+}
+
 /**
  * The sort select, inside the field.
  *
@@ -392,7 +418,9 @@ export function SearchBoxSort(props: ComponentProps<typeof Select.Trigger>): Rea
         {...props}
       >
         {/* Its text from the first render, not filled by Radix a render later: the field never resizes. */}
-        <Select.Value data-slot="search-box-sort-value">{sortBy.labels.sort(sort)}</Select.Value>
+        <Select.Value data-slot="search-box-sort-value">
+          <SortText labels={sortBy.labels} sort={sort} />
+        </Select.Value>
         <Select.Icon asChild data-slot="search-box-sort-icon">
           <span />
         </Select.Icon>
@@ -407,7 +435,9 @@ export function SearchBoxSort(props: ComponentProps<typeof Select.Trigger>): Rea
           <Select.Viewport>
             {sortBy.sorts.map((name) => (
               <Select.Item key={name} value={name} data-slot="search-box-sort-item">
-                <Select.ItemText>{sortBy.labels.sort(name)}</Select.ItemText>
+                <Select.ItemText>
+                  <SortText labels={sortBy.labels} sort={name} />
+                </Select.ItemText>
               </Select.Item>
             ))}
           </Select.Viewport>

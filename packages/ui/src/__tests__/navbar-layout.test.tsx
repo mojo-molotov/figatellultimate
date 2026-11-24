@@ -95,7 +95,7 @@ describe('Navbar layout with styles.css', () => {
             names={() => 'Français'}
             labels={{ language: 'Langue' }}
           />
-          <ThemeToggle labels={{ dark: 'Sombre' }} />
+          <ThemeToggle labels={{ light: 'Clair', dark: 'Sombre', unknown: 'Thème' }} />
         </Navbar>
       </div>,
     );

@@ -17,8 +17,18 @@ afterEach(() => {
 describe('ThemeToggle, styled', () => {
   it.skipIf(!inBrowser)('shows what a click gives: the sun in the dark theme, the moon in the light one', () => {
     // Controlled with no theme yet: the page's theme alone decides, as before hydration.
-    render(<ThemeToggle labels={{ dark: 'Thème sombre' }} theme={undefined} onThemeChange={() => undefined} />);
-    const button = screen.getByRole('button', { name: 'Thème sombre' });
+    render(
+      <ThemeToggle
+        labels={{
+          light: 'Thème clair, passer au thème sombre',
+          dark: 'Thème sombre, passer au thème clair',
+          unknown: 'Changer de thème',
+        }}
+        theme={undefined}
+        onThemeChange={() => undefined}
+      />,
+    );
+    const button = screen.getByRole('button', { name: /^Thème|^Changer/ });
     const shown = (): string[] =>
       ['theme-toggle-sun', 'theme-toggle-moon'].filter((slot) => {
         const icon = button.querySelector(`[data-slot="${slot}"]`);
@@ -38,8 +48,16 @@ describe('ThemeToggle, styled', () => {
       // Precondition: the browser does not ask for reduced motion (the orbit is then off on purpose).
       expect(matchMedia('(prefers-reduced-motion: reduce)').matches).toBe(false);
       document.documentElement.dataset['theme'] = 'light';
-      render(<ThemeToggle labels={{ dark: 'Thème sombre' }} />);
-      const button = screen.getByRole('button', { name: 'Thème sombre' });
+      render(
+        <ThemeToggle
+          labels={{
+            light: 'Thème clair, passer au thème sombre',
+            dark: 'Thème sombre, passer au thème clair',
+            unknown: 'Changer de thème',
+          }}
+        />,
+      );
+      const button = screen.getByRole('button', { name: /^Thème|^Changer/ });
       const icon = (slot: string): Element => button.querySelector(`[data-slot="${slot}"]`) ?? button;
 
       button.click();
@@ -61,8 +79,16 @@ describe('ThemeToggle, styled', () => {
     'the page follows as a sunset: the night falls along a curved horizon over the dusk, the sky along it, then all is cleared',
     async () => {
       document.documentElement.dataset['theme'] = 'light';
-      render(<ThemeToggle labels={{ dark: 'Thème sombre' }} />);
-      screen.getByRole('button', { name: 'Thème sombre' }).click();
+      render(
+        <ThemeToggle
+          labels={{
+            light: 'Thème clair, passer au thème sombre',
+            dark: 'Thème sombre, passer au thème clair',
+            unknown: 'Changer de thème',
+          }}
+        />,
+      );
+      screen.getByRole('button', { name: /^Thème|^Changer/ }).click();
       // The transition's own animations, on the root's view-transition pseudo-elements.
       await waitFor(() => {
         const names = document
@@ -79,7 +105,7 @@ describe('ThemeToggle, styled', () => {
 
       expect(horizon === null ? '' : getComputedStyle(horizon).viewTransitionName).toBe('fig-theme-horizon');
       // The pressed toggle is captured on its own, live above the sweep: its orbit shows from start to end.
-      expect(getComputedStyle(screen.getByRole('button', { name: 'Thème sombre' })).viewTransitionName).toBe(
+      expect(getComputedStyle(screen.getByRole('button', { name: /^Thème|^Changer/ })).viewTransitionName).toBe(
         'fig-theme-toggle',
       );
       await waitFor(() => {

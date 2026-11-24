@@ -150,7 +150,11 @@ function PostsView({
         </p>
         <SortSelect
           binding={binding}
-          labels={{ trigger: labels.sort.trigger, sort: (name) => labels.sort.names[name] ?? name }}
+          labels={{
+            trigger: labels.sort.trigger,
+            sort: (name) => labels.sort.names[name] ?? name,
+            spoken: (name) => labels.sort.spoken[name] ?? labels.sort.names[name] ?? name,
+          }}
           dir={dir}
         />
         <ListingOptions

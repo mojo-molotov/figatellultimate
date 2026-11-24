@@ -37,13 +37,21 @@ async function headerLabels(locale: Locale): Promise<HeaderLabels> {
       unavailable: ui('search.unavailable'),
       more: ui('search.more'),
       sortTrigger: ui('search.sort.trigger'),
-      sorts: Object.fromEntries(SEARCH_SORTS.map((sort) => [sort, ui(`search.sort.${sort}`)])),
+      // Relevance is the search's own; the other sorts are named as the listings name them, shown and read alike.
+      sorts: Object.fromEntries(
+        SEARCH_SORTS.map((sort) => [sort, sort === 'relevance' ? ui('search.sort.relevance') : ui(`sort.${sort}`)]),
+      ),
+      spoken: { 'title-asc': ui('sort.spoken.title-asc'), 'title-desc': ui('sort.spoken.title-desc') },
       collections: { pages: ui('collections.pages'), blog: ui('collections.blog') },
       tooShort: await compiled(locale, 'ui.search.tooShort'),
       found: await compiled(locale, 'ui.search.found'),
     },
     language: ui('locales.language'),
-    dark: ui('theme.dark'),
+    theme: {
+      light: ui('theme.toggle.light'),
+      dark: ui('theme.toggle.dark'),
+      unknown: ui('theme.toggle.unknown'),
+    },
   };
 }
 

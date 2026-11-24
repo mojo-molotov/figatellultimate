@@ -7,7 +7,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ThemeToggle } from '../index.js';
 import { themeScript } from '../scripts.js';
 
-const LABELS = { dark: '«thème sombre»' };
+const LABELS = {
+  light: '«thème clair, passer au sombre»',
+  dark: '«thème sombre, passer au clair»',
+  unknown: '«changer de thème»',
+};
+/** The toggle, whichever theme its name says. */
+const NAME = /^«(thème|changer)/;
 const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 /** happy-dom does not run inline scripts: the script itself is run in real browsers (`pnpm test:browser`). */
 const inBrowser = !navigator.userAgent.includes('HappyDOM');
@@ -36,11 +42,13 @@ afterEach(() => {
 });
 
 describe('ThemeToggle', () => {
-  it('is a toggle button named by its label, pressed when the dark theme is on, and passes axe', async () => {
+  it('is a button named by the theme on and the one a press gives, and passes axe', async () => {
     render(<ThemeToggle labels={LABELS} />);
-    const button = screen.getByRole('button', { name: '«thème sombre»' });
+    const button = screen.getByRole('button', { name: NAME });
 
-    expect(button.getAttribute('aria-pressed')).toBe(String(systemDark));
+    // Its name says the theme on and the one a press gives; nothing pressed or unpressed to announce besides.
+    expect(button.getAttribute('aria-label')).toBe(systemDark ? LABELS.dark : LABELS.light);
+    expect(button.hasAttribute('aria-pressed')).toBe(false);
     const result = await axe.run(document.body, { rules: { region: { enabled: false } } });
 
     expect(result.violations).toEqual([]);
@@ -50,7 +58,7 @@ describe('ThemeToggle', () => {
     const user = userEvent.setup();
 
     render(<ThemeToggle labels={LABELS} />);
-    const button = screen.getByRole('button', { name: '«thème sombre»' });
+    const button = screen.getByRole('button', { name: NAME });
     const start = systemDark ? 'dark' : 'light';
     const other = systemDark ? 'light' : 'dark';
 
@@ -61,7 +69,7 @@ describe('ThemeToggle', () => {
       expect(document.documentElement.dataset['theme']).toBe(other);
     });
     expect(localStorage.getItem('figatellultimate-theme')).toBe(other);
-    expect(button.getAttribute('aria-pressed')).toBe(String(other === 'dark'));
+    expect(button.getAttribute('aria-label')).toBe(other === 'dark' ? LABELS.dark : LABELS.light);
     // The orbit played and the page's transition ended: Space switches back.
     await act(async () => {
       fireEvent.animationEnd(button);
@@ -77,7 +85,7 @@ describe('ThemeToggle', () => {
     const user = userEvent.setup();
 
     render(<ThemeToggle labels={LABELS} />);
-    const button = screen.getByRole('button', { name: '«thème sombre»' });
+    const button = screen.getByRole('button', { name: NAME });
     const other = systemDark ? 'light' : 'dark';
 
     // Precondition: the environment does not ask for reduced motion (the orbit is then off on purpose).
@@ -120,7 +128,7 @@ describe('ThemeToggle', () => {
 
     try {
       render(<ThemeToggle labels={LABELS} />);
-      const button = screen.getByRole('button', { name: '«thème sombre»' });
+      const button = screen.getByRole('button', { name: NAME });
       const other = systemDark ? 'light' : 'dark';
 
       fireEvent.click(button);
@@ -158,11 +166,11 @@ describe('ThemeToggle', () => {
     render(
       <>
         <ThemeToggle labels={LABELS} />
-        <ThemeToggle labels={{ dark: '«autre bouton»' }} />
+        <ThemeToggle labels={{ light: '«autre bouton»', dark: '«autre bouton»', unknown: '«autre bouton»' }} />
       </>,
     );
     // The first one switches; the other one switches back while the first transition still plays.
-    fireEvent.click(screen.getByRole('button', { name: '«thème sombre»' }));
+    fireEvent.click(screen.getByRole('button', { name: NAME }));
     fireEvent.click(screen.getByRole('button', { name: '«autre bouton»' }));
     const way = document.documentElement.dataset['themeSwitch'];
 
@@ -199,7 +207,7 @@ describe('ThemeToggle', () => {
 
     Object.defineProperty(document, 'startViewTransition', { configurable: true, value: slow });
     render(<ThemeToggle labels={LABELS} />);
-    const button = screen.getByRole('button', { name: '«thème sombre»' });
+    const button = screen.getByRole('button', { name: NAME });
 
     fireEvent.click(button);
     await act(async () => {
@@ -230,7 +238,7 @@ describe('ThemeToggle', () => {
     try {
       Object.defineProperty(document, 'startViewTransition', { configurable: true, value: transition });
       render(<ThemeToggle labels={LABELS} />);
-      const button = screen.getByRole('button', { name: '«thème sombre»' });
+      const button = screen.getByRole('button', { name: NAME });
       const other = systemDark ? 'light' : 'dark';
 
       fireEvent.click(button);
@@ -248,7 +256,7 @@ describe('ThemeToggle', () => {
 
     try {
       render(<ThemeToggle labels={LABELS} />);
-      const button = screen.getByRole('button', { name: '«thème sombre»' });
+      const button = screen.getByRole('button', { name: NAME });
 
       fireEvent.click(button);
       expect(button.getAttribute('aria-disabled')).toBe('true');
@@ -274,7 +282,7 @@ describe('ThemeToggle', () => {
 
     try {
       render(<ThemeToggle labels={LABELS} />);
-      const button = screen.getByRole('button', { name: '«thème sombre»' });
+      const button = screen.getByRole('button', { name: NAME });
       const start = document.documentElement.dataset['theme'];
 
       const transition = vi.fn();
@@ -322,7 +330,7 @@ describe('ThemeToggle', () => {
 
   it('draws a sun and a moon (heroicons), both hidden from assistive technologies', () => {
     render(<ThemeToggle labels={LABELS} />);
-    const button = screen.getByRole('button', { name: '«thème sombre»' });
+    const button = screen.getByRole('button', { name: NAME });
 
     for (const slot of ['theme-toggle-sun', 'theme-toggle-moon']) {
       const icon = button.querySelector(`[data-slot="${slot}"]`);
@@ -341,9 +349,9 @@ describe('ThemeToggle', () => {
     const user = userEvent.setup();
     const onThemeChange = vi.fn();
     const { rerender } = render(<ThemeToggle labels={LABELS} theme="dark" onThemeChange={onThemeChange} />);
-    const button = screen.getByRole('button', { name: '«thème sombre»' });
+    const button = screen.getByRole('button', { name: NAME });
 
-    expect(button.getAttribute('aria-pressed')).toBe('true');
+    expect(button.getAttribute('aria-label')).toBe(LABELS.dark);
     await user.click(button);
     await waitFor(() => {
       expect(onThemeChange).toHaveBeenCalledWith('light');
@@ -352,9 +360,10 @@ describe('ThemeToggle', () => {
     expect(document.documentElement.dataset['theme']).toBeUndefined();
     expect(localStorage.length).toBe(0);
     rerender(<ThemeToggle labels={LABELS} theme="light" onThemeChange={onThemeChange} />);
-    expect(button.getAttribute('aria-pressed')).toBe('false');
+    expect(button.getAttribute('aria-label')).toBe(LABELS.light);
     // Before the library knows the theme (server rendering): not pressed.
     rerender(<ThemeToggle labels={LABELS} theme={undefined} onThemeChange={onThemeChange} />);
-    expect(button.getAttribute('aria-pressed')).toBe('false');
+    // The library does not know it yet: a name that promises nothing.
+    expect(button.getAttribute('aria-label')).toBe(LABELS.unknown);
   });
 });

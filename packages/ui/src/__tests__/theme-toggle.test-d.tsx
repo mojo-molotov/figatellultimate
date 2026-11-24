@@ -3,7 +3,11 @@ import { describe, expectTypeOf, it } from 'vitest';
 
 import { ThemeToggle } from '../index.js';
 
-const labels = { dark: 'Thème sombre' };
+const labels = {
+  light: 'Thème clair, passer au thème sombre',
+  dark: 'Thème sombre, passer au thème clair',
+  unknown: 'Changer de thème',
+};
 
 describe('ThemeToggle: on its own, or controlled by a theme library', () => {
   it('takes the theme and its change together, or neither', () => {
