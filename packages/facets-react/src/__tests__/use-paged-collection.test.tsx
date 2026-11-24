@@ -229,3 +229,160 @@ describe('createIndexLoader', () => {
     expect(fetch).toHaveBeenCalledTimes(2);
   });
 });
+
+describe('usePagedCollection: batches', () => {
+  // 60 posts, five a page: twelve pages; batches of five pages (1–5, 6–10, 11–12).
+  const MANY: readonly Post[] = Array.from({ length: 60 }, (_, i) => ({
+    url: `/m/${String(i).padStart(2, '0')}`,
+    date: `2026-${String(12 - Math.floor(i / 28)).padStart(2, '0')}-${String(28 - (i % 28)).padStart(2, '0')}`,
+    tags: ['bot'],
+  }));
+  const keysOf = (from: number, to: number): string[] => MANY.slice((from - 1) * 5, to * 5).map((post) => post.url);
+
+  /** A listing on a page, its batches loaded by a recorder; the address as an in-memory URL. */
+  function batched(page: number, options: { readonly batches?: boolean } = {}) {
+    const navigated: { readonly search: string; readonly mode: string; readonly local: boolean }[] = [];
+    const prefetched: string[] = [];
+    const asked: number[] = [];
+    const at = { search: page === 1 ? '' : `?page=${String(page)}` };
+    const url = (): UrlAdapter => ({
+      search: at.search,
+      navigate(next, { mode, local }) {
+        navigated.push({ search: next, mode, local: local === true });
+        at.search = next;
+      },
+      prefetch(next) {
+        prefetched.push(next);
+      },
+    });
+    const batches = {
+      size: 5,
+      load: (from: number) => {
+        asked.push(from);
+
+        return Promise.resolve({ keys: keysOf(from, Math.min(12, from + 4)) });
+      },
+    };
+    const hook = renderHook(
+      ({ adapter }: { readonly adapter: UrlAdapter }) =>
+        usePagedCollection({
+          engine: engineOf,
+          items: MANY.slice((page - 1) * 5, page * 5),
+          paged: { page, pages: 12, total: 60, perPage: 5 },
+          load: () => Promise.resolve({ items: MANY }),
+          url: adapter,
+          ...(options.batches === false ? {} : { batches }),
+        }),
+      { initialProps: { adapter: url() } },
+    );
+
+    return {
+      ...hook,
+      navigated,
+      prefetched,
+      asked,
+      follow: () => {
+        hook.rerender({ adapter: url() });
+      },
+      /** Idle, then the batches' answers. */
+      settle: async () => {
+        await act(async () => {
+          await new Promise((resolve) => setTimeout(resolve, 300));
+        });
+      },
+    };
+  }
+
+  it('loads the current page’s batch on idle, and nothing more away from its edges', async () => {
+    const { asked, settle } = batched(2);
+
+    expect(asked).toEqual([]);
+    await settle();
+    expect(asked).toEqual([1]);
+  });
+
+  it('shows a page its batch holds without the server: only the address moves, its keys from the batch', async () => {
+    const { result, navigated, settle, follow } = batched(2);
+
+    await settle();
+    act(() => {
+      result.current.binding.dispatch({ type: 'page', page: 3 });
+    });
+    expect(navigated).toEqual([{ search: '?page=3', mode: 'push', local: true }]);
+    follow();
+    expect(result.current.binding.state.page).toBe(3);
+    expect(result.current.binding.view.keys).toEqual(keysOf(3, 3));
+  });
+
+  it('reaches a page no loaded batch holds through the server, as without batches', async () => {
+    const { result, navigated, settle } = batched(2);
+
+    await settle();
+    act(() => {
+      result.current.binding.dispatch({ type: 'page', page: 9 });
+    });
+    expect(navigated).toEqual([{ search: '?page=9', mode: 'push', local: false }]);
+  });
+
+  it('loads the next batch as the reader nears the edge, and loads ahead no page a batch holds', async () => {
+    const { result, asked, prefetched, settle, follow } = batched(2);
+
+    await settle();
+    act(() => {
+      result.current.binding.dispatch({ type: 'page', page: 3 });
+    });
+    follow();
+    await settle();
+    // Page 3, within three pages of batch 1's end (5): batch 6 too.
+    expect(asked).toEqual([1, 6]);
+    prefetched.length = 0;
+    result.current.binding.prefetchFor({ type: 'page', page: 7 });
+    result.current.binding.prefetchFor({ type: 'page', page: 12 });
+    // Page 7 is in a loaded batch: nothing to load ahead; page 12 is not: its prerendered page.
+    expect(prefetched).toEqual(['?page=12']);
+  });
+
+  it('loads at once the batch of an address its props do not hold, and shows that page from it', async () => {
+    const { result, asked, rerender, navigated } = batched(2);
+    const restored: UrlAdapter = {
+      search: '?page=4',
+      navigate: (next, { mode }) => navigated.push({ search: next, mode, local: false }),
+    };
+
+    // Back on a history entry whose address is page 4, its props still page 2's (as Next restores a tree): no idle wait.
+    rerender({ adapter: restored });
+    // Its batch, and the next one, page 4 being within three pages of its end.
+    expect(asked).toEqual([1, 6]);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(result.current.binding.view.keys).toEqual(keysOf(4, 4));
+    expect(navigated).toEqual([]);
+  });
+
+  it('shows every page here once the whole index is at hand, a filter having loaded it', async () => {
+    const { result, navigated, settle } = batched(2);
+
+    act(() => {
+      result.current.prefetch();
+    });
+    await settle();
+    // Precondition: the index is here.
+    expect(result.current.index?.items).toHaveLength(60);
+    act(() => {
+      result.current.binding.dispatch({ type: 'page', page: 11 });
+    });
+    expect(navigated).toEqual([{ search: '?page=11', mode: 'push', local: true }]);
+  });
+
+  it('without batches, takes back to the server an address its props do not hold', () => {
+    const { navigated, rerender } = batched(2, { batches: false });
+    const moved: UrlAdapter = {
+      search: '?page=4',
+      navigate: (next, { mode }) => navigated.push({ search: next, mode, local: false }),
+    };
+
+    rerender({ adapter: moved });
+    expect(navigated).toEqual([{ search: '?page=4', mode: 'replace', local: false }]);
+  });
+});

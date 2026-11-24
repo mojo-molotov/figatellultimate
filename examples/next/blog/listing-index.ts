@@ -56,3 +56,22 @@ export interface ListingIndex {
 export const loadListingIndex: (url: string) => Promise<ListingIndex> = createIndexLoader((json) =>
   v.parse(Index, json),
 );
+
+const Batch = v.object({ keys: v.array(v.string()), cards: v.record(v.string(), Card) });
+
+/** A run of a listing's pages (`batchesOf`): their posts' keys in the default order, and each one's card. */
+export interface ListingBatch {
+  readonly keys: readonly string[];
+  readonly cards: Readonly<Record<string, CardData>>;
+}
+
+/**
+ * A listing's batch, fetched once, checked by its schema before it is read: the pages it holds shown without the
+ * server.
+ *
+ * @param url - The batch's URL (`<index>/pages/<first page>`).
+ * @returns The batch; rejects when it cannot be fetched or does not match its schema.
+ */
+export const loadListingBatch: (url: string) => Promise<ListingBatch> = createIndexLoader((json) =>
+  v.parse(Batch, json),
+);

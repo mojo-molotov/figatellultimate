@@ -120,6 +120,12 @@ export const { GET, generateStaticParams } = listingIndexRoute({
 });
 ```
 
-L’exemple en a deux : `listing/[...folder]` pour les articles d’une sous-catégorie, `author-listing/[term]` pour ceux d’un auteur, toutes sous-catégories confondues. Un index coûte une cinquantaine d’octets gzip par article (le test de charge le mesure).
+L’exemple en a deux : `listing/[...folder]` pour les articles d’une sous-catégorie, `author-listing/[...term]` pour ceux d’un auteur, toutes sous-catégories confondues. Un index coûte une cinquantaine d’octets gzip par article (le test de charge le mesure).
+
+À côté de son index, une liste a des lots de pages : les pages de sa vue par défaut, dix par dix (`batchesOf`), chacun un petit fichier statique à `<index>/pages/<première page>`, produit par la même route (son option `pages`). `usePagedCollection` charge le lot de la page courante dès que la page est au repos, puis le suivant ou le précédent près de ses bords ; une page que son lot contient s’affiche aussitôt, seule l’adresse bougeant, et toute autre passe par le serveur. Le coût par visite reste celui d’un lot, environ deux kilo-octets gzip, quelle que soit la longueur de la liste : le test de charge mesure un clic sur suivant sous les 50 ms avec un serveur à 300 ms, contre 360 ms par le serveur.
+
+```ts
+usePagedCollection({ …, batches: { load: (from) => loadBatch(`${index}/${batchPath(from).join('/')}`) } });
+```
 
 Hors de Next, `pagedHref` et `pagedSearch` de `@figatellultimate/facets` font passer une vue à cet emplacement et inversement.

@@ -185,6 +185,38 @@ const indexed =
 
 check(indexed.length === decrees.length, "/listing/empire/decrees: the listing's index does not hold every post");
 
+// Its batches: one per ten pages, each a run of the default view's keys and cards, the first starting with page 1's.
+{
+  const folder = findBlogFolderByUrl('/blog/empire/decrees');
+  const pages = folder?.pages ?? 0;
+  const batchOf = (from: number): unknown => {
+    try {
+      return JSON.parse(
+        readFileSync(join(app, 'fr', 'listing', 'empire', 'decrees', 'pages', `${String(from)}.body`), 'utf8'),
+      );
+    } catch {
+      return undefined;
+    }
+  };
+  const starts = Array.from({ length: Math.ceil(pages / 10) }, (_, index) => index * 10 + 1);
+  const first = batchOf(1);
+  const keys =
+    typeof first === 'object' && first !== null && 'keys' in first && Array.isArray(first.keys) ? first.keys : [];
+  const pageOne = [...(htmlOf('/blog/empire/decrees') ?? '').matchAll(/data-key="([^"]+)"/g)].map((match) => match[1]);
+
+  // Precondition: the listing has pages to batch.
+  check(pages > 0, '/blog/empire/decrees: no page');
+  check(
+    starts.every((from) => batchOf(from) !== undefined),
+    '/listing/empire/decrees: a batch missing',
+  );
+  check(batchOf((starts.at(-1) ?? 0) + 10) === undefined, '/listing/empire/decrees: a batch past the last page');
+  check(
+    pageOne.length > 0 && pageOne.every((key, index) => keys[index] === key),
+    "/listing/empire/decrees/pages/1: not page 1's posts first",
+  );
+}
+
 // The unstyled components are prerendered: the pagination's real links, the sort, the gear holding the facets.
 for (const slot of [
   'sort-select-trigger',
@@ -1034,6 +1066,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    `✓ ${String(mountedUrls.length)} mounted URLs prerendered with canonical, alternates, x-default and Open Graph; subcategory pages with their default view and pagination links; sitemap (dated, noindex left out), structured data, feeds, robots.txt, drafts, the footer, one search bundle per locale (French and English queries, stemming, collection filter), images through next/image with their sizes, a meta description on every folder and author page, with plain spaces, and the navbar from the content in each page's language as expected.`,
+    `✓ ${String(mountedUrls.length)} mounted URLs prerendered with canonical, alternates, x-default and Open Graph; subcategory pages with their default view and pagination links; sitemap (dated, noindex left out), structured data, feeds, robots.txt, drafts, the footer, the listings' batches, one search bundle per locale (French and English queries, stemming, collection filter), images through next/image with their sizes, a meta description on every folder and author page, with plain spaces, and the navbar from the content in each page's language as expected.`,
   );
 }

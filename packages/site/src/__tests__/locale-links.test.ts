@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { localeLinksOf, type MountedUrl } from '../index.js';
+import { localeLinksOf, pageLocaleLinks, type MountedUrl } from '../index.js';
 
 const item = (collection: string, key: string, locale: string, url: string): MountedUrl => ({
   collection,
@@ -124,5 +124,30 @@ describe('localeLinksOf: the home', () => {
       { locale: 'fr', url: '/', kind: 'home', current: false },
       { locale: 'en', url: '/en', kind: 'home', current: false },
     ]);
+  });
+});
+
+describe('pageLocaleLinks', () => {
+  const href = (first: string, page: number): string => (page === 1 ? first : `${first}/page/${String(page)}`);
+  const landed = [
+    { locale: 'fr', url: '/blog/news/page/2', kind: 'entry', current: true },
+    { locale: 'en', url: '/en/blog/news/page/2', kind: 'entry', current: false },
+    { locale: 'de', url: '/de', kind: 'home', current: false },
+  ] as const;
+  const listing = { fr: { first: '/blog/news', pages: 9 }, en: { first: '/en/blog/news', pages: 4 } };
+
+  it('leads to the current page in each locale that has it, else to the listing there; another locale keeps its link', () => {
+    // Moved in the browser from page 2 to page 6: English has 4 pages only.
+    expect(pageLocaleLinks(landed, { page: 6, locale: 'fr', listing, href })).toEqual([
+      { locale: 'fr', url: '/blog/news/page/6', kind: 'entry', current: true },
+      { locale: 'en', url: '/en/blog/news', kind: 'ancestor', current: false },
+      { locale: 'de', url: '/de', kind: 'home', current: false },
+    ]);
+    expect(pageLocaleLinks(landed, { page: 3, locale: 'fr', listing, href })[1]).toEqual({
+      locale: 'en',
+      url: '/en/blog/news/page/3',
+      kind: 'entry',
+      current: false,
+    });
   });
 });

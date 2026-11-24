@@ -13,7 +13,7 @@ import { PostCard } from './cards';
 import { FolderPagination } from './folder-pagination';
 import { Listing } from './listing';
 import { listingLabels } from './listing-labels';
-import { cardDataOf, indexOf, itemsOf, postsOf } from './posts-data';
+import { cardDataOf, folderLocalesOf, indexOf, itemsOf, postsOf } from './posts-data';
 
 /** The cards of some posts, keyed by URL: rendered once on the server, reordered by key on the client. */
 export async function cardsOf(
@@ -52,7 +52,9 @@ export async function BlogFolderPage({ folder }: { readonly folder: BlogFolder }
   const { locale } = folder;
   const t = await getTranslations({ locale });
   const title = await folderTitle(folder);
-  const header = <SiteHeader locale={locale} url={folder.url} crumbs={folder.first} title={title} />;
+  // A listing of posts the browser pages through (its batches): the switcher follows its page.
+  const listing = folder.subfolders.length === 0 && folder.index !== undefined ? folderLocalesOf(folder) : undefined;
+  const header = <SiteHeader locale={locale} url={folder.url} crumbs={folder.first} title={title} listing={listing} />;
   const labels = await listingLabels(locale);
   const pagination = (
     <FolderPagination

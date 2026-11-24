@@ -333,6 +333,51 @@ export function localeLinksOf(
   return Object.freeze(links);
 }
 
+/** A paginated listing in each locale that has it: its first page's URL and its count of pages. */
+export type ListingLocales = Readonly<Record<string, { readonly first: string; readonly pages: number }>>;
+
+/**
+ * Where a locale switcher leads from a page of a paginated listing shown in the browser (`usePagedCollection`'s
+ * batches): the page moved, the server's links did not. The same rules as `localeLinksOf`'s, from the page's number:
+ * that page in a locale that has it, else the listing's first page there (its nearest translated ancestor); a locale
+ * without the listing keeps the server's link.
+ *
+ * @param links - The server's links, for the page the reader landed on (`localeLinksOf`).
+ * @param at - The current page and locale, the listing in each locale, and how a page's URL is built from its first
+ *   page's (`pagedHref` of `@figatellultimate/facets`).
+ * @returns The links for the current page, in the same order.
+ *
+ * @example
+ * pageLocaleLinks(links, { page: 4, locale: 'fr', listing, href: (first, page) => pagedHref(first, `?page=${page}`) });
+ */
+export function pageLocaleLinks(
+  links: readonly LocaleLink[],
+  at: {
+    readonly page: number;
+    readonly locale: string;
+    readonly listing: ListingLocales;
+    readonly href: (first: string, page: number) => string;
+  },
+): readonly LocaleLink[] {
+  return Object.freeze(
+    links.map((link): LocaleLink => {
+      const there = at.listing[link.locale];
+
+      if (there === undefined) return link;
+
+      const has = at.page <= there.pages;
+      const url = has ? at.href(there.first, at.page) : there.first;
+
+      return Object.freeze({
+        locale: link.locale,
+        url,
+        kind: has ? 'entry' : 'ancestor',
+        current: link.locale === at.locale && has,
+      });
+    }),
+  );
+}
+
 /**
  * A node of the generated `#figatellultimate/navigation`: an entry link, or a section labelled by a message key `K` (the
  * generated `MessageKey`, kept through every helper below so that `t` receives it as is).

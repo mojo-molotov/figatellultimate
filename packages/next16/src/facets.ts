@@ -68,11 +68,12 @@ export function useNextUrl(options: NextUrlOptions = {}): UrlAdapter {
 
     return {
       search: pagedSearch({ pathname, search: raw }, first),
-      navigate(next, { mode }) {
+      navigate(next, { mode, local }) {
         const href = pagedHref(first, next);
 
-        // A default page: a prerendered page, its slice from the server; any other view: computed here.
-        if (!href.includes('?')) router[mode](href, { scroll: false });
+        // A default page: a prerendered page, its slice from the server, unless the app renders it itself (`local`:
+        // only the address moves, which Next's router follows); any other view: computed here.
+        if (!href.includes('?') && local !== true) router[mode](href, { scroll: false });
         else history(href, mode);
       },
       href: (next) => pagedHref(first, next),

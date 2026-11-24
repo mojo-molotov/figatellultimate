@@ -6,7 +6,10 @@
  * sort. The binding is the same whichever is at hand, so the components never know.
  *
  *     the page's slice ──> static binding (the slice's keys, the server's pages and total)
- *         │                    a page ──> the URL (another prerendered page); any other action ──> pending
+ *         │                    a page ──> its batch at hand: shown here, the address alone moves (`local`)
+ *         │                               otherwise: the URL, another prerendered page from the server
+ *         │                    any other action ──> pending
+ *         │ batches (`batches`): the current page's on idle, the next or previous one near its edges
  *         │ a selection or a sort in the URL, a pending action, or `prefetch` (the reader heads for a filter)
  *         ▼
  *     load() ──> the index ──> the engine over every item ──> the live binding; the pending action applied
@@ -20,14 +23,33 @@
  *       links would leave the selection.
  *     - An action chosen before the index waits for it, then applies: a click is never lost.
  *     - A failed load is a value (`error`): the page's slice stays, and the next `prefetch` loads again.
+ *     - Batches, as chosen with the user, rather than the whole index on idle: the pages around the reader, ten a small
+ *       file, whatever the list's length (the index is ~42 bytes gzip a post: a megabyte at 27,000 posts). A page its
+ *       batch holds is shown here at once; any other through the server, as without batches; a failed batch leaves its
+ *       pages to the server and is loaded again on the next approach.
+ *     - The page is the address's, never the props': a page shown here leaves the props on the landed one. An address
+ *       they do not hold (a history entry Next restores with the landed page's tree) loads its batch at once, or,
+ *       without batches, goes back to the server.
+ *     - Once the whole index is here, every default page is shown here: only the address moves, nothing loaded ahead.
  *     - Without `paged`, every item is at hand: the live binding at once, nothing loaded.
  *
  * Invariants (`use-paged-collection.test.tsx`): every item at hand, never loaded; the slice and the server's pages
  * without loading; another default page by the URL alone; the index for a selection in the URL, a term the slice
  * lacks included; an action kept until the index, then applied; a single prefetch; a failed load as a value, loaded
- * again; the loader fetching each URL once, an error status or a bad body rejected and fetched again.
+ * again; the loader fetching each URL once, an error status or a bad body rejected and fetched again; the current
+ * page's batch on idle, the next near its edge; a page a batch holds shown without the server, any other through it;
+ * no page a batch holds loaded ahead; a restored address's batch at once, or the server without batches; every page
+ * shown here once the index is at hand.
  */
-import { isDefaultView, type Action, type Engine, type UrlAdapter } from '@figatellultimate/facets';
+import {
+  isDefaultView,
+  PAGES_PER_BATCH,
+  readPage,
+  batchStart,
+  type Action,
+  type Engine,
+  type UrlAdapter,
+} from '@figatellultimate/facets';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useFacetedCollection, type FacetedCollectionBinding } from './use-faceted-collection.js';
@@ -40,10 +62,25 @@ export interface PagedSlice {
   readonly pages: number;
   /** The default view's count of items. */
   readonly total: number;
+  /** Items per page: where each page's keys lie in a batch. Needed with `batches`. */
+  readonly perPage?: number | undefined;
+}
+
+/** A batch as `usePagedCollection` reads it: its pages' keys in the default order, from its first page on. */
+export interface Batch {
+  readonly keys: readonly string[];
+}
+
+/** The batches of a collection paginated in its path (`batchesOf` of `@figatellultimate/facets`, `listingIndexRoute`'s `pages`). */
+export interface PagedBatches<S extends Batch> {
+  /** Loads the batch starting at a page (`batchStart`): a stable function, e.g. `createIndexLoader` on its URL. */
+  readonly load: (from: number) => Promise<S>;
+  /** Pages per batch, as the route builds them; default `PAGES_PER_BATCH`. */
+  readonly size?: number | undefined;
 }
 
 /** What `usePagedCollection` takes. */
-export interface PagedCollectionOptions<T, I extends { readonly items: readonly T[] }> {
+export interface PagedCollectionOptions<T, I extends { readonly items: readonly T[] }, S extends Batch = Batch> {
   /** The engine over some items: a stable function (at module scope, or memoized). */
   readonly engine: (items: readonly T[]) => Engine<T>;
   /** The page's own items when `paged`; every item otherwise. */
@@ -54,10 +91,15 @@ export interface PagedCollectionOptions<T, I extends { readonly items: readonly 
   readonly load: () => Promise<I>;
   /** The URL adapter, e.g. `useNextUrl({ first })`. */
   readonly url: UrlAdapter;
+  /**
+   * The listing's batches: loaded on idle around the current page, its pages then shown in the browser (only the
+   * address moves); none without it, each page reached through the server.
+   */
+  readonly batches?: PagedBatches<S> | undefined;
 }
 
 /** What `usePagedCollection` gives. */
-export interface PagedCollection<I> {
+export interface PagedCollection<I, S extends Batch = Batch> {
   /** The binding for the components, the same whether the index is at hand or not. */
   readonly binding: FacetedCollectionBinding;
   /** The index, once loaded. */
@@ -66,6 +108,28 @@ export interface PagedCollection<I> {
   readonly prefetch: () => void;
   /** The last load's failure, until the next one. */
   readonly error: unknown;
+  /** The batches loaded so far, in no order: what the app shows a page's cards from. */
+  readonly batches: readonly S[];
+}
+
+/** How close to a batch's edge the next one is loaded: a reader moving on never reaches an unloaded page. */
+const BATCH_MARGIN = 3;
+
+/** After the page's own work: `requestIdleCallback` where there is one, a short delay elsewhere. */
+function whenIdle(run: () => void): () => void {
+  if (typeof requestIdleCallback === 'function') {
+    const handle = requestIdleCallback(run);
+
+    return () => {
+      cancelIdleCallback(handle);
+    };
+  }
+
+  const handle = setTimeout(run, 200);
+
+  return () => {
+    clearTimeout(handle);
+  };
 }
 
 /**
@@ -79,10 +143,45 @@ export interface PagedCollection<I> {
  *   engine: postsEngine, items, paged: { page, pages, total }, load, url: useNextUrl({ first }),
  * });
  */
-export function usePagedCollection<T, I extends { readonly items: readonly T[] }>(
-  options: PagedCollectionOptions<T, I>,
-): PagedCollection<I> {
-  const { engine: engineOf, items, paged, load, url } = options;
+export function usePagedCollection<T, I extends { readonly items: readonly T[] }, S extends Batch = Batch>(
+  options: PagedCollectionOptions<T, I, S>,
+): PagedCollection<I, S> {
+  const { engine: engineOf, items, paged, load, url, batches: batched } = options;
+  const size = batched?.size ?? PAGES_PER_BATCH;
+  const perPage = paged?.perPage;
+  // The batches at hand, by first page, and those on their way.
+  const [batches, setBatches] = useState<ReadonlyMap<number, S>>(() => new Map());
+  const asked = useRef(new Set<number>());
+  const loadBatch = useCallback(
+    (from: number): void => {
+      if (batched === undefined || paged === undefined || from < 1 || from > paged.pages || asked.current.has(from))
+        return;
+
+      asked.current.add(from);
+      batched.load(from).then(
+        (batch) => {
+          setBatches((known) => new Map([...known, [from, batch]]));
+        },
+        () => {
+          // Loaded again on the next approach: a failed batch leaves its pages to the server.
+          asked.current.delete(from);
+        },
+      );
+    },
+    [batched, paged],
+  );
+  // A page's keys from its batch, when it is at hand.
+  const batchKeys = useCallback(
+    (page: number): readonly string[] | undefined => {
+      const from = batchStart(page, size);
+      const batch = batches.get(from);
+
+      if (batch === undefined || perPage === undefined) return undefined;
+
+      return batch.keys.slice((page - from) * perPage, (page - from + 1) * perPage);
+    },
+    [batches, size, perPage],
+  );
   const [index, setIndex] = useState<I | undefined>(undefined);
   const [error, setError] = useState<unknown>(undefined);
   // An action chosen before the index, applied once it is here.
@@ -101,8 +200,50 @@ export function usePagedCollection<T, I extends { readonly items: readonly T[] }
   }, [paged, index, load]);
   const all = index?.items ?? items;
   const engine = useMemo(() => engineOf(all), [engineOf, all]);
-  const live = useFacetedCollection(engine, url);
+  // Every item at hand: any default page is shown here, only the address moves, nothing loaded ahead.
+  const everywhere = useMemo(
+    (): UrlAdapter => ({
+      search: url.search,
+      navigate: (next, navigation) => {
+        url.navigate(next, { ...navigation, local: true });
+      },
+      ...(url.href === undefined ? {} : { href: (next: string) => url.href?.(next) ?? next }),
+    }),
+    [url],
+  );
+  const live = useFacetedCollection(engine, everywhere);
   const selecting = !isDefaultView(url.search);
+  // The page the address shows: a page shown here moves the address, never the server's props.
+  const current = paged === undefined ? 1 : readPage(url.search);
+
+  // The current page's batch on idle, then, as the reader moves, the next or previous one near its edges.
+  useEffect(() => {
+    if (batched === undefined || paged === undefined || selecting) return undefined;
+
+    const from = batchStart(current, size);
+    const near = (): void => {
+      loadBatch(from);
+
+      if (current + BATCH_MARGIN > from + size - 1) loadBatch(from + size);
+
+      if (current - BATCH_MARGIN < from) loadBatch(from - size);
+    };
+
+    // The landed page waits for idle; a page the address reached that its props do not hold, at once.
+    if (current === paged.page) return whenIdle(near);
+
+    near();
+
+    return undefined;
+  }, [batched, paged, selecting, current, size, loadBatch]);
+
+  // An address the props do not hold and no batch can show (a restored history entry, without batches): the server's.
+  useEffect(() => {
+    if (paged === undefined || index !== undefined || selecting || current === paged.page || batched !== undefined)
+      return;
+
+    url.navigate(engine.write({ facets: {}, sort: engine.sorts[0] ?? '', page: current }), { mode: 'replace' });
+  }, [paged, index, selecting, current, batched, url, engine]);
 
   useEffect(() => {
     if (selecting) prefetch();
@@ -124,18 +265,26 @@ export function usePagedCollection<T, I extends { readonly items: readonly T[] }
     const sort = engine.sorts[0] ?? '';
     const searchOf = (page: number): string => engine.write({ facets: {}, sort, page });
 
+    // The page the props hold: the slice, in the server's order; another one, from its batch (none yet: no card).
+    const keys = current === paged.page ? engine.view({ facets: {}, sort, page: 1 }).keys : (batchKeys(current) ?? []);
+
     return {
-      state: { facets: {}, sort, page: paged.page },
+      state: { facets: {}, sort, page: current },
       view: {
         // A selection waits for the index: no card, and no page of the unselected list to reach. Before the index, the
         // engine holds the slice alone: its first default page is the slice, in the server's order.
-        keys: selecting ? [] : engine.view({ facets: {}, sort, page: 1 }).keys,
+        keys: selecting ? [] : keys,
         total: paged.total,
         pages: selecting ? 1 : paged.pages,
         counts: {},
       },
       dispatch: (action) => {
-        if (action.type === 'page') url.navigate(searchOf(action.page), { mode: 'push' });
+        // A page its batch holds is shown here, only the address moves; any other, the server's prerendered page.
+        if (action.type === 'page')
+          url.navigate(searchOf(action.page), {
+            mode: 'push',
+            local: action.page === paged.page || batchKeys(action.page) !== undefined,
+          });
         else {
           pending.current = action;
           prefetch();
@@ -148,15 +297,17 @@ export function usePagedCollection<T, I extends { readonly items: readonly T[] }
 
         return url.href?.(search) ?? (search === '' ? '?' : search);
       },
-      // A prerendered page loaded ahead; a selection has nothing to load but the index (`prefetch`).
+      // A prerendered page loaded ahead, unless its batch shows it; a selection has nothing to load but the index.
       prefetchFor: (action) => {
-        if (action.type === 'page') url.prefetch?.(searchOf(action.page));
+        if (action.type === 'page' && action.page !== paged.page && batchKeys(action.page) === undefined)
+          url.prefetch?.(searchOf(action.page));
       },
       sorts: engine.sorts,
     };
-  }, [paged, index, live, engine, selecting, url, prefetch]);
+  }, [paged, index, live, engine, selecting, url, prefetch, current, batchKeys]);
+  const loaded = useMemo(() => [...batches.values()], [batches]);
 
-  return { binding, index, prefetch, error };
+  return { binding, index, prefetch, error, batches: loaded };
 }
 
 /**

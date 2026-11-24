@@ -4,12 +4,12 @@ import NextImage from 'next/image';
 import type { ReactNode } from 'react';
 
 import { taxonomies } from '#figatellultimate/taxonomies';
-import type { AuthorsTermPage } from '#figatellultimate/terms';
+import { findAuthorsTermByUrl, type AuthorsTermPage } from '#figatellultimate/terms';
 
 import { Body } from '../components/mdx';
 import { SiteHeader } from '../components/site-header';
 import { cardsOf } from './folder-page';
-import { indexOf, itemsOf, postsOf } from './posts-data';
+import { indexOf, itemsOf, listingLocalesOf, postsOf } from './posts-data';
 import { Listing } from './listing';
 import { listingLabels } from './listing-labels';
 
@@ -41,7 +41,12 @@ export async function AuthorPage({ page }: { readonly page: AuthorsTermPage }): 
 
   return (
     <>
-      <SiteHeader locale={locale} url={page.url} title={name} />
+      <SiteHeader
+        locale={locale}
+        url={page.url}
+        title={name}
+        listing={listingLocalesOf(findAuthorsTermByUrl(page.first) ?? page, findAuthorsTermByUrl)}
+      />
       <main data-listing="author">
         <header data-slot="author-header">
           <NextImage src={taxonomies.authors.data[term].avatar} alt="" width={96} height={96} priority />

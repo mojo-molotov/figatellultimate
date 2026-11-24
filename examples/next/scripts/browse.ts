@@ -2,6 +2,7 @@
 // HTML (`verify.ts`) nor the packages' own tests. Each check states the bug it guards against.
 // Run after `pnpm example:build`: `pnpm example:browse [--port N]` (plain Node, Chromium).
 import { spawn } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
@@ -24,6 +25,17 @@ const last = Math.ceil(posts / perPage);
 check(posts % perPage !== 0, `${LISTING}: its last page is full, so no page change alters the page's height`);
 
 /** Where the page is scrolled, and where a slot's element sits on the screen. */
+/** A page as the build prerendered it, French unprefixed. */
+const htmlOf = (url: string): string | undefined => {
+  try {
+    return readFileSync(
+      join(import.meta.dirname, '..', '.next/server/app', `${url.startsWith('/en') ? url : `/fr${url}`}.html`),
+      'utf8',
+    );
+  } catch {
+    return undefined;
+  }
+};
 const placeOf = (page: Page, slot: string) =>
   page.evaluate((name) => {
     const element = document.querySelector(`[data-slot="${name}"]`);
@@ -132,6 +144,73 @@ try {
       `${LISTING}: its next three pages not loaded ahead (${JSON.stringify(asked)})`,
     );
     await ahead.close();
+  }
+
+  // A listing's batch loaded on idle: its pages shown here, without the server, the address moving to /page/N, the
+  // cards those of the prerendered page, the switcher following; Back brings the page before back.
+  {
+    const paging = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+    const asked: string[] = [];
+    const cardsOn = (html: string): string[] =>
+      [...html.slice(html.indexOf('data-slot="listing-cards"')).matchAll(/data-key="([^"]+)"/g)]
+        .map((match) => match[1] ?? '')
+        .slice(0, 3);
+    const shown = (): Promise<string[]> =>
+      paging.evaluate(() =>
+        [...(document.querySelector('[data-slot="listing-cards"]')?.querySelectorAll('[data-key]') ?? [])]
+          .slice(0, 3)
+          .map((card) => card.getAttribute('data-key') ?? ''),
+      );
+
+    paging.on('request', (request) => {
+      const path = new URL(request.url()).pathname;
+
+      if (request.headers()['rsc'] !== undefined || path.includes('/pages/')) asked.push(path);
+    });
+    const batch = paging.waitForResponse(
+      (response) => new URL(response.url()).pathname.includes('/listing/') && response.url().includes('/pages/'),
+    );
+
+    await paging.goto(`${base}${LISTING}`, { waitUntil: 'networkidle' });
+    await batch;
+    asked.length = 0;
+    await paging.locator('[data-slot="pagination-next"]').first().click();
+    await paging.waitForURL(`**${LISTING}/page/2`);
+    await paging
+      .waitForFunction(
+        (first) => document.querySelector('[data-slot="listing-cards"] [data-key]')?.getAttribute('data-key') !== first,
+        (await shown())[0] ?? '',
+      )
+      .catch(() => undefined);
+    const expected = cardsOn(htmlOf(`${LISTING}/page/2`) ?? '');
+
+    // Precondition: the prerendered page 2 has its cards to compare with.
+    check(expected.length > 0, `${LISTING}/page/2: no card prerendered`);
+    check(
+      JSON.stringify(await shown()) === JSON.stringify(expected),
+      `${LISTING}: page 2 shown from its batch is not the prerendered page 2 (${JSON.stringify(await shown())} ≠ ${JSON.stringify(expected)})`,
+    );
+    check(
+      !asked.some((path) => path.endsWith(`${LISTING}/page/2`)),
+      `${LISTING}: page 2 asked of the server, its batch at hand (${JSON.stringify(asked)})`,
+    );
+    // The switcher's links, its menu open: English has page 2 too.
+    await paging.locator('[data-slot="locale-switcher"]').first().click();
+    const english = (await paging.locator('a[hreflang="en"]').first().getAttribute('href')) ?? '';
+
+    await paging.keyboard.press('Escape');
+    check(
+      english === `/en${LISTING}/page/2`,
+      `${LISTING}/page/2: the switcher leads to ${english}, not English page 2`,
+    );
+    await paging.goBack();
+    await paging.waitForURL(`**${LISTING}`);
+    await paging.waitForTimeout(300);
+    check(
+      JSON.stringify(await shown()) === JSON.stringify(cardsOn(htmlOf(LISTING) ?? '')),
+      `${LISTING}: Back did not bring page 1's cards back`,
+    );
+    await paging.close();
   }
 
   // A filter chosen before the index arrives is applied once it is here, never lost.
@@ -581,6 +660,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
+    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, the switcher following, Back restoring; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
   );
 }

@@ -6,10 +6,11 @@
  */
 import { createSearch, SEARCH_SORTS, type SearchSort } from '@figatellultimate/search';
 import { SearchDialog } from '@figatellultimate/search-react';
-import type { LocaleLink } from '@figatellultimate/site';
+import { pagedHref, pagedSearch, readPage } from '@figatellultimate/facets';
+import { pageLocaleLinks, type ListingLocales, type LocaleLink } from '@figatellultimate/site';
 import { LocaleSwitcher, Navbar, ThemeToggle, type NavigationNode } from '@figatellultimate/ui';
 import { useTheme } from 'next-themes';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { localeInfo, locales, type Locale } from '#figatellultimate/locales';
@@ -57,8 +58,25 @@ export function HeaderBar(props: {
   readonly items: readonly NavigationNode[];
   readonly links: readonly LocaleLink[];
   readonly labels: HeaderLabels;
+  /** A paginated listing in each locale: the switcher follows its page shown in the browser (its batches). */
+  readonly listing?: ListingLocales | undefined;
 }): ReactNode {
-  const { locale, url, items, links, labels } = props;
+  const { locale, url, items, labels, listing } = props;
+  const pathname = usePathname();
+  // A page of the listing shown in the browser moved the address, not the server's links: they follow the page.
+  const links = useMemo(() => {
+    const first = listing?.[locale]?.first;
+
+    if (listing === undefined || first === undefined || (pathname !== first && !pathname.startsWith(`${first}/page/`)))
+      return props.links;
+
+    return pageLocaleLinks(props.links, {
+      page: readPage(pagedSearch({ pathname, search: '' }, first)),
+      locale,
+      listing,
+      href: (start, page) => pagedHref(start, page === 1 ? '' : `?page=${String(page)}`),
+    });
+  }, [listing, locale, pathname, props.links]);
   const { search: text } = labels;
   const router = useRouter();
   // next-themes owns the page's theme: the toggle shows it once mounted (the server cannot know it, and

@@ -135,7 +135,17 @@ export interface UrlAdapter {
    * Writes a new query string, never scrolling. The binding asks `push` for a page change and `replace` for filters
    * and sorts, so that Back leaves the list instead of undoing each filter.
    */
-  navigate(search: string, options: { readonly mode: 'replace' | 'push' }): void;
+  navigate(
+    search: string,
+    options: {
+      readonly mode: 'replace' | 'push';
+      /**
+       * The app renders this view itself (its keys and cards at hand, a batch or the index): only the address moves,
+       * never a request to the server for it.
+       */
+      readonly local?: boolean | undefined;
+    },
+  ): void;
   /**
    * The `href` of a query string, for links (e.g. pagination's); default the query string itself, relative to the
    * page. A listing paginated in its path gives `/…/page/N` for a default page (`pagedHref`).

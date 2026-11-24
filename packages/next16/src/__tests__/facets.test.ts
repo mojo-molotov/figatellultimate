@@ -67,6 +67,17 @@ describe('useNextUrl', () => {
     expect(router.push).toHaveBeenCalledTimes(1);
   });
 
+  it('moves only the address for a default page the app renders itself, never through the router', () => {
+    at.pathname = '/blog/news/page/2';
+    at.search = '';
+    const push = vi.spyOn(window.history, 'pushState');
+    const { result } = renderHook(() => useNextUrl({ first: '/blog/news' }));
+
+    result.current.navigate('?page=3', { mode: 'push', local: true });
+    expect(push).toHaveBeenCalledWith(null, '', '/blog/news/page/3');
+    expect(router.push).not.toHaveBeenCalled();
+  });
+
   it('loads a default page ahead through the router, never a view in the query, which fetches nothing', () => {
     at.pathname = '/blog/news/page/2';
     at.search = '';

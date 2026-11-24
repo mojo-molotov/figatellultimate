@@ -1,6 +1,6 @@
 /** The header of every page and its breadcrumb, from the content's navigation. */
 import { SEARCH_SORTS } from '@figatellultimate/search';
-import { breadcrumbOf, localeLinksOf } from '@figatellultimate/site';
+import { breadcrumbOf, localeLinksOf, type ListingLocales } from '@figatellultimate/site';
 import type { NavigationNode } from '@figatellultimate/ui';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
@@ -58,6 +58,7 @@ export async function SiteHeader({
   breadcrumb,
   crumbs = url,
   translates = url,
+  listing,
 }: {
   readonly locale: Locale;
   /** The page's URL: the navbar's current item. */
@@ -68,6 +69,8 @@ export async function SiteHeader({
   readonly crumbs?: string | undefined;
   /** The page's title, the breadcrumb's last step when the navigation does not list it (a blog post). */
   readonly title?: string | undefined;
+  /** A paginated listing in each locale, whose pages the browser shows: the switcher follows them. */
+  readonly listing?: ListingLocales | undefined;
   /** `false`: the page places the breadcrumb itself (`PageCrumbs`), e.g. a post with its table of contents. */
   readonly breadcrumb?: boolean | undefined;
 }): Promise<ReactNode> {
@@ -82,6 +85,7 @@ export async function SiteHeader({
         items={translated(items, (key) => t(key))}
         links={localeLinksOf(translates, mountedUrls, locales)}
         labels={await headerLabels(locale)}
+        listing={listing}
       />
       {/* Static: computed with the page, real links. */}
       {breadcrumb === false ? null : <Crumbs locale={locale} crumbs={breadcrumbOf(items, crumbs, title)} />}

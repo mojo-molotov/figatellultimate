@@ -15,9 +15,11 @@
  *     - The params are the app's own (its route's segments), matched exactly, arrays element by element.
  *     - The segment config (`dynamic`, `dynamicParams`) stays in the route file: Next only reads it there, as literals.
  *
- * Invariants (`listing-index.test.ts`): one index per listing, at its params; a listing's index built from it alone,
- * as JSON; a 404 for unknown params, nothing built.
+ * Invariants (`listing-index.test.ts`): one index per listing, at its params, then its batches when `pages` is given,
+ * each built from its own range; a listing's index built from it alone, as JSON; a 404 for unknown params, nothing
+ * built.
  */
+import { PAGES_PER_BATCH, batchesOf } from '@figatellultimate/facets';
 
 /** A route's params: its dynamic segments, a catch-all as an array. */
 type Params = Readonly<Record<string, string | readonly string[]>>;
@@ -30,6 +32,23 @@ export interface ListingIndexRouteOptions<L, P extends Params> {
   readonly params: (listing: L) => P;
   /** A listing's index: its items and anything else its page needs, serializable as JSON. */
   readonly build: (listing: L) => unknown;
+  /**
+   * The listing's batches (`batchesOf` of `@figatellultimate/facets`): its default view's pages in runs of `size`, each
+   * a static JSON the browser loads to show those pages itself (`usePagedCollection`'s `batches`). None without it.
+   */
+  readonly pages?: ListingBatches<L, P> | undefined;
+}
+
+/** What a listing's batches are made of: its count of pages, each batch's params and content. */
+export interface ListingBatches<L, P extends Params> {
+  /** The listing's count of pages, its default view's. */
+  readonly count: (listing: L) => number;
+  /** Pages per batch; default `PAGES_PER_BATCH`. */
+  readonly size?: number | undefined;
+  /** A batch's params in the route, e.g. the listing's and `batchPath(from)`: `{ locale, folder: [...segments, 'pages', '11'] }`. */
+  readonly params: (listing: L, from: number) => P;
+  /** A batch's content: its pages' keys in the default order, and what the browser needs to show them. */
+  readonly build: (listing: L, range: { readonly from: number; readonly to: number }) => unknown;
 }
 
 /** The route's handlers, to export from the route file. */
@@ -62,22 +81,30 @@ const same = (a: string | readonly string[] | undefined, b: string | readonly st
  * });
  */
 export function listingIndexRoute<L, P extends Params>(options: ListingIndexRouteOptions<L, P>): ListingIndexRoute<P> {
-  const { listings, params, build } = options;
+  const { listings, params, build, pages } = options;
+  // Every file the route serves: each listing's index, then its batches.
+  const files = (): { readonly params: P; readonly content: () => unknown }[] =>
+    listings().flatMap((listing) => [
+      { params: params(listing), content: () => build(listing) },
+      ...(pages === undefined
+        ? []
+        : batchesOf(pages.count(listing), pages.size ?? PAGES_PER_BATCH).map((range) => ({
+            params: pages.params(listing, range.from),
+            content: () => pages.build(listing, range),
+          }))),
+    ]);
+  const matches = (own: P, asked: Params): boolean =>
+    [...new Set([...Object.keys(own), ...Object.keys(asked)])].every((name) => same(own[name], asked[name]));
 
   return {
-    generateStaticParams: () => listings().map(params),
+    generateStaticParams: () => files().map((file) => file.params),
     GET: async (_, context) => {
       const asked = await context.params;
-      const listing = listings().find((candidate) => {
-        const own = params(candidate);
-        const names = new Set([...Object.keys(own), ...Object.keys(asked)]);
+      const file = files().find((candidate) => matches(candidate.params, asked));
 
-        return [...names].every((name) => same(own[name], asked[name]));
-      });
+      if (file === undefined) return new Response(null, { status: 404 });
 
-      if (listing === undefined) return new Response(null, { status: 404 });
-
-      return Response.json(await build(listing));
+      return Response.json(await file.content());
     },
   };
 }

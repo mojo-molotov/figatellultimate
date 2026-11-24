@@ -11,7 +11,7 @@
  *       cards of that view from it. `usePagedCollection` of `@figatellultimate/facets-react` does the orchestration.
  */
 import type { UrlAdapter } from '@figatellultimate/facets';
-import { isDefaultView, pagedHref } from '@figatellultimate/facets';
+import { isDefaultView, pagedHref, batchPath } from '@figatellultimate/facets';
 import {
   FacetOptions,
   FacetsReset,
@@ -30,7 +30,7 @@ import { localeInfo, type Locale } from '#figatellultimate/locales';
 
 import { PostCard } from './cards';
 import { postsEngine, type PostItem } from './facets';
-import { loadListingIndex } from './listing-index';
+import { loadListingIndex, loadListingBatch } from './listing-index';
 import type { FacetLabels, ListingLabels } from './listing-labels';
 import { PAGINATION_ICONS } from './pagination-icons';
 
@@ -99,11 +99,26 @@ function PostsView({
     [locale, paged?.perPage],
   );
   const load = useCallback(() => loadListingIndex(paged?.index ?? ''), [paged?.index]);
-  const { binding, index, prefetch } = usePagedCollection({ engine, items, paged, load, url });
+  // The pages around the reader, ten a small file, loaded on idle: a page they hold is shown at once.
+  const batchesOf = useMemo(
+    () =>
+      paged === undefined
+        ? undefined
+        : { load: (from: number) => loadListingBatch(`${paged.index}/${batchPath(from).join('/')}`) },
+    [paged],
+  );
+  const { binding, index, prefetch, batches } = usePagedCollection({
+    engine,
+    items,
+    paged,
+    load,
+    url,
+    batches: batchesOf,
+  });
   const selecting = !isDefaultView(url.search);
   const cardOf = (key: string): ReactNode => {
     const prerendered = cards[key];
-    const data = index?.cards[key];
+    const data = index?.cards[key] ?? batches.find((batch) => key in batch.cards)?.cards[key];
 
     return prerendered ?? (data === undefined ? null : <PostCard card={data} />);
   };

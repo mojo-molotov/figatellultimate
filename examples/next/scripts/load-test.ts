@@ -1,7 +1,8 @@
 // Load test (`pnpm example:load [--posts N]`): the example copied to `.tmp/load-<N>/` (gitignored), with N generated
 // posts per locale spread over the blog's four subcategories, each read through its strictly typed getter by a module
 // of the copy, then timed (figatellultimate build, typecheck, next build, search index) and measured (JavaScript,
-// HTML, generated code, navigation in Chromium). Plain Node, as `verify.ts`.
+// HTML, generated code, navigation in Chromium, a burst of clicks on next with the server a cold CDN away, with and
+// without the listings' batches). Plain Node, as `verify.ts`.
 import { spawn, spawnSync } from 'node:child_process';
 import {
   cpSync,
@@ -229,6 +230,8 @@ for (const url of PAGES) {
 
 // --- Navigation in Chromium: what crosses the network, per step --------------------------------------------------
 const stepTotals = new Map<string, number>();
+// Each listing's pagination with its batches, the server far away: the median and worst click (ms).
+const paging = new Map<string, { readonly median: number; readonly worst: number }>();
 const server = spawn(bin('next'), ['start', '-p', String(port)], { cwd: target, stdio: 'ignore' });
 
 try {
@@ -325,6 +328,77 @@ try {
     );
   }
 
+  // --- Pagination, the server far away: a burst of clicks on next, a cold CDN's delay on every page and index ------
+  // Each click's time until the first card changes, with the listing's batches (its pages shown in the browser) and
+  // without them (refused: each page through the router, loaded ahead three on each side), on the same build.
+  const COLD = 300;
+  const CLICKS = 12;
+  const burst = async (url: string, batches: boolean): Promise<number[]> => {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+
+    await context.route('**/*', async (route) => {
+      const request = route.request();
+      const path = new URL(request.url()).pathname;
+
+      if (!batches && path.includes('/pages/')) return route.abort();
+
+      if (request.headers()['rsc'] !== undefined || path.includes('listing/'))
+        await new Promise((resolve) => setTimeout(resolve, COLD));
+
+      return route.continue();
+    });
+    const tab = await context.newPage();
+    const first = (): Promise<string> =>
+      tab.evaluate(
+        () => document.querySelector('[data-slot="listing-cards"] [data-key]')?.getAttribute('data-key') ?? '',
+      );
+    const times: number[] = [];
+
+    await tab.goto(`http://localhost:${String(port)}${url}`, { waitUntil: 'networkidle' });
+    // The reader looks at the page a moment: idle, the batch (or the pages loaded ahead) on its way.
+    await tab.waitForTimeout(1500);
+
+    for (let click = 0; click < CLICKS; click++) {
+      const before = await first();
+      const start = performance.now();
+
+      await tab.locator('[data-slot="pagination-next"]').first().click();
+      await tab.waitForFunction(
+        (shown) => document.querySelector('[data-slot="listing-cards"] [data-key]')?.getAttribute('data-key') !== shown,
+        before,
+        { timeout: 30_000 },
+      );
+      times.push(performance.now() - start);
+      // The next click soon after: a reader going through the list.
+      await tab.waitForTimeout(150);
+    }
+
+    await context.close();
+
+    return times;
+  };
+  const median = (values: readonly number[]): number =>
+    [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)] ?? Infinity;
+  const worst = (values: readonly number[]): number => Math.max(...values);
+
+  report.push(
+    '',
+    `## Pagination, the server ${String(COLD)} ms away (${String(CLICKS)} clicks on next, 150 ms apart)`,
+    '',
+    '| Listing | Without batches: median | worst | With batches: median | worst |',
+    '|---|---|---|---|---|',
+  );
+
+  for (const url of [`/blog/${SUBCATEGORIES[0] ?? ''}`, '/authors/igor']) {
+    const without = await burst(url, false);
+    const batched = await burst(url, true);
+
+    paging.set(url, { median: median(batched), worst: worst(batched) });
+    report.push(
+      `| \`${url}\` | ${median(without).toFixed(0)} ms | ${worst(without).toFixed(0)} ms | **${median(batched).toFixed(0)} ms** | **${worst(batched).toFixed(0)} ms** |`,
+    );
+  }
+
   await browser.close();
 } finally {
   server.kill();
@@ -352,6 +426,9 @@ const listed = (url: string): number => {
   ).length;
 };
 const KB = 1024;
+// A subcategory's first batch: its first ten pages' keys and cards.
+const batchFile = join(app, 'fr', 'listing', `${SUBCATEGORIES[0] ?? ''}`, 'pages', '1.body');
+const batchGzip = existsSync(batchFile) ? gzipSync(readFileSync(batchFile)).length : Infinity;
 // A subcategory's index: every post's item and card, the JSON its listing fetches on a filter or a sort.
 const indexFile = join(app, 'fr', 'listing', `${SUBCATEGORIES[0] ?? ''}.body`);
 const indexGzip = existsSync(indexFile) ? gzipSync(readFileSync(indexFile)).length : Infinity;
@@ -400,6 +477,13 @@ const budgets: [string, number, number][] = [
       ] satisfies [string, number, number][])),
   // The post's page, its images and its own JavaScript: the cover alone weighs most of it.
   ['opening a post (kB on the wire)', (stepTotals.get('open a post') ?? Infinity) / KB, 175],
+  // Next, clicked in a burst, the server far away: a page its batch holds shows at once, whatever the list's length.
+  ...[...paging].flatMap(([url, { median: middle, worst: slowest }]): [string, number, number][] => [
+    [`next on ${url}, the median click (ms)`, middle, 100],
+    [`next on ${url}, the worst click (ms)`, slowest, 250],
+  ]),
+  // A batch: ten pages' keys and cards, the same size whatever the list's length.
+  ...(posts === 0 ? [] : [['a batch gzip (kB)', batchGzip / KB, 10] as [string, number, number]]),
 ];
 
 report.push('', '## Budgets', '', '| Budget | Measured | At most | |', '|---|---|---|---|');

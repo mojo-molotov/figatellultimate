@@ -5,7 +5,8 @@
  */
 import { getTranslations } from 'next-intl/server';
 
-import { findBlogPostByUrl, type BlogPost } from '#figatellultimate/blog';
+import type { ListingLocales } from '@figatellultimate/site';
+import { findBlogFolderByUrl, findBlogPostByUrl, type BlogFolder, type BlogPost } from '#figatellultimate/blog';
 import type { Locale } from '#figatellultimate/locales';
 import { taxonomies } from '#figatellultimate/taxonomies';
 import { authorsTermUrl } from '#figatellultimate/terms';
@@ -83,3 +84,36 @@ export function indexOf(page: { readonly url: string; readonly index?: string })
 
   return page.index;
 }
+
+/**
+ * A paginated listing in each locale that has it, from its first page's translations: where the locale switcher leads
+ * from a page the browser shows (`pageLocaleLinks` of `@figatellultimate/site`).
+ *
+ * @param first - The listing's first page in the page's locale.
+ * @param find - Its kind of page at a URL (a folder, an author's page).
+ * @returns Each locale's first page and count of pages.
+ */
+export function listingLocalesOf<
+  P extends {
+    readonly first: string;
+    readonly pages: number;
+    readonly alternates: Readonly<Partial<Record<string, string>>>;
+  },
+>(first: P, find: (url: string) => P | undefined): ListingLocales {
+  return Object.fromEntries(
+    Object.entries(first.alternates).flatMap(([locale, url]) => {
+      const there = url === undefined ? undefined : find(url);
+
+      return there === undefined ? [] : [[locale, { first: there.first, pages: there.pages }]];
+    }),
+  );
+}
+
+/**
+ * A subcategory's listing in each locale (`listingLocalesOf`).
+ *
+ * @param folder - A page of the subcategory.
+ * @returns Each locale's first page and count of pages.
+ */
+export const folderLocalesOf = (folder: BlogFolder): ListingLocales =>
+  listingLocalesOf(findBlogFolderByUrl(folder.first) ?? folder, findBlogFolderByUrl);

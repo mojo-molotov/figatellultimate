@@ -52,3 +52,44 @@ describe('listingIndexRoute', () => {
     expect(build).not.toHaveBeenCalled();
   });
 });
+
+describe('listingIndexRoute: batches', () => {
+  const batch = vi.fn((listing: Listing, range: { readonly from: number; readonly to: number }) =>
+    Promise.resolve({ keys: listing.posts, from: range.from, to: range.to }),
+  );
+  const batched = listingIndexRoute({
+    listings: () => LISTINGS.slice(0, 1),
+    params: (listing) => ({ locale: listing.locale, folder: listing.segments }),
+    build,
+    pages: {
+      // 23 pages: batches of 10, 10 and 3.
+      count: () => 23,
+      params: (listing, from) => ({ locale: listing.locale, folder: [...listing.segments, 'pages', String(from)] }),
+      build: batch,
+    },
+  });
+
+  it('prerenders each listing’s index, then a batch per run of ten pages', () => {
+    expect(batched.generateStaticParams()).toEqual([
+      { locale: 'fr', folder: ['news', 'bot'] },
+      { locale: 'fr', folder: ['news', 'bot', 'pages', '1'] },
+      { locale: 'fr', folder: ['news', 'bot', 'pages', '11'] },
+      { locale: 'fr', folder: ['news', 'bot', 'pages', '21'] },
+    ]);
+  });
+
+  it('answers a batch built from its own range, and 404 past the last one', async () => {
+    const last = await batched.GET(new Request('https://example.org/'), {
+      params: Promise.resolve({ locale: 'fr', folder: ['news', 'bot', 'pages', '21'] }),
+    });
+
+    expect(await last.json()).toEqual({ keys: ['a', 'b'], from: 21, to: 23 });
+    expect(
+      (
+        await batched.GET(new Request('https://example.org/'), {
+          params: Promise.resolve({ locale: 'fr', folder: ['news', 'bot', 'pages', '31'] }),
+        })
+      ).status,
+    ).toBe(404);
+  });
+});

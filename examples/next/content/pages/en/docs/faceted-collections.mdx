@@ -118,6 +118,12 @@ export const { GET, generateStaticParams } = listingIndexRoute({
 });
 ```
 
-The example has two: `listing/[...folder]` for a subcategory’s posts, `author-listing/[term]` for an author’s, across every subcategory. An index costs about fifty bytes gzip per post (the load test measures it).
+The example has two: `listing/[...folder]` for a subcategory’s posts, `author-listing/[...term]` for an author’s, across every subcategory. An index costs about fifty bytes gzip per post (the load test measures it).
+
+Next to its index, a listing has page batches: its default view’s pages in runs of ten (`batchesOf`), each a small static file at `<index>/pages/<first page>`, built by the same route (its `pages` option). `usePagedCollection` loads the current page’s batch once the page is idle, then the next or previous one near its edges; a page its batch holds is shown at once, only the address moving, and any other goes through the server. The cost per visit stays a batch’s, about two kilobytes gzip, whatever the list’s length: the load test measures a click on next at under 50 ms with the server 300 ms away, against 360 ms through the server.
+
+```ts
+usePagedCollection({ …, batches: { load: (from) => loadBatch(`${index}/${batchPath(from).join('/')}`) } });
+```
 
 Outside Next, `pagedHref` and `pagedSearch` of `@figatellultimate/facets` map a view to this location and back.
