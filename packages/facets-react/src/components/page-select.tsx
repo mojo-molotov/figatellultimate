@@ -14,7 +14,7 @@
  *
  * Invariants (`components.test.tsx`): axe open and closed; the current page shown; Enter opens on it, arrows and
  * Enter go to another, focus back to the trigger; Escape changes nothing; none for a single page; the locale's digits;
- * the current page read by its spoken text when given one.
+ * the current page read by its spoken text when given one; each page of the list named by its label when given one.
  */
 import { Select, VisuallyHidden } from 'radix-ui';
 import { useMemo, type ComponentProps, type ReactNode } from 'react';
@@ -35,6 +35,11 @@ export interface PageSelectLabels {
    * "Page 3 of 10". Default: the shown text.
    */
   readonly spoken?: ((page: number, pages: number) => string) | undefined;
+  /**
+   * A page's name in the list, its number shown, e.g. "Page 3" (as the full pagination's `page`): a screen reader
+   * says more than "3", the number in the name (WCAG 2.5.3). Default: the number.
+   */
+  readonly page?: ((page: number) => string) | undefined;
 }
 
 /** The page select's props: a Radix Select root's, plus the binding, the labels and the locale. */
@@ -103,7 +108,16 @@ export function PageSelect({ binding, labels, locale, ...props }: PageSelectProp
           <Select.Viewport data-slot="page-select-viewport">
             {Array.from({ length: pages }, (_, index) => (
               <Select.Item key={index} data-slot="page-select-item" value={String(index + 1)}>
-                <Select.ItemText>{format(index + 1)}</Select.ItemText>
+                <Select.ItemText>
+                  {labels.page === undefined ? (
+                    format(index + 1)
+                  ) : (
+                    <>
+                      <span aria-hidden>{format(index + 1)}</span>
+                      <VisuallyHidden.Root>{labels.page(index + 1)}</VisuallyHidden.Root>
+                    </>
+                  )}
+                </Select.ItemText>
                 <Select.ItemIndicator data-slot="page-select-indicator" />
               </Select.Item>
             ))}

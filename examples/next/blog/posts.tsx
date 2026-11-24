@@ -138,6 +138,7 @@ function PostsView({
             trigger: labels.pagination.jump,
             current: (page, pages) => formatPrecompiled(labels.pagination.short, locale, { page, pages }),
             spoken: (page, pages) => formatPrecompiled(labels.pagination.spoken, locale, { page, pages }),
+            page: (page) => formatPrecompiled(labels.pagination.page, locale, { page }),
           }}
           locale={locale}
           dir={dir}

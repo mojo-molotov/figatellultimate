@@ -371,7 +371,7 @@ try {
   const select = await open(LISTING);
 
   await select.getByRole('combobox', { name: 'Aller à la page' }).click();
-  await select.getByRole('option', { name: '4', exact: true }).click();
+  await select.getByRole('option', { name: 'Page 4', exact: true }).click();
   await select.waitForURL('**/page/4', { timeout: 5000 }).catch(() => undefined);
   check(new URL(select.url()).pathname === `${LISTING}/page/4`, `${LISTING}: the page select did not reach page 4`);
   await select.close();

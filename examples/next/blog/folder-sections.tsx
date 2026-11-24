@@ -133,6 +133,7 @@ function SectionsView({
           trigger: labels.jump,
           current: (page, pages) => formatPrecompiled(labels.short, locale, { page, pages }),
           spoken: (page, pages) => formatPrecompiled(labels.spoken, locale, { page, pages }),
+          page: (page) => formatPrecompiled(labels.page, locale, { page }),
         }}
         locale={locale}
         dir={localeInfo[locale].dir}
