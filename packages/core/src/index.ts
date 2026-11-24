@@ -28,6 +28,7 @@ export { assemble, type Assembly, type AssembleInput, type Entry } from './conte
 export { localImageReferences, type ImageReference, type ImageSource } from './content/images.js';
 export {
   defineCollection,
+  exposedToLlms,
   InvalidCollectionError,
   type Collection,
   type CollectionInput,

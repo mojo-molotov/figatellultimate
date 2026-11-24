@@ -13,6 +13,9 @@
  *       them.
  *     - Folder pages are declared per level, with an optional image per folder path.
  *     - `shared` names the fields a translation takes from the default locale's version (`content/inherit.ts`).
+ *     - What a collection exposes to LLMs (`llms`, the app's `llms.txt` and each page's Markdown) is declared with it,
+ *       as chosen with the user: its keys by the patterns `reserved` takes, and a boolean frontmatter field leaving
+ *       an entry out (as `draft` does). Nothing by default; never from a collection without pages, nothing to link.
  *
  * Invariants (`collection.test.ts`, `collection.test-d.ts`): every invalid declaration throws; segment names
  * inferred.
@@ -106,6 +109,11 @@ export interface CollectionInput<E extends string, G extends readonly GrammarPar
   /** Whether the local search indexes this collection. Default: `true`. */
   readonly searchable?: boolean;
   /**
+   * What it exposes to LLMs: its entries whose key matches `include` (a key, or `prefix/*` for the prefix's
+   * descendants, as `reserved`), except those whose boolean frontmatter field `exclude` is `true`. Nothing when absent.
+   */
+  readonly llms?: { readonly include: readonly string[]; readonly exclude?: string | null } | null;
+  /**
    * Whether its entries have pages. `false`: none, every entry read through its getters only (e.g. a taxonomy's
    * `content`); no folder pages. Default: `true`.
    */
@@ -188,6 +196,8 @@ export interface Collection<E extends string = string, G extends readonly Gramma
   readonly messages: CollectionMessages<SegmentNames<G>>;
   readonly metadata: MetadataFields;
   readonly searchable: boolean;
+  /** What it exposes to LLMs; `null` for nothing. */
+  readonly llms: { readonly include: readonly string[]; readonly exclude: string | null } | null;
   /** `false` when its entries have no page: read through their getters only. */
   readonly mounted: boolean;
   /** `null` when no folder has a page. */
@@ -197,6 +207,37 @@ export interface Collection<E extends string = string, G extends readonly Gramma
 const IDENTIFIER = /^[a-z][a-zA-Z0-9]*$/;
 const RESERVED_SEGMENT_NAMES: readonly string[] = ['slug', 'locale'];
 const DEFAULT_MAX_NAME_LENGTH = 80;
+
+/** Whether a value is a list, its items still unknown. */
+const isList = (value: unknown): value is readonly unknown[] => Array.isArray(value);
+
+/** The `llms` option, validated and frozen: its patterns as `reserved`'s, its exclusion field a field name. */
+function validateLlms(entry: string, input: unknown): Collection['llms'] {
+  // `null`: a collection already validated, declared again (its `llms` exposing nothing).
+  if (input === undefined || input === null) return null;
+
+  const include: unknown = typeof input === 'object' ? Reflect.get(input, 'include') : undefined;
+  const exclude: unknown = typeof input === 'object' ? (Reflect.get(input, 'exclude') ?? null) : null;
+
+  if (!isList(include) || include.length === 0)
+    fail(entry, 'llms.include must list the keys or key prefixes to expose');
+
+  const patterns: string[] = [];
+
+  for (const pattern of include) {
+    const path = typeof pattern === 'string' && pattern.endsWith('/*') ? pattern.slice(0, -2) : pattern;
+
+    if (typeof pattern !== 'string' || typeof path !== 'string' || !isValidKeyPath(path))
+      fail(entry, `invalid llms.include pattern "${String(pattern)}"`);
+
+    patterns.push(pattern);
+  }
+
+  if (exclude !== null && (typeof exclude !== 'string' || exclude === ''))
+    fail(entry, 'llms.exclude must be a non-empty frontmatter field name');
+
+  return Object.freeze({ include: Object.freeze(patterns), exclude });
+}
 
 function fail(entry: string, problem: string): never {
   throw new InvalidCollectionError(`Collection "${entry}": ${problem}.`);
@@ -211,6 +252,25 @@ function fail(entry: string, problem: string): never {
  */
 export function matchesReservation(key: string, pattern: string): boolean {
   return pattern.endsWith('/*') ? key.startsWith(`${pattern.slice(0, -2)}/`) : key === pattern;
+}
+
+/**
+ * Whether a collection exposes an entry to LLMs.
+ *
+ * @param collection - The entry's collection.
+ * @param key - The entry's key.
+ * @param data - The entry's frontmatter, its exclusion field read.
+ * @returns Whether its key matches the collection's `llms.include` and its exclusion field is not `true`.
+ *
+ * @example
+ * exposedToLlms(pages, 'docs/installation', { llmExclude: false }); // true, with `include: ['docs/*']`
+ */
+export function exposedToLlms(collection: Collection, key: string, data: Readonly<Record<string, unknown>>): boolean {
+  const llms = collection.llms;
+
+  if (llms === null || !llms.include.some((pattern) => matchesReservation(key, pattern))) return false;
+
+  return llms.exclude === null || data[llms.exclude] !== true;
 }
 
 function isValidKeyPath(path: string): boolean {
@@ -422,6 +482,10 @@ export function defineCollection<const E extends string, const G extends readonl
 
   if (!mounted && folderPages !== null) fail(entry, 'an unmounted collection has no pages: remove folderPages');
 
+  const llms = validateLlms(entry, input.llms);
+
+  if (!mounted && llms !== null) fail(entry, 'an unmounted collection has no pages to expose: remove llms');
+
   return Object.freeze({
     entry,
     base,
@@ -438,6 +502,7 @@ export function defineCollection<const E extends string, const G extends readonl
     shared: Object.freeze([...shared]),
     metadata: Object.freeze({ ...(input.metadata ?? {}) }),
     searchable,
+    llms,
     mounted,
     folderPages,
     messages: frozenMessages(segmentNames, input.messages ?? {}),

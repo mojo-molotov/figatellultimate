@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { defineCollection, InvalidCollectionError } from '../collection.js';
+import { defineCollection, exposedToLlms, InvalidCollectionError } from '../collection.js';
 import { join, locale, rest, segment, slug } from '../grammar.js';
 import { blog, blogWithContent, landingPages, pages } from '../../__tests__/scenarios/collections.js';
 
@@ -187,6 +187,67 @@ describe('defineCollection: searchable', () => {
       // @ts-expect-error -- an untyped (JS or JSON) caller: validated at runtime.
       defineCollection({ entry: 'page', base: '', grammar, searchable: 'no' }),
     ).toThrow(InvalidCollectionError);
+  });
+});
+
+describe('defineCollection: llms', () => {
+  const grammar = [locale({ optional: true }), rest('path'), slug()] as const;
+
+  it('exposes nothing by default; keeps what it exposes and its exclusion field, frozen', () => {
+    expect(defineCollection({ entry: 'page', base: '', grammar }).llms).toBeNull();
+    const collection = defineCollection({
+      entry: 'page',
+      base: '',
+      grammar,
+      llms: { include: ['docs', 'docs/*'], exclude: 'llmExclude' },
+    });
+
+    expect(collection.llms).toEqual({ include: ['docs', 'docs/*'], exclude: 'llmExclude' });
+    expect(Object.isFrozen(collection.llms)).toBe(true);
+    expect(Object.isFrozen(collection.llms?.include)).toBe(true);
+    expect(
+      defineCollection({ entry: 'page', base: '', grammar, llms: { include: ['docs'] } }).llms?.exclude,
+    ).toBeNull();
+  });
+
+  it.each<[string, unknown]>([
+    ['no pattern', { include: [] }],
+    ['patterns that are not a list', { include: 'docs' }],
+    ['an invalid pattern', { include: ['Docs/*'] }],
+    ['an empty exclusion field', { include: ['docs'], exclude: '' }],
+  ])('throws InvalidCollectionError on %s', (_, llms) => {
+    expect(() =>
+      // @ts-expect-error -- an untyped (JS or JSON) caller: validated at runtime.
+      defineCollection({ entry: 'page', base: '', grammar, llms }),
+    ).toThrow(InvalidCollectionError);
+  });
+
+  it('throws on a collection without pages: nothing to link', () => {
+    expect(() =>
+      defineCollection({ entry: 'page', base: '', grammar, mounted: false, llms: { include: ['docs'] } }),
+    ).toThrow(InvalidCollectionError);
+  });
+
+  it.each<[string, string, Readonly<Record<string, unknown>>, boolean]>([
+    ['the exact key', 'docs', {}, true],
+    ["a prefix's descendant", 'docs/install', {}, true],
+    ['a key outside the patterns', 'blog/post', {}, false],
+    ['a prefix itself, under `docs/*` alone', 'guides', {}, false],
+    ['an entry whose exclusion field is true', 'docs/install', { llmExclude: true }, false],
+    ['an entry whose exclusion field is false', 'docs/install', { llmExclude: false }, true],
+  ])('exposes %s as told', (_, key, data, exposed) => {
+    const collection = defineCollection({
+      entry: 'page',
+      base: '',
+      grammar,
+      llms: { include: ['docs', 'docs/*', 'guides/*'], exclude: 'llmExclude' },
+    });
+
+    expect(exposedToLlms(collection, key, data)).toBe(exposed);
+  });
+
+  it('exposes nothing from a collection that declares nothing', () => {
+    expect(exposedToLlms(defineCollection({ entry: 'page', base: '', grammar }), 'docs', {})).toBe(false);
   });
 });
 
