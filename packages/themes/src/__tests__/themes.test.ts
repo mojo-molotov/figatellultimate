@@ -222,6 +222,18 @@ describe('base.css', () => {
     );
   });
 
+  it('sets a category\'s full pagination on its last "see more" line, at its end, below it on a phone', () => {
+    const body = (selector: string) => rules.find((rule) => rule.selector === selector)?.body ?? '';
+
+    expect(body("[data-slot='folder-end']")).toMatch(
+      /display: flex; flex-wrap: wrap;.*justify-content: space-between;/,
+    );
+    expect(body("[data-slot='folder-end'] > [data-slot='pagination']")).toBe('margin-inline-start: auto;');
+    expect(source).toMatch(
+      /@media \(max-width: 36rem\) \{\s*\[data-slot='folder-end'\] > \[data-slot='pagination'\] \{\s*flex-basis: 100%;/,
+    );
+  });
+
   it("keeps a section's heading its h2's spacing when the compact pagination shares its line", () => {
     const body = (selector: string) => rules.find((rule) => rule.selector === selector)?.body;
 

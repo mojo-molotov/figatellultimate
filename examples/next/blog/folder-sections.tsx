@@ -12,7 +12,8 @@
  *     - The sections are data rendered alike on both sides (`SectionData`), rather than rendered on the server only,
  *       so that a batch can show a page the server never sent.
  *     - The pagination as a listing's: a select on the heading's line, at its end on a phone too, and previous and next
- *       below the sections (checked by `scripts/browse.ts`).
+ *       below: on the last section's "see more" line on a desktop, under it on a phone (checked by
+ *       `scripts/browse.ts`).
  */
 import { batchPath, defineFacetedCollection, type Engine, type UrlAdapter } from '@figatellultimate/facets';
 import { PageSelect, Pagination, usePagedCollection } from '@figatellultimate/facets-react';
@@ -139,6 +140,14 @@ function SectionsView({
     </div>
   );
 
+  // A section's link towards its every post, when its preview holds fewer.
+  const more = (section: SectionData): ReactNode =>
+    section.more === undefined ? null : (
+      <NextLink href={section.more.href} data-slot="folder-more">
+        {section.more.text}
+      </NextLink>
+    );
+
   if (level === null)
     return (
       <>
@@ -185,15 +194,19 @@ function SectionsView({
                 </li>
               ))}
             </ol>
-            {section.more === undefined ? null : (
-              <NextLink href={section.more.href} data-slot="folder-more">
-                {section.more.text}
-              </NextLink>
+            {/* The last section ends the page: its "see more" and the full pagination on one line, the pagination at
+                its end (below it on a phone, the theme's). */}
+            {index === shown.length - 1 ? (
+              <div data-slot="folder-end">
+                {more(section)}
+                {pagination}
+              </div>
+            ) : (
+              more(section)
             )}
           </section>
         );
       })}
-      {pagination}
     </>
   );
 }

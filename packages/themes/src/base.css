@@ -370,8 +370,32 @@ header > [data-slot='breadcrumb'] {
   font-size: 1rem;
 }
 
-/* The full pagination below the sections, apart from them; on a narrow screen at the end of the line, under the
-   thumb, as a listing's below its cards. */
+/* A category's last section ends the page: its "see more" and the full pagination on one line, the pagination at its
+   end; on a narrow screen, the pagination below it, at the end of its line, under the thumb. */
+[data-slot='folder-end'] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--fig-space) * 2);
+}
+
+[data-slot='folder-end'] > [data-slot='pagination'] {
+  margin-inline-start: auto;
+}
+
+@media (max-width: 36rem) {
+  [data-slot='folder-end'] > [data-slot='pagination'] {
+    flex-basis: 100%;
+  }
+
+  [data-slot='folder-end'] > [data-slot='pagination'] [data-slot='pagination-content'] {
+    justify-content: flex-end;
+  }
+}
+
+/* The blog's full pagination below its categories, apart from them; on a narrow screen at the end of the line, under
+   the thumb, as a listing's below its cards. */
 :is([data-slot='folder-list'], [data-slot='folder-section']) ~ [data-slot='pagination'] {
   margin-block-start: calc(var(--fig-space) * 2);
 }
