@@ -56,5 +56,8 @@
     "happy-dom": "21.0.4",
     "react": "19.3.1",
     "react-dom": "19.3.1"
+  },
+  "dependencies": {
+    "throttleit": "3.0.0"
   }
 }

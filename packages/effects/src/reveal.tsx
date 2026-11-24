@@ -20,6 +20,10 @@
  *       page against the screen's height), taken again when the page or the screen resizes; otherwise the footer
  *       stays in its place, with no effect. Rejected: forcing every page to be a screen tall, which makes a short page
  *       scroll for its footer.
+ *     - Measured at most every `MEASURE_EVERY` ms while the screen or the page keeps resizing (`throttleit`): the
+ *       first resize at once, the last one always, so the final layout is never missed; a measure still pending at
+ *       unmount is dropped (throttleit has no cancel: a flag guards it). Rejected: a debounce, which would leave the
+ *       footer in its old state for the whole drag of a window's edge.
  *     - Static until measured: the server's footer sits in its place, and the reveal starts once the browser has
  *       found the room, while the slot is still below the screen, so nothing moves.
  *     - Never the browser's scroll anchor (`overflow-anchor: none`): its content moves with the scroll, and a page
@@ -34,10 +38,14 @@
  * Invariants (`reveal.test.tsx`; `reveal-layout.test.tsx`, in real browsers): revealed only when it starts below the
  * screen, in its place otherwise (a short page, a page scrolling less than its height); while revealed, the
  * content's bottom stays on the screen's bottom; once in full, it sits in its place; the focus entering it reveals it
- * in full; it comes above a docked panel;
+ * in full; it comes above a docked panel; a burst of resizes measured at once, then once settled, never after unmount;
  * never a scroll anchor (the example's `scripts/browse.ts`, on Next's real navigation).
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import throttle from 'throttleit';
+
+/** The least time between two measures while resizing, in milliseconds. */
+const MEASURE_EVERY = 100;
 
 /** Whether the slot starts below the screen before any scroll: room to reveal it. */
 const hasRoom = (slot: HTMLElement): boolean => slot.getBoundingClientRect().top + window.scrollY >= window.innerHeight;
@@ -60,20 +68,23 @@ export function Reveal({ children }: { readonly children: ReactNode }): ReactNod
 
     if (element === null) return;
 
+    let mounted = true;
     const measure = (): void => {
-      setRevealing(hasRoom(element));
+      if (mounted) setRevealing(hasRoom(element));
     };
 
     measure();
-    // The page grows or shrinks (a listing filtered, images loaded), or the screen does.
-    const observer = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(measure);
+    // The page grows or shrinks (a listing filtered, images loaded), or the screen does: throttled.
+    const remeasure = throttle(measure, MEASURE_EVERY);
+    const observer = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(remeasure);
 
     observer?.observe(document.body);
-    window.addEventListener('resize', measure);
+    window.addEventListener('resize', remeasure);
 
     return () => {
+      mounted = false;
       observer?.disconnect();
-      window.removeEventListener('resize', measure);
+      window.removeEventListener('resize', remeasure);
     };
   }, []);
 

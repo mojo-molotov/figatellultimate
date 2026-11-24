@@ -3,16 +3,27 @@
 /**
  * Twinkling particles in the margins, drawn on a canvas; placed and masked by `styles.css`.
  *
+ * Key design decisions:
+ *     - Resizes throttled (`throttleit`, at most every `RESIZE_EVERY` ms): a new size sizes the canvas again and
+ *       draws new particles, too much to redo for every step of a window's edge dragged. The first resize at once,
+ *       the last one always, so the canvas ends at the final size; a resize still pending at unmount is dropped
+ *       (throttleit has no cancel: a flag guards it, or the frames would start again). The theme, the motion
+ *       preference and the page's visibility stay immediate: one change each, never a burst.
+ *
  * Invariants (`sparkles.test.tsx`): decorative (hidden, never catching a click); nothing drawn without a 2D
- * context; every frame and listener released on unmount.
+ * context; every frame and listener released on unmount; a burst of resizes drawn at once, then once settled, never
+ * after unmount.
  */
 import { useEffect, useRef, type ReactNode } from 'react';
+import throttle from 'throttleit';
 
 /** The text column's width in rem when `--fig-sparkles-column` is unset: particles only beside it. */
 const COLUMN_REM = 48;
 /** Particles per square pixel of margin: a few dozen on a wide screen. */
 const DENSITY = 1 / 6000;
 const MAX_PARTICLES = 140;
+/** The least time between two resizes drawn, in milliseconds. */
+const RESIZE_EVERY = 200;
 
 interface Particle {
   x: number;
@@ -57,6 +68,7 @@ export function Sparkles(): ReactNode {
     let width = 0;
     let height = 0;
     let margin = 0;
+    let mounted = true;
 
     /** The canvas sized to its box; the same particles while its size stays, new ones for a new size. */
     const populate = (): void => {
@@ -146,6 +158,8 @@ export function Sparkles(): ReactNode {
 
     /** Runs, draws still, or stops, as the theme, the screen, the motion preference and the page's visibility say. */
     const update = (): void => {
+      if (!mounted) return;
+
       stop();
       const shown = getComputedStyle(element).display !== 'none' && document.visibilityState === 'visible';
 
@@ -157,7 +171,7 @@ export function Sparkles(): ReactNode {
       else frame = requestAnimationFrame(step);
     };
 
-    const resize = new ResizeObserver(update);
+    const resize = new ResizeObserver(throttle(update, RESIZE_EVERY));
 
     resize.observe(element);
     // The theme toggle sets `<html data-theme>`: the effect follows it.
@@ -170,6 +184,7 @@ export function Sparkles(): ReactNode {
     update();
 
     return () => {
+      mounted = false;
       stop();
       resize.disconnect();
       theme.disconnect();
