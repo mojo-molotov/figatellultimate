@@ -51,6 +51,8 @@ export const schema = {
       authors: { trigger: _, filter: _, list: _, empty: _, clear: _ },
     },
     reset: _,
+      // What a term's count counts, heard after it ("Harpe, 17 articles"), not seen.
+      unit: _,
     options: { trigger: _, content: _ },
     // Each sort's name as shown, and, where it reads badly aloud (an arrow), as a screen reader says it.
     sort: {

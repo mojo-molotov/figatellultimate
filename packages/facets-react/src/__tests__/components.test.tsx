@@ -186,6 +186,24 @@ afterEach(() => {
 });
 
 describe('facet options', () => {
+  it("reads each term with its count and the count's unit, the unit hidden from sight, the shown text in the name", async () => {
+    const { user } = renderListing('', (binding) => (
+      <FacetOptions
+        binding={binding}
+        facet="tags"
+        labels={{ ...FACET, unit: (count) => (count === 1 ? '«billet»' : '«billets»') }}
+        locale="fr"
+      />
+    ));
+
+    await user.click(screen.getByRole('button', { name: '«déclencheur 0»' }));
+    const bot = await screen.findByRole('option', { name: /^«terme bot» 5 «billets»$/ });
+
+    // Seen: the term and its count; heard: the unit too, after them, so that the name holds what is seen.
+    expect(bot.querySelector('[data-slot="facet-options-count"]')?.textContent).toBe('5 «billets»');
+    expect(await violations(screen.getByRole('listbox'))).toEqual([]);
+  });
+
   it('passes axe, closed and open', async () => {
     const { user } = renderListing();
 

@@ -258,6 +258,7 @@ const ui = {
       clear: 'Réinitialiser les auteurs',
     },
   },
+    unit: '{count, plural, one {article} many {articles} other {articles}}',
   listing: { total: '{count, plural, =0 {Aucun article} one {# article} many {# articles} other {# articles}}' },
   reset: 'Réinitialiser les filtres',
   options: {

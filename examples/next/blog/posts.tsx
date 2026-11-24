@@ -123,6 +123,7 @@ function PostsView({
     empty: text.empty,
     term: (key: string) => text.terms[key] ?? key,
     clear: text.clear,
+    unit: (count: number) => formatPrecompiled(text.unit, locale, { count }),
   });
 
   return (

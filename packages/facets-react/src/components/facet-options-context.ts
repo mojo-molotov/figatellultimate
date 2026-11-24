@@ -19,6 +19,11 @@ export interface FacetOptionsLabels {
   readonly empty: string;
   /** A term's display name (e.g. its translation under `taxonomies.<taxonomy>.<term>`). */
   readonly term: (term: string) => string;
+  /**
+   * What a term's count counts, read after it and hidden from sight, e.g. "posts" (`Harp 17` heard "Harp, 17 posts"):
+   * the shown text stays in the option's name (WCAG 2.5.3). None: the count alone.
+   */
+  readonly unit?: ((count: number) => string) | undefined;
   /** The "clear the selection" option. */
   readonly clear: string;
 }

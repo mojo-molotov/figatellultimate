@@ -268,6 +268,7 @@ const ui = {
       clear: 'Clear authors',
     },
   },
+    unit: '{count, plural, one {post} other {posts}}',
   listing: { total: '{count, plural, =0 {No posts} one {# post} other {# posts}}' },
   reset: 'Reset filters',
   options: {

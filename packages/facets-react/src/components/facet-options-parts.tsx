@@ -8,7 +8,7 @@
  * filter, arrows move, Enter toggles, Escape closes back to the trigger), no text of its own, slots and props.
  */
 import { Command } from 'cmdk';
-import { Popover } from 'radix-ui';
+import { Popover, VisuallyHidden } from 'radix-ui';
 import type { ComponentProps, ReactNode } from 'react';
 
 import { selectedOf, useFacetOptions as use } from './facet-options-context.js';
@@ -123,7 +123,8 @@ export function FacetOptionsItem({ term, count, children, ...props }: FacetOptio
       onSelect={() => {
         context.binding.dispatch({ type: 'toggle', facet: context.facet, value: term });
       }}
-      // The accessible name is the visible text, term and count (WCAG 2.5.3); the state is aria-checked.
+      // The accessible name is the visible text, term and count (WCAG 2.5.3), then the count's unit, heard only; the
+      // state is aria-checked.
       aria-checked={selected}
       data-slot="facet-options-item"
       data-state={state}
@@ -134,7 +135,12 @@ export function FacetOptionsItem({ term, count, children, ...props }: FacetOptio
         <>
           <FacetOptionsIndicator data-state={state} />
           <span data-slot="facet-options-term">{name}</span>{' '}
-          <span data-slot="facet-options-count">{context.format(count)}</span>
+          <span data-slot="facet-options-count">
+            {context.format(count)}
+            {context.labels.unit === undefined ? null : (
+              <VisuallyHidden.Root> {context.labels.unit(count)}</VisuallyHidden.Root>
+            )}
+          </span>
         </>
       )}
     </Command.Item>

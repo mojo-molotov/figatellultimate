@@ -18,6 +18,8 @@ export interface FacetLabels<N extends 'tags' | 'authors' = 'tags' | 'authors'> 
   readonly list: string;
   readonly empty: string;
   readonly clear: string;
+  /** What a term's count counts, heard after it, not seen: it takes the count. */
+  readonly unit: Precompiled<'ui.facets.unit'>;
   /** Each term's name. */
   readonly terms: Readonly<Record<string, string>>;
 }
@@ -68,6 +70,7 @@ export async function listingLabels(locale: Locale): Promise<ListingLabels> {
         list: t('ui.facets.tags.list'),
         empty: t('ui.facets.tags.empty'),
         clear: t('ui.facets.tags.clear'),
+        unit: await compiled(locale, 'ui.facets.unit'),
         terms: Object.fromEntries(taxonomies.tags.terms.map((term) => [term, t(`taxonomies.tags.${term}.label`)])),
       },
       authors: {
@@ -76,6 +79,7 @@ export async function listingLabels(locale: Locale): Promise<ListingLabels> {
         list: t('ui.facets.authors.list'),
         empty: t('ui.facets.authors.empty'),
         clear: t('ui.facets.authors.clear'),
+        unit: await compiled(locale, 'ui.facets.unit'),
         terms: Object.fromEntries(taxonomies.authors.terms.map((term) => [term, t(`taxonomies.authors.${term}.name`)])),
       },
     },
