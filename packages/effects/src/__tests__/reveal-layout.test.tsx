@@ -59,6 +59,36 @@ describe('Reveal, styled', () => {
     },
   );
 
+  it.skipIf(!scrollDriven)(
+    'scrolls to reveal it in full when the focus enters it, hidden though the browser sees it',
+    async () => {
+      render(
+        <>
+          <div style={{ height: '3000px' }} />
+          <Reveal>
+            <footer style={{ height: '200px', background: 'black' }}>
+              <a href="#top">«haut»</a>
+            </footer>
+          </Reveal>
+          <div style={{ height: '1000px' }} />
+        </>,
+      );
+      await frames();
+      // The slot's top 20 px on the screen: the link, lifted with the content, lies above them, clipped.
+      window.scrollTo(0, window.scrollY + box('reveal').top - window.innerHeight + 20);
+      await frames();
+      const link = document.querySelector('footer a');
+
+      // Precondition: the link is hidden by the slot, yet within the screen, where the browser would not scroll to it.
+      expect(link?.getBoundingClientRect().top).toBeLessThan(box('reveal').top);
+      expect(link?.getBoundingClientRect().top).toBeGreaterThan(0);
+      (link instanceof HTMLElement ? link : undefined)?.focus();
+      await frames();
+      expect(box('reveal').bottom).toBeLessThanOrEqual(window.innerHeight + 1);
+      expect(box('reveal-content').top).toBeCloseTo(box('reveal').top, 0);
+    },
+  );
+
   it.skipIf(!scrollDriven).each([
     ['a short page', 100],
     ['a page scrolling less than its height', window.innerHeight - 100],

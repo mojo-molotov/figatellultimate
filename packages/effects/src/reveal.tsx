@@ -26,12 +26,15 @@
  *       changing above it (a list's next page) would otherwise be scrolled to keep it in place.
  *     - Above the page's docked panels (a sidebar, the table of contents) as it rises, below popups and dialogs
  *       (`--fig-reveal-layer`): the footer covers what stays docked, never the other way round.
+ *     - The focus entering it scrolls it in full: the browser scrolls a focused element into view from its lifted box,
+ *       already within the screen, while the slot still clips it (a link reached with Tab, hidden).
  *     - Progressive: without scroll-driven animations, or with `prefers-reduced-motion`, the footer scrolls in as any
  *       content.
  *
  * Invariants (`reveal.test.tsx`; `reveal-layout.test.tsx`, in real browsers): revealed only when it starts below the
  * screen, in its place otherwise (a short page, a page scrolling less than its height); while revealed, the
- * content's bottom stays on the screen's bottom; once in full, it sits in its place; it comes above a docked panel;
+ * content's bottom stays on the screen's bottom; once in full, it sits in its place; the focus entering it reveals it
+ * in full; it comes above a docked panel;
  * never a scroll anchor (the example's `scripts/browse.ts`, on Next's real navigation).
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
@@ -74,8 +77,17 @@ export function Reveal({ children }: { readonly children: ReactNode }): ReactNod
     };
   }, []);
 
+  // The focus entering a footer partly revealed: lifted with the content, the focused element lies within the screen,
+  // where the browser sees no need to scroll, yet the slot clips it. Scrolled to reveal it in full.
+  const reveal = (): void => {
+    const element = slot.current;
+
+    if (element !== null && revealing && element.getBoundingClientRect().bottom > window.innerHeight)
+      element.scrollIntoView({ block: 'end' });
+  };
+
   return (
-    <div ref={slot} data-slot="reveal" {...(revealing ? { 'data-revealing': '' } : {})}>
+    <div ref={slot} data-slot="reveal" onFocus={reveal} {...(revealing ? { 'data-revealing': '' } : {})}>
       <div data-slot="reveal-content">{children}</div>
     </div>
   );
