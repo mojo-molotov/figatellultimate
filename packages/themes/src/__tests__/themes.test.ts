@@ -131,7 +131,7 @@ describe('base.css', () => {
     expect(motion.slice(0, motion.indexOf('@keyframes fig-blur-away'))).not.toMatch(/animation: /);
   });
 
-  it("centres a compact card's tags on its authors, side by side: the authors' margin above them dropped", () => {
+  it("centers a compact card's tags on its authors, side by side: the authors' margin above them dropped", () => {
     const body = rules.find(
       (rule) => rule.selector === "main:is([data-folder='category'], [data-listing]) [data-slot='entry-card-authors']",
     )?.body;
@@ -171,15 +171,24 @@ describe('base.css', () => {
     expect(source).not.toContain("content: '#'");
   });
 
-  it("sets a listing's pagination, below its cards, at the end of the line on a narrow screen", () => {
+  it("sets a listing's and the blog's pagination, below the cards, at the end of the line on every screen", () => {
+    const body = (selector: string) => rules.find((rule) => rule.selector === selector)?.body;
     const narrow = mediaOf(source)
       .filter(({ condition }) => condition === '(max-width: 36rem)')
-      .map(({ body }) => body.replace(/\s+/g, ' '))
+      .map(({ body: rule }) => rule.replace(/\s+/g, ' '))
       .join(' ');
 
-    expect(narrow).toContain(
-      "[data-slot='listing-cards'] ~ [data-slot='pagination'] [data-slot='pagination-content'] { justify-content: flex-end; }",
+    // Not a phone's alone: no longer in its narrow block.
+    expect(narrow).not.toContain("~ [data-slot='pagination'] [data-slot='pagination-content']");
+    // On every screen: under the thumb on a phone, at the end of the cards' column on a desktop.
+    expect(body("[data-slot='listing-cards'] ~ [data-slot='pagination'] [data-slot='pagination-content']")).toBe(
+      'justify-content: flex-end;',
     );
+    expect(
+      body(
+        ":is([data-slot='folder-list'], [data-slot='folder-section']) ~ [data-slot='pagination'] [data-slot='pagination-content']",
+      ),
+    ).toBe('justify-content: flex-end;');
   });
 
   it('reveals the footer on a desktop only: on a touch screen, it scrolls in as any content', () => {
@@ -216,17 +225,14 @@ describe('base.css', () => {
     expect(body("[data-slot='folder-heading'] > [data-slot='page-select-trigger']")).toBe(
       'flex: none; margin-inline-start: auto;',
     );
-    // The full pagination below the sections, at the end of the line on a phone, under the thumb.
-    expect(source).toMatch(
-      /@media \(max-width: 36rem\) \{\s*:is\(\[data-slot='folder-list'\], \[data-slot='folder-section'\]\)\s+~ \[data-slot='pagination'\]\s+\[data-slot='pagination-content'\] \{\s*justify-content: flex-end;/,
-    );
   });
 
   it('sets a category\'s full pagination on its last "see more" line, at its end, below it on a phone', () => {
     const body = (selector: string) => rules.find((rule) => rule.selector === selector)?.body ?? '';
 
+    // At the line's top: the link sits as in every other section, the taller pagination beside it moving it not.
     expect(body("[data-slot='folder-end']")).toMatch(
-      /display: flex; flex-wrap: wrap;.*justify-content: space-between;/,
+      /display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between;/,
     );
     expect(body("[data-slot='folder-end'] > [data-slot='pagination']")).toBe('margin-inline-start: auto;');
     expect(source).toMatch(

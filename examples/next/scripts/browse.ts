@@ -371,7 +371,7 @@ try {
   const select = await open(LISTING);
 
   await select.getByRole('combobox', { name: 'Aller à la page' }).click();
-  await select.getByRole('option', { name: '4', exact: true }).click();
+  await select.getByRole('option', { name: 'Page 4', exact: true }).click();
   await select.waitForURL('**/page/4', { timeout: 5000 }).catch(() => undefined);
   check(new URL(select.url()).pathname === `${LISTING}/page/4`, `${LISTING}: the page select did not reach page 4`);
   await select.close();
@@ -548,12 +548,19 @@ try {
         const box = select?.getBoundingClientRect();
         const end = document.querySelector('[data-slot="folder-end"]')?.getBoundingClientRect();
         const more = document
-          .querySelector('[data-slot="folder-end"] > [data-slot="folder-more"]')
+          .querySelector('[data-slot="folder-end"] [data-slot="folder-more"]')
           ?.getBoundingClientRect();
         const pagination = document
           .querySelector('[data-slot="folder-end"] > [data-slot="pagination"] [data-slot="pagination-content"]')
           ?.getBoundingClientRect();
-        const centre = (rect: DOMRect): number => rect.top + rect.height / 2;
+        const center = (rect: DOMRect): number => rect.top + rect.height / 2;
+        // Each section's "see more" as far below its cards: the last one's, beside the pagination, too.
+        const gaps = [...document.querySelectorAll('[data-slot="folder-section"]')].flatMap((section) => {
+          const cards = section.querySelector('[data-slot="listing-cards"]')?.getBoundingClientRect();
+          const link = section.querySelector('[data-slot="folder-more"]')?.getBoundingClientRect();
+
+          return cards === undefined || link === undefined ? [] : [link.top - cards.bottom];
+        });
 
         return row === undefined ||
           heading === undefined ||
@@ -563,11 +570,13 @@ try {
           pagination === undefined
           ? undefined
           : {
-              sameLine: Math.abs(centre(heading) - centre(box)) < 2,
+              sameLine: Math.abs(center(heading) - center(box)) < 2,
               end: Math.round(row.right - box.right),
-              bottomLine: Math.abs(centre(more) - centre(pagination)) < 2,
+              // On the link's line: beside it, its top at the line's (never centred, which would move it up).
+              bottomLine: pagination.top < more.bottom && pagination.bottom > more.top,
               bottomBelow: pagination.top >= more.bottom,
               bottomEnd: Math.round(end.right - pagination.right),
+              gaps: gaps.length > 1 && gaps.every((gap) => Math.abs(gap - (gaps[0] ?? 0)) < 1),
             };
       });
 
@@ -576,8 +585,27 @@ try {
           placed.sameLine &&
           placed.end === 0 &&
           placed.bottomEnd === 0 &&
+          placed.gaps &&
           (revealed ? placed.bottomLine : placed.bottomBelow),
         `/blog/maquis on ${device}: its paginations not as expected (${JSON.stringify(placed)})`,
+      );
+    }
+
+    // The full pagination below the cards at the end of its line, on every screen: the blog's, an author's.
+    for (const url of ['/blog', '/authors/napoleon']) {
+      await phone.goto(`${base}${url}`, { waitUntil: 'networkidle' });
+      const gap = await phone.evaluate(() => {
+        const pagination = [...document.querySelectorAll('main [data-slot="pagination"]')].at(-1);
+        const last = pagination?.querySelector('[data-slot="pagination-content"] > :last-child');
+
+        return pagination === undefined || last === null || last === undefined
+          ? undefined
+          : Math.round(pagination.getBoundingClientRect().right - last.getBoundingClientRect().right);
+      });
+
+      check(
+        gap === 0,
+        `${url} on ${device}: its pagination below the cards not at the end of its line (${String(gap)})`,
       );
     }
 
@@ -591,14 +619,14 @@ try {
         const parts = ['listing-total', 'sort-select-trigger', 'listing-options-trigger'].map(box);
 
         return {
-          centres: parts.map((part) => (part === undefined ? -1 : Math.round(part.top + part.height / 2))),
+          centers: parts.map((part) => (part === undefined ? -1 : Math.round(part.top + part.height / 2))),
           start: Math.round((parts[0]?.left ?? -1) - (row?.left ?? 0)),
           end: Math.round((row?.right ?? 0) - (parts[2]?.right ?? -1)),
         };
       });
 
       check(
-        new Set(line.centres).size === 1 && !line.centres.includes(-1) && line.start === 0 && line.end === 0,
+        new Set(line.centers).size === 1 && !line.centers.includes(-1) && line.start === 0 && line.end === 0,
         `${LISTING}?sort=title-asc on ${device}: the count, the sort and the gear are not one line, end to end (${JSON.stringify(line)})`,
       );
     }
@@ -715,7 +743,7 @@ try {
       await phone.goto(`${base}${LISTING}`, { waitUntil: 'networkidle' });
     }
 
-    // On a phone, a compact card's tags on the same centre line as its avatars, side by side.
+    // On a phone, a compact card's tags on the same center line as its avatars, side by side.
     if (!revealed) {
       await phone.goto(`${base}/blog/academy`, { waitUntil: 'networkidle' });
       const [tagMiddle, authorMiddle] = await phone.evaluate(() => {
@@ -843,6 +871,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, those of a category too, a listing reached from its category at once, the switcher following, Back restoring; Tab straight to the copy buttons, a region a stop only while it overflows; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit, always for a category, its full pagination on its last line on a desktop; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
+    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, those of a category too, a listing reached from its category at once, the switcher following, Back restoring; Tab straight to the copy buttons, a region a stop only while it overflows; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit, always for a category, its full pagination on its last line on a desktop, every see more as far below its cards, every full pagination at the end of its line; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
   );
 }

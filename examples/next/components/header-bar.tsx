@@ -83,66 +83,64 @@ export function HeaderBar(props: {
   const dir = localeInfo[locale].dir;
 
   return (
-    <>
-      <Navbar
-        items={items}
-        current={url}
-        // Section labels already translated on the server.
-        t={(label) => label}
-        labels={labels.navbar}
+    <Navbar
+      items={items}
+      current={url}
+      // Section labels already translated on the server.
+      t={(label) => label}
+      labels={labels.navbar}
+      dir={dir}
+      // The blog's menu: its own page and its categories, flat (subcategories through the category pages).
+      menuDepth={1}
+    >
+      <SearchDialog
+        search={search}
         dir={dir}
-        // The blog's menu: its own page and its categories, flat (subcategories through the category pages).
-        menuDepth={1}
-      >
-        <SearchDialog
-          search={search}
-          dir={dir}
-          // Each result's breadcrumb, put on its page as Pagefind metadata; its collection when it has none.
-          // Its steps, the chevrons the meta joined them with (`trail.ts`) left to the box, seen and not heard.
-          trail={(result) => result.meta['breadcrumb']?.split(/ [›‹] /)}
-          // The page being read: its own result is dimmed.
-          current={url}
-          // Each dated result shows its date, in the page's language.
-          locale={locale}
-          // Relevance first, then by title or date, chosen in the field.
-          sort={{
-            sorts: SEARCH_SORTS,
-            labels: {
-              trigger: text.sortTrigger,
-              sort: (sort: SearchSort) => text.sorts[sort] ?? sort,
-              spoken: (sort: SearchSort) => text.spoken[sort] ?? text.sorts[sort] ?? sort,
-            },
-          }}
-          labels={{ trigger: text.trigger, title: text.title, close: text.close }}
-          boxLabels={{
-            input: text.input,
-            placeholder: text.placeholder,
-            collection: (collection) => text.collections[collection],
-            results: text.results,
-            status: {
-              tooShort: (minimum) => formatPrecompiled(text.tooShort, locale, { minimum }),
-              searching: text.searching,
-              unavailable: text.unavailable,
-              found: (count) => formatPrecompiled(text.found, locale, { count }),
-            },
-            more: text.more,
-            pause: text.pause,
-          }}
-          onNavigate={(target) => {
-            router.push(target);
-          }}
-          // The highlighted result prefetched, as `next/link` does for links: Enter opens it at once.
-          onHighlight={(target) => {
-            router.prefetch(target);
-          }}
-        />
-        <LocaleSwitcher links={links} locale={locale} names={nameOf} labels={{ language: labels.language }} dir={dir} />
-        <ThemeToggle
-          labels={labels.theme}
-          theme={mounted && (resolvedTheme === 'dark' || resolvedTheme === 'light') ? resolvedTheme : undefined}
-          onThemeChange={setTheme}
-        />
-      </Navbar>
-    </>
+        // Each result's breadcrumb, put on its page as Pagefind metadata; its collection when it has none.
+        // Its steps, the chevrons the meta joined them with (`trail.ts`) left to the box, seen and not heard.
+        trail={(result) => result.meta['breadcrumb']?.split(/ [›‹] /)}
+        // The page being read: its own result is dimmed.
+        current={url}
+        // Each dated result shows its date, in the page's language.
+        locale={locale}
+        // Relevance first, then by title or date, chosen in the field.
+        sort={{
+          sorts: SEARCH_SORTS,
+          labels: {
+            trigger: text.sortTrigger,
+            sort: (sort: SearchSort) => text.sorts[sort] ?? sort,
+            spoken: (sort: SearchSort) => text.spoken[sort] ?? text.sorts[sort] ?? sort,
+          },
+        }}
+        labels={{ trigger: text.trigger, title: text.title, close: text.close }}
+        boxLabels={{
+          input: text.input,
+          placeholder: text.placeholder,
+          collection: (collection) => text.collections[collection],
+          results: text.results,
+          status: {
+            tooShort: (minimum) => formatPrecompiled(text.tooShort, locale, { minimum }),
+            searching: text.searching,
+            unavailable: text.unavailable,
+            found: (count) => formatPrecompiled(text.found, locale, { count }),
+          },
+          more: text.more,
+          pause: text.pause,
+        }}
+        onNavigate={(target) => {
+          router.push(target);
+        }}
+        // The highlighted result prefetched, as `next/link` does for links: Enter opens it at once.
+        onHighlight={(target) => {
+          router.prefetch(target);
+        }}
+      />
+      <LocaleSwitcher links={links} locale={locale} names={nameOf} labels={{ language: labels.language }} dir={dir} />
+      <ThemeToggle
+        labels={labels.theme}
+        theme={mounted && (resolvedTheme === 'dark' || resolvedTheme === 'light') ? resolvedTheme : undefined}
+        onThemeChange={setTheme}
+      />
+    </Navbar>
   );
 }

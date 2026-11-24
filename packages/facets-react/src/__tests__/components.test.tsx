@@ -418,6 +418,19 @@ describe('sort select', () => {
 });
 
 describe('page select', () => {
+  it('names each page of its list by its own label when given one, its number shown and in its name', async () => {
+    const { user } = renderListing('?page=5', (binding) => (
+      <PageSelect binding={binding} labels={{ ...JUMP, page: (page) => `«page ${String(page)}»` }} locale="fr" />
+    ));
+
+    await user.click(screen.getByRole('combobox', { name: JUMP.trigger }));
+    const third = await screen.findByRole('option', { name: '«page 3»' });
+
+    // Seen: the number; heard: the page, the number in it (WCAG 2.5.3).
+    expect(third.querySelector('[aria-hidden="true"]')?.textContent).toBe('3');
+    expect(await violations(screen.getByRole('listbox'))).toEqual([]);
+  });
+
   it('reads its page by its spoken text when given one, the short one left to sight ("3 / 10" read "3 slash 10")', () => {
     renderListing('?page=5', (binding) => (
       <PageSelect

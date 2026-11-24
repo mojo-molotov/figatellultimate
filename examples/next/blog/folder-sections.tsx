@@ -133,6 +133,7 @@ function SectionsView({
           trigger: labels.jump,
           current: (page, pages) => formatPrecompiled(labels.short, locale, { page, pages }),
           spoken: (page, pages) => formatPrecompiled(labels.spoken, locale, { page, pages }),
+          page: (page) => formatPrecompiled(labels.page, locale, { page }),
         }}
         locale={locale}
         dir={localeInfo[locale].dir}
@@ -198,7 +199,8 @@ function SectionsView({
                 its end (below it on a phone, the theme's). */}
             {index === shown.length - 1 ? (
               <div data-slot="folder-end">
-                {more(section)}
+                {/* The link on a line of its own, as in every section: the pagination beside it moves it not. */}
+                <div data-slot="folder-end-more">{more(section)}</div>
                 {pagination}
               </div>
             ) : (

@@ -77,6 +77,10 @@ function pathOf(node: Node): string[] {
   return names;
 }
 
+/** Whether a node is a property its leading comment marks as kept. */
+const isMarked = (node: Node): boolean =>
+  Node.isPropertyAssignment(node) && node.getLeadingCommentRanges().some((range) => KEEP.test(range.getText()));
+
 /**
  * The keys an app's code uses, and the ones its schema keeps.
  *
@@ -172,11 +176,9 @@ export function scanKeyUsage(input: {
 
     const file = project.getSourceFile(path) ?? project.addSourceFileAtPath(path);
 
-    return file
-      .getDescendants()
-      .filter(Node.isPropertyAssignment)
-      .filter((property) => property.getLeadingCommentRanges().some((range) => KEEP.test(range.getText())))
-      .map((property) => pathOf(property).join('.'));
+    // Each marked property's path: the node passed on as `getDescendants` gave it, a boolean (not a type guard)
+    // telling it apart.
+    return file.getDescendants().flatMap((node) => (isMarked(node) ? [pathOf(node).join('.')] : []));
   });
 
   return { used, kept };
