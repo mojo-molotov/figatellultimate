@@ -313,6 +313,60 @@ describe('SearchBox', () => {
     expect(opened).toEqual([]);
   });
 
+  it('keyboard: ↓ on the last result reaches "see more", ↑ from it the last result again, in the field', async () => {
+    const { user, field } = renderBox();
+
+    await user.type(field(), 'chevaux');
+    await waitFor(() => {
+      expect(options()).toHaveLength(5);
+    });
+    await user.keyboard('{End}');
+    expect(active()).toBe('/doc/4');
+    const more = screen.getByRole('button', { name: '«voir plus»' });
+
+    await user.keyboard('{ArrowDown}');
+    expect(document.activeElement).toBe(more);
+    // Its end: ↓ stays on it, moving no result behind it.
+    await user.keyboard('{ArrowDown}');
+    expect(document.activeElement).toBe(more);
+    expect(active()).toBe('/doc/4');
+    await user.keyboard('{ArrowUp}');
+    expect(document.activeElement).toBe(field());
+    expect(active()).toBe('/doc/4');
+  });
+
+  it('keyboard: ↓ on the last result stays on it when there is no "see more"', async () => {
+    const { user, field } = renderBox();
+
+    await user.type(field(), 'chevaux');
+    await waitFor(() => {
+      expect(options()).toHaveLength(5);
+    });
+    await user.click(screen.getByRole('button', { name: '«voir plus»' }));
+    await waitFor(() => {
+      expect(options()).toHaveLength(7);
+    });
+    await user.keyboard('{End}{ArrowDown}');
+    expect(active()).toBe('/doc/6');
+    expect(document.activeElement).toBe(field());
+  });
+
+  it('keyboard: ↑ on the first result leaves the results for the field alone, ↓ comes back to the first', async () => {
+    const { user, field } = renderBox();
+
+    await user.type(field(), 'chevaux');
+    await waitFor(() => {
+      expect(options()).toHaveLength(5);
+    });
+    expect(active()).toBe('/doc/0');
+    await user.keyboard('{ArrowUp}');
+    expect(active()).toBeNull();
+    expect(document.activeElement).toBe(field());
+    expect(field().hasAttribute('aria-activedescendant')).toBe(false);
+    await user.keyboard('{ArrowDown}');
+    expect(active()).toBe('/doc/0');
+  });
+
   it('keyboard: Home and End go to the first and last result', async () => {
     const { user, field } = renderBox();
 

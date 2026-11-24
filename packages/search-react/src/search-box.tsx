@@ -7,12 +7,15 @@
  * Key design decisions:
  *     - Focus stays in the field; arrows move through results (the ARIA combobox pattern, by cmdk): a result is a
  *       listbox option, not a link, so a modifier opens it in a new tab instead.
+ *     - The arrows go on past the results' ends, as chosen with the user: ↓ on the last one reaches "see more" (the
+ *       only time focus leaves the field), ↑ from it comes back to the last one; ↑ on the first one leaves the results
+ *       for the field alone, none active, and ↓ comes back to the first. Without "see more", ↓ stays on the last.
  *     - Results are already filtered by the index: cmdk only handles the keyboard and the active result.
  *     - A new sort searches at once, its first result active; a typed term waits the client's quiet time.
  *     - No style, no text of its own: every label required, dates formatted for the given locale.
  *
  * Invariants (`search-box.test.tsx`, in happy-dom and in real browsers): axe empty and with results, the keyboard
- * flow, new tabs, the sort, its spoken names, dates, the highlight announced once per change, no text of its own; a
+ * flow (past the results' ends included), new tabs, the sort, its spoken names, dates, the highlight announced once per change, no text of its own; a
  * result named by its title, place and date, its excerpt its description, a trail's chevrons not heard.
  */
 import type { Search, SearchResult, SearchSort } from '@figatellultimate/search';
@@ -86,6 +89,8 @@ interface SearchBoxContext {
   /** The active result's URL (`''` when none). */
   readonly active: string;
   readonly input: RefObject<HTMLInputElement | null>;
+  /** "See more", while rendered: ↓ on the last result reaches it. */
+  readonly more: RefObject<HTMLButtonElement | null>;
   readonly autoFocus: boolean;
   /** Makes the first result of the next batch active ("see more"). */
   readonly activateFrom: (index: number) => void;
@@ -210,6 +215,7 @@ export function SearchBox<C extends string>({
   trail,
   current,
   children,
+  onKeyDown,
   ...props
 }: SearchBoxProps<C>): ReactNode {
   const [own, setOwn] = useState('');
@@ -223,6 +229,7 @@ export function SearchBox<C extends string>({
   const [sort, setSortState] = useState<SearchSort>(sortBy?.sorts[0] ?? 'relevance');
   const binding = useSearch(search, term, { collections: only, sort });
   const input = useRef<HTMLInputElement>(null);
+  const more = useRef<HTMLButtonElement>(null);
   const [active, setActive] = useState<Active>({ kind: 'value', value: '' });
   const value = active.kind === 'value' ? active.value : (binding.results[active.index]?.url ?? '');
   // The active result, once each time it changes: the latest callback, never a reason to call again.
@@ -234,6 +241,38 @@ export function SearchBox<C extends string>({
   useEffect(() => {
     if (highlighted !== '') announce(highlighted);
   }, [highlighted]);
+
+  // ↓ on the last result to "see more", ↑ from it back to the last; ↑ on the first to the field alone.
+  const pastTheEnds = (event: KeyboardEvent<HTMLDivElement>): void => {
+    const results = binding.results;
+    const vertical = event.key === 'ArrowDown' || event.key === 'ArrowUp';
+
+    if (!vertical || hasModifier(event) || event.altKey || results.length === 0) return;
+
+    if (more.current !== null && event.target === more.current) {
+      // Its end: ↓ stays on it, moving no result behind it.
+      event.preventDefault();
+
+      if (event.key === 'ArrowUp') {
+        setActive({ kind: 'index', index: results.length - 1 });
+        input.current?.focus();
+      }
+
+      return;
+    }
+
+    if (event.target !== input.current) return;
+
+    if (event.key === 'ArrowDown' && more.current !== null && value === results.at(-1)?.url) {
+      event.preventDefault();
+      more.current.focus();
+    }
+
+    if (event.key === 'ArrowUp' && value === results[0]?.url) {
+      event.preventDefault();
+      setActive({ kind: 'value', value: '' });
+    }
+  };
 
   const { collection, ...rest } = labels;
   const context: SearchBoxContext = {
@@ -283,6 +322,7 @@ export function SearchBox<C extends string>({
       }),
     active: value,
     input,
+    more,
     autoFocus,
     activateFrom: (index) => {
       setActive({ kind: 'index', index });
@@ -298,6 +338,12 @@ export function SearchBox<C extends string>({
         value={value}
         onValueChange={(next) => {
           setActive({ kind: 'value', value: next });
+        }}
+        // Before cmdk's own keys (it skips prevented events): the arrows past the results' ends.
+        onKeyDown={(event) => {
+          onKeyDown?.(event);
+
+          if (!event.defaultPrevented) pastTheEnds(event);
         }}
         data-slot="search-box"
         data-status={binding.status}
@@ -685,9 +731,10 @@ export function SearchBoxResult({ result, children, ...props }: SearchBoxResultP
  *
  * @param props - A button's props; `children` replace the label.
  * @returns A button rendered while more results exist; the first new result becomes active, focus back in the field.
+ *   ↓ on the last result reaches it, ↑ from it comes back to the last result, in the field.
  */
 export function SearchBoxMore({ children, onClick, ...props }: ComponentProps<'button'>): ReactNode {
-  const { binding, labels, input, activateFrom } = use('SearchBoxMore');
+  const { binding, labels, input, more: button, activateFrom } = use('SearchBoxMore');
 
   if (binding.more === undefined) return null;
 
@@ -695,6 +742,7 @@ export function SearchBoxMore({ children, onClick, ...props }: ComponentProps<'b
 
   return (
     <button
+      ref={button}
       type="button"
       data-slot="search-box-more"
       onClick={(event) => {
