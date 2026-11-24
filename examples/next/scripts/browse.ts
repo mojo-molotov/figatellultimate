@@ -264,6 +264,48 @@ try {
     await category.close();
   }
 
+  // A listing reached from its category shows at once: its code loaded while the category was idle, never awaited
+  // with an empty <main> (each script made slow, as the deployed site is).
+  {
+    const arrival = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+
+    await arrival.route('**/_next/static/**/*.js', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await route.continue();
+    });
+    await arrival.goto(`${base}/blog/maquis`, { waitUntil: 'networkidle' });
+    await arrival.waitForTimeout(1000);
+    const link = arrival.locator('a[data-slot="folder-more"]').first();
+    const target = (await link.getAttribute('href')) ?? '';
+
+    // Every frame from the click: the address, and whether the main shows anything.
+    await arrival.evaluate(() => {
+      const frames: [string, boolean][] = [];
+      const start = performance.now();
+      const sample = (): void => {
+        frames.push([location.pathname, (document.querySelector('main')?.textContent ?? '').trim() !== '']);
+
+        if (performance.now() - start < 2000) requestAnimationFrame(sample);
+      };
+
+      Reflect.set(window, '__frames', frames);
+      requestAnimationFrame(sample);
+    });
+    await link.click();
+    await arrival.waitForURL(`**${target}`);
+    await arrival.waitForTimeout(2100);
+    const frames: unknown = await arrival.evaluate(() => Reflect.get(window, '__frames'));
+    const shown = Array.isArray(frames) ? frames.filter((frame) => Array.isArray(frame) && frame[0] === target) : [];
+
+    // Precondition: frames were sampled on the listing.
+    check(target !== '' && shown.length > 0, `/blog/maquis: no frame sampled on ${target}`);
+    check(
+      shown.every((frame) => Array.isArray(frame) && frame[1] === true),
+      `${target}: its main empty a moment, reached from its category`,
+    );
+    await arrival.close();
+  }
+
   // Tab reaches what a reader acts on: from a snippet's tabs straight to its copy button, a snippet or a table that
   // fits taking no stop; one that overflows (a table on a phone) takes one, to scroll it with the keyboard.
   {
@@ -756,6 +798,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, those of a category too, the switcher following, Back restoring; Tab straight to the copy buttons, a region a stop only while it overflows; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
+    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, those of a category too, a listing reached from its category at once, the switcher following, Back restoring; Tab straight to the copy buttons, a region a stop only while it overflows; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
   );
 }

@@ -15,6 +15,7 @@ import { AppLinks } from '../../components/links';
 import { SITE_THEMES } from '../../components/site-themes';
 import { routing } from '../../i18n/routing';
 import { SiteFooter } from '../../components/site-footer';
+import { ListingPreload } from '../../blog/listing';
 
 // The minimal design system, the effects' mechanics, the themes' shared layout, then both themes, one picked by
 // `<html data-site-theme>` (`components/site-themes.ts`).
@@ -69,6 +70,8 @@ export default async function LocaleLayout(props: LayoutProps<'/[locale]'>): Pro
           <SiteFooter locale={locale} />
           {/* The cursor glow and the margins' sparkles, loaded on desktops only. */}
           <Effects />
+          {/* The listing's code, loaded once the page is idle: a listing reached later shows at once. */}
+          <ListingPreload />
         </ThemeProvider>
         {/* The real visitors' Core Web Vitals, sent to Vercel's Speed Insights: its script exists on Vercel only. */}
         <SpeedInsights />
