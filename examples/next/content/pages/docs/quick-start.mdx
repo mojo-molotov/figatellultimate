@@ -79,6 +79,8 @@ const pages = withFigatellultimate(
 export default defineConfig({ content: [pages] });
 ```
 
+Pour une table des matières et des blocs de code en onglets, `compileWithHeadings` de `@figatellultimate/content-collections/config` compile le MDX avec ses titres, mis en cache ensemble, et `rehypeCodeGroups` regroupe les blocs marqués `npm`, `pnpm`, `yarn` ou `bun` en onglets (`CodeTabs`).
+
 figatellultimate dit ce que signifient les dossiers :
 
 ```ts

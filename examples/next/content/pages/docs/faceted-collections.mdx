@@ -78,7 +78,9 @@ const binding = useFacetedCollection(engine, useNextUrl());
 
 `PageSelect` est une pagination compacte, les pages en liste déroulante, pour une barre d’outils ; la `Pagination` complète garde les liens. Chacune prend `icons` pour les liens précédent et suivant, seules affichées sur un écran étroit.
 
-`ListingOptions` range les facettes derrière un seul bouton, l’icône de l’application (une roue crantée) et le nombre de termes choisis : son panneau garde les widgets tels quels, ↑ et ↓ passant de l’un à l’autre, pour que les contrôles d’une liste tiennent sur une ligne sur tout écran, le tri à côté de la roue.
+`ListingOptions` range les facettes derrière un seul bouton, l’icône de l’application (une roue crantée) et le nombre de termes choisis : son panneau garde les widgets tels quels, ↑ et ↓ passant de l’un à l’autre, pour que les contrôles d’une liste tiennent sur une ligne sur tout écran, le tri à côté de la roue. Une seule facette s’affiche à la place de la roue : un panneau ne contenant qu’une liste serait un clic pour rien.
+
+Chaque texte lu à voix haute peut différer de celui qu’on voit, quand celui-ci se lit mal : `spoken` de `SortSelect` lit « Ordre alphabétique » pour `A → Z` (la liste ouverte l’affiche aussi, le nom d’une option contenant son texte visible), `spoken` de `PageSelect` lit « Page 3 sur 10 » pour `3 / 10`, et `unit` de `FacetOptions` fait entendre « Harpe 17 articles » sous « Harpe 17 ».
 
 `useNextUrl` change l’URL par l’API History, intégrée par le routeur de Next : aucune requête serveur par filtre. Hors de Next, `useHistoryUrl` fait de même.
 
@@ -110,7 +112,7 @@ folderPages: { levels: ['category', 'subcategory'], perPage: { subcategory: 5 },
 L’index est une route statique par liste et par langue, produite par `listingIndexRoute` de `@figatellultimate/next16/listing-index`, qui prend ces listes, les paramètres de route de chacune, et `build`, son contenu : l’élément de chaque article, ce que le moteur filtre et trie, et les données de sa carte, pour que le navigateur dessine les cartes des pages qu’il n’a pas. Seul `build` revient à l’application.
 
 ```ts
-// app/[locale]/listing/[...folder]/route.ts: /listing/news/bot, /en/listing/news/bot
+// app/[locale]/listing/[[...folder]]/route.ts: /listing/news/bot, /en/listing/news/bot
 export const dynamic = 'force-static';
 export const dynamicParams = false;
 export const { GET, generateStaticParams } = listingIndexRoute({
@@ -120,12 +122,16 @@ export const { GET, generateStaticParams } = listingIndexRoute({
 });
 ```
 
-L’exemple en a deux : `listing/[...folder]` pour les articles d’une sous-catégorie, `author-listing/[...term]` pour ceux d’un auteur, toutes sous-catégories confondues. Un index coûte une cinquantaine d’octets gzip par article (le test de charge le mesure).
+L’exemple en a deux : `listing/[[...folder]]` pour les articles d’une sous-catégorie, `author-listing/[...term]` pour ceux d’un auteur, toutes sous-catégories confondues. Un index coûte une cinquantaine d’octets gzip par article (le test de charge le mesure).
 
 À côté de son index, une liste a des lots de pages : les pages de sa vue par défaut, dix par dix (`batchesOf`), chacun un petit fichier statique à `<index>/pages/<première page>`, produit par la même route (son option `pages`). `usePagedCollection` charge le lot de la page courante dès que la page est au repos, puis le suivant ou le précédent près de ses bords ; une page que son lot contient s’affiche aussitôt, seule l’adresse bougeant, et toute autre passe par le serveur. Le coût par visite reste celui d’un lot, environ deux kilo-octets gzip, quelle que soit la longueur de la liste : le test de charge mesure un clic sur suivant sous les 50 ms avec un serveur à 300 ms, contre 360 ms par le serveur.
 
 ```ts
 usePagedCollection({ …, batches: { load: (from) => loadBatch(`${index}/${batchPath(from).join('/')}`) } });
 ```
+
+`pageItems` et `batchItems` de `@figatellultimate/facets` donnent les éléments d’une page et ceux d’un lot, pour son `build`. Dans une page prérendue, `NextUrlBoundary` de `@figatellultimate/next16/facets` rend la liste depuis sa page d’arrivée tant que l’adresse n’est pas lue, puis depuis l’adresse : les liens de pagination sont réels dans le HTML. Le sélecteur de langue suit la page affichée par un lot : `usePagedLocaleLinks`, avec la liste dans chaque langue (`listingLocalesOf` de `@figatellultimate/site`).
+
+Les pages de dossiers ont leurs lots elles aussi : le blog et une catégorie, leurs sections de sous-dossiers dix pages par dix. Chaque dossier paginé porte l’URL de ses lots sous le même préfixe que les index (`folder.batches` : `/listing`, `/listing/news`), le code généré liste ces dossiers (`blogFolderBatches()`), et la route les sert par `pages.listings` ; d’où le catch-all facultatif, pour `/listing/pages/1`. Un dossier n’a rien à filtrer : `usePagedCollection` s’y passe d’index (`load` absent).
 
 Hors de Next, `pagedHref` et `pagedSearch` de `@figatellultimate/facets` font passer une vue à cet emplacement et inversement.

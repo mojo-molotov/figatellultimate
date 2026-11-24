@@ -75,16 +75,19 @@ Dans une application Next.js, next-intl lit les mêmes messages, typés par les 
 
 Dans une application Next.js, chaque message peut être compilé une fois, au build : aucune page n’embarque alors l’analyseur ICU, ni le catalogue des messages. Les clés se typent avec `runtime: 'use-intl'` dans `messages` de la config.
 
-Côté serveur, `precompileMessages` compile les messages de chaque langue, et next-intl les lit avec son moteur `format-only`, que `withPrecompiledMessages` lui donne :
+Côté serveur, `precompiledLoader` compile les messages de chaque langue une fois par processus (`precompileMessages` pour un seul arbre), et next-intl les lit avec son moteur `format-only`, que `withPrecompiledMessages` lui donne :
 
 ```ts
 // i18n/request.ts
-import { precompileMessages } from '@figatellultimate/use-intl/precompile';
+import { precompiledLoader } from '@figatellultimate/use-intl/precompile';
+
+// Les messages de chaque langue, compilés une fois par processus.
+const precompiled = precompiledLoader(loadMessages);
 
 export default getRequestConfig(async ({ locale }) => ({
   locale,
   // next-intl type les messages sources : il reçoit ici leur forme compilée.
-  messages: precompileMessages(await loadMessages(locale)) as unknown as Messages,
+  messages: (await precompiled(locale)) as unknown as Messages,
 }));
 ```
 

@@ -29,6 +29,8 @@ bunx figatellultimate search --site .next/server/app --out public/pagefind --loc
 
 `--locale-folders` is for builds that write every language in its own folder, the default one included, as next-intl does. A collection declaring `searchable: false` is left out. The indexed text is the element marked `data-pagefind-body`: the navigation, the footer and the lists of pages stay out of the results.
 
+With a deployment adapter (Vercel’s), Next writes the prerendered pages elsewhere, under a folder hashed by route: `prerenderedPages` of `@figatellultimate/next16/build` gives the folder holding them, with an adapter or without, and `copyIntoOutput` copies the index into the adapter’s output, which the deployment serves.
+
 ## The client
 
 `createSearch` queries the index of one language, lazily: nothing loads before the first query.
@@ -63,3 +65,5 @@ import { SearchDialog } from '@figatellultimate/search-react';
   onNavigate={(url) => router.push(url)}
 />;
 ```
+
+Each result is named by its title, its place and its date, short to hear from one arrow to the next; its excerpt is its description, read after a pause. `trail` gives the place: a list of steps, drawn with chevrons a screen reader does not say, or a text as is. `pause` is what is heard between those parts without being seen, a comma for instance, and `spoken` the sorts’ names read aloud, as for `SortSelect`.

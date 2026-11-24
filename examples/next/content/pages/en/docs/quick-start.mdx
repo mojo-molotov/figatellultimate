@@ -77,6 +77,8 @@ const pages = withFigatellultimate(
 export default defineConfig({ content: [pages] });
 ```
 
+For a table of contents and tabbed code blocks, `compileWithHeadings` of `@figatellultimate/content-collections/config` compiles the MDX with its headings, cached together, and `rehypeCodeGroups` groups the blocks marked `npm`, `pnpm`, `yarn` or `bun` as tabs (`CodeTabs`).
+
 figatellultimate says what the folders mean:
 
 ```ts

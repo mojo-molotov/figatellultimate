@@ -76,7 +76,9 @@ const binding = useFacetedCollection(engine, useNextUrl());
 
 `PageSelect` is a compact pagination, the pages as a select, for a toolbar; the full `Pagination` keeps the links. Each takes `icons` for previous and next, shown alone on a narrow screen.
 
-`ListingOptions` puts the facets behind one button, the app’s icon (a gear) and the count of selected terms: its panel holds the widgets as they are, ↑ and ↓ moving from one to the next, so that a listing’s controls keep one line on any screen, the sort beside the gear.
+`ListingOptions` puts the facets behind one button, the app’s icon (a gear) and the count of selected terms: its panel holds the widgets as they are, ↑ and ↓ moving from one to the next, so that a listing’s controls keep one line on any screen, the sort beside the gear. A single facet shows in the gear’s place: a panel holding one list would be a click for nothing.
+
+Each text read aloud may differ from the one seen, when the latter reads badly: `spoken` of `SortSelect` reads “Alphabetical order” for `A → Z` (the open list shows it too, an option’s name holding its visible text), `spoken` of `PageSelect` reads “Page 3 of 10” for `3 / 10`, and `unit` of `FacetOptions` makes “Harp 17 posts” heard under “Harp 17”.
 
 `useNextUrl` changes the URL through the History API, integrated by Next’s router: no server request per filter. Outside Next, `useHistoryUrl` does the same.
 
@@ -108,7 +110,7 @@ folderPages: { levels: ['category', 'subcategory'], perPage: { subcategory: 5 },
 The index is one static route per listing and locale, from `listingIndexRoute` of `@figatellultimate/next16/listing-index`, which takes those listings, each one’s route parameters, and `build`, its content: each post’s item, what the engine filters and sorts, and its card’s data, so that the browser draws the cards of the pages it does not have. Only `build` is the app’s to decide.
 
 ```ts
-// app/[locale]/listing/[...folder]/route.ts: /listing/news/bot, /en/listing/news/bot
+// app/[locale]/listing/[[...folder]]/route.ts: /listing/news/bot, /en/listing/news/bot
 export const dynamic = 'force-static';
 export const dynamicParams = false;
 export const { GET, generateStaticParams } = listingIndexRoute({
@@ -118,12 +120,16 @@ export const { GET, generateStaticParams } = listingIndexRoute({
 });
 ```
 
-The example has two: `listing/[...folder]` for a subcategory’s posts, `author-listing/[...term]` for an author’s, across every subcategory. An index costs about fifty bytes gzip per post (the load test measures it).
+The example has two: `listing/[[...folder]]` for a subcategory’s posts, `author-listing/[...term]` for an author’s, across every subcategory. An index costs about fifty bytes gzip per post (the load test measures it).
 
 Next to its index, a listing has page batches: its default view’s pages in runs of ten (`batchesOf`), each a small static file at `<index>/pages/<first page>`, built by the same route (its `pages` option). `usePagedCollection` loads the current page’s batch once the page is idle, then the next or previous one near its edges; a page its batch holds is shown at once, only the address moving, and any other goes through the server. The cost per visit stays a batch’s, about two kilobytes gzip, whatever the list’s length: the load test measures a click on next at under 50 ms with the server 300 ms away, against 360 ms through the server.
 
 ```ts
 usePagedCollection({ …, batches: { load: (from) => loadBatch(`${index}/${batchPath(from).join('/')}`) } });
 ```
+
+`pageItems` and `batchItems` of `@figatellultimate/facets` give a page’s items and a batch’s, for its `build`. In a prerendered page, `NextUrlBoundary` of `@figatellultimate/next16/facets` renders the listing from its landed page while the address is unread, then from the address: the pagination’s links are real in the HTML. The locale switcher follows the page a batch shows: `usePagedLocaleLinks`, with the listing in each locale (`listingLocalesOf` of `@figatellultimate/site`).
+
+Folder pages have their batches too: the blog and a category, their subfolders’ sections ten pages at a time. Each paginated folder carries its batches’ URL under the indexes’ prefix (`folder.batches`: `/listing`, `/listing/news`), the generated code lists those folders (`blogFolderBatches()`), and the route serves them through `pages.listings`; hence the optional catch-all, for `/listing/pages/1`. A folder has nothing to filter: `usePagedCollection` does without an index there (no `load`).
 
 Outside Next, `pagedHref` and `pagedSearch` of `@figatellultimate/facets` map a view to this location and back.
