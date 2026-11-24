@@ -99,6 +99,12 @@ What a collection exposes to LLMs ([the configuration](/en/docs/configuration#ex
 
 A route cannot share the shared route’s segment: the proxy rewrites `/docs/cli.md` to a dedicated route, in the page’s language (`app/[locale]/llms/[[...url]]`). Each exposed page links its Markdown version and its language’s `llms.txt`, with `<link rel="alternate" type="text/markdown">` and `<link rel="describedby">`.
 
+## Agents (ARD)
+
+What a site offers AI agents is declared after [Agentic Resource Discovery](https://agenticresourcediscovery.org/spec/): a manifest at `/.well-known/ard.json` lists its resources, an agent skill, an MCP server. `agentCatalogOf` of `@figatellultimate/site` writes it, each identifier anchored to the site’s domain (`urn:air:<domain>:<name>`). The same document reads as its predecessor, AI Catalog, too; the example serves it at both paths, `ard.json` and `ai-catalog.json`, and every page points to it with `<link rel="ard">`.
+
+This site lists its skill there, `use-figatellultimate`, which teaches an agent to use figatellultimate: [/skills/use-figatellultimate/SKILL.md](/skills/use-figatellultimate/SKILL.md). llms.txt is not in it: it is documentation, not a resource an agent calls.
+
 ## Redirects
 
 `figatellultimate migrate` writes `redirects.json` when URLs change. Next serves it as permanent redirects:

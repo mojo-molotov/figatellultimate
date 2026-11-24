@@ -52,6 +52,7 @@ export const config = {
     '/feed.xml',
     '/llms.txt',
     '/llms-full.txt',
-    '/((?!_next|pagefind).*\\.md)',
+    // Not the agent skill, a file of its own (`app/skills`).
+    '/((?!_next|pagefind|skills/).*\\.md)',
   ],
 };

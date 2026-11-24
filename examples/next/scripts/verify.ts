@@ -1040,6 +1040,40 @@ check(
   '/docs/configuration.md, /en/docs/nextjs.md: a tag in code applied, the page after it lost',
 );
 
+// What the site offers AI agents (ARD): one manifest at ARD's well-known path and its predecessor's, the same
+// document, listing the agent skill with an identifier ARD's pattern accepts and a URL the site serves; the skill
+// served as the repository holds it; every page pointing agents to the manifest (`rel="ard"`).
+const ard = readBody(join(app, '.well-known', 'ard.json.body'));
+const catalog: unknown = ard === '' ? undefined : JSON.parse(ard);
+const entries: unknown = typeof catalog === 'object' && catalog !== null ? Reflect.get(catalog, 'entries') : undefined;
+const [entry]: readonly unknown[] = Array.isArray(entries) ? entries : [];
+const field = (name: string): unknown =>
+  typeof entry === 'object' && entry !== null ? Reflect.get(entry, name) : undefined;
+const skillFile = readFileSync(
+  join(import.meta.dirname, '..', '..', '..', 'skills', 'use-figatellultimate', 'SKILL.md'),
+  'utf8',
+);
+
+check(
+  /^urn:air:[a-zA-Z0-9.-]+(:[a-zA-Z0-9._-]+)+$/.test(String(field('identifier'))) &&
+    typeof field('displayName') === 'string' &&
+    field('type') === 'application/agent-skills+md' &&
+    field('url') === absolute('/skills/use-figatellultimate/SKILL.md'),
+  `/.well-known/ard.json: not an ARD entry for the agent skill (${ard})`,
+);
+check(
+  readBody(join(app, '.well-known', 'ai-catalog.json.body')) === ard,
+  '/.well-known/ai-catalog.json: not the same manifest as ard.json',
+);
+check(
+  readBody(join(app, 'skills', 'use-figatellultimate', 'SKILL.md.body')) === skillFile,
+  '/skills/use-figatellultimate/SKILL.md: not the skill the repository holds',
+);
+check(
+  htmlOf('/en/docs/cli')?.includes('<link rel="ard" href="/.well-known/ard.json"/>') === true,
+  '/en/docs/cli: no link to the ARD manifest',
+);
+
 const feedLink = '<link rel="alternate" type="application/rss+xml" href="/en/feed.xml"/>';
 
 check(htmlOf('/en/docs')?.includes(feedLink) === true, '/en/docs: no link to its feed');
@@ -1202,6 +1236,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    `✓ ${String(mountedUrls.length)} mounted URLs prerendered with canonical, alternates, x-default and Open Graph; subcategory pages with their default view and pagination links; sitemap (dated, noindex left out), structured data, feeds, robots.txt, drafts, the footer, the listings' and the folder pages' batches, one search bundle per locale (French and English queries, stemming, collection filter), an llms.txt per locale listing the documentation's Markdown, each page's Markdown without what <llm-exclude> holds, images through next/image with their sizes, a meta description on every folder and author page, with plain spaces, and the navbar from the content in each page's language as expected.`,
+    `✓ ${String(mountedUrls.length)} mounted URLs prerendered with canonical, alternates, x-default and Open Graph; subcategory pages with their default view and pagination links; sitemap (dated, noindex left out), structured data, feeds, robots.txt, drafts, the footer, the listings' and the folder pages' batches, one search bundle per locale (French and English queries, stemming, collection filter), an llms.txt per locale listing the documentation's Markdown, each page's Markdown without what <llm-exclude> holds, the ARD manifest listing the agent skill, images through next/image with their sizes, a meta description on every folder and author page, with plain spaces, and the navbar from the content in each page's language as expected.`,
   );
 }

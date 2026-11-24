@@ -55,6 +55,8 @@ export default async function LocaleLayout(props: LayoutProps<'/[locale]'>): Pro
         <script dangerouslySetInnerHTML={{ __html: siteThemeScript(SITE_THEMES) }} />
         {/* The blog's feed in this locale, for feed readers to find from any page. */}
         <link rel="alternate" type="application/rss+xml" href={urlOf(locale, ['feed.xml'])} />
+        {/* The agentic resources the site offers (its agent skill), as ARD has agents look for them. */}
+        <link rel="ard" href="/.well-known/ard.json" />
       </head>
       <body>
         {/* The stylesheet's dark tokens follow `data-theme`; without a choice, the system's preference. */}

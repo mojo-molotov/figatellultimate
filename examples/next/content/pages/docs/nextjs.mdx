@@ -101,6 +101,12 @@ Ce qu’une collection expose aux LLM ([la configuration](/docs/configuration#ex
 
 Une route ne peut pas partager le segment de la route commune : le proxy réécrit `/docs/cli.md` vers une route dédiée, dans la langue de la page (`app/[locale]/llms/[[...url]]`). Chaque page exposée renvoie à sa version Markdown et au `llms.txt` de sa langue, par `<link rel="alternate" type="text/markdown">` et `<link rel="describedby">`.
 
+## Les agents (ARD)
+
+Ce qu’un site offre aux agents IA se déclare d’après [Agentic Resource Discovery](https://agenticresourcediscovery.org/spec/) : un manifeste `ard.json`, à l’adresse que la convention réserve aux agents, liste ses ressources, une skill d’agent, un serveur MCP. `agentCatalogOf` de `@figatellultimate/site` l’écrit, chaque identifiant ancré au domaine du site (`urn:air:<domaine>:<nom>`). Le même document se lit aussi comme son prédécesseur, AI Catalog ; l’exemple le sert donc aux deux chemins, `ard.json` et `ai-catalog.json`, et chaque page y renvoie par `<link rel="ard">`.
+
+Ce site y liste sa skill, `use-figatellultimate`, qui apprend à un agent à se servir de figatellultimate : [/skills/use-figatellultimate/SKILL.md](/skills/use-figatellultimate/SKILL.md). llms.txt n’y figure pas : c’est de la documentation, pas une ressource qu’un agent appelle.
+
 ## Les redirections
 
 `figatellultimate migrate` écrit `redirects.json` quand des URL changent. Next les sert en redirections permanentes :

@@ -558,6 +558,29 @@ try {
       `/en/docs/cli.md: ${String(englishMarkdown.status)}`,
     );
     check(left.status === 404, `/docs.md: ${String(left.status)}, the page left out of llms.txt`);
+
+    // What the site offers agents, at its public URLs: the ARD manifest at both well-known paths, and the skill it
+    // lists, never taken for a page's Markdown by the proxy.
+    const [ard, catalog, skill] = await Promise.all([
+      served('/.well-known/ard.json'),
+      served('/.well-known/ai-catalog.json'),
+      served('/skills/use-figatellultimate/SKILL.md'),
+    ]);
+
+    check(
+      ard.status === 200 && ard.type.startsWith('application/json') && ard.text.includes('application/agent-skills+md'),
+      `/.well-known/ard.json: ${String(ard.status)} ${ard.type}`,
+    );
+    check(
+      catalog.status === 200 && catalog.text === ard.text,
+      `/.well-known/ai-catalog.json: ${String(catalog.status)}`,
+    );
+    check(
+      skill.status === 200 &&
+        skill.type.startsWith('text/markdown') &&
+        skill.text.startsWith('---\nname: use-figatellultimate'),
+      `/skills/use-figatellultimate/SKILL.md: ${String(skill.status)} ${skill.type}`,
+    );
   }
 
   // The search's shortcut after its label, the reader's keys (⌘K on an Apple device, Ctrl K elsewhere) on the
@@ -1067,6 +1090,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, those of a category too, a listing reached from its category at once, the switcher following, Back restoring; Tab straight to the copy buttons, a region a stop only while it overflows; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit, always for a category, its full pagination on its last line on a desktop, every see more as far below its cards, every full pagination at the end of its line; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; the navbar on one line at any width, compact once its links do not fit; a zoom preloaded on hover; the chosen theme shown before hydration; the code at AA contrast in every theme, light and dark; the search placeholder shown where the text begins, never heard; the shortcut of the search, the keys of the reader, on a desktop only; llms.txt and each page as Markdown at their public URLs; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
+    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, those of a category too, a listing reached from its category at once, the switcher following, Back restoring; Tab straight to the copy buttons, a region a stop only while it overflows; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit, always for a category, its full pagination on its last line on a desktop, every see more as far below its cards, every full pagination at the end of its line; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; the navbar on one line at any width, compact once its links do not fit; a zoom preloaded on hover; the chosen theme shown before hydration; the code at AA contrast in every theme, light and dark; the search placeholder shown where the text begins, never heard; the shortcut of the search, the keys of the reader, on a desktop only; llms.txt and each page as Markdown at their public URLs, the ARD manifest and its skill; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
   );
 }
