@@ -182,6 +182,7 @@ describe('generated term pages, run', () => {
       locale: 'fr',
       alternates: { fr: '/authors/gustave', en: '/en/authors/gustave' },
       searchable: false,
+      llms: false,
       key: 'gustave',
       // Its newest post's date: news/b.
       modified: '2026-03-01',

@@ -41,6 +41,7 @@ const config = defineConfig({
       grammar: [locale({ optional: true }), rest('path'), slug()],
       reserved: ['lp/sign-up'],
       metadata: { title: 'title', description: 'metadescription' },
+      llms: { include: ['docs', 'docs/*'], exclude: 'llmExclude' },
     }),
     landingPages: defineCollection({
       entry: 'landingPage',
@@ -61,7 +62,15 @@ const config = defineConfig({
 
 /** The sample shapes: the home in both locales, `about` in French only, a reserved page, a flat landing page URL. */
 const FILES: Readonly<Record<string, readonly string[]>> = {
-  pages: ['index.mdx', 'en/index.mdx', 'about.mdx', 'docs/setup.mdx', 'en/docs/setup.mdx', 'lp/sign-up.mdx'],
+  pages: [
+    'index.mdx',
+    'en/index.mdx',
+    'about.mdx',
+    'docs/setup.mdx',
+    'en/docs/setup.mdx',
+    'docs/internal.mdx',
+    'lp/sign-up.mdx',
+  ],
   landingPages: ['promo/summer.mdx', 'promo/en/summer.mdx'],
 };
 
@@ -85,6 +94,7 @@ const UrlsModule = v.looseObject({
       locale: v.string(),
       alternates: v.unknown(),
       searchable: v.boolean(),
+      llms: v.boolean(),
       key: v.string(),
       home: v.optional(v.literal(true)),
     }),
@@ -108,7 +118,11 @@ beforeAll(async () => {
     analysis: analyze({ locales: config.locales, collections: config.collections, sources }),
     documents: sources.map((s) => ({
       ...s,
-      data: { title: `Title of ${s.sourcePath}` },
+      // A page of the exposed folder that leaves itself out.
+      data: {
+        title: `Title of ${s.sourcePath}`,
+        ...(s.sourcePath === 'docs/internal.mdx' ? { llmExclude: true } : {}),
+      },
       body: `Body of ${s.sourcePath}`,
     })),
     sourceDiagnostics: [],
@@ -157,6 +171,7 @@ describe('generated urls module, run', () => {
     expect([...mounted].sort()).toEqual([
       '/',
       '/about',
+      '/docs/internal',
       '/docs/setup',
       '/en',
       '/en/docs/setup',
@@ -189,6 +204,18 @@ describe('generated urls module, run', () => {
 
     expect(searchable['/docs/setup']).toBe(true);
     expect(searchable['/lp/promo-summer']).toBe(false);
+  });
+
+  it('marks what each mounted URL exposes to LLMs, from its collection and its frontmatter', () => {
+    const exposed = Object.fromEntries(urls.mountedUrls.map((item) => [item.url, item.llms]));
+
+    expect(exposed).toMatchObject({
+      '/docs/setup': true,
+      '/en/docs/setup': true,
+      '/docs/internal': false,
+      '/about': false,
+      '/lp/promo-summer': false,
+    });
   });
 
   it('exports each collection’s declared metadata fields, so an app never imports the config', () => {

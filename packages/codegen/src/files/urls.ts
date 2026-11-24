@@ -1,9 +1,11 @@
 /**
  * `urls/index`: one catch-all route for every collection: `findByUrl`, `mountedUrls` (entries, folder pages, term
  * pages; reserved entries out), `metadataFields`, and `urlOf` / `segmentsOf`, the project's URL strategy written
- * once so that an app never rewrites it.
+ * once so that an app never rewrites it. Each URL tells whether it is searchable, indexed, and exposed to LLMs
+ * (`llms`: an entry its collection's `llms` takes, its exclusion field not set, and indexed; never a folder or
+ * term page).
  */
-import type { FigatellultimateConfig, FolderPage, TermPage } from '@figatellultimate/core';
+import { exposedToLlms, type FigatellultimateConfig, type FolderPage, type TermPage } from '@figatellultimate/core';
 import { VariableDeclarationKind, Writers, type Project } from 'ts-morph';
 
 import { literal, pascal, type CollectionModel } from '../model.js';
@@ -124,6 +126,10 @@ export function urlsFile(
         property('locale', 'Locale'),
         property('alternates', 'Readonly<Partial<Record<Locale, string>>>'),
         property('searchable', 'boolean'),
+        {
+          ...property('llms', 'boolean'),
+          docs: ["Exposed to LLMs (`llms.txt`, its Markdown): its collection's `llms` takes it, and it is indexed."],
+        },
         property('key', 'string'),
         property('modified', 'string', true),
         property('indexed', 'boolean'),
@@ -201,6 +207,28 @@ export function urlsFile(
     });
     file.addVariableStatement({
       declarationKind: VariableDeclarationKind.Const,
+      declarations: [
+        {
+          name: 'llms',
+          type: 'ReadonlySet<string>',
+          // The entries exposed to LLMs, by collection, locale and key: matched by their collection's patterns, their
+          // exclusion field not set.
+          initializer: `new Set(${literal(
+            mounted.flatMap(({ name, entries }) => {
+              const collection = config.collections[name];
+
+              return collection === undefined
+                ? []
+                : entries
+                    .filter((entry) => exposedToLlms(collection, entry.descriptor.key, entry.data))
+                    .map((entry) => `${name}\u0000${entry.descriptor.locale}\u0000${entry.descriptor.key}`);
+            }),
+          )})`,
+        },
+      ],
+    });
+    file.addVariableStatement({
+      declarationKind: VariableDeclarationKind.Const,
       isExported: true,
       docs: ['Every mounted URL, once: reserved entries are left to their dedicated routes.'],
       declarations: [
@@ -210,7 +238,7 @@ export function urlsFile(
           initializer: `[${mounted
             .map(
               ({ name }) =>
-                `...${name}Index.filter((item) => !item.reserved).map((item): UrlItem => { const seo = entrySeo.get(item.url) ?? { indexed: true }; return { kind: 'entry', collection: ${literal(name)}, url: item.url, locale: item.locale, alternates: item.alternates, searchable: ${String(config.collections[name]?.searchable ?? true)} && seo.indexed, key: item.key, ...seo, ...(homes.has(\`${name}\\u0000\${item.locale}\\u0000\${item.key}\`) ? { home: true as const } : {}) }; })`,
+                `...${name}Index.filter((item) => !item.reserved).map((item): UrlItem => { const seo = entrySeo.get(item.url) ?? { indexed: true }; return { kind: 'entry', collection: ${literal(name)}, url: item.url, locale: item.locale, alternates: item.alternates, searchable: ${String(config.collections[name]?.searchable ?? true)} && seo.indexed, llms: llms.has(\`${name}\\u0000\${item.locale}\\u0000\${item.key}\`) && seo.indexed, key: item.key, ...seo, ...(homes.has(\`${name}\\u0000\${item.locale}\\u0000\${item.key}\`) ? { home: true as const } : {}) }; })`,
             )
             .concat(folders.length === 0 ? [] : [`...(${literal(folderItems(folders, seo))} as readonly UrlItem[])`])
             .concat(terms.length === 0 ? [] : [`...(${literal(termItems(terms, seo))} as readonly UrlItem[])`])
@@ -336,6 +364,7 @@ function folderItems(folders: readonly FolderPage[], seo: ReadonlyMap<string, Pa
         .map((other) => [other.locale, other.url]),
     ),
     searchable: false,
+    llms: false,
     // The folder's values, and its page after the first: the switcher finds the same page in another locale.
     key: [...Object.values(folder.segments), ...(folder.page > 1 ? ['page', String(folder.page)] : [])].join('/'),
     ...(seo.get(folder.url) ?? { indexed: true }),
@@ -356,6 +385,7 @@ function termItems(terms: readonly TermPage[], seo: ReadonlyMap<string, PageSeo>
         .map((other) => [other.locale, other.url]),
     ),
     searchable: false,
+    llms: false,
     key: page.term,
     ...(seo.get(page.url) ?? { indexed: true }),
   }));
