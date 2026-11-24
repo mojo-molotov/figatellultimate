@@ -213,6 +213,51 @@ try {
     await paging.close();
   }
 
+  // Tab reaches what a reader acts on: from a snippet's tabs straight to its copy button, a snippet or a table that
+  // fits taking no stop; one that overflows (a table on a phone) takes one, to scroll it with the keyboard.
+  {
+    const keyboard = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+
+    await keyboard.goto(`${base}/docs/installation`, { waitUntil: 'networkidle' });
+    await keyboard.locator('[data-slot="code-tabs-trigger"][data-state="active"]').first().focus();
+    await keyboard.keyboard.press('Tab');
+    check(
+      (await keyboard.evaluate(() => document.activeElement?.getAttribute('data-slot'))) === 'code-block-copy',
+      '/docs/installation: Tab from the tabs does not reach the copy button',
+    );
+    await keyboard.goto(`${base}/docs/configuration`, { waitUntil: 'networkidle' });
+    const stops = (): Promise<(string | null)[]> =>
+      keyboard.evaluate(() =>
+        [...document.querySelectorAll('[data-slot="mdx-table"], [data-slot="code-block-pre"]')].map((region) =>
+          region.scrollWidth > region.clientWidth + 1
+            ? (region.getAttribute('tabindex') ?? 'none')
+            : region.getAttribute('tabindex'),
+        ),
+      );
+    const overflowing = (): Promise<boolean[]> =>
+      keyboard.evaluate(() =>
+        [...document.querySelectorAll('[data-slot="mdx-table"], [data-slot="code-block-pre"]')].map(
+          (region) => region.scrollWidth > region.clientWidth + 1,
+        ),
+      );
+    const consistent = async (): Promise<boolean> => {
+      const [regions, wide] = [await stops(), await overflowing()];
+
+      return regions.every((stop, index) => (wide[index] === true ? stop === '0' : stop === null));
+    };
+
+    check(
+      await consistent(),
+      '/docs/configuration: a region takes a Tab stop without overflowing, or lacks one overflowing',
+    );
+    await keyboard.setViewportSize({ width: 390, height: 844 });
+    await keyboard.waitForTimeout(300);
+    // Precondition: on a phone, something overflows (a table), so that both sides are checked.
+    check((await overflowing()).some(Boolean), '/docs/configuration: nothing overflows on a phone');
+    check(await consistent(), '/docs/configuration on a phone: an overflowing region without its Tab stop');
+    await keyboard.close();
+  }
+
   // A filter chosen before the index arrives is applied once it is here, never lost.
   const early = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 
@@ -660,6 +705,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, the switcher following, Back restoring; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
+    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, the switcher following, Back restoring; Tab straight to the copy buttons, a region a stop only while it overflows; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
   );
 }

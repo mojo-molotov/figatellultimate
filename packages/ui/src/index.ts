@@ -24,6 +24,7 @@
 export * from './breadcrumb.js';
 export * from './code-block.js';
 export * from './code-tabs.js';
+export * from './scroll-region.js';
 export * from './entry-card.js';
 export * from './entry-card-author.js';
 export * from './image-zoom.js';

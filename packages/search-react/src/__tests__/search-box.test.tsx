@@ -253,6 +253,26 @@ describe('SearchBox', () => {
     expect(await violations()).toEqual([]);
   });
 
+  it('closes its sort on a tap on its trigger while open, never reopening at once (a touch screen)', async () => {
+    // On a touch screen, the tap's pointerdown closed it as outside, then its click on the trigger opened it again.
+    renderBox({ sort: true });
+    // The page under the open list takes no pointer (Radix): a finger's tap reaches the trigger all the same, as here.
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    const select = screen.getByRole('combobox', { name: '«trier»' });
+
+    // Its own list, by its slot: the results are a listbox too.
+    const list = (): Element | null => document.querySelector('[data-slot="search-box-sort-content"]');
+
+    await user.pointer({ keys: '[TouchA]', target: select });
+    await waitFor(() => {
+      expect(list() === null).toBe(false);
+    });
+    await user.pointer({ keys: '[TouchA]', target: select });
+    await waitFor(() => {
+      expect(list() === null).toBe(true);
+    });
+  });
+
   it('a modifier opens the result in a new tab: Ctrl or Shift + Enter, a modified or middle click', async () => {
     const { user, field, opened, tabs } = renderBox();
 

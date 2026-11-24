@@ -7,6 +7,8 @@
  * Key design decisions:
  *     - No highlighter here: highlighting belongs to the app's MDX compilation, prerendered, no client JavaScript.
  *     - The copy is announced (a polite live region), not only shown: a screen reader user knows it worked.
+ *     - The code takes a Tab stop only while it overflows (`useOverflowFocus`): Tab reaches the copy button directly,
+ *       a highlighter's `tabindex` (Shiki's `0`) ignored; a wide one is still scrolled with the keyboard.
  *     - The check is kept while the button fades out after a copy, so that a mouse leaving meanwhile never sees the
  *       clipboard icon come back first.
  *
@@ -14,6 +16,8 @@
  * the failure, axe and the keyboard.
  */
 import { useEffect, useRef, useState, type ComponentProps, type ReactNode } from 'react';
+
+import { useOverflowFocus } from './scroll-region.js';
 
 /** How long a copy stays confirmed. */
 const COPIED_MS = 2000;
@@ -49,6 +53,8 @@ export type CodeBlockProps = ComponentProps<'pre'> & { readonly labels: CodeBloc
  */
 export function CodeBlock({ labels, children, ...props }: CodeBlockProps): ReactNode {
   const pre = useRef<HTMLPreElement>(null);
+  // In the Tab order only while it overflows (to scroll it with the keyboard), never for a highlighter's `tabindex`.
+  const stop = useOverflowFocus(pre);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const [state, setState] = useState<CopyState>('idle');
 
@@ -80,7 +86,7 @@ export function CodeBlock({ labels, children, ...props }: CodeBlockProps): React
 
   return (
     <div data-slot="code-block">
-      <pre {...props} ref={pre} data-slot="code-block-pre">
+      <pre {...props} ref={pre} tabIndex={stop} data-slot="code-block-pre">
         {children}
       </pre>
       <button

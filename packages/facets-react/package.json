@@ -32,6 +32,7 @@
     "lint:package": "publint --strict && attw --pack . --profile esm-only"
   },
   "dependencies": {
+    "@figatellultimate/dismiss": "workspace:*",
     "@figatellultimate/facets": "workspace:*",
     "cmdk": "1.1.1",
     "radix-ui": "1.8.1"

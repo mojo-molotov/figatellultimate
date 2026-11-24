@@ -1,0 +1,39 @@
+{
+  "name": "@figatellultimate/dismiss",
+  "version": "0.0.0",
+  "description": "Dismissal model of figatellultimate: a popup closed by a tap on its own trigger stays closed, pure.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "@figatellultimate/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./package.json": "./package.json"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --config ../../vitest.config.ts --project dismiss",
+    "lint:package": "publint --strict && attw --pack . --profile esm-only"
+  },
+  "dependencies": {},
+  "figatellultimate": {
+    "role": "runtime"
+  },
+  "devDependencies": {}
+}

@@ -30,6 +30,7 @@ import {
   type RefObject,
 } from 'react';
 
+import { useTapToClose } from './tap-to-close.js';
 import { useSearch, type SearchBinding } from './use-search.js';
 
 /** Every text of the search box, visible or for assistive technologies: no default, no English. */
@@ -365,6 +366,7 @@ export function SearchBoxSpinner(props: ComponentProps<'span'>): ReactNode {
  */
 export function SearchBoxSort(props: ComponentProps<typeof Select.Trigger>): ReactNode {
   const { sortBy, sort, setSort, dir } = use('SearchBoxSort');
+  const { trigger, closesOnTrigger, swallowsReopen } = useTapToClose();
 
   if (sortBy === undefined) return null;
 
@@ -379,6 +381,8 @@ export function SearchBoxSort(props: ComponentProps<typeof Select.Trigger>): Rea
       {...(dir === undefined ? {} : { dir })}
     >
       <Select.Trigger
+        ref={trigger}
+        onClick={swallowsReopen}
         data-slot="search-box-sort"
         aria-label={sortBy.labels.trigger}
         // Its arrow keys open the select, never move the active result of the list around it.
@@ -394,7 +398,12 @@ export function SearchBoxSort(props: ComponentProps<typeof Select.Trigger>): Rea
         </Select.Icon>
       </Select.Trigger>
       <Select.Portal>
-        <Select.Content data-slot="search-box-sort-content" position="popper" align="end">
+        <Select.Content
+          data-slot="search-box-sort-content"
+          position="popper"
+          align="end"
+          onPointerDownOutside={closesOnTrigger}
+        >
           <Select.Viewport>
             {sortBy.sorts.map((name) => (
               <Select.Item key={name} value={name} data-slot="search-box-sort-item">

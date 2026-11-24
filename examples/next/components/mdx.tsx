@@ -1,5 +1,6 @@
 /** The MDX components: every element the content produces, styled by the maquis theme (`@figatellultimate/themes/maquis.css`). */
 import { MDXContent } from '@content-collections/mdx/react';
+import { ScrollRegion } from '@figatellultimate/ui';
 import NextLink from 'next/link';
 import type { ComponentProps, ReactNode } from 'react';
 
@@ -31,11 +32,11 @@ const components = {
   ol: (props: ComponentProps<'ol'>): ReactNode => <ol data-slot="mdx-ol" {...props} />,
   li: (props: ComponentProps<'li'>): ReactNode => <li data-slot="mdx-li" {...props} />,
   blockquote: (props: ComponentProps<'blockquote'>): ReactNode => <blockquote data-slot="mdx-blockquote" {...props} />,
-  // A wide table scrolls on its own, reachable with the keyboard (as Shiki's `pre`), never the whole page.
+  // A wide table scrolls on its own, never the whole page; in the Tab order only while it overflows (ScrollRegion).
   table: (props: ComponentProps<'table'>): ReactNode => (
-    <div data-slot="mdx-table" tabIndex={0}>
+    <ScrollRegion data-slot="mdx-table">
       <table {...props} />
-    </div>
+    </ScrollRegion>
   ),
   tr: (props: ComponentProps<'tr'>): ReactNode => <tr data-slot="mdx-tr" {...props} />,
   th: (props: ComponentProps<'th'>): ReactNode => <th data-slot="mdx-th" {...props} />,

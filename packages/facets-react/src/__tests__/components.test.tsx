@@ -376,6 +376,22 @@ describe('sort select', () => {
 });
 
 describe('page select', () => {
+  it('closes on a tap on its trigger while open, never reopening at once (a touch screen)', async () => {
+    // On a touch screen, the tap's pointerdown closed it as outside, then its click on the trigger opened it again.
+    renderListing('?page=5', (binding) => <PageSelect binding={binding} labels={JUMP} locale="fr" />);
+    // The page under the open list takes no pointer (Radix): a finger's tap reaches the trigger all the same, as here.
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    const trigger = screen.getByRole('combobox', { name: '«aller à la page»' });
+
+    await user.pointer({ keys: '[TouchA]', target: trigger });
+    await screen.findByRole('listbox');
+    await user.pointer({ keys: '[TouchA]', target: trigger });
+    await waitFor(() => {
+      expect(screen.queryByRole('listbox') === null).toBe(true);
+    });
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+  });
+
   const withSelect = (locale: string) => (binding: FacetedCollectionBinding) => (
     <PageSelect binding={binding} labels={JUMP} locale={locale} />
   );

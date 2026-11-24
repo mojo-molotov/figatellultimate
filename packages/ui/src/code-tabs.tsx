@@ -120,7 +120,14 @@ export function CodeTabs({
         ))}
       </Tabs.List>
       {panels.map((panel) => (
-        <Tabs.Content key={panel.label} data-slot="code-tabs-content" value={panel.label} forceMount>
+        <Tabs.Content
+          key={panel.label}
+          data-slot="code-tabs-content"
+          value={panel.label}
+          forceMount
+          // No Tab stop of its own: from the tabs, Tab goes to its code's copy button (its code, when it overflows).
+          tabIndex={-1}
+        >
           {panel.content}
         </Tabs.Content>
       ))}

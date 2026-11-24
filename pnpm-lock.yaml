@@ -446,6 +446,8 @@ importers:
 
   packages/core: {}
 
+  packages/dismiss: {}
+
   packages/effects:
     devDependencies:
       '@testing-library/dom':
@@ -477,6 +479,9 @@ importers:
 
   packages/facets-react:
     dependencies:
+      '@figatellultimate/dismiss':
+        specifier: workspace:*
+        version: link:../dismiss
       '@figatellultimate/facets':
         specifier: workspace:*
         version: link:../facets
@@ -575,6 +580,9 @@ importers:
 
   packages/search-react:
     dependencies:
+      '@figatellultimate/dismiss':
+        specifier: workspace:*
+        version: link:../dismiss
       '@figatellultimate/search':
         specifier: workspace:*
         version: link:../search

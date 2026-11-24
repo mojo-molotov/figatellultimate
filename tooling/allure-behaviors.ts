@@ -77,6 +77,8 @@ export const BEHAVIORS = {
   search: { epic: SEARCH, severity: 'normal', layer: 'unit' },
   'search-react': { epic: SEARCH, severity: 'normal', layer: 'component' },
   pagefind: { epic: SEARCH, severity: 'normal', layer: 'integration' },
+  // A popup's dismissal, pure, shared by the design system's selects (the page select, the search's sort).
+  dismiss: { epic: DESIGN, severity: 'normal', layer: 'unit' },
   ui: { epic: DESIGN, severity: 'normal', layer: 'component' },
   effects: { epic: DESIGN, severity: 'normal', layer: 'component' },
   themes: { epic: DESIGN, severity: 'normal', layer: 'integration' },

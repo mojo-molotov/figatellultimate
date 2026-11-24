@@ -18,6 +18,8 @@
 import { Select } from 'radix-ui';
 import { useMemo, type ComponentProps, type ReactNode } from 'react';
 
+import { useTapToClose } from './tap-to-close.js';
+
 import type { FacetedCollectionBinding } from '../use-faceted-collection.js';
 import { numberFormat } from './context.js';
 
@@ -51,6 +53,7 @@ export interface PageSelectProps extends Omit<
  */
 export function PageSelect({ binding, labels, locale, ...props }: PageSelectProps): ReactNode {
   const format = useMemo(() => numberFormat(locale), [locale]);
+  const { trigger, closesOnTrigger, swallowsReopen } = useTapToClose();
   const { page } = binding.state;
   const { pages } = binding.view;
 
@@ -64,14 +67,24 @@ export function PageSelect({ binding, labels, locale, ...props }: PageSelectProp
       }}
       {...props}
     >
-      <Select.Trigger data-slot="page-select-trigger" aria-label={labels.trigger}>
+      <Select.Trigger
+        ref={trigger}
+        data-slot="page-select-trigger"
+        aria-label={labels.trigger}
+        onClick={swallowsReopen}
+      >
         <Select.Value data-slot="page-select-value">{labels.current(page, pages)}</Select.Value>
         <Select.Icon asChild data-slot="page-select-icon">
           <span />
         </Select.Icon>
       </Select.Trigger>
       <Select.Portal>
-        <Select.Content data-slot="page-select-content" position="popper" sideOffset={4}>
+        <Select.Content
+          data-slot="page-select-content"
+          position="popper"
+          sideOffset={4}
+          onPointerDownOutside={closesOnTrigger}
+        >
           <Select.Viewport data-slot="page-select-viewport">
             {Array.from({ length: pages }, (_, index) => (
               <Select.Item key={index} data-slot="page-select-item" value={String(index + 1)}>

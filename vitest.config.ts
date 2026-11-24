@@ -51,7 +51,7 @@ const config: ViteUserConfig = defineConfig({
     // A report, never a threshold: a number to read, not a target to game.
     coverage: {
       provider: 'v8',
-      include: ['packages/{core,facets,site,toc,messages,codegen,search}/src/**'],
+      include: ['packages/{core,facets,site,toc,dismiss,messages,codegen,search}/src/**'],
       exclude: ['**/__tests__/**', '**/ports.ts'],
       // `json-summary`: read by `tooling/coverage-summary.ts` for the CI job's summary.
       reporter: ['text-summary', 'html', 'lcov', 'json-summary'],
