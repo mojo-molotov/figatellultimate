@@ -7,6 +7,7 @@ description: >-
   The branch stays under GitHub's 100 MB file limit and never grows: each history is compressed and holds its last
   runs (allurerc.mjs's historyLimit), a file near the limit fails the publication with a clear message, and the
   branch is one commit, replaced on each publication (its history is the trends', in the files, not git's).
+  The site is handed to deploy-pages only once the run lists its artifact: the caller's job needs `actions: read`.
 
 inputs:
   family:
@@ -114,8 +115,27 @@ runs:
         git push -q --force "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" allure-reports
 
     - name: Stage the site
+      id: site
       uses: actions/upload-pages-artifact@v5
       with:
         path: .allure-reports/
         # As v4 did: every file of the site, `.nojekyll` included.
         include-hidden-files: true
+
+    - name: Wait until the site is listed
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        # The upload ends once its artifact is finalized, but the run's listing, which deploy-pages reads, can lag
+        # behind: a deployment half a second later found no artifact and failed. Wait for this very artifact (a rerun
+        # lists the earlier attempts' too); the caller's job grants `actions: read` for it.
+        id="${{ steps.site.outputs.artifact_id }}"
+        for attempt in $(seq 1 60); do
+          listed=$(gh api "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts?name=github-pages" \
+            --jq "[.artifacts[] | select(.id == $id)] | length")
+          if [ "$listed" = 1 ]; then exit 0; fi
+          sleep 5
+        done
+        echo "::error::The site's artifact $id was still not listed after five minutes: rerun the publication."
+        exit 1

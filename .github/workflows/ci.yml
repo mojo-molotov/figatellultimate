@@ -106,6 +106,7 @@ jobs:
     if: always() && github.event_name != 'pull_request' && github.repository_visibility != 'private'
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       contents: write
       pages: write
       id-token: write

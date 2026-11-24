@@ -74,6 +74,23 @@ describe('GitHub Actions', () => {
     expect(publish).toContain('git push -q --force');
   });
 
+  it('deploys the reports only once their artifact is listed, which its upload does not wait for', () => {
+    const publish = readFileSync(join(ROOT, '.github', 'actions', 'reports-publish', 'action.yml'), 'utf8');
+    const deployers = files.filter((file) => readFileSync(file, 'utf8').includes('uses: actions/deploy-pages@'));
+
+    // The listing lags the upload's end: a deployment half a second after it found no artifact.
+    expect(publish.indexOf('Wait until the site is listed')).toBeGreaterThan(publish.indexOf('upload-pages-artifact'));
+    // Precondition: the workflows publishing a report were found.
+    expect(deployers.length).toBeGreaterThanOrEqual(4);
+
+    for (const file of deployers) {
+      // The wait reads the run's artifacts, which a job's own permissions must grant.
+      expect(readFileSync(file, 'utf8'), relative(ROOT, file)).toMatch(
+        /permissions:\n(?: {6}.+\n)* {6}actions: read\n/,
+      );
+    }
+  });
+
   it("runs Playwright's image pinned by digest, of the repository's playwright release, so that its browsers match", () => {
     const manifest: unknown = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
     const dependencies: unknown =
