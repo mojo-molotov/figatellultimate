@@ -29,6 +29,7 @@
     "@figatellultimate/use-intl": "workspace:*",
     "@heroicons/react": "2.2.0",
     "@shikijs/rehype": "4.5.0",
+    "@vercel/analytics": "2.0.1",
     "@vercel/speed-insights": "2.1.0",
     "icu-minify": "4.15.0",
     "next": "16.4.6",
