@@ -3,12 +3,21 @@
 // Run after `pnpm example:build`: `pnpm example:browse [--port N]` (plain Node, Chromium).
 import { spawn } from 'node:child_process';
 import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
+import type { AxeResults, ElementContext, RunOptions } from 'axe-core';
 import { chromium, type Page } from 'playwright';
 
 import { blogIndex, findBlogFolderByUrl } from '#figatellultimate/blog';
+
+declare global {
+  // axe-core, injected into a page for its contrast check.
+  interface Window {
+    readonly axe: { run: (context: ElementContext, options: RunOptions) => Promise<AxeResults> };
+  }
+}
 
 const { values } = parseArgs({ options: { port: { type: 'string', default: '3198' } } });
 const base = `http://localhost:${values.port}`;
@@ -511,6 +520,47 @@ try {
     await context.close();
   }
 
+  // The code readable in every site theme, light and dark: axe's color contrast (WCAG AA) on every token of the code
+  // blocks. A highlighter's palette drawn for white once fell below it on a theme's tinted surface.
+  {
+    const code = await browser.newPage({ viewport: { width: 1280, height: 900 }, reducedMotion: 'reduce' });
+
+    await code.goto(`${base}/docs/quick-start`, { waitUntil: 'load' });
+    await code.addScriptTag({ path: createRequire(import.meta.url).resolve('axe-core/axe.min.js') });
+
+    for (const site of ['maquis', 'paper'] as const) {
+      for (const theme of ['light', 'dark'] as const) {
+        const { checked, failing } = await code.evaluate(
+          async ([siteTheme, colorTheme]) => {
+            document.documentElement.dataset['siteTheme'] = siteTheme;
+            document.documentElement.dataset['theme'] = colorTheme;
+            const results = await window.axe.run(
+              { include: [['[data-slot="code-block-pre"]']] },
+              { runOnly: ['color-contrast'] },
+            );
+
+            return {
+              checked: results.passes.reduce((count, rule) => count + rule.nodes.length, 0),
+              failing: results.violations.flatMap((rule) =>
+                rule.nodes.map((node) => `${node.html.slice(0, 60)} (${node.any[0]?.message ?? ''})`),
+              ),
+            };
+          },
+          [site, theme] as const,
+        );
+
+        // Precondition: tokens were checked, not a page without code.
+        check(checked > 0, `/docs/quick-start: no code token checked for contrast (${site}, ${theme})`);
+        check(
+          failing.length === 0,
+          `/docs/quick-start, ${site} ${theme}: code below AA contrast: ${failing.join('; ')}`,
+        );
+      }
+    }
+
+    await code.close();
+  }
+
   // The footer revealed from under the page on a desktop only: on a phone, it scrolls in as any content.
   for (const [device, options, revealed] of [
     ['a desktop', { viewport: { width: 1280, height: 900 } }, true],
@@ -902,6 +952,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, those of a category too, a listing reached from its category at once, the switcher following, Back restoring; Tab straight to the copy buttons, a region a stop only while it overflows; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit, always for a category, its full pagination on its last line on a desktop, every see more as far below its cards, every full pagination at the end of its line; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; the navbar on one line at any width, compact once its links do not fit; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
+    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, those of a category too, a listing reached from its category at once, the switcher following, Back restoring; Tab straight to the copy buttons, a region a stop only while it overflows; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit, always for a category, its full pagination on its last line on a desktop, every see more as far below its cards, every full pagination at the end of its line; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; the navbar on one line at any width, compact once its links do not fit; a zoom preloaded on hover; the chosen theme shown before hydration; the code at AA contrast in every theme, light and dark; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
   );
 }

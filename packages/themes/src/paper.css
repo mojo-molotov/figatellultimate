@@ -76,9 +76,11 @@
   font-weight: 600;
 }
 
-/* The code on the page's own tint, not its highlighter's white or blue-grey: the paper's in both lights. */
+/* The code on the page's own tint, not its highlighter's white or blue-grey: the paper's in both lights. In the light
+   theme, the page's background, not the darker surface: a highlighter's lightest tokens (its comments) stay at AA
+   contrast on it. */
 :root:where(:not([data-site-theme]), [data-site-theme='paper']) [data-slot='code-block-pre'].shiki {
-  background-color: var(--fig-surface);
+  background-color: var(--fig-bg);
 }
 
 @media (prefers-color-scheme: dark) {

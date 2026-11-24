@@ -47,8 +47,12 @@ const transform = async <D extends { content: string; _meta: Meta }>(
         [rehypeImageSizes, { publicDirectory: resolve('public') }],
         // After the ids: each section heading links to itself, its text the link's name.
         [rehypeAutolinkHeadings, { behavior: 'wrap', test: ['h2', 'h3', 'h4'] }],
-        // Code highlighted at build time, both themes as CSS variables picked by the stylesheet.
-        [rehypeShiki, { themes: { light: 'github-light', dark: 'github-dark' }, defaultColor: false }],
+        // Code highlighted at build time, both themes as CSS variables picked by the stylesheet. GitHub's high-contrast
+        // palettes: the plain ones are drawn for white, and fall below AA on a theme's tinted surface (`browse.ts`).
+        [
+          rehypeShiki,
+          { themes: { light: 'github-light-high-contrast', dark: 'github-dark-high-contrast' }, defaultColor: false },
+        ],
       ],
     }),
   )),
