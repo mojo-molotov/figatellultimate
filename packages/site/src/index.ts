@@ -1,6 +1,6 @@
 /**
  * The site's helpers, pure and framework-free: metadata, sitemap, static params, locale links, navigation sections,
- * breadcrumbs, structured data, feeds and what the site exposes to LLMs (llms.txt). A framework adapter maps their results (`@figatellultimate/next16` for Next).
+ * breadcrumbs, structured data, feeds, what the site exposes to LLMs (llms.txt) and what it offers agents (ARD). A framework adapter maps their results (`@figatellultimate/next16` for Next).
  *
  * Architecture:
  *     generated modules (#figatellultimate/urls, #figatellultimate/navigation) ──> these helpers ──> neutral, frozen data
@@ -10,6 +10,7 @@
  *     structured-data.ts  structuredDataOf, breadcrumbListOf, personOf, jsonLd
  *     feed.ts             rssOf
  *     llms.ts             llmsTxtOf, llmsFullOf, markdownUrlOf
+ *     agents.ts           agentCatalogOf (ARD, AI Catalog)
  *     shared.ts           absolute URLs, dates, robots, cssString
  *
  * Key design decisions:
@@ -57,6 +58,7 @@ import { absoluteAlternates, absoluteOn, plainSpaces, text, texts, w3cDate } fro
 
 export { breadcrumbListOf, jsonLd, personOf, structuredDataOf, type Person } from './structured-data.js';
 export { rssOf, type FeedChannel, type FeedInput } from './feed.js';
+export { agentCatalogOf, type AgentCatalog, type AgentCatalogEntry, type AgentResource } from './agents.js';
 export {
   llmsFullOf,
   llmsTxtOf,

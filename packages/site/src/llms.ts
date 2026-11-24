@@ -23,7 +23,7 @@
  * Invariants (`llms.test.ts`): the spec's grammar whatever the texts hold (a property); the order of its parts; the
  * H1 alone when nothing else is given; plain spaces; the Markdown URLs.
  */
-import { absoluteOn, plainSpaces } from './shared.js';
+import { absoluteOn, oneLine } from './shared.js';
 import type { Site } from './types.js';
 
 /** A link of a file list: its name, its URL (a path on the site, or absolute), and what it holds. */
@@ -65,9 +65,6 @@ export interface LlmsFullInput {
   readonly pages: readonly { readonly url: string; readonly markdown: string }[];
   readonly site: Site;
 }
-
-/** A text on one line, with plain spaces. */
-const oneLine = (value: string): string => plainSpaces(value).replaceAll(/\s+/g, ' ').trim();
 
 /** A link's text, its brackets and backslashes escaped. */
 const linkText = (value: string): string => value.replaceAll(/[\\[\]]/g, (character) => `\\${character}`);

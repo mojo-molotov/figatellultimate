@@ -27,6 +27,14 @@ export const absoluteOn =
 export const plainSpaces = (value: string): string => value.replaceAll(/[\u00a0\u202f\u2007]/g, ' ');
 
 /**
+ * A text on one line, with plain spaces: for a field a machine reads (llms.txt, an agent catalog).
+ *
+ * @param value - A text, possibly over lines, typeset.
+ * @returns The text on one line, its whitespace collapsed, trimmed, with plain spaces.
+ */
+export const oneLine = (value: string): string => plainSpaces(value).replaceAll(/\s+/g, ' ').trim();
+
+/**
  * A frontmatter value read as text.
  *
  * @param value - A frontmatter value.
