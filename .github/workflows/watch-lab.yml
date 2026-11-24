@@ -42,8 +42,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    # A family's publications one at a time; another family's may run meanwhile (the action pushes with a lease).
     concurrency:
-      group: allure-reports
+      group: allure-reports-watch-lab
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v7

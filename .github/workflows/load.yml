@@ -53,9 +53,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    # Shared by every workflow that publishes a report: one publication at a time, none cancelled.
+    # A family's publications one at a time; another family's may run meanwhile (the action pushes with a lease).
     concurrency:
-      group: allure-reports
+      group: allure-reports-load
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v7

@@ -3,7 +3,9 @@ description: >-
   Renders one test family's report (an Allure report from its results, or a Markdown report as a page) into its own
   folder of the allure-reports branch, with its own history and metadata, writes the index of every report
   (tooling/reports-index.ts), and pushes the branch, which GitHub Pages serves. Each family replaces only its folder,
-  so the CI's report and the weekly ones never overwrite each other. Callers share the `allure-reports` concurrency group: one publication at a time.
+  so the CI's report and the weekly ones never overwrite each other. Each family publishes on its own (a concurrency
+  group per family, `allure-reports-<family>`): the branch is read again at the push, the report laid over it, and
+  pushed only if nobody pushed since, else read again.
   The branch stays under GitHub's 100 MB file limit and never grows: each history is compressed and holds its last
   runs (allurerc.mjs's historyLimit), a file near the limit fails the publication with a clear message, and the
   branch is one commit, replaced on each publication (its history is the trends', in the files, not git's).
@@ -85,40 +87,62 @@ runs:
         node tooling/reports-index.ts meta --site .allure-reports --family "$family" --title "${{ inputs.title }}" \
           --frequency "${{ inputs.frequency }}" --markdown "${{ inputs.markdown }}"
 
-    - name: Write the index of every report
+    - name: Set the report aside
       shell: bash
       run: |
-        node tooling/reports-index.ts index --site .allure-reports
-        touch .allure-reports/.nojekyll
+        # The publication's own files: its folder and its history's (`_history/<family>.*`), laid over the branch as
+        # it stands when pushed.
+        family="${{ inputs.family }}"
+        rm -rf .publication
+        mkdir -p .publication/_history
+        cp -R ".allure-reports/$family" ".publication/$family"
+        for own in .allure-reports/_history/"$family".*; do
+          if [ -e "$own" ]; then cp "$own" .publication/_history/; fi
+        done
 
-    - name: Stay under GitHub's file size limit
+    - name: Publish the reports branch
       shell: bash
       run: |
-        # GitHub refuses a file over 100 MB, with no hint of which report grew: say it here, with room to spare.
-        large=$(find .allure-reports -path .allure-reports/.git -prune -o -type f -size +90M -print)
-        if [ -n "$large" ]; then
-          echo "::error::Over 90 MB, near GitHub's 100 MB limit (lower historyLimit in allurerc.mjs): $large"
-          exit 1
-        fi
-
-    - name: Save the reports branch
-      shell: bash
-      run: |
-        # One commit, replacing the branch: it only carries the site and the histories, and kept commits would hold
-        # every version of every history.
-        cd .allure-reports
-        rm -rf .git
-        git init -q
-        git checkout -q --orphan allure-reports
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        git add -A
-        git commit -q -m "chore: reports, ${{ inputs.family }} last (run #${{ github.run_number }})"
+        family="${{ inputs.family }}"
         remote="https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
-        # A push GitHub refuses on its side (`fatal error in commit_refs_rules`) is tried again after a pause, twice:
-        # the same single commit, replaced, so a second push is harmless.
-        for pause in 15 60; do
-          if git push -q --force "$remote" allure-reports; then exit 0; fi
+        # One attempt: the branch as it stands, the report laid over it, the index of every report written again, then
+        # one commit replacing the branch (kept commits would hold every version of every history), pushed only if the
+        # branch is still the one read (`--force-with-lease`): another family may have pushed meanwhile.
+        publish() {
+          rm -rf .allure-reports
+          if git clone -q --depth=1 --branch allure-reports "$remote" .allure-reports 2>/dev/null; then
+            base=$(git -C .allure-reports rev-parse HEAD)
+          else
+            mkdir .allure-reports
+            base=''
+          fi
+          rm -rf .allure-reports/.git ".allure-reports/$family"
+          mkdir -p .allure-reports/_history
+          # Uncompressed histories are an older format, dropped: each family's history restarts compressed.
+          rm -f .allure-reports/_history/*.jsonl
+          cp -R .publication/. .allure-reports/
+          node tooling/reports-index.ts index --site .allure-reports
+          touch .allure-reports/.nojekyll
+          # GitHub refuses a file over 100 MB, with no hint of which report grew: say it here, with room to spare.
+          large=$(find .allure-reports -type f -size +90M -print)
+          if [ -n "$large" ]; then
+            echo "::error::Over 90 MB, near GitHub's 100 MB limit (lower historyLimit in allurerc.mjs): $large"
+            exit 1
+          fi
+          (
+            cd .allure-reports
+            git init -q
+            git checkout -q --orphan allure-reports
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -q -m "chore: reports, $family last (run #${{ github.run_number }})"
+            git push -q --force-with-lease="allure-reports:$base" "$remote" allure-reports
+          )
+        }
+        # Refused, by that race or on GitHub's side (`fatal error in commit_refs_rules`): read again after a pause.
+        for pause in 15 30 60; do
+          if publish; then exit 0; fi
           sleep "$pause"
         done
-        git push -q --force "$remote" allure-reports
+        publish

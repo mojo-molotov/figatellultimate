@@ -71,12 +71,35 @@ describe('GitHub Actions', () => {
     expect(publish).toMatch(/gzip -9 -c history\.jsonl > "\$history"/);
     expect(publish).toMatch(/-size \+90M/);
     expect(publish).toContain('--orphan allure-reports');
-    expect(publish).toContain('git push -q --force');
-    // A push GitHub refuses on its side (`fatal error in commit_refs_rules`) is tried again after a pause: the same
-    // single commit, replaced, so a second push is harmless.
-    expect(publish).toMatch(
-      /for pause in [\d ]+; do\n\s+if git push -q --force [^\n]+; then exit 0; fi\n\s+sleep "\$pause"\n\s+done/,
+  });
+
+  it('publishes each family on its own: the branch read again, the report laid over it, pushed only if unchanged', () => {
+    const publish = readFileSync(join(ROOT, '.github', 'actions', 'reports-publish', 'action.yml'), 'utf8');
+    const publishers = files.filter((file) =>
+      readFileSync(file, 'utf8').includes('uses: ./.github/actions/reports-publish'),
     );
+
+    // Precondition: the workflows publishing a report were found.
+    expect(publishers.length).toBeGreaterThanOrEqual(4);
+
+    // A group per family: GitHub keeps one waiting job per group, a newer one cancelling it, so a shared group let a
+    // weekly report's publication cancel the CI's. One family's publications still wait for each other.
+    for (const file of publishers) {
+      const source = readFileSync(file, 'utf8');
+      const family = /family: ([\w-]+)/.exec(source)?.[1];
+
+      expect(family, relative(ROOT, file)).toBeDefined();
+      expect(source, relative(ROOT, file)).toMatch(
+        new RegExp(`concurrency:\\n\\s+group: allure-reports-${family ?? ''}\\n\\s+cancel-in-progress: false`),
+      );
+    }
+
+    // Another family may push meanwhile: each attempt reads the branch again, lays the report over it, and pushes
+    // only if it is still the one read (`--force-with-lease`); a refusal, that race or GitHub's own error, tries again
+    // after a pause.
+    expect(publish).toMatch(/git push -q --force-with-lease="allure-reports:\$base"/);
+    expect(publish).toMatch(/for pause in [\d ]+; do\n\s+if publish; then exit 0; fi\n\s+sleep "\$pause"\n\s+done/);
+    expect(publish).toMatch(/publish\(\) \{\n\s+rm -rf \.allure-reports\n\s+if git clone/);
   });
 
   it('publishes the reports by their branch alone, which Pages serves: no artifact, no deployment to fail', () => {
