@@ -139,6 +139,16 @@ Le gestionnaire choisi dans un onglet vaut pour toute la documentation.
 </llm-exclude>
 ```
 
+Le MDX devient du Markdown : ses imports, exports et expressions disparaissent, commentaires compris, et un composant se réduit à son contenu. L’application peut écrire un composant en Markdown, comme elle le rend en React, d’après ses propriétés (leurs valeurs littérales) et son contenu, déjà converti :
+
+```ts
+llmsMarkdownOf(entry.body, {
+  components: {
+    Callout: ({ type }, content) => `> **${String(type)}** ${content}`,
+  },
+});
+```
+
 Le code généré marque chaque URL exposée (`llms` dans `mountedUrls`) ; l’application sert les fichiers par ses routes ([Next.js](/docs/nextjs#llmstxt)).
 
 ## Les taxonomies

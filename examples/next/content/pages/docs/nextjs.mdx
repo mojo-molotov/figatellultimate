@@ -90,14 +90,14 @@ Le sitemap liste chaque page indexable avec ses traductions et sa date de modifi
 
 ## llms.txt
 
-Ce qu’une collection expose aux LLM ([la configuration](/docs/configuration#exposer-aux-llm)) se sert par trois routes, comme le flux : `llms.txt` par langue, `llms-full.txt`, toutes les pages dans un fichier (un ajout à la convention, que beaucoup d’outils lisent), et la version Markdown de chaque page. `mountedUrls` marque les URL exposées (`llms`) ; `@figatellultimate/site` écrit les fichiers.
+Ce qu’une collection expose aux LLM ([la configuration](/docs/configuration#exposer-aux-llm)) se sert par trois routes, comme le flux : `llms.txt` par langue, `llms-full.txt`, toutes les pages dans un fichier (un ajout à la convention, que beaucoup d’outils lisent), et la version Markdown de chaque page. `mountedUrls` marque les URL exposées (`llms`) ; `@figatellultimate/site` écrit les fichiers, et l’adaptateur de l’outil de contenu le Markdown de chaque page.
 
-| Fonction         | Ce qu’elle écrit                                                                                                |
-| ---------------- | --------------------------------------------------------------------------------------------------------------- |
-| `llmsTxtOf`      | Le fichier `llms.txt`, d’après la convention : un titre, un résumé, des listes de liens.                        |
-| `llmsMarkdownOf` | Le Markdown d’une page, depuis sa source : sans ce que tient `<llm-exclude>`, ni les imports et exports du MDX. |
-| `llmsFullOf`     | Le fichier `llms-full.txt`.                                                                                     |
-| `markdownUrlOf`  | L’URL de la version Markdown d’une page : la sienne suivie de `.md`.                                            |
+| Fonction         | Ce qu’elle écrit                                                                                                                                                                                                                                         |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `llmsTxtOf`      | Le fichier `llms.txt`, d’après la convention : un titre, un résumé, des listes de liens.                                                                                                                                                                 |
+| `llmsMarkdownOf` | Le Markdown d’une page, depuis son MDX (`@figatellultimate/content-collections/llms`) : sans ce que tient `<llm-exclude>`, ni les imports, exports et expressions du MDX, chaque composant écrit en Markdown par l’application, ou réduit à son contenu. |
+| `llmsFullOf`     | Le fichier `llms-full.txt`.                                                                                                                                                                                                                              |
+| `markdownUrlOf`  | L’URL de la version Markdown d’une page : la sienne suivie de `.md`.                                                                                                                                                                                     |
 
 Une route ne peut pas partager le segment de la route commune : le proxy réécrit `/docs/cli.md` vers une route dédiée, dans la langue de la page (`app/[locale]/llms/[[...url]]`). Chaque page exposée renvoie à sa version Markdown et au `llms.txt` de sa langue, par `<link rel="alternate" type="text/markdown">` et `<link rel="describedby">`.
 

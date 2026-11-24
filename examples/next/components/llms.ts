@@ -3,7 +3,7 @@
  * their reading order, each with its Markdown. Read by the `llms.txt`, `llms-full.txt` and Markdown routes, and by
  * the page, which links its Markdown version and its locale's `llms.txt`.
  */
-import { llmsMarkdownOf } from '@figatellultimate/site';
+import { llmsMarkdownOf } from '@figatellultimate/content-collections/llms';
 
 import { findByUrl, mountedUrls } from '#figatellultimate/urls';
 

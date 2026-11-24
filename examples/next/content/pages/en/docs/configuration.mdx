@@ -137,6 +137,16 @@ The package manager you pick in a tab holds for the whole documentation.
 </llm-exclude>
 ```
 
+MDX becomes Markdown: its imports, exports and expressions are gone, comments included, and a component is reduced to its content. The app can write a component as Markdown, as it renders it with React, from its props (their literal values) and its content, already converted:
+
+```ts
+llmsMarkdownOf(entry.body, {
+  components: {
+    Callout: ({ type }, content) => `> **${String(type)}** ${content}`,
+  },
+});
+```
+
 The generated code marks every exposed URL (`llms` in `mountedUrls`); the app serves the files through its routes ([Next.js](/en/docs/nextjs#llmstxt)).
 
 ## Taxonomies

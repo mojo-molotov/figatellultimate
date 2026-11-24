@@ -24,6 +24,11 @@
       "types": "./dist/images.d.ts",
       "default": "./dist/images.js"
     },
+    "./llms": {
+      "@figatellultimate/source": "./src/llms.ts",
+      "types": "./dist/llms.d.ts",
+      "default": "./dist/llms.js"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -39,6 +44,10 @@
       "./images": {
         "types": "./dist/images.d.ts",
         "default": "./dist/images.js"
+      },
+      "./llms": {
+        "types": "./dist/llms.d.ts",
+        "default": "./dist/llms.js"
       },
       "./package.json": "./package.json"
     }
@@ -56,7 +65,12 @@
     "@figatellultimate/core": "workspace:*",
     "@figatellultimate/toc": "workspace:*",
     "github-slugger": "2.0.0",
-    "image-size": "2.1.0"
+    "image-size": "2.1.0",
+    "remark-gfm": "4.0.1",
+    "remark-mdx": "3.1.1",
+    "remark-parse": "11.0.0",
+    "remark-stringify": "11.0.0",
+    "unified": "11.0.5"
   },
   "peerDependencies": {
     "@content-collections/core": "^0.15.0"

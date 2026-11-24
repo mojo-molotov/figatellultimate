@@ -3,7 +3,7 @@
  * Markdown, and `llms-full.txt`, every page in one file.
  *
  *     the app's route ──> llmsTxtOf({ title, summary, details, sections, optional })   /llms.txt
- *                     ──> llmsMarkdownOf(the page's MDX source)                         /<page>.md (markdownUrlOf)
+ *                     ──> each page's Markdown (`@figatellultimate/content-collections/llms`), at markdownUrlOf
  *                     ──> llmsFullOf({ title, summary, pages })                         /llms-full.txt
  *
  * Key design decisions:
@@ -15,18 +15,13 @@
  *       `index.md` to a URL ending with a slash.
  *     - `llms-full.txt` is not in the proposal: an extra many tools read, kept apart so that `llms.txt` stays exactly
  *       its format. Each page follows a rule and its source, its own H1 kept.
- *     - A page's Markdown is its source with `<llm-exclude>` left out (over lines or within one, a code block in it
- *       too) and MDX's imports and exports dropped; code blocks and code spans kept as written, a tag shown in one
- *       never applied (a page documenting the tag once lost everything after its first mention). Written by the author, not rebuilt from the HTML: what an LLM reads is what the author wrote.
+ *     - A page's Markdown is written by the MDX tool's adapter (`@figatellultimate/content-collections/llms`, which
+ *       parses MDX): these helpers have no dependency.
  *     - Plain spaces in `llms.txt` and `llms-full.txt`'s own texts (titles, summary, notes): a machine reads them,
  *       as the meta description. A page's Markdown keeps its typography: it is the content.
  *
  * Invariants (`llms.test.ts`): the spec's grammar whatever the texts hold (a property); the order of its parts; the
- * H1 alone when nothing else is given; plain spaces; `<llm-exclude>` and MDX's statements left out, code blocks
- * kept; the Markdown URLs.
- *
- * Limitations: a JSX component in the content stays as written (its rendering is the app's); a tag in a code block
- * or a code span is shown, never applied, but a code span spread over lines is not recognized as one.
+ * H1 alone when nothing else is given; plain spaces; the Markdown URLs.
  */
 import { absoluteOn, plainSpaces } from './shared.js';
 import type { Site } from './types.js';
@@ -63,7 +58,10 @@ export interface LlmsInput {
 export interface LlmsFullInput {
   readonly title: string;
   readonly summary?: string | undefined;
-  /** Each page's Markdown (`llmsMarkdownOf`) and its URL, in reading order. */
+  /**
+   * Each page's Markdown (`llmsMarkdownOf` of `@figatellultimate/content-collections/llms`) and its URL, in reading
+   * order.
+   */
   readonly pages: readonly { readonly url: string; readonly markdown: string }[];
   readonly site: Site;
 }
@@ -144,127 +142,6 @@ export function llmsTxtOf(input: LlmsInput): string {
   ];
 
   return `${blocks.join('\n\n')}\n`;
-}
-
-/** A code fence's opening: up to three spaces, then three backticks or tildes at least. */
-const FENCE = /^ {0,3}(`{3,}|~{3,})/;
-const OPEN = '<llm-exclude>';
-const CLOSE = '</llm-exclude>';
-
-/**
- * Where a tag starts in a line, inline code skipped: a code span (a run of backticks, up to the next run of the same
- * length) shows a tag, never applies it.
- *
- * @param line - A line outside code blocks.
- * @param tag - The tag looked for.
- * @param from - Where to look from.
- * @returns The tag's index, or -1.
- */
-function tagIndex(line: string, tag: string, from: number): number {
-  let at = from;
-
-  while (at < line.length) {
-    if (line[at] === '`') {
-      const run = /^`+/.exec(line.slice(at))?.[0] ?? '`';
-      const closing = new RegExp(`(?<!\`)${run}(?!\`)`, 'g');
-
-      closing.lastIndex = at + run.length;
-      const end = closing.exec(line);
-
-      // Unmatched backticks are text.
-      at = end === null ? at + run.length : end.index + run.length;
-      continue;
-    }
-
-    if (line.startsWith(tag, at)) return at;
-
-    at += 1;
-  }
-
-  return -1;
-}
-
-/**
- * A page's Markdown for LLMs, from its MDX source.
- *
- * @param source - The page's source, its frontmatter already apart (e.g. content-collections' `content`).
- * @returns The source without what `<llm-exclude>` holds (over lines or within one, a code block in it too), without
- *   MDX's imports and exports, its blank lines collapsed; code blocks kept as written. One final newline.
- *
- * @example
- * llmsMarkdownOf('# Install\n\n<llm-exclude>For humans.</llm-exclude>\n\nRun it.'); // '# Install\n\nRun it.\n'
- */
-export function llmsMarkdownOf(source: string): string {
-  const out: string[] = [];
-  let fence: { readonly mark: string; readonly length: number } | undefined;
-  let excluding = false;
-  let statement = false;
-  const keep = (line: string): void => {
-    // Blank lines collapsed, none at the start.
-    if (line.trim() === '' && (out.length === 0 || out.at(-1)?.trim() === '')) return;
-
-    out.push(line);
-  };
-
-  for (const line of source.replaceAll(/\r\n?/g, '\n').split('\n')) {
-    if (fence !== undefined) {
-      if (!excluding) out.push(line);
-
-      if (new RegExp(`^ {0,3}${fence.mark}{${String(fence.length)},}\\s*$`).test(line)) fence = undefined;
-
-      continue;
-    }
-
-    const opening = FENCE.exec(line);
-
-    if (opening !== null) {
-      const marks = opening[1] ?? '```';
-
-      fence = { mark: marks[0] === '~' ? '~' : '`', length: marks.length };
-
-      if (!excluding) keep(line);
-
-      continue;
-    }
-
-    // MDX's imports and exports: a block of their own, up to its blank line.
-    if (statement || (!excluding && /^(?:import|export)\s/.test(line))) {
-      statement = line.trim() !== '';
-
-      continue;
-    }
-
-    let kept = '';
-    let at = 0;
-    let tagged = false;
-
-    for (;;) {
-      const tag = excluding ? CLOSE : OPEN;
-      const found = tagIndex(line, tag, at);
-
-      if (found === -1) {
-        if (!excluding) kept += line.slice(at);
-
-        break;
-      }
-
-      tagged = true;
-
-      if (!excluding) kept += line.slice(at, found);
-
-      at = found + tag.length;
-      excluding = !excluding;
-    }
-
-    // A line holding only tags, or only what they leave out, leaves nothing.
-    if (tagged && kept.trim() === '') continue;
-
-    if (!excluding || tagged) keep(kept);
-  }
-
-  while (out.at(-1)?.trim() === '') out.pop();
-
-  return `${out.join('\n')}\n`;
 }
 
 /**

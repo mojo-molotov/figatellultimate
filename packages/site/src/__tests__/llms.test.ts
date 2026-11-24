@@ -1,7 +1,7 @@
 import * as fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
-import { llmsFullOf, llmsMarkdownOf, llmsTxtOf, markdownUrlOf } from '../index.js';
+import { llmsFullOf, llmsTxtOf, markdownUrlOf } from '../index.js';
 
 const site = { origin: 'https://example.dev', defaultLocale: 'fr' };
 
@@ -123,83 +123,6 @@ describe('llmsTxtOf', () => {
         },
       ),
     );
-  });
-});
-
-describe('llmsMarkdownOf', () => {
-  it('leaves out what <llm-exclude> holds, over lines or within one, and keeps the rest', () => {
-    const markdown = [
-      '# Installation',
-      '',
-      '<llm-exclude>',
-      '',
-      'Choisissez votre gestionnaire dans les onglets.',
-      '',
-      '</llm-exclude>',
-      '',
-      'Ajoutez la CLI<llm-exclude> (le bouton copie)</llm-exclude>.',
-    ].join('\n');
-
-    expect(llmsMarkdownOf(markdown)).toBe('# Installation\n\nAjoutez la CLI.\n');
-  });
-
-  it('keeps a code block as written, even one showing <llm-exclude> or an import, and leaves out an excluded one', () => {
-    const markdown = [
-      'Un exemple :',
-      '',
-      '```mdx',
-      'import { X } from "x";',
-      '<llm-exclude>Pour les humains</llm-exclude>',
-      '```',
-      '',
-      '<llm-exclude>',
-      '',
-      '```sh',
-      'npm run interne',
-      '```',
-      '',
-      '</llm-exclude>',
-    ].join('\n');
-
-    expect(llmsMarkdownOf(markdown)).toBe(
-      [
-        'Un exemple :',
-        '',
-        '```mdx',
-        'import { X } from "x";',
-        '<llm-exclude>Pour les humains</llm-exclude>',
-        '```',
-        '',
-      ].join('\n'),
-    );
-  });
-
-  it('shows a tag in inline code, never applies it: the page after it stays', () => {
-    // A page documenting the tag once lost everything after its first mention in inline code.
-    const markdown = [
-      'Un passage s’écarte par `<llm-exclude>` ou ``a `<llm-exclude>` b``.',
-      '',
-      '## Suite',
-      '',
-      'Gardée.',
-    ].join('\n');
-
-    expect(llmsMarkdownOf(markdown)).toBe(`${markdown}\n`);
-  });
-
-  it("leaves out MDX's imports and exports, outside code blocks, and the blank lines they leave", () => {
-    const markdown = [
-      "import { Note } from './note';",
-      'export const meta = {};',
-      '',
-      '',
-      '',
-      '# Titre',
-      '',
-      'Texte.',
-    ].join('\n');
-
-    expect(llmsMarkdownOf(markdown)).toBe('# Titre\n\nTexte.\n');
   });
 });
 

@@ -9,7 +9,7 @@
  *     index.ts            metadataOf, pageMetadataOf, sitemapOf, catchAllParamsOf, localeLinksOf, sectionOf, breadcrumbOf
  *     structured-data.ts  structuredDataOf, breadcrumbListOf, personOf, jsonLd
  *     feed.ts             rssOf
- *     llms.ts             llmsTxtOf, llmsMarkdownOf, llmsFullOf, markdownUrlOf
+ *     llms.ts             llmsTxtOf, llmsFullOf, markdownUrlOf
  *     shared.ts           absolute URLs, dates, robots, cssString
  *
  * Key design decisions:
@@ -59,7 +59,6 @@ export { breadcrumbListOf, jsonLd, personOf, structuredDataOf, type Person } fro
 export { rssOf, type FeedChannel, type FeedInput } from './feed.js';
 export {
   llmsFullOf,
-  llmsMarkdownOf,
   llmsTxtOf,
   markdownUrlOf,
   type LlmsFullInput,
