@@ -52,7 +52,6 @@ jobs:
     if: always() && github.repository_visibility != 'private'
     runs-on: ubuntu-latest
     permissions:
-      actions: read
       contents: write
       pages: write
       id-token: write
@@ -76,12 +75,10 @@ jobs:
       - id: report
         run: echo "path=$(find load-report -name load-report.md | head -1)" >> "$GITHUB_OUTPUT"
       - if: steps.report.outputs.path != ''
+        id: deployment
         uses: ./.github/actions/reports-publish
         with:
           family: load
           title: Load test
           frequency: weekly
           markdown: ${{ steps.report.outputs.path }}
-      - if: steps.report.outputs.path != ''
-        id: deployment
-        uses: actions/deploy-pages@v5

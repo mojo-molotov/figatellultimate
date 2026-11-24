@@ -44,7 +44,6 @@ jobs:
     if: always() && github.repository_visibility != 'private'
     runs-on: ubuntu-latest
     permissions:
-      actions: read
       contents: write
       pages: write
       id-token: write
@@ -67,10 +66,9 @@ jobs:
           pattern: allure-results-browsers
           path: allure-results
           merge-multiple: true
-      - uses: ./.github/actions/reports-publish
+      - id: deployment
+        uses: ./.github/actions/reports-publish
         with:
           family: browsers
           title: Real browsers (weekly)
           frequency: weekly
-      - id: deployment
-        uses: actions/deploy-pages@v5

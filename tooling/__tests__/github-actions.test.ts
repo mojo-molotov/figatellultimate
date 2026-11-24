@@ -74,19 +74,35 @@ describe('GitHub Actions', () => {
     expect(publish).toContain('git push -q --force');
   });
 
-  it('deploys the reports only once their artifact is listed, which its upload does not wait for', () => {
-    const publish = readFileSync(join(ROOT, '.github', 'actions', 'reports-publish', 'action.yml'), 'utf8');
-    const deployers = files.filter((file) => readFileSync(file, 'utf8').includes('uses: actions/deploy-pages@'));
+  it('deploys the reports from the publication, again after a failure: the listing it reads lags the upload', () => {
+    const action = join('.github', 'actions', 'reports-publish', 'action.yml');
+    const publish = readFileSync(join(ROOT, action), 'utf8');
+    const deploys = [
+      ...publish.matchAll(/\n {4}- name: [^\n]+\n((?: {6}[^\n]+\n)*) {6}uses: actions\/deploy-pages@v\d+\n/g),
+    ];
+    const publishers = files.filter((file) =>
+      readFileSync(file, 'utf8').includes('uses: ./.github/actions/reports-publish'),
+    );
 
-    // The listing lags the upload's end: a deployment half a second after it found no artifact.
-    expect(publish.indexOf('Wait until the site is listed')).toBeGreaterThan(publish.indexOf('upload-pages-artifact'));
+    // The artifact listing deploy-pages reads lags the upload's end, apart from the REST API's: a deployment half a
+    // second after it found no artifact. Tried again after a pause, twice, each attempt but the last allowed to fail.
+    expect(deploys.map(([, lines]) => /continue-on-error: true/.test(lines ?? ''))).toEqual([true, true, false]);
+    expect(deploys.slice(1).every(([, lines]) => /if: .*outcome == 'failure'/.test(lines ?? ''))).toBe(true);
+    expect(publish.indexOf('actions/deploy-pages')).toBeGreaterThan(publish.indexOf('upload-pages-artifact'));
     // Precondition: the workflows publishing a report were found.
-    expect(deployers.length).toBeGreaterThanOrEqual(4);
+    expect(publishers.length).toBeGreaterThanOrEqual(4);
 
-    for (const file of deployers) {
-      // The wait reads the run's artifacts, which a job's own permissions must grant.
+    // Deployed in one place: no workflow deploys on its own, each shows the publication's URL.
+    for (const file of files.filter((path) => !path.endsWith(action))) {
+      expect(readFileSync(file, 'utf8'), relative(ROOT, file)).not.toContain('actions/deploy-pages');
+    }
+
+    for (const file of publishers) {
+      expect(readFileSync(file, 'utf8'), relative(ROOT, file)).toContain(
+        'url: ${{ steps.deployment.outputs.page_url }}',
+      );
       expect(readFileSync(file, 'utf8'), relative(ROOT, file)).toMatch(
-        /permissions:\n(?: {6}.+\n)* {6}actions: read\n/,
+        /- (?:if: [^\n]+\n {8})?id: deployment\n(?: {8}[^\n]+\n)* {8}uses: \.\/\.github\/actions\/reports-publish/,
       );
     }
   });

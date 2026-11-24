@@ -106,7 +106,6 @@ jobs:
     if: always() && github.event_name != 'pull_request' && github.repository_visibility != 'private'
     runs-on: ubuntu-latest
     permissions:
-      actions: read
       contents: write
       pages: write
       id-token: write
@@ -135,12 +134,11 @@ jobs:
           name: coverage
           path: coverage
         continue-on-error: true
-      - uses: ./.github/actions/reports-publish
+      - id: deployment
+        uses: ./.github/actions/reports-publish
         with:
           family: ci
           title: CI (every pull request and push to main)
           frequency: push
           extra-dir: coverage
           extra-name: coverage
-      - id: deployment
-        uses: actions/deploy-pages@v5
