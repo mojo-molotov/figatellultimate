@@ -310,13 +310,21 @@ describe('ImageZoom', () => {
 
     for (const type of types) document.addEventListener(type, record, true);
 
+    // Away from the page's corner, where a real browser's pointer rests (0,0): an image appearing under it gets a
+    // pointer's entering, a real interest the component rightly answers (Chromium in CI preloaded so).
     render(
-      <ImageProvider component={AppImage}>
-        <ImageZoom labels={LABELS} src="/covers/map.png" alt={ALT} width={1024} height={768} />
-      </ImageProvider>,
+      <div style={{ padding: '64px' }}>
+        <ImageProvider component={AppImage}>
+          <ImageZoom labels={LABELS} src="/covers/map.png" alt={ALT} width={1024} height={768} />
+        </ImageProvider>
+      </div>,
     );
     const preloads = () => [...document.querySelectorAll('[data-slot="image-zoom-preload"]')];
     const button = await screen.findByRole('button', { name: `«agrandir : ${ALT}»` });
+    const box = button.getBoundingClientRect();
+
+    // Precondition: the image is not under the corner's pointer (happy-dom lays nothing out: every box is empty).
+    expect(box.width === 0 || (box.left > 0 && box.top > 0)).toBe(true);
 
     for (const type of types) document.removeEventListener(type, record, true);
 

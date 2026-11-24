@@ -133,12 +133,14 @@ describe('base.css', () => {
 
   it("centres a compact card's tags on its authors, side by side: the authors' margin above them dropped", () => {
     const body = rules.find(
-      (rule) => rule.selector === "main[data-folder='category'] [data-slot='entry-card-authors']",
+      (rule) => rule.selector === "main:is([data-folder='category'], [data-listing]) [data-slot='entry-card-authors']",
     )?.body;
 
     expect(body).toBe('margin-block-start: 0;');
     expect(
-      rules.find((rule) => rule.selector === "main[data-folder='category'] [data-slot='entry-card-body']")?.body,
+      rules.find(
+        (rule) => rule.selector === "main:is([data-folder='category'], [data-listing]) [data-slot='entry-card-body']",
+      )?.body,
     ).toContain('align-items: center;');
   });
 
@@ -237,21 +239,28 @@ describe('base.css', () => {
     ).toBe('margin-inline-start: auto;');
   });
 
-  it("compacts a category's previews only, a subcategory's list keeping its tall cards", () => {
-    // The folder pages' rules on cards: a category's alone, never a listing's.
-    const compact = rules.filter(
-      (rule) => /^main\[data-(folder|listing)/.test(rule.selector) && rule.selector.includes("[data-slot='entry-card"),
+  it("compacts a category's previews, a listing's cards keeping their size; tags and authors side by side in both", () => {
+    // The folder pages' rules on cards: their size a category's alone, never a listing's.
+    const cards = rules.filter(
+      (rule) => /^main(\[data-|:is\()/.test(rule.selector) && rule.selector.includes("[data-slot='entry-card"),
     );
+    const shared = "main:is([data-folder='category'], [data-listing]) ";
+    const sized = cards.filter((rule) => !rule.selector.startsWith(shared));
 
-    // Precondition: the compact previews are styled here.
-    expect(compact.length).toBeGreaterThan(3);
+    // Precondition: both kinds are styled here.
+    expect(sized.length).toBeGreaterThan(3);
+    expect(cards.length).toBeGreaterThan(sized.length);
 
-    for (const rule of compact)
+    for (const rule of sized)
       expect(rule.selector.startsWith("main[data-folder='category'] "), rule.selector).toBe(true);
 
     expect(
       rules.find((rule) => rule.selector === "main[data-folder='category'] [data-slot='entry-card-title']")?.body,
     ).toBe('--entry-card-title-lines: 1;');
+    // The tags and the authors on one line, a category's previews and every listing's cards alike.
+    expect(rules.find((rule) => rule.selector === `${shared}[data-slot='entry-card-body']`)?.body).toMatch(
+      /grid-template-columns: minmax\(0, 1fr\) auto;/,
+    );
   });
 
   it('hides the effects, for a theme to show them', () => {

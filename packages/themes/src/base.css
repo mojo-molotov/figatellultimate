@@ -384,8 +384,8 @@ header > [data-slot='breadcrumb'] {
   }
 }
 
-/* A category's previews, compact: a narrower image, one line of title and of description, the tags and the authors
-   side by side. A subcategory's own list keeps its tall cards. */
+/* A category's previews, compact: a narrower image, one line of title and of description. A listing's cards keep
+   their size; the tags and the authors are side by side in both (below). */
 main[data-folder='category'] [data-slot='entry-card'] {
   grid-template-columns: 8rem 1fr;
   gap: calc(var(--fig-space) * 1.5);
@@ -397,13 +397,15 @@ main[data-folder='category'] [data-slot='entry-card-media'] {
   aspect-ratio: auto;
 }
 
-main[data-folder='category'] [data-slot='entry-card-body'] {
+/* The tags and the authors side by side on one line, a category's previews and every listing's cards alike (a
+   subcategory's, an author's): the text above them across the card. */
+main:is([data-folder='category'], [data-listing]) [data-slot='entry-card-body'] {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: calc(var(--fig-space) / 2) var(--fig-space);
 }
 
-main[data-folder='category']
+main:is([data-folder='category'], [data-listing])
   :is([data-slot='entry-card-title'], [data-slot='entry-card-date'], [data-slot='entry-card-description']) {
   grid-column: 1 / -1;
 }
@@ -418,7 +420,7 @@ main[data-folder='category'] [data-slot='entry-card-description'] {
 
 /* The tags and the authors side by side, on one centre line: without the margin that sets the authors apart from tags
    above them, which would put the avatars lower than the tags. */
-main[data-folder='category'] [data-slot='entry-card-authors'] {
+main:is([data-folder='category'], [data-listing]) [data-slot='entry-card-authors'] {
   margin-block-start: 0;
 }
 
@@ -434,11 +436,12 @@ main[data-folder='category'] [data-slot='listing-cards'] {
     grid-template-columns: 5.5rem 1fr;
   }
 
-  main[data-folder='category'] [data-slot='entry-card-author']:has([data-slot='entry-card-avatar']) {
+  main:is([data-folder='category'], [data-listing])
+    [data-slot='entry-card-author']:has([data-slot='entry-card-avatar']) {
     padding-inline: 0.2rem;
   }
 
-  main[data-folder='category']
+  main:is([data-folder='category'], [data-listing])
     [data-slot='entry-card-author']:has([data-slot='entry-card-avatar'])
     [data-slot='entry-card-author-label'] {
     position: absolute;

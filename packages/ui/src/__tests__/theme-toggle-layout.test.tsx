@@ -59,18 +59,34 @@ describe('ThemeToggle, styled', () => {
       );
       const button = screen.getByRole('button', { name: /^Thème|^Changer/ });
       const icon = (slot: string): Element => button.querySelector(`[data-slot="${slot}"]`) ?? button;
+      // The animations played, as they start: read later, a busy runner may find them already over (WebKit once read
+      // no animation at all).
+      const played: string[] = [];
 
+      button.addEventListener('animationstart', (event) => {
+        const slot = event.target instanceof Element ? event.target.getAttribute('data-slot') : null;
+
+        played.push(`${slot ?? '?'} ${event.animationName}`);
+      });
+      // Whether it was blocked a while, as it happens.
+      let blocked = false;
+      const observer = new MutationObserver(() => {
+        blocked ||= button.getAttribute('aria-disabled') === 'true';
+      });
+
+      observer.observe(button, { attributes: true, attributeFilter: ['aria-disabled'] });
       button.click();
-      // To the dark theme: the sun (what a click now gives) rises, the moon sets; both show while they move.
+      // To the dark theme: the sun (what a click now gives) rises, the moon sets.
       await waitFor(() => {
-        expect(getComputedStyle(icon('theme-toggle-sun')).animationName).toBe('fig-theme-rise');
+        expect(played).toEqual(
+          expect.arrayContaining(['theme-toggle-sun fig-theme-rise', 'theme-toggle-moon fig-theme-set']),
+        );
       });
-      expect(getComputedStyle(icon('theme-toggle-moon')).animationName).toBe('fig-theme-set');
-      expect(getComputedStyle(icon('theme-toggle-moon')).display).not.toBe('none');
-      expect(button.getAttribute('aria-disabled')).toBe('true');
+      // Blocked from the click until the orbit and the page's transition end, then free.
       await waitFor(() => {
-        expect(button.hasAttribute('aria-disabled')).toBe(false);
+        expect(blocked && !button.hasAttribute('aria-disabled')).toBe(true);
       });
+      observer.disconnect();
       expect(getComputedStyle(icon('theme-toggle-moon')).display).toBe('none');
     },
   );
