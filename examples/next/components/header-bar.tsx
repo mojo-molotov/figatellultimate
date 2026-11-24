@@ -23,6 +23,8 @@ export interface HeaderLabels {
   readonly navbar: { readonly nav: string; readonly menu: string };
   readonly search: {
     readonly trigger: string;
+    /** The trigger's shortcut, an Apple keyboard's keys and any other's. */
+    readonly shortcut: { readonly mac: string; readonly other: string };
     readonly title: string;
     readonly close: string;
     readonly input: string;
@@ -112,7 +114,7 @@ export function HeaderBar(props: {
             spoken: (sort: SearchSort) => text.spoken[sort] ?? text.sorts[sort] ?? sort,
           },
         }}
-        labels={{ trigger: text.trigger, title: text.title, close: text.close }}
+        labels={{ trigger: text.trigger, shortcut: text.shortcut, title: text.title, close: text.close }}
         boxLabels={{
           input: text.input,
           placeholder: text.placeholder,

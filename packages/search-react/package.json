@@ -11,6 +11,11 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./scripts": {
+      "@figatellultimate/source": "./src/scripts.ts",
+      "types": "./dist/scripts.d.ts",
+      "default": "./dist/scripts.js"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -18,6 +23,10 @@
       ".": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
+      },
+      "./scripts": {
+        "types": "./dist/scripts.d.ts",
+        "default": "./dist/scripts.js"
       },
       "./package.json": "./package.json"
     }

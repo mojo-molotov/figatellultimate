@@ -8,11 +8,21 @@
  * a page ships only the button and the dialog until the reader searches. The loaded module is kept in state rather
  * than behind `React.lazy`, which would erase the box's collection type.
  *
+ * Key design decisions:
+ *     - The shortcut shown after the trigger's label (`labels.shortcut`), as asked by the user: the reader's keys, ⌘ K
+ *       on an Apple device, Ctrl K elsewhere, both rendered and one shown by the stylesheet from the shortcut's
+ *       `data-platform`. Marked before the first paint by the page's `searchShortcutScript`, and by a layout effect
+ *       once hydrated: never a switch, and never a mismatch to correct. Seen, not heard: the button keeps its label
+ *       as its name, its shortcut told by `aria-keyshortcuts`. Never shown on a touch screen (the stylesheet's).
+ *
  * Invariants (`search-dialog.test.tsx`): axe on the dialog; Enter opens it with focus in the field; Escape back to
- * the trigger; ⌘K or Ctrl+K; opening a result closes it.
+ * the trigger; ⌘K or Ctrl+K; opening a result closes it; the shortcut after the label, the reader's keys from the
+ * first paint, out of the name, none with the hotkey off.
  */
 import { Dialog, VisuallyHidden } from 'radix-ui';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+
+import { APPLE_PLATFORM } from './scripts.js';
 
 import type * as Box from './search-box.js';
 import type { SearchBoxProps } from './search-box.js';
@@ -40,6 +50,11 @@ export interface SearchDialogLabels {
   readonly title: string;
   /** The close button's accessible name. */
   readonly close: string;
+  /**
+   * The shortcut shown after the trigger's label while the hotkey is on: its keys on an Apple device (e.g. `'⌘ K'`)
+   * and elsewhere (e.g. `'Ctrl K'`); none when absent.
+   */
+  readonly shortcut?: { readonly mac: string; readonly other: string } | undefined;
 }
 
 /** The dialog's props: the search box's, its labels as `boxLabels`, the dialog's own labels, and the hotkey. */
@@ -56,7 +71,8 @@ export interface SearchDialogProps<C extends string> extends Omit<SearchBoxProps
  * @param props - The dialog's labels (trigger, title, close), the box's labels and props, and whether ⌘K or Ctrl+K
  *   opens it from anywhere (default `true`).
  * @returns A trigger and a Radix Dialog (focus trapped, Escape back to the trigger) holding the `SearchBox`, its field
- *   focused on opening; opening a result closes it.
+ *   focused on opening; opening a result closes it. With the hotkey on, the trigger tells it (`aria-keyshortcuts`),
+ *   and shows `labels.shortcut` after its label, the reader's keys, when given.
  *
  * @example
  * <SearchDialog search={search} labels={dialogLabels} boxLabels={boxLabels} locale="fr" onNavigate={router.push} />
@@ -70,6 +86,16 @@ export function SearchDialog<C extends string>({
 }: SearchDialogProps<C>): ReactNode {
   const [open, setOpen] = useState(false);
   const [box, setBox] = useState<BoxModule | undefined>(loaded);
+  const shortcut = useRef<HTMLElement>(null);
+  const shows = hotkey && labels.shortcut !== undefined;
+
+  // The reader's keys, as `searchShortcutScript` marks them before the first paint: the same, whatever ran first.
+  useLayoutEffect(() => {
+    shortcut.current?.setAttribute(
+      'data-platform',
+      new RegExp(APPLE_PLATFORM).test(navigator.userAgent) ? 'mac' : 'other',
+    );
+  }, [shows]);
 
   // Opened: the box's module, fetched now unless the button's hover or focus already did.
   useEffect(() => {
@@ -110,9 +136,25 @@ export function SearchDialog<C extends string>({
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger data-slot="search-dialog-trigger" onPointerEnter={preload} onFocus={preload}>
+      <Dialog.Trigger
+        data-slot="search-dialog-trigger"
+        onPointerEnter={preload}
+        onFocus={preload}
+        {...(hotkey ? { 'aria-keyshortcuts': 'Meta+K Control+K' } : {})}
+      >
         <span data-slot="search-dialog-icon" aria-hidden />
         <span data-slot="search-dialog-label">{labels.trigger}</span>
+        {!shows ? null : (
+          // Marked by the page's script before hydration: its `data-platform` is expected.
+          <kbd ref={shortcut} data-slot="search-dialog-shortcut" aria-hidden suppressHydrationWarning>
+            <span data-slot="search-dialog-shortcut-keys" data-platform="mac">
+              {labels.shortcut.mac}
+            </span>
+            <span data-slot="search-dialog-shortcut-keys" data-platform="other">
+              {labels.shortcut.other}
+            </span>
+          </kbd>
+        )}
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay data-slot="search-dialog-overlay" />

@@ -1511,6 +1511,38 @@ a[data-slot='entry-card-author'] {
   transform: rotate(45deg);
 }
 
+/* The shortcut after the label (`labels.shortcut`), as a key: never on a touch screen, where no keyboard is at hand. */
+[data-slot='search-dialog-shortcut'] {
+  display: inline-block;
+  margin-inline-start: calc(var(--fig-space) / 2);
+  padding: 0 0.4em;
+  border: 1px solid var(--fig-border);
+  border-radius: calc(var(--fig-radius) / 2);
+  font: inherit;
+  font-size: 0.75em;
+  line-height: 1.7;
+  white-space: nowrap;
+}
+
+@media (pointer: coarse) {
+  [data-slot='search-dialog-shortcut'] {
+    display: none;
+  }
+}
+
+/* A compact navbar has no room for it: its search button alone, beside the other controls. Measured with it, so that
+   the navbar turns compact once the full search button no longer fits. */
+[data-slot='navbar'][data-compact]:not([data-measuring]) [data-slot='search-dialog-shortcut'] {
+  display: none;
+}
+
+/* The reader's keys alone, from the shortcut's `data-platform` (the page's script, then the component); without a
+   mark, those of most readers. */
+[data-slot='search-dialog-shortcut']:not([data-platform='mac']) [data-platform='mac'],
+[data-slot='search-dialog-shortcut'][data-platform='mac'] [data-platform='other'] {
+  display: none;
+}
+
 [data-slot='search-dialog-overlay'] {
   position: fixed;
   inset: 0;

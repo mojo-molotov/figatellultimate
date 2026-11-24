@@ -355,6 +355,19 @@ describe('styles.css', () => {
     }
   });
 
+  it("shows the search shortcut but on a touch screen, the reader's keys alone", () => {
+    expect(propertiesOf("[data-slot='search-dialog-shortcut']")['display']).toBe('inline-block');
+    expect(CSS).toMatch(/@media \(pointer: coarse\) \{\s*\[data-slot='search-dialog-shortcut'\] \{\s*display: none;/);
+    // A compact navbar has no room for it: its search button alone, beside the other controls.
+    expect(CSS).toMatch(
+      /\[data-slot='navbar'\]\[data-compact\]:not\(\[data-measuring\]\) \[data-slot='search-dialog-shortcut'\] \{\s*display: none;/,
+    );
+    // Without a mark (no script, no JavaScript): the keys of most readers.
+    expect(CSS).toMatch(
+      /\[data-slot='search-dialog-shortcut'\]:not\(\[data-platform='mac'\]\) \[data-platform='mac'\],\s*\[data-slot='search-dialog-shortcut'\]\[data-platform='mac'\] \[data-platform='other'\] \{\s*display: none;/,
+    );
+  });
+
   it('keeps focus visible on every component', () => {
     expect(CSS).toMatch(/\[data-slot\]:focus-visible\s*\{[^}]*outline:\s*2px solid var\(--fig-accent\)/);
   });

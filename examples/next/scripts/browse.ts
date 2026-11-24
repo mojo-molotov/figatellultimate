@@ -520,6 +520,36 @@ try {
     await context.close();
   }
 
+  // The search's shortcut after its label, the reader's keys (⌘K on an Apple device, Ctrl K elsewhere) on the
+  // trigger's line, on a desktop; never on a touch screen, where no keyboard is at hand.
+  for (const [device, options, shown] of [
+    ['a desktop', { viewport: { width: 1280, height: 900 } }, true],
+    ['a phone', { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true }, false],
+  ] as const) {
+    const search = await browser.newPage(options);
+
+    await search.goto(`${base}/docs`, { waitUntil: 'load' });
+    const shortcut = search.locator('[data-slot="search-dialog-shortcut"]');
+    const apple = /Mac|iPhone|iPad|iPod/.test(await search.evaluate(() => navigator.userAgent));
+    const keys = (await shortcut.isVisible()) ? await shortcut.innerText() : '';
+    const [label, kbd] = await Promise.all([
+      search.locator('[data-slot="search-dialog-label"]').boundingBox(),
+      shortcut.boundingBox(),
+    ]);
+
+    check(
+      shown
+        ? keys === (apple ? '⌘K' : 'Ctrl K') &&
+            label !== null &&
+            kbd !== null &&
+            kbd.x > label.x + label.width &&
+            Math.abs(kbd.y + kbd.height / 2 - (label.y + label.height / 2)) < 2
+        : keys === '',
+      `/docs on ${device}: the search's shortcut « ${keys} »${shown ? ', not the reader’s keys after its label' : ', shown on a touch screen'}`,
+    );
+    await search.close();
+  }
+
   // The code readable in every site theme, light and dark: axe's color contrast (WCAG AA) on every token of the code
   // blocks. A highlighter's palette drawn for white once fell below it on a theme's tinted surface.
   {
@@ -952,6 +982,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, those of a category too, a listing reached from its category at once, the switcher following, Back restoring; Tab straight to the copy buttons, a region a stop only while it overflows; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit, always for a category, its full pagination on its last line on a desktop, every see more as far below its cards, every full pagination at the end of its line; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; the navbar on one line at any width, compact once its links do not fit; a zoom preloaded on hover; the chosen theme shown before hydration; the code at AA contrast in every theme, light and dark; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
+    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, those of a category too, a listing reached from its category at once, the switcher following, Back restoring; Tab straight to the copy buttons, a region a stop only while it overflows; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit, always for a category, its full pagination on its last line on a desktop, every see more as far below its cards, every full pagination at the end of its line; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; the navbar on one line at any width, compact once its links do not fit; a zoom preloaded on hover; the chosen theme shown before hydration; the code at AA contrast in every theme, light and dark; the shortcut of the search, the keys of the reader, on a desktop only; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
   );
 }

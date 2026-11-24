@@ -2,6 +2,7 @@
 import { SEARCH_SORTS } from '@figatellultimate/search';
 import { breadcrumbOf, localeLinksOf, type ListingLocales } from '@figatellultimate/site';
 import type { NavigationNode } from '@figatellultimate/ui';
+import { searchShortcutScript } from '@figatellultimate/search-react/scripts';
 import { navbarScript } from '@figatellultimate/ui/scripts';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
@@ -29,6 +30,7 @@ async function headerLabels(locale: Locale): Promise<HeaderLabels> {
     navbar: { nav: ui('navbar.nav'), menu: ui('navbar.menu') },
     search: {
       trigger: ui('search.trigger'),
+      shortcut: { mac: ui('search.shortcut.mac'), other: ui('search.shortcut.other') },
       title: ui('search.title'),
       close: ui('search.close'),
       input: ui('search.input'),
@@ -97,6 +99,8 @@ export async function SiteHeader({
         labels={await headerLabels(locale)}
         listing={listing}
       />
+      {/* The search's shortcut, the reader's keys from the first paint: marked before the navbar is measured. */}
+      <script dangerouslySetInnerHTML={{ __html: searchShortcutScript }} />
       {/* Compact from the first paint when the navbar's links do not fit on one line: measured right after it. */}
       <script dangerouslySetInnerHTML={{ __html: navbarScript }} />
       {/* Static: computed with the page, real links. */}

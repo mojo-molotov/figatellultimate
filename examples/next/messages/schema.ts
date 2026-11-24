@@ -33,6 +33,8 @@ export const schema = {
     collections: { pages: _, blog: _ },
     search: {
       trigger: _,
+      // The trigger's shortcut, the keys of an Apple keyboard and of any other: seen after its label, never heard.
+      shortcut: { mac: _, other: _ },
       title: _,
       close: _,
       input: _,

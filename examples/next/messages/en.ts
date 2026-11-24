@@ -240,6 +240,7 @@ const ui = {
   collections: { pages: 'Pages', blog: SHARED.blog },
   search: {
     trigger: 'Search',
+    shortcut: { mac: '⌘K', other: 'Ctrl K' },
     title: 'Search the site',
     close: 'Close the search',
     input: 'Search the site',

@@ -3,9 +3,10 @@ import { createSearch } from '@figatellultimate/search';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import axe from 'axe-core';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { SearchDialog, type SearchBoxLabels } from '../index.js';
+import { SearchDialog, type SearchBoxLabels, type SearchDialogLabels } from '../index.js';
+import { searchShortcutScript } from '../scripts.js';
 
 type Collection = 'pages' | 'blog';
 const pagefind = {
@@ -29,7 +30,9 @@ const BOX: SearchBoxLabels<Collection> = {
 };
 const LABELS = { trigger: '«Rechercher»', title: '«Recherche»', close: '«Fermer»' };
 
-function renderDialog() {
+const SHORTCUT = { mac: '«⌘ K»', other: '«Ctrl K»' };
+
+function renderDialog(options: { labels?: SearchDialogLabels; hotkey?: boolean } = {}) {
   const opened: string[] = [];
   const search = createSearch<Collection>({
     collections: ['pages', 'blog'],
@@ -44,9 +47,10 @@ function renderDialog() {
       <SearchDialog
         search={search}
         filter={{ collections: ['pages', 'blog'], label: '«collections»' }}
-        labels={LABELS}
+        labels={options.labels ?? LABELS}
         boxLabels={BOX}
         onNavigate={(url) => opened.push(url)}
+        {...(options.hotkey === undefined ? {} : { hotkey: options.hotkey })}
       />
     </main>,
   );
@@ -56,6 +60,7 @@ function renderDialog() {
 
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
 });
 
 describe('SearchDialog', () => {
@@ -99,6 +104,41 @@ describe('SearchDialog', () => {
     await user.keyboard('{Enter}');
     expect(opened).toEqual(['/a']);
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it.each([
+    ['an Apple platform', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', 'mac'],
+    ['any other', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'other'],
+  ])(
+    'shows its shortcut after its label on %s, from the first paint (the script) and once hydrated',
+    (_, agent, platform) => {
+      vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(agent);
+      const { trigger } = renderDialog({ labels: { ...LABELS, shortcut: SHORTCUT } });
+      const shortcut = trigger().querySelector('kbd[data-slot="search-dialog-shortcut"]');
+
+      // Seen, not heard: the button keeps its label as its name, the shortcut told by `aria-keyshortcuts`.
+      expect(trigger().getAttribute('aria-keyshortcuts')).toBe('Meta+K Control+K');
+      expect(shortcut?.getAttribute('aria-hidden')).toBe('true');
+      expect(trigger().lastElementChild).toBe(shortcut);
+      expect(shortcut?.getAttribute('data-platform')).toBe(platform);
+      expect(shortcut?.textContent).toBe('«⌘ K»«Ctrl K»');
+      // Before hydration, the page's inline script marks it the same.
+      shortcut?.removeAttribute('data-platform');
+      // eslint-disable-next-line @typescript-eslint/no-implied-eval, @typescript-eslint/no-unsafe-call -- the inline script's own text, run as the page would.
+      new Function(searchShortcutScript)();
+
+      expect(shortcut?.getAttribute('data-platform')).toBe(platform);
+    },
+  );
+
+  it('shows no shortcut without its labels, and announces none with the hotkey off', () => {
+    const { trigger } = renderDialog({ labels: { ...LABELS, shortcut: SHORTCUT }, hotkey: false });
+
+    expect(trigger().querySelector('kbd')).toBeNull();
+    expect(trigger().hasAttribute('aria-keyshortcuts')).toBe(false);
+    cleanup();
+    renderDialog();
+    expect(screen.getByRole('button', { name: '«Rechercher»' }).querySelector('kbd')).toBeNull();
   });
 
   it('the close button is named by its label', async () => {
