@@ -69,7 +69,13 @@ const SORT = {
 } as const;
 
 function renderBox(
-  options: { search?: Search<Collection>; dir?: 'ltr' | 'rtl'; sort?: boolean | 'spoken'; locale?: string } = {},
+  options: {
+    search?: Search<Collection>;
+    dir?: 'ltr' | 'rtl';
+    sort?: boolean | 'spoken';
+    locale?: string;
+    labels?: SearchBoxLabels<Collection>;
+  } = {},
 ) {
   const opened: string[] = [];
   const highlighted: string[] = [];
@@ -89,7 +95,7 @@ function renderBox(
       <SearchBox
         search={search}
         filter={{ collections: ['pages', 'blog'], label: '«collections»' }}
-        labels={LABELS}
+        labels={options.labels ?? LABELS}
         onNavigate={(url) => opened.push(url)}
         onOpenInNewTab={(url) => tabs.push(url)}
         onHighlight={(url) => highlighted.push(url)}
@@ -453,6 +459,32 @@ describe('SearchBox', () => {
     await waitFor(() => {
       expect(status()).toBe('«indisponible»');
     });
+  });
+
+  it('shows its placeholder and reads it as the field placeheld, with no spoken one', () => {
+    const { field } = renderBox();
+
+    expect(field().getAttribute('placeholder')).toBe('«tapez»');
+    expect(document.querySelector('[data-slot="search-box-placeholder"]')).toBeNull();
+  });
+
+  it('with a spoken placeholder, shows its placeholder never heard, the field described by the spoken one', async () => {
+    const { user, field } = renderBox({ labels: { ...LABELS, spoken: { placeholder: '«au moins trois lettres»' } } });
+    const shown = (): Element | null => document.querySelector('[data-slot="search-box-placeholder"]');
+
+    expect(field().hasAttribute('placeholder')).toBe(false);
+    expect(shown()?.textContent).toBe('«tapez»');
+    expect(shown()?.getAttribute('aria-hidden')).toBe('true');
+    expect(
+      (field().getAttribute('aria-describedby') ?? '')
+        .split(' ')
+        .map((id) => document.getElementById(id)?.textContent)
+        .join(' '),
+    ).toBe('«au moins trois lettres»');
+    expect(await violations()).toEqual([]);
+    // Gone once typed, as a placeholder.
+    await user.type(field(), 'ch');
+    expect(shown()).toBeNull();
   });
 
   it('renders no text of its own, and its parts carry their data-slot', async () => {

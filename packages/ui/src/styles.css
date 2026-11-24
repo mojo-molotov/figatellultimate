@@ -1324,8 +1324,15 @@ a[data-slot='entry-card-author'] {
   outline-offset: 2px;
 }
 
-[data-slot='search-box-input'] {
+/* The input and, with a spoken placeholder, the placeholder drawn over it: one cell, the field's room. */
+[data-slot='search-box-input-frame'] {
+  display: grid;
   flex: 1;
+  min-width: 0;
+}
+
+[data-slot='search-box-input'] {
+  grid-area: 1 / 1;
   min-width: 0;
   min-height: 2.5rem;
   padding: 0 calc(var(--fig-space) * 1.5);
@@ -1338,6 +1345,18 @@ a[data-slot='entry-card-author'] {
 
 [data-slot='search-box-input']:focus-visible {
   outline: none;
+}
+
+/* The placeholder drawn where the browser draws its own (`labels.spoken.placeholder`): never heard, never clicked. */
+[data-slot='search-box-placeholder'] {
+  grid-area: 1 / 1;
+  align-self: center;
+  padding-inline: calc(var(--fig-space) * 1.5);
+  overflow: hidden;
+  color: var(--fig-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
 }
 
 [data-slot='search-box-sort'] {

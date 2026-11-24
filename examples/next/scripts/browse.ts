@@ -550,6 +550,51 @@ try {
     await search.close();
   }
 
+  // The search field's placeholder shown where typed text begins, never heard (its ellipsis read aloud once): the
+  // field described by its spoken text instead.
+  {
+    const dialog = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+
+    await dialog.goto(`${base}/docs`, { waitUntil: 'load' });
+    await dialog.getByRole('button', { name: 'Rechercher' }).click();
+    const field = dialog.getByRole('combobox', { name: 'Termes de recherche' });
+
+    await field.waitFor();
+    const placed = await dialog.evaluate(() => {
+      const input = document.querySelector('[data-slot="search-box-input"]');
+      const shown = document.querySelector('[data-slot="search-box-placeholder"]');
+
+      if (input === null || shown === null) return undefined;
+
+      const begins = (element: Element): number =>
+        element.getBoundingClientRect().left + Number.parseFloat(getComputedStyle(element).paddingLeft);
+
+      return {
+        aligned: Math.abs(begins(input) - begins(shown)) < 1,
+        text: shown.textContent,
+        hidden: shown.getAttribute('aria-hidden') === 'true',
+        attribute: input.hasAttribute('placeholder'),
+      };
+    });
+    const described = await field.evaluate((input) =>
+      (input.getAttribute('aria-describedby') ?? '')
+        .split(' ')
+        .map((id) => document.getElementById(id)?.textContent)
+        .join(' '),
+    );
+
+    check(
+      placed !== undefined &&
+        placed.aligned &&
+        placed.text === 'Rechercher…' &&
+        placed.hidden &&
+        !placed.attribute &&
+        described === 'Tapez au moins 3 caractères.',
+      `/docs: the search placeholder not shown where typed text begins, or heard (${JSON.stringify({ placed, described })})`,
+    );
+    await dialog.close();
+  }
+
   // The code readable in every site theme, light and dark: axe's color contrast (WCAG AA) on every token of the code
   // blocks. A highlighter's palette drawn for white once fell below it on a theme's tinted surface.
   {
@@ -982,6 +1027,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, those of a category too, a listing reached from its category at once, the switcher following, Back restoring; Tab straight to the copy buttons, a region a stop only while it overflows; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit, always for a category, its full pagination on its last line on a desktop, every see more as far below its cards, every full pagination at the end of its line; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; the navbar on one line at any width, compact once its links do not fit; a zoom preloaded on hover; the chosen theme shown before hydration; the code at AA contrast in every theme, light and dark; the shortcut of the search, the keys of the reader, on a desktop only; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
+    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, those of a category too, a listing reached from its category at once, the switcher following, Back restoring; Tab straight to the copy buttons, a region a stop only while it overflows; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit, always for a category, its full pagination on its last line on a desktop, every see more as far below its cards, every full pagination at the end of its line; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; the navbar on one line at any width, compact once its links do not fit; a zoom preloaded on hover; the chosen theme shown before hydration; the code at AA contrast in every theme, light and dark; the search placeholder shown where the text begins, never heard; the shortcut of the search, the keys of the reader, on a desktop only; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
   );
 }

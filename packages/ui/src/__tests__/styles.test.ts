@@ -368,6 +368,17 @@ describe('styles.css', () => {
     );
   });
 
+  it("draws a spoken search placeholder where the native one shows: the input's cell, its padding, never clicked", () => {
+    const input = propertiesOf("[data-slot='search-box-input']");
+    const placeholder = propertiesOf("[data-slot='search-box-placeholder']");
+
+    expect(propertiesOf("[data-slot='search-box-input-frame']")['display']).toBe('grid');
+    expect(input['grid-area']).toBe('1 / 1');
+    expect(placeholder['grid-area']).toBe('1 / 1');
+    expect(`0 ${placeholder['padding-inline'] ?? ''}`).toBe(input['padding']);
+    expect(placeholder['pointer-events']).toBe('none');
+  });
+
   it('keeps focus visible on every component', () => {
     expect(CSS).toMatch(/\[data-slot\]:focus-visible\s*\{[^}]*outline:\s*2px solid var\(--fig-accent\)/);
   });

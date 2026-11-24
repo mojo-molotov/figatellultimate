@@ -233,7 +233,7 @@ const ui = {
     shortcut: { mac: '⌘K', other: 'Ctrl K' },
     title: 'Recherche sur le site',
     close: 'Fermer la recherche',
-    input: 'Rechercher sur le site',
+    input: 'Termes de recherche',
     placeholder: 'Rechercher…',
     results: 'Résultats',
     more: 'Voir plus',

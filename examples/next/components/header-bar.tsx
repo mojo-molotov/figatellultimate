@@ -128,6 +128,8 @@ export function HeaderBar(props: {
           },
           more: text.more,
           pause: text.pause,
+          // Heard instead of the placeholder, whose ellipsis reads badly aloud: what the field needs to search.
+          spoken: { placeholder: formatPrecompiled(text.tooShort, locale, { minimum: search.minLength }) },
         }}
         onNavigate={(target) => {
           router.push(target);

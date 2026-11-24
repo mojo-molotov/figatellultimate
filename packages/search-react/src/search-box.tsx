@@ -13,6 +13,10 @@
  *     - Results are already filtered by the index: cmdk only handles the keyboard and the active result.
  *     - A new sort searches at once, its first result active; a typed term waits the client's quiet time.
  *     - No style, no text of its own: every label required, dates formatted for the given locale.
+ *     - A placeholder that reads badly aloud has a spoken text (`labels.spoken.placeholder`), as the sorts' names do,
+ *       chosen with the user: the placeholder then drawn over the field, `aria-hidden`, never the input's
+ *       `placeholder` (which a screen reader reads after the name, VoiceOver its ellipsis too), and the field
+ *       described by the spoken text. Rejected: an `aria-placeholder`, which a native input's placeholder overrides.
  *
  * Invariants (`search-box.test.tsx`, in happy-dom and in real browsers): axe empty and with results, the keyboard
  * flow (past the results' ends included), new tabs, the sort, its spoken names, dates, the highlight announced once per change, no text of its own; a
@@ -63,6 +67,12 @@ export interface SearchBoxLabels<C extends string> {
   readonly pause?: string | undefined;
   /** The "see more" button. */
   readonly more: string;
+  /**
+   * What a screen reader hears instead of a text that reads badly aloud. `placeholder`: the field's description,
+   * the placeholder then shown and never heard (an ellipsis, or the field's name said again). None: the placeholder
+   * is shown and heard, as the browser reads it.
+   */
+  readonly spoken?: { readonly placeholder: string } | undefined;
 }
 
 interface SearchBoxContext {
@@ -507,37 +517,54 @@ export function SearchBoxSort(props: ComponentProps<typeof Select.Trigger>): Rea
  * a new tab), Escape clears the term.
  *
  * @param props - cmdk's input props.
- * @returns The combobox, named and placeheld by the labels.
+ * @returns The combobox in its frame, named and placeheld by the labels; with a spoken placeholder, the shown one
+ *   drawn over it and never heard, the field described by the spoken one.
  */
 export function SearchBoxInput({ onKeyDown, ...props }: ComponentProps<typeof Command.Input>): ReactNode {
   const { labels, term, setTerm, input, autoFocus, active, openInNewTab } = use('SearchBoxInput');
+  const description = useId();
+  const spoken = labels.spoken?.placeholder;
 
   return (
-    <Command.Input
-      ref={input}
-      autoFocus={autoFocus}
-      data-slot="search-box-input"
-      placeholder={labels.placeholder}
-      value={term}
-      onValueChange={setTerm}
-      onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
-        onKeyDown?.(event);
+    <span data-slot="search-box-input-frame">
+      <Command.Input
+        ref={input}
+        autoFocus={autoFocus}
+        data-slot="search-box-input"
+        // A spoken placeholder: the shown one drawn below, never heard; the field described by the spoken one.
+        {...(spoken === undefined ? { placeholder: labels.placeholder } : { 'aria-describedby': description })}
+        value={term}
+        onValueChange={setTerm}
+        onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
+          onKeyDown?.(event);
 
-        if (event.defaultPrevented) return;
+          if (event.defaultPrevented) return;
 
-        if (event.key === 'Escape' && term !== '') {
-          event.preventDefault();
-          setTerm('');
-        }
+          if (event.key === 'Escape' && term !== '') {
+            event.preventDefault();
+            setTerm('');
+          }
 
-        // With a modifier, Enter opens the active result in a new tab instead (cmdk skips prevented events).
-        if (event.key === 'Enter' && hasModifier(event) && active !== '') {
-          event.preventDefault();
-          openInNewTab(active);
-        }
-      }}
-      {...props}
-    />
+          // With a modifier, Enter opens the active result in a new tab instead (cmdk skips prevented events).
+          if (event.key === 'Enter' && hasModifier(event) && active !== '') {
+            event.preventDefault();
+            openInNewTab(active);
+          }
+        }}
+        {...props}
+      />
+      {spoken === undefined || term !== '' ? null : (
+        <span data-slot="search-box-placeholder" aria-hidden>
+          {labels.placeholder}
+        </span>
+      )}
+      {/* Hidden, still its description: a referenced element is read even hidden. */}
+      {spoken === undefined ? null : (
+        <span id={description} hidden>
+          {spoken}
+        </span>
+      )}
+    </span>
   );
 }
 
