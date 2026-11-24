@@ -17,11 +17,11 @@ const folder = new FileSystem(join(import.meta.dirname, '..', '..', '.tmp', rand
 const out = join(folder.basePath, 'pagefind');
 const realFetch = globalThis.fetch;
 
-const built = (url: string, locale: string, collection: string, text: string): BuiltPage => ({
+const built = (url: string, locale: string, collection: string, text: string, code = ''): BuiltPage => ({
   url,
   locale,
   collection,
-  html: `<html><head><title>${url}</title></head><body><main data-pagefind-body><p>${text}</p></main></body></html>`,
+  html: `<html><head><title>${url}</title></head><body><main data-pagefind-body><p>${text}</p>${code}</main></body></html>`,
 });
 
 type Collection = 'blog' | 'pages';
@@ -49,6 +49,14 @@ beforeAll(async () => {
       built('/blog/chevaux', 'fr', 'blog', 'Les chevaux galopent dans la prairie.'),
       built('/docs/cheval', 'fr', 'pages', 'Un cheval blanc dans la documentation.'),
       built('/en/blog/horses', 'en', 'blog', 'The horses are running across the meadow.'),
+      // A word in its text and, many times, in its code; another in its code only.
+      built(
+        '/docs/jument',
+        'fr',
+        'pages',
+        'Une jument broute au pré.',
+        '<pre class="shiki"><code><span>jument</span> <span>jument</span> <span>jument</span> galopin</code></pre>',
+      ),
     ],
   });
 
@@ -74,6 +82,21 @@ describe('the written bundles, searched like a browser would', () => {
     const page = await searchIn('fr').query('cheval', { collections: ['pages'] });
 
     expect(page?.results).toEqual([expect.objectContaining({ url: '/docs/cheval', collection: 'pages' })]);
+  });
+});
+
+describe('code blocks, left out of the index', () => {
+  it('finds nothing for a word in a code block only', async () => {
+    expect(urls(await searchIn('fr').query('galopin'))).toEqual([]);
+  });
+
+  it("excerpts a page's text, never its code, however often the code holds the word", async () => {
+    const result = (await searchIn('fr').query('jument'))?.results.find((r) => r.url === '/docs/jument');
+
+    // Precondition: the page is found by its text.
+    expect(result).toBeDefined();
+    expect(result?.excerpt).toContain('broute');
+    expect(result?.excerpt).not.toContain('galopin');
   });
 });
 

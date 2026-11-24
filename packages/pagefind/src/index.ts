@@ -14,6 +14,10 @@
  *       depends on the page the reader searches from.
  *     - Only the mounted entries of searchable collections, only their `data-pagefind-body` element: a clean index,
  *       the app's markup explicit about what is content.
+ *     - Code blocks (`<pre>`) are left out of the index (`data-pagefind-ignore`), as chosen with the user: an excerpt is
+ *       the page's text, never a command, and a block in tabs (one command per package manager, the hidden ones
+ *       included) never counts its words several times. Every `<pre>`, whatever the app's components: preformatted
+ *       text is code. The cost: a word found in a code block only finds nothing; inline code in a sentence stays.
  *     - Markers are hidden, ignored elements added at the end of the body: the collection as a filter, the sort keys
  *       (a title lowercased without accents, the date twice so that undated pages come last both ways), the date as
  *       metadata for the results.
@@ -25,7 +29,8 @@
  *       process at once: the last locale's files were sometimes left empty. Like `writeFiles`, the folder is not
  *       emptied first.
  *
- * Invariants: problems for empty pages, and every bundle complete once `indexSite` returns, repeated against the
+ * Invariants: code blocks left out, a word in code only finding nothing and an excerpt never code
+ * (`browser-bundle.test.ts`), a page of code only empty (`index-site.test.ts`); problems for empty pages, and every bundle complete once `indexSite` returns, repeated against the
  * timing race (`index-site.test.ts`); the written bundles searched as a browser would, per locale, with filters,
  * sorts and dates (`browser-bundle.test.ts`).
  */
@@ -54,12 +59,18 @@ export interface IndexedSite {
 
 const BODY = /<([a-zA-Z][\w-]*)\b[^>]*\sdata-pagefind-body(?=[\s=>]|\/>)[^>]*>/;
 
+/** Every code block's opening tag. */
+const CODE = /<pre(?=[\s>])/gi;
+
+/** The page's HTML, its code blocks out of the index (`data-pagefind-ignore`). */
+const withoutCode = (html: string): string => html.replace(CODE, '<pre data-pagefind-ignore');
+
 /**
  * The text Pagefind would index in a built page.
  *
  * @param html - The page's full HTML.
- * @returns The text of its first `data-pagefind-body` element (tags balanced by name, then scripts, styles and tags
- *   removed), `undefined` when it has none. Needed because Pagefind's own word count cannot tell an empty page (it
+ * @returns The text of its first `data-pagefind-body` element (tags balanced by name, then scripts, styles, code
+ *   blocks and tags removed), `undefined` when it has none. Needed because Pagefind's own word count cannot tell an empty page (it
  *   counts 1).
  *
  * @example
@@ -88,7 +99,7 @@ export function indexableText(html: string): string | undefined {
 
   return html
     .slice(open.index + open[0].length, end)
-    .replace(/<(script|style)\b[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<(script|style|pre)\b[\s\S]*?<\/\1>/gi, ' ')
     .replace(/<[^>]*>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -155,7 +166,10 @@ export async function indexSite(input: {
           continue;
         }
 
-        const added = await index.addHTMLFile({ url: page.url, content: withMarkers(page) });
+        const added = await index.addHTMLFile({
+          url: page.url,
+          content: withMarkers({ ...page, html: withoutCode(page.html) }),
+        });
 
         if (added.errors.length > 0) {
           problems.push({ code: 'pagefind-error', url: page.url, message: added.errors.join('; ') });

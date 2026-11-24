@@ -121,6 +121,13 @@ describe('indexableText', () => {
     expect(indexableText('<main data-pagefind-body><script>var x = 1;</script>Texte</main>')).toBe('Texte');
   });
 
+  it('leaves code blocks out, as Pagefind does: a page of code only is empty', () => {
+    expect(
+      indexableText('<main data-pagefind-body><p>Un texte</p><pre class="x"><code>du code</code></pre></main>'),
+    ).toBe('Un texte');
+    expect(indexableText('<main data-pagefind-body><pre><code>du code</code></pre></main>')).toBe('');
+  });
+
   it('is undefined without a marked element, and empty for an empty one', () => {
     expect(indexableText('<html><body><main>Texte</main></body></html>')).toBeUndefined();
     expect(indexableText('<html><body><main data-pagefind-body><h1></h1></main></body></html>')).toBe('');
