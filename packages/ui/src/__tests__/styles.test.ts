@@ -279,12 +279,9 @@ describe('styles.css', () => {
     expect(block).toMatch(/\[data-slot='search-box-field'\] \{\s*margin-inline-end:/);
   });
 
-  it("takes a closed navbar's menu out of the layout on a narrow screen: no empty line under the toggle", () => {
-    const narrow = CSS.slice(CSS.indexOf('@media (max-width: 48rem)', CSS.indexOf("[data-slot='navbar-extras']")));
-    const block = narrow.slice(0, narrow.indexOf('\n}\n'));
-
-    expect(block).toMatch(
-      /\[data-slot='navbar'\]\[data-state='closed'\] \[data-slot='navbar-menu'\] \{\s*display: none;/,
+  it("takes a compact navbar's closed menu out of the layout: no empty line under the toggle", () => {
+    expect(CSS).toMatch(
+      /\[data-slot='navbar'\]\[data-compact\]:not\(\[data-measuring\]\)\[data-state='closed'\] \[data-slot='navbar-menu'\] \{\s*display: none;/,
     );
   });
 
@@ -307,13 +304,17 @@ describe('styles.css', () => {
     );
   });
 
-  it("sets the navbar's extras at the end of the toggle's line on a narrow screen, the toggle at its start", () => {
-    const narrow = CSS.slice(CSS.indexOf('@media (max-width: 48rem)', CSS.indexOf("[data-slot='navbar-extras']")));
-
+  it("sets a compact navbar's extras at the end of the toggle's line, the toggle at its start", () => {
     // At the line's end in the reading direction: a logical margin, right to left too.
-    expect(narrow.slice(0, narrow.indexOf('\n}\n'))).toMatch(
-      /\[data-slot='navbar-extras'\] \{\s*margin-inline-start: auto;/,
+    expect(CSS).toMatch(
+      /\[data-slot='navbar'\]\[data-compact\]:not\(\[data-measuring\]\) \[data-slot='navbar-extras'\] \{\s*margin-inline-start: auto;/,
     );
+  });
+
+  it('turns the navbar compact by its measure, never by a screen width', () => {
+    // Whole, it never wraps: too many links turn it compact (`navbar.tsx`), not into two lines.
+    expect(propertiesOf("[data-slot='navbar']")['flex-wrap']).toBe('nowrap');
+    expect(CSS).not.toMatch(/@media \(max-width: 48rem\)/);
   });
 
   it("shows the pagination's narrow layout on a narrow screen only, and tells its ellipses so", () => {

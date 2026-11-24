@@ -1,6 +1,7 @@
 /**
  * `@figatellultimate/ui/scripts`: the inline scripts a page puts in its `<head>`, run before the first paint, so that a
- * remembered choice (the theme, the site's theme, a closed table of contents) never flashes on load.
+ * remembered choice (the theme, the site's theme, a closed table of contents) never flashes on load, and a navbar
+ * that does not fit is compact from the first paint.
  *
  * Key design decision: an entry of its own, without `'use client'`: a server component (a root layout) calls these,
  * which it cannot do through the client components' entry.
@@ -34,6 +35,19 @@ export const themeScript: string = `try{var t=localStorage.getItem('${THEME_STOR
 export function tocScript(storageKey: string = TOC_STORAGE_KEY): string {
   return `try{if(localStorage.getItem(${JSON.stringify(storageKey)})==='closed')document.documentElement.dataset.toc='closed'}catch(e){}`;
 }
+
+/**
+ * The inline script that makes a navbar compact before the first paint when its links do not fit on one line, so that
+ * the page never shows it on two lines, nor switches its layout once hydrated. `Navbar` measures the same way after,
+ * as its room changes.
+ *
+ * Put it right after the navbar (a `<script>` in the header): it measures the navbars already in the page, their
+ * stylesheet loaded (a parser's script waits for it).
+ *
+ * @example
+ * <header><HeaderBar … /><script dangerouslySetInnerHTML={{ __html: navbarScript }} /></header>
+ */
+export const navbarScript: string = `try{document.querySelectorAll('[data-slot="navbar"]').forEach(function(n){n.setAttribute('data-measuring','');var o=n.scrollWidth>n.clientWidth+1;n.removeAttribute('data-measuring');if(o)n.setAttribute('data-compact','');else n.removeAttribute('data-compact')})}catch(e){}`;
 
 /** Where `SiteThemePicker` remembers the visitor's site theme by default. */
 export const SITE_THEME_STORAGE_KEY = 'figatellultimate-site-theme';

@@ -8,12 +8,29 @@
  *       labels are message keys, so a new folder breaks every locale's typecheck until its title is translated.
  *     - Menus open on a click, never on hover: Radix's hover handlers are cancelled.
  *     - A collection may ask for its sections as plain links (`menu: false`).
+ *     - Compact (a toggle, the links behind it) once its links and extras no longer fit on one line, whatever the
+ *       screen, as chosen with the user: measured, never a fixed width, so that many links never wrap to a second
+ *       line. The bar shows itself whole a moment (`data-measuring`, no paint between) and compares its content's
+ *       width with its own; again as its room changes, its fonts load or its links change. `navbarScript` measures
+ *       the same way before the first paint: no layout switch once hydrated. Rejected: a breakpoint, blind to how
+ *       many links there are; a scrolling row, hiding links off the screen.
+ *     - `data-compact` is set on the element, not rendered: the script may have set it before React hydrates.
  *
  * Invariants (`navbar.test.tsx`, `navbar-layout.test.tsx` in real browsers): real links, the current page marked, the
- * menus by click and keyboard, the narrow screens' disclosure, axe.
+ * menus by click and keyboard, the compact bar's disclosure, axe; one line while its links fit, compact once they do
+ * not, whatever the screen, again as its room changes; compact before hydration by its script.
  */
 import { Direction, NavigationMenu } from 'radix-ui';
-import { createContext, useContext, useId, useState, type ComponentProps, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ComponentProps,
+  type ReactNode,
+} from 'react';
 
 import { Link } from './link.js';
 
@@ -125,6 +142,35 @@ export function Navbar<K extends string>({
 }: NavbarProps<K>): ReactNode {
   const [open, setOpen] = useState(false);
   const listId = useId();
+  const bar = useRef<HTMLDivElement>(null);
+
+  // Compact once its content no longer fits on one line: measured whole (`data-measuring`), synchronously, nothing
+  // painted between; again as its room changes, its fonts load or its links change.
+  useLayoutEffect(() => {
+    const element = bar.current;
+
+    if (element === null) return undefined;
+
+    const measure = (): void => {
+      element.dataset['measuring'] = '';
+      const overflows = element.scrollWidth > element.clientWidth + 1;
+
+      delete element.dataset['measuring'];
+      element.toggleAttribute('data-compact', overflows);
+    };
+
+    measure();
+    const observer = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(measure);
+
+    observer?.observe(element);
+
+    // Where the document knows its fonts (not every test environment does): measured again once they load.
+    if ('fonts' in document) void document.fonts.ready.then(measure);
+
+    return () => {
+      observer?.disconnect();
+    };
+  }, [items]);
   // Every section's label, translated here once: the parts below only see strings.
   const translated = new Map<NavigationNode, string>();
   const translate = (nodes: readonly NavigationNode<K>[]): void => {
@@ -140,7 +186,14 @@ export function Navbar<K extends string>({
   const labelOf = (node: NavigationSection): string => translated.get(node) ?? node.label;
   const root = (
     <Context value={{ items, current, labelOf, labels, open, setOpen, listId, menuDepth }}>
-      <div data-slot="navbar" data-state={open ? 'open' : 'closed'} className={className}>
+      {/* Its `data-compact` set by its script before hydration, not by React: no mismatch to report. */}
+      <div
+        ref={bar}
+        data-slot="navbar"
+        data-state={open ? 'open' : 'closed'}
+        className={className}
+        suppressHydrationWarning
+      >
         <NavbarToggle />
         <NavigationMenu.Root
           aria-label={labels.nav}
@@ -163,7 +216,7 @@ export function Navbar<K extends string>({
 }
 
 /**
- * Shows or hides the list on narrow screens (the stylesheet decides when it is visible).
+ * Shows or hides the list while the bar is compact (the stylesheet shows it then only).
  *
  * @param props - A button's props.
  * @returns A disclosure button (`aria-expanded`, `aria-controls`), named by the labels' `menu`.

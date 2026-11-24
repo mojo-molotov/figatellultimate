@@ -2,6 +2,7 @@
 import { SEARCH_SORTS } from '@figatellultimate/search';
 import { breadcrumbOf, localeLinksOf, type ListingLocales } from '@figatellultimate/site';
 import type { NavigationNode } from '@figatellultimate/ui';
+import { navbarScript } from '@figatellultimate/ui/scripts';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 
@@ -96,6 +97,8 @@ export async function SiteHeader({
         labels={await headerLabels(locale)}
         listing={listing}
       />
+      {/* Compact from the first paint when the navbar's links do not fit on one line: measured right after it. */}
+      <script dangerouslySetInnerHTML={{ __html: navbarScript }} />
       {/* Static: computed with the page, real links. */}
       {breadcrumb === false ? null : <Crumbs locale={locale} crumbs={breadcrumbOf(items, crumbs, title)} />}
     </header>

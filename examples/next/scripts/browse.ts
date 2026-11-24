@@ -306,6 +306,37 @@ try {
     await arrival.close();
   }
 
+  // The navbar on one line at any width: whole while its links fit (a desktop), compact once they do not (a phone),
+  // measured, never two lines.
+  for (const [width, compact] of [
+    [1280, false],
+    [800, undefined],
+    [390, true],
+  ] as const) {
+    const bar = await browser.newPage({ viewport: { width, height: 800 } });
+
+    await bar.goto(`${base}/docs`, { waitUntil: 'networkidle' });
+    const state = await bar.evaluate(() => {
+      const navbar = document.querySelector('[data-slot="navbar"]');
+      const toggle = document.querySelector('[data-slot="navbar-toggle"]');
+      const tops = [...document.querySelectorAll('[data-slot="navbar"] > *')]
+        .filter((part) => getComputedStyle(part).display !== 'none')
+        .map((part) => Math.round(part.getBoundingClientRect().top + part.getBoundingClientRect().height / 2));
+
+      return {
+        compact: navbar?.hasAttribute('data-compact') ?? false,
+        toggle: toggle !== null && getComputedStyle(toggle).display !== 'none',
+        oneLine: tops.length > 0 && Math.max(...tops) - Math.min(...tops) <= 2,
+      };
+    });
+
+    check(
+      state.oneLine && state.toggle === state.compact && (compact === undefined || state.compact === compact),
+      `/docs at ${String(width)}px: the navbar not on one line, or not as compact as expected (${JSON.stringify(state)})`,
+    );
+    await bar.close();
+  }
+
   // Tab reaches what a reader acts on: from a snippet's tabs straight to its copy button, a snippet or a table that
   // fits taking no stop; one that overflows (a table on a phone) takes one, to scroll it with the keyboard.
   {
@@ -871,6 +902,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, those of a category too, a listing reached from its category at once, the switcher following, Back restoring; Tab straight to the copy buttons, a region a stop only while it overflows; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit, always for a category, its full pagination on its last line on a desktop, every see more as far below its cards, every full pagination at the end of its line; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
+    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, those of a category too, a listing reached from its category at once, the switcher following, Back restoring; Tab straight to the copy buttons, a region a stop only while it overflows; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit, always for a category, its full pagination on its last line on a desktop, every see more as far below its cards, every full pagination at the end of its line; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; the navbar on one line at any width, compact once its links do not fit; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
   );
 }

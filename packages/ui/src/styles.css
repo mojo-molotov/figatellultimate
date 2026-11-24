@@ -858,9 +858,10 @@ a[data-slot='entry-card-author'] {
 }
 
 /* Navbar */
+/* Whole, on one line: its links never wrap to a second one, the bar turning compact instead (below). */
 [data-slot='navbar'] {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: var(--fig-space);
   padding: var(--fig-space) calc(var(--fig-space) * 2);
@@ -882,7 +883,7 @@ a[data-slot='entry-card-author'] {
 
 [data-slot='navbar-list'] {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: calc(var(--fig-space) / 2);
   margin: 0;
@@ -1002,42 +1003,54 @@ a[data-slot='entry-card-author'] {
   gap: var(--fig-space);
 }
 
-@media (max-width: 48rem) {
-  [data-slot='navbar-toggle'] {
-    display: inline-flex;
-  }
+/* Whole, a label never wraps within itself: the bar overflows instead, and turns compact. */
+[data-slot='navbar']:is(:not([data-compact]), [data-measuring])
+  [data-slot='navbar-list']
+  > [data-slot='navbar-item']
+  > :is([data-slot='navbar-link'], [data-slot='navbar-trigger']) {
+  white-space: nowrap;
+}
 
-  /* The toggle at the line's start, the extras (search, locale, theme) at its end, as the menu pushes them on a wide
-     screen: logical, so right to left too. */
-  [data-slot='navbar-extras'] {
-    margin-inline-start: auto;
-  }
+/* Compact, once its links and extras no longer fit on one line (measured by `Navbar` and `navbarScript`, never a
+   screen's width): the toggle, the links behind it; a line of its own for the open menu. Whole while it measures. */
+[data-slot='navbar'][data-compact]:not([data-measuring]) {
+  flex-wrap: wrap;
+}
 
-  /* Closed, the whole menu out of the layout, not only its list: an empty menu would still take a line of its own,
-     and the bar's row gap under the toggle (the bar taller below its controls than above). */
-  [data-slot='navbar'][data-state='closed'] [data-slot='navbar-menu'] {
-    display: none;
-  }
+[data-slot='navbar'][data-compact]:not([data-measuring]) [data-slot='navbar-toggle'] {
+  display: inline-flex;
+}
 
-  [data-slot='navbar-menu'] {
-    flex-basis: 100%;
-    order: 3;
-  }
+/* The toggle at the line's start, the extras (search, locale, theme) at its end, as the menu pushes them on a wide
+   screen: logical, so right to left too. */
+[data-slot='navbar'][data-compact]:not([data-measuring]) [data-slot='navbar-extras'] {
+  margin-inline-start: auto;
+}
 
-  [data-slot='navbar-list'] {
-    flex-direction: column;
-  }
+/* Closed, the whole menu out of the layout, not only its list: an empty menu would still take a line of its own,
+   and the bar's row gap under the toggle (the bar taller below its controls than above). */
+[data-slot='navbar'][data-compact]:not([data-measuring])[data-state='closed'] [data-slot='navbar-menu'] {
+  display: none;
+}
 
-  /* A section's menu opens below its trigger, in the flow, never beside it. */
-  [data-slot='navbar-item'] {
-    flex-direction: column;
-  }
+[data-slot='navbar'][data-compact]:not([data-measuring]) [data-slot='navbar-menu'] {
+  flex-basis: 100%;
+  order: 3;
+}
 
-  [data-slot='navbar-content'] {
-    position: static;
-    margin-block-start: calc(var(--fig-space) / 2);
-    box-shadow: none;
-  }
+[data-slot='navbar'][data-compact]:not([data-measuring]) [data-slot='navbar-list'] {
+  flex-direction: column;
+}
+
+/* A section's menu opens below its trigger, in the flow, never beside it. */
+[data-slot='navbar'][data-compact]:not([data-measuring]) [data-slot='navbar-item'] {
+  flex-direction: column;
+}
+
+[data-slot='navbar'][data-compact]:not([data-measuring]) [data-slot='navbar-content'] {
+  position: static;
+  margin-block-start: calc(var(--fig-space) / 2);
+  box-shadow: none;
 }
 
 /* Locale switcher */

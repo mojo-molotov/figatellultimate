@@ -7,6 +7,7 @@ import { userEvent } from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { EntryCard, LocaleSwitcher, Navbar, ThemeToggle, type NavigationNode } from '../index.js';
+import { navbarScript } from '../scripts.js';
 
 const inBrowser = !navigator.userAgent.includes('HappyDOM');
 
@@ -30,6 +31,86 @@ afterEach(() => {
 });
 
 describe('Navbar layout with styles.css', () => {
+  /** A navigation of `count` pages, their titles long enough to fill a bar. */
+  const pages = (count: number): NavigationNode[] =>
+    Array.from({ length: count }, (_, index) => ({
+      kind: 'entry',
+      url: `/page-${String(index)}`,
+      title: `Une page numéro ${String(index)}`,
+      key: `page-${String(index)}`,
+    }));
+  /** A navbar in a bar of the given width: what it shows, and its height against a single line's. */
+  const bar = (items: readonly NavigationNode[], width: number) => {
+    const { container } = render(
+      <div style={{ width: `${String(width)}px` }}>
+        <Navbar items={items} t={(key) => key} labels={{ nav: 'Navigation', menu: 'Menu' }} current="/" />
+      </div>,
+    );
+    const navbar = container.querySelector('[data-slot="navbar"]');
+
+    if (!(navbar instanceof HTMLElement)) throw new Error('no navbar');
+
+    return navbar;
+  };
+  const toggleShown = (navbar: HTMLElement): boolean =>
+    getComputedStyle(navbar.querySelector('[data-slot="navbar-toggle"]') ?? navbar).display !== 'none';
+
+  it.skipIf(!inBrowser)('keeps its links on one line, no toggle, while they fit', () => {
+    const navbar = bar(pages(3), 1000);
+    const tops = [...navbar.querySelectorAll('[data-slot="navbar-link"]')].map((link) =>
+      Math.round(link.getBoundingClientRect().top),
+    );
+
+    expect(navbar.hasAttribute('data-compact')).toBe(false);
+    expect(toggleShown(navbar)).toBe(false);
+    // Precondition: the links are there, then on one line.
+    expect(tops).toHaveLength(3);
+    expect(new Set(tops).size).toBe(1);
+  });
+
+  it.skipIf(!inBrowser)(
+    'turns compact once its links no longer fit on one line, whatever the screen, never two lines',
+    () => {
+      const navbar = bar(pages(14), 1000);
+
+      // Precondition: a wide screen, where the width alone would never make it compact.
+      expect(window.innerWidth).toBeGreaterThan(1000);
+      expect(navbar.hasAttribute('data-compact')).toBe(true);
+      expect(toggleShown(navbar)).toBe(true);
+      // One line: the toggle's, its links behind it.
+      expect(navbar.getBoundingClientRect().height).toBeLessThan(80);
+    },
+  );
+
+  it.skipIf(!inBrowser)('measures again as its room changes, compact and back', async () => {
+    const navbar = bar(pages(5), 1200);
+    const room = navbar.parentElement;
+
+    if (room === null) throw new Error('no room');
+
+    // Precondition: five pages fit in 1200px.
+    expect(navbar.hasAttribute('data-compact')).toBe(false);
+    room.style.width = '420px';
+    await waitFor(() => {
+      expect(navbar.hasAttribute('data-compact')).toBe(true);
+    });
+    room.style.width = '1200px';
+    await waitFor(() => {
+      expect(navbar.hasAttribute('data-compact')).toBe(false);
+    });
+  });
+
+  it.skipIf(!inBrowser)('is made compact before hydration by its script, when its links do not fit', () => {
+    const navbar = bar(pages(14), 1000);
+
+    navbar.removeAttribute('data-compact');
+    // The script as the page runs it, after the navbar, before the first paint.
+    // eslint-disable-next-line @typescript-eslint/no-implied-eval, @typescript-eslint/no-unsafe-call -- the inline script's own text, run as the page would.
+    new Function(navbarScript)();
+    expect(navbar.hasAttribute('data-compact')).toBe(true);
+    expect(navbar.hasAttribute('data-measuring')).toBe(false);
+  });
+
   it.skipIf(!inBrowser)(
     "a section shown as a link (`menu: false`) is highlighted on its pages' descendants too",
     () => {
