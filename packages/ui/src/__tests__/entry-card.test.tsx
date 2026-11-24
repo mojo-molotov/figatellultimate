@@ -103,6 +103,24 @@ describe('EntryCard', () => {
     expect((await axe.run(document.body, { rules: { region: { enabled: false } } })).violations).toEqual([]);
   });
 
+  it.each([
+    ['by default, a level 2 heading: the page title above it is its h1', undefined, 2],
+    ['a level 3 heading under a section heading', 3, 3],
+    ['a level 6 heading as deep as needed', 6, 6],
+  ] as const)('titles the card with %s', (_, headingLevel, level) => {
+    render(
+      <EntryCard
+        href="/blog/a"
+        title="«Un article»"
+        locale="fr"
+        labels={{ tags: '«Tags»', authors: '«Auteurs»', more: '«Autres tags»' }}
+        {...(headingLevel === undefined ? {} : { headingLevel })}
+      />,
+    );
+
+    expect(screen.getByRole('heading', { name: '«Un article»' }).tagName).toBe(`H${String(level)}`);
+  });
+
   it('renders no text of its own', () => {
     renderCard();
     const texts: string[] = [];
