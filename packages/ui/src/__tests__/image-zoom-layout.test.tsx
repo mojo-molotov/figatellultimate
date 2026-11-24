@@ -2,7 +2,7 @@
 // Layout, with the stylesheet: only a real browser computes it (`pnpm test:browser`).
 import '../styles.css';
 
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { userEvent } from '@testing-library/user-event';
@@ -98,6 +98,29 @@ describe('ImageZoom in a content column', () => {
         expect(document.activeElement?.getAttribute('aria-label')).toBe('«agrandir : Une image»');
       });
       expect(window.scrollY).toBe(before);
+    },
+  );
+
+  it.skipIf(!inBrowser)(
+    'shows the zoom out while the button is held, on the frame that holds the pointer, the zoom in once released',
+    async () => {
+      vi.spyOn(window, 'matchMedia').mockImplementation((media) => new FixedMediaQueryList(true, media));
+      render(<ImageZoom labels={LABELS} src={SRC} alt="Une image" />);
+      await userEvent.setup().click(screen.getByRole('button', { name: '«agrandir : Une image»' }));
+      const frame = (await screen.findByRole('dialog')).querySelector('[data-slot="image-zoom-frame"]');
+
+      if (frame === null) throw new Error('no frame');
+
+      expect(getComputedStyle(frame).cursor).toBe('zoom-in');
+      // While the pointer is captured, the browser shows the frame's cursor, wherever the image's is.
+      fireEvent.pointerDown(frame, { pointerType: 'mouse', button: 0, buttons: 1, pointerId: 1 });
+      await waitFor(() => {
+        expect(getComputedStyle(frame).cursor).toBe('zoom-out');
+      });
+      fireEvent.pointerUp(frame, { pointerType: 'mouse', button: 0, buttons: 0, pointerId: 1 });
+      await waitFor(() => {
+        expect(getComputedStyle(frame).cursor).toBe('zoom-in');
+      });
     },
   );
 

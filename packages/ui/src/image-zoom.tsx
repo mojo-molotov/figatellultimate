@@ -12,7 +12,9 @@
  *     - The lens never stays zoomed once the button is up, even when the release is lost (a move without the button,
  *       the context menu, the window losing focus); Ctrl + click (the Mac's context menu) never starts it.
  *     - The pointer capture is a comfort, never a condition: a browser refuses a pointer it no longer counts as active
- *       (Firefox throws), and the zoom starts before it is attempted.
+ *       (Firefox throws), and the zoom starts before it is attempted. While it holds, the browser shows the frame's
+ *       cursor, not the image's: the zoom's cursor is the frame's (`data-zoomed` on both), or the zoom out would show
+ *       for a moment, then the zoom in, the button still down.
  *     - Closing gives the focus back to the image without scrolling (`preventScroll`): the keyboard finds its place,
  *       and the page stays where the reader left it, never jumping to the image.
  *     - The zoom out keeps the last zoomed point until the image is whole again: it shrinks back where the reader
@@ -225,6 +227,8 @@ function ImageZoomLens({
     // Measured on the frame (the event's target), never on the scaled image: its box would include the zoom.
     <div
       data-slot="image-zoom-frame"
+      // Its cursor, the one the browser shows while the frame holds the pointer.
+      data-zoomed={zoomed ? '' : undefined}
       onPointerDown={(event) => {
         // The left button alone: Ctrl + click is the Mac's context menu, whose menu would swallow the release.
         if (event.pointerType !== 'mouse' || event.button !== 0 || event.ctrlKey) return;

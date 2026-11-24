@@ -2271,6 +2271,10 @@ a[data-slot='entry-card-author'] {
 /* Held: ×2.5 around the pressed point, which follows the mouse (`transform-origin`, set by the component). */
 [data-slot='image-zoom-full'][data-zoomed] {
   transform: scale(2.5);
+}
+
+/* Held, the zoom out: on the frame, whose cursor the browser shows while it holds the pointer, wherever the image's. */
+[data-slot='image-zoom-frame'][data-zoomed] {
   cursor: zoom-out;
 }
 
