@@ -32,6 +32,8 @@
  *       without batches, goes back to the server.
  *     - Once the whole index is here, every default page is shown here: only the address moves, nothing loaded ahead.
  *     - Without `paged`, every item is at hand: the live binding at once, nothing loaded.
+ *     - Without `load`, no index (a folder of folders, nothing to filter): its pages from the server or its batches, a
+ *       query in its URL read as its default view.
  *
  * Invariants (`use-paged-collection.test.tsx`): every item at hand, never loaded; the slice and the server's pages
  * without loading; another default page by the URL alone; the index for a selection in the URL, a term the slice
@@ -39,7 +41,7 @@
  * again; the loader fetching each URL once, an error status or a bad body rejected and fetched again; the current
  * page's batch on idle, the next near its edge; a page a batch holds shown without the server, any other through it;
  * no page a batch holds loaded ahead; a restored address's batch at once, or the server without batches; every page
- * shown here once the index is at hand.
+ * shown here once the index is at hand; without an index, its pages from its batches, a query read as the default view.
  */
 import {
   isDefaultView,
@@ -80,15 +82,22 @@ export interface PagedBatches<S extends Batch> {
 }
 
 /** What `usePagedCollection` takes. */
-export interface PagedCollectionOptions<T, I extends { readonly items: readonly T[] }, S extends Batch = Batch> {
+export interface PagedCollectionOptions<
+  T,
+  I extends { readonly items: readonly T[] } = { readonly items: readonly T[] },
+  S extends Batch = Batch,
+> {
   /** The engine over some items: a stable function (at module scope, or memoized). */
   readonly engine: (items: readonly T[]) => Engine<T>;
   /** The page's own items when `paged`; every item otherwise. */
   readonly items: readonly T[];
   /** The page of a collection paginated in its path; without it, every item is at hand. */
   readonly paged?: PagedSlice | undefined;
-  /** Loads the index, every item and whatever else the app needs (its cards): a stable function. */
-  readonly load: () => Promise<I>;
+  /**
+   * Loads the index, every item and whatever else the app needs (its cards): a stable function. None for a collection
+   * with nothing to filter (e.g. a folder of folders): a query in its URL is read as its default view.
+   */
+  readonly load?: (() => Promise<I>) | undefined;
   /** The URL adapter, e.g. `useNextUrl({ first })`. */
   readonly url: UrlAdapter;
   /**
@@ -143,9 +152,11 @@ function whenIdle(run: () => void): () => void {
  *   engine: postsEngine, items, paged: { page, pages, total }, load, url: useNextUrl({ first }),
  * });
  */
-export function usePagedCollection<T, I extends { readonly items: readonly T[] }, S extends Batch = Batch>(
-  options: PagedCollectionOptions<T, I, S>,
-): PagedCollection<I, S> {
+export function usePagedCollection<
+  T,
+  I extends { readonly items: readonly T[] } = { readonly items: readonly T[] },
+  S extends Batch = Batch,
+>(options: PagedCollectionOptions<T, I, S>): PagedCollection<I, S> {
   const { engine: engineOf, items, paged, load, url, batches: batched } = options;
   const size = batched?.size ?? PAGES_PER_BATCH;
   const perPage = paged?.perPage;
@@ -188,7 +199,7 @@ export function usePagedCollection<T, I extends { readonly items: readonly T[] }
   const pending = useRef<Action | undefined>(undefined);
   const loading = useRef(false);
   const prefetch = useCallback(() => {
-    if (paged === undefined || index !== undefined || loading.current) return;
+    if (paged === undefined || load === undefined || index !== undefined || loading.current) return;
 
     loading.current = true;
     setError(undefined);
@@ -212,7 +223,8 @@ export function usePagedCollection<T, I extends { readonly items: readonly T[] }
     [url],
   );
   const live = useFacetedCollection(engine, everywhere);
-  const selecting = !isDefaultView(url.search);
+  // Without an index, nothing to select: a query it never writes is read as the default view.
+  const selecting = load !== undefined && !isDefaultView(url.search);
   // The page the address shows: a page shown here moves the address, never the server's props.
   const current = paged === undefined ? 1 : readPage(url.search);
 

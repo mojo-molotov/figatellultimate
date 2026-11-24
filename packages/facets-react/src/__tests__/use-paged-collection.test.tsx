@@ -240,11 +240,14 @@ describe('usePagedCollection: batches', () => {
   const keysOf = (from: number, to: number): string[] => MANY.slice((from - 1) * 5, to * 5).map((post) => post.url);
 
   /** A listing on a page, its batches loaded by a recorder; the address as an in-memory URL. */
-  function batched(page: number, options: { readonly batches?: boolean } = {}) {
+  function batched(
+    page: number,
+    options: { readonly batches?: boolean; readonly index?: boolean; readonly search?: string } = {},
+  ) {
     const navigated: { readonly search: string; readonly mode: string; readonly local: boolean }[] = [];
     const prefetched: string[] = [];
     const asked: number[] = [];
-    const at = { search: page === 1 ? '' : `?page=${String(page)}` };
+    const at = { search: options.search ?? (page === 1 ? '' : `?page=${String(page)}`) };
     const url = (): UrlAdapter => ({
       search: at.search,
       navigate(next, { mode, local }) {
@@ -269,7 +272,7 @@ describe('usePagedCollection: batches', () => {
           engine: engineOf,
           items: MANY.slice((page - 1) * 5, page * 5),
           paged: { page, pages: 12, total: 60, perPage: 5 },
-          load: () => Promise.resolve({ items: MANY }),
+          ...(options.index === false ? {} : { load: () => Promise.resolve({ items: MANY }) }),
           url: adapter,
           ...(options.batches === false ? {} : { batches }),
         }),
@@ -292,6 +295,21 @@ describe('usePagedCollection: batches', () => {
       },
     };
   }
+
+  it('without an index, shows its pages from its batches, a selection in the URL read as the default view', async () => {
+    // A folder of folders: nothing to filter, so no index; a query it never writes changes nothing.
+    const { result, navigated, settle, follow } = batched(2, { index: false, search: '?page=2&tags=harp' });
+
+    expect(result.current.binding.view).toMatchObject({ keys: keysOf(2, 2), pages: 12 });
+    await settle();
+    act(() => {
+      result.current.binding.dispatch({ type: 'page', page: 3 });
+    });
+    expect(navigated).toEqual([{ search: '?page=3', mode: 'push', local: true }]);
+    follow();
+    expect(result.current.binding.view.keys).toEqual(keysOf(3, 3));
+    expect(result.current.index).toBeUndefined();
+  });
 
   it('loads the current page’s batch on idle, and nothing more away from its edges', async () => {
     const { asked, settle } = batched(2);

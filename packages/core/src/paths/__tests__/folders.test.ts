@@ -124,6 +124,64 @@ describe('the listings’ indexes', () => {
       true,
     );
   });
+
+  it('gives every paginated folder its batches under the same prefix, a listing’s at its index; none without a page size', () => {
+    const indexed = defineCollection({
+      ...blog,
+      folderPages: {
+        root: true,
+        levels: ['category', 'subcategory'],
+        perPage: { root: 1, subcategory: 1 },
+        index: 'listing',
+      },
+    });
+    const analysis = analyze({ locales, collections: { pages, blog: indexed }, sources: SOURCES });
+    const all = folderPagesOf({ locales, collections: { pages, blog: indexed }, entries: analysis.entries });
+    const batchesAt = (url: string) => all.find((folder) => folder.url === url)?.batches ?? '-';
+
+    // Precondition: the scenario is valid.
+    expect(analysis.diagnostics.filter((d) => d.severity === 'error')).toEqual([]);
+    // The root and a listing, each page sharing them, in its locale.
+    expect(['/blog', '/blog/page/2', '/en/blog', '/blog/news/bot/page/2'].map(batchesAt)).toEqual([
+      '/listing',
+      '/listing',
+      '/en/listing',
+      '/listing/news/bot',
+    ]);
+    // A category has no page size here: a single page, nothing to batch.
+    expect(batchesAt('/blog/news')).toBe('-');
+  });
+});
+
+describe('listing-index-collision', () => {
+  it('a listing whose index is a folder’s batch is an error on its entries, naming both', () => {
+    const indexed = defineCollection({
+      ...blog,
+      folderPages: {
+        root: true,
+        levels: ['category', 'subcategory'],
+        perPage: { root: 1, subcategory: 1 },
+        index: 'listing',
+      },
+    });
+    // Three categories, one a page: the root's batches are /listing/pages/1 to /3. `pages/2` lists its entries at
+    // /listing/pages/2; `pages/9` lies past them.
+    const analysis = analyze({
+      locales,
+      collections: { pages, blog: indexed },
+      sources: [...SOURCES, ...src('blog', 'pages/2/post-05.mdx', 'pages/9/post-06.mdx')],
+    });
+
+    expect(analysis.diagnostics.filter((d) => d.code === 'listing-index-collision')).toEqual([
+      expect.objectContaining({
+        collection: 'blog',
+        sourcePath: 'pages/2/post-05.mdx',
+        data: { url: '/listing/pages/2', folder: '/blog' },
+      }),
+    ]);
+    expect(analysis.entries.some((e) => e.sourcePath === 'pages/2/post-05.mdx')).toBe(false);
+    expect(analysis.entries.some((e) => e.sourcePath === 'pages/9/post-06.mdx')).toBe(true);
+  });
 });
 
 describe('folder-image-fallback', () => {

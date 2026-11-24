@@ -2,7 +2,7 @@
  * An author's index: every post they wrote in a locale, as the items its listing's engine filters and sorts and as
  * their cards' data, one static JSON per author and locale (`/author-listing/igor`, `/en/author-listing/igor`). An
  * author's page carries only its slice; the browser fetches this on the first filter or sort, as a subcategory's
- * (`../../listing/[...folder]/route.ts`). The route itself is `listingIndexRoute` of `@figatellultimate/next16`.
+ * (`../../listing/[[...folder]]/route.ts`). The route itself is `listingIndexRoute` of `@figatellultimate/next16`.
  */
 import { batchPath } from '@figatellultimate/facets';
 import { listingIndexRoute } from '@figatellultimate/next16/listing-index';

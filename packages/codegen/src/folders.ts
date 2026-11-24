@@ -45,6 +45,8 @@ export interface FolderData {
   readonly perPage?: number;
   /** Its listing's index URL (`folderPages.index`), shared by its every page; none otherwise. */
   readonly index?: string;
+  /** The URL its batches live under (`folderPages.index`), shared by its every page; none when its level has no page size. */
+  readonly batches?: string;
   /** Its pages after the first: each one's URL, number and translations (a locale may have fewer pages). */
   readonly slices: readonly {
     readonly url: string;
@@ -193,6 +195,7 @@ export function folderData(
       pages: folder.pages,
       ...(perPage === undefined ? {} : { perPage }),
       ...(folder.index === undefined ? {} : { index: folder.index }),
+      ...(folder.batches === undefined ? {} : { batches: folder.batches }),
       slices,
     };
   });

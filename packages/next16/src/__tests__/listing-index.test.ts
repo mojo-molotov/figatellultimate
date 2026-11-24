@@ -93,3 +93,40 @@ describe('listingIndexRoute: batches', () => {
     ).toBe(404);
   });
 });
+
+describe('listingIndexRoute: batches of listings without an index', () => {
+  const batch = vi.fn((listing: Listing, range: { readonly from: number; readonly to: number }) =>
+    Promise.resolve({ keys: listing.posts.slice(range.from - 1, range.to) }),
+  );
+  // A folder of folders, e.g. the blog's own page: batched, nothing to filter, so no index.
+  const root: Listing = { locale: 'fr', segments: [], posts: ['news', 'guides'] };
+  const mixed = listingIndexRoute({
+    listings: () => LISTINGS.slice(2),
+    params: (listing) => ({ locale: listing.locale, folder: listing.segments }),
+    build,
+    pages: {
+      listings: () => [root, ...LISTINGS.slice(2)],
+      count: (listing) => listing.posts.length,
+      params: (listing, from) => ({ locale: listing.locale, folder: [...listing.segments, 'pages', String(from)] }),
+      build: batch,
+    },
+  });
+
+  it('prerenders the indexes of their listings, and the batches of its own', () => {
+    expect(mixed.generateStaticParams()).toEqual([
+      { locale: 'fr', folder: ['guides'] },
+      { locale: 'fr', folder: ['pages', '1'] },
+      { locale: 'fr', folder: ['guides', 'pages', '1'] },
+    ]);
+  });
+
+  it('answers a batch of a listing without an index, and 404 for that index', async () => {
+    build.mockClear();
+    const answer = (folder: readonly string[]) =>
+      mixed.GET(new Request('https://example.org/'), { params: Promise.resolve({ locale: 'fr', folder }) });
+
+    expect(await (await answer(['pages', '1'])).json()).toEqual({ keys: ['news', 'guides'] });
+    expect((await answer([])).status).toBe(404);
+    expect(build).not.toHaveBeenCalled();
+  });
+});

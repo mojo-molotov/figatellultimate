@@ -19,6 +19,7 @@ import {
   type Diagnostic,
   type FileErrorDiagnostic,
   type FolderPageCollisionDiagnostic,
+  type ListingIndexCollisionDiagnostic,
 } from '../shared/diagnostics.js';
 import type { Locales } from '../declarations/locales.js';
 import type { EntryDescriptor } from './descriptor.js';
@@ -353,6 +354,7 @@ export function analyze(input: AnalyzeInput): Analysis {
       urls,
     ),
     ...folderPageCollisions(parsed, locales, collections, urls),
+    ...listingIndexCollisions(parsed, locales, collections, urls),
   ];
   const failed = new Set(globalErrors.map((d) => idOf({ collection: d.collection, sourcePath: d.sourcePath })));
   const entries = parsed.filter((entry) => !failed.has(idOf(entry)));
@@ -382,6 +384,54 @@ export function analyze(input: AnalyzeInput): Analysis {
  */
 export function hasErrors(analysis: Analysis): boolean {
   return analysis.diagnostics.some((d) => d.severity === 'error');
+}
+
+/**
+ * Entries of a listing whose index is a folder's batch (`<batches>/pages/<n>`, any page a batch could start at): two
+ * files at one URL. Only a listing two levels below the folder can, its folders named `pages` and a page's number.
+ */
+function listingIndexCollisions(
+  entries: readonly EntryDescriptor[],
+  locales: Locales,
+  collections: Readonly<Record<string, Collection>>,
+  urls: UrlBuilder,
+): ListingIndexCollisionDiagnostic[] {
+  const folders = folderPagesOf({ locales, collections, urls, entries }).filter((folder) => folder.page === 1);
+  const batches = new Map(
+    folders.flatMap((folder) =>
+      folder.batches === undefined
+        ? []
+        : Array.from({ length: folder.pages }, (_, n) => [
+            `${folder.batches ?? ''}/pages/${String(n + 1)}`,
+            folder.url,
+          ]),
+    ),
+  );
+
+  return folders.flatMap((listing) => {
+    const other = listing.index === undefined ? undefined : batches.get(listing.index);
+
+    return other === undefined || listing.index === undefined
+      ? []
+      : entries
+          .filter(
+            (entry) =>
+              !entry.reserved &&
+              entry.collection === listing.collection &&
+              entry.locale === listing.locale &&
+              Object.entries(listing.segments).every(([segment, value]) => entry.segments[segment] === value),
+          )
+          .map((entry) =>
+            diagnostic({
+              code: 'listing-index-collision',
+              severity: 'error',
+              collection: entry.collection,
+              sourcePath: entry.sourcePath,
+              data: { url: listing.index ?? '', folder: other },
+              suggestions: [],
+            }),
+          );
+  });
 }
 
 /** Entries whose URL is a folder page's: two pages at one URL, never resolved implicitly. */

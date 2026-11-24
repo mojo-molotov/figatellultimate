@@ -1,12 +1,13 @@
 /**
  * A listing's index: every post's item (what the engine filters and sorts) and card, a static JSON per listing
- * (`app/[locale]/listing/[...folder]/route.ts`), fetched by the browser on the first filter or sort, never sent with
- * the page. Checked by its schema before it is read, cached once per listing (`createIndexLoader`).
+ * (`app/[locale]/listing/[[...folder]]/route.ts`), fetched by the browser on the first filter or sort, never sent with
+ * the page; and the batches beside it, a listing's runs of posts or a folder page's runs of sections, loaded on idle.
+ * Each checked by its schema before it is read, cached once per URL (`createIndexLoader`).
  */
 import { createIndexLoader } from '@figatellultimate/facets-react';
 import * as v from 'valibot';
 
-import type { CardData } from './cards';
+import type { CardData, SectionData } from './cards';
 import type { PostItem } from './facets';
 
 const Term = v.object({ key: v.string(), label: v.string() });
@@ -74,4 +75,31 @@ export interface ListingBatch {
  */
 export const loadListingBatch: (url: string) => Promise<ListingBatch> = createIndexLoader((json) =>
   v.parse(Batch, json),
+);
+
+const Section = v.object({
+  title: v.string(),
+  href: v.optional(v.string()),
+  description: v.optional(v.string()),
+  image: v.optional(v.string()),
+  posts: v.array(Card),
+  more: v.optional(v.object({ href: v.string(), text: v.string() })),
+});
+const FolderBatch = v.object({ keys: v.array(v.string()), sections: v.record(v.string(), Section) });
+
+/** A run of a folder page's pages (`batchesOf`): their subfolders' keys in the folders' order, and each one's section. */
+export interface FolderBatch {
+  readonly keys: readonly string[];
+  readonly sections: Readonly<Record<string, SectionData>>;
+}
+
+/**
+ * A folder page's batch (the blog's, a category's), fetched once, checked by its schema before it is read: the pages
+ * it holds shown without the server.
+ *
+ * @param url - The batch's URL (`<folder.batches>/pages/<first page>`).
+ * @returns The batch; rejects when it cannot be fetched or does not match its schema.
+ */
+export const loadFolderBatch: (url: string) => Promise<FolderBatch> = createIndexLoader((json) =>
+  v.parse(FolderBatch, json),
 );

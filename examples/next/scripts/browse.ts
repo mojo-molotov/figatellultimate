@@ -213,6 +213,57 @@ try {
     await paging.close();
   }
 
+  // A category's batch: its next page of subcategories shown here, without the server, as the prerendered page 2.
+  {
+    const category = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+    const asked: string[] = [];
+    const headings = (html: string): string[] =>
+      [...html.matchAll(/data-slot="folder-section".*?<h2[^>]*>(?:<a[^>]*>)?([^<]*)</gs)].map(
+        (match) => match[1] ?? '',
+      );
+    const shown = (): Promise<string[]> =>
+      category.evaluate(() =>
+        [...document.querySelectorAll('[data-slot="folder-section"] h2')].map((heading) => heading.textContent),
+      );
+
+    category.on('request', (request) => {
+      const path = new URL(request.url()).pathname;
+
+      if (request.headers()['rsc'] !== undefined || path.includes('/pages/')) asked.push(path);
+    });
+    const batch = category.waitForResponse((response) => response.url().includes('/listing/maquis/pages/1'));
+
+    await category.goto(`${base}/blog/maquis`, { waitUntil: 'networkidle' });
+    await batch;
+    asked.length = 0;
+    const before = JSON.stringify(await shown());
+
+    await category.locator('[data-slot="pagination-next"]').first().click();
+    await category.waitForURL('**/blog/maquis/page/2');
+    await category
+      .waitForFunction(
+        (was) =>
+          JSON.stringify(
+            [...document.querySelectorAll('[data-slot="folder-section"] h2')].map((h) => h.textContent),
+          ) !== was,
+        before,
+      )
+      .catch(() => undefined);
+    const expected = headings(htmlOf('/blog/maquis/page/2') ?? '');
+
+    // Precondition: the prerendered page 2 has its sections to compare with.
+    check(expected.length > 0, '/blog/maquis/page/2: no section prerendered');
+    check(
+      JSON.stringify(await shown()) === JSON.stringify(expected),
+      `/blog/maquis: page 2 shown from its batch is not the prerendered page 2 (${JSON.stringify(await shown())} ≠ ${JSON.stringify(expected)})`,
+    );
+    check(
+      !asked.some((path) => path.endsWith('/blog/maquis/page/2')),
+      `/blog/maquis: page 2 asked of the server, its batch at hand (${JSON.stringify(asked)})`,
+    );
+    await category.close();
+  }
+
   // Tab reaches what a reader acts on: from a snippet's tabs straight to its copy button, a snippet or a table that
   // fits taking no stop; one that overflows (a table on a phone) takes one, to scroll it with the keyboard.
   {
@@ -705,6 +756,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, the switcher following, Back restoring; Tab straight to the copy buttons, a region a stop only while it overflows; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
+    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, those of a category too, the switcher following, Back restoring; Tab straight to the copy buttons, a region a stop only while it overflows; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; a zoom preloaded on hover; the chosen theme shown before hydration; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
   );
 }

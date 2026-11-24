@@ -1,17 +1,23 @@
 /**
  * The blog's posts as data, without a component: the items a listing's engine filters and sorts, the cards' data, and
  * a listing's index URL. Shared by the folder pages (their slice, rendered on the server) and the listings' JSON
- * index (`app/[locale]/listing/[...folder]/route.ts`, every post, rendered in the browser on a filter or a sort).
+ * index (`app/[locale]/listing/[[...folder]]/route.ts`, every post, rendered in the browser on a filter or a sort).
  */
 import { getTranslations } from 'next-intl/server';
 
 import type { ListingLocales } from '@figatellultimate/site';
-import { findBlogFolderByUrl, findBlogPostByUrl, type BlogFolder, type BlogPost } from '#figatellultimate/blog';
+import {
+  findBlogFolderByUrl,
+  findBlogPostByUrl,
+  type BlogFolder,
+  type BlogPost,
+  type BlogSubfolder,
+} from '#figatellultimate/blog';
 import type { Locale } from '#figatellultimate/locales';
 import { taxonomies } from '#figatellultimate/taxonomies';
 import { authorsTermUrl } from '#figatellultimate/terms';
 
-import type { CardData } from './cards';
+import type { CardData, SectionData } from './cards';
 import type { PostItem } from './facets';
 
 /**
@@ -54,6 +60,49 @@ export async function cardDataOf(
         },
       ];
     }),
+  );
+}
+
+/** A subfolder's key among its folder's: its segments, unique there. */
+export const subfolderKey = (subfolder: BlogSubfolder): string => Object.values(subfolder.segments).join('/');
+
+/**
+ * Some subfolders' sections as data, keyed by `subfolderKey`, their texts translated: a folder page's slice, rendered
+ * on the server, or a batch's, rendered in the browser (`folder-sections.tsx`). At the root, a category's card; below,
+ * a subcategory's latest posts and its "see more".
+ */
+export async function sectionDataOf(
+  subfolders: readonly BlogSubfolder[],
+  locale: Locale,
+  root: boolean,
+): Promise<Record<string, SectionData>> {
+  const t = await getTranslations({ locale });
+
+  return Object.fromEntries(
+    await Promise.all(
+      subfolders.map(async (subfolder): Promise<[string, SectionData]> => {
+        const description = subfolder.messages.description;
+        const posts = root ? [] : await postsOf(subfolder.latest);
+        const cards = await cardDataOf(posts, locale);
+        // Only towards a list of posts: a category's page lists subcategories, its heading already links it.
+        const more =
+          subfolder.url !== undefined && subfolder.level === 'subcategory' && subfolder.total > subfolder.latest.length
+            ? { href: subfolder.url, text: t('ui.folder.more', { count: subfolder.total }) }
+            : undefined;
+
+        return [
+          subfolderKey(subfolder),
+          {
+            title: t(subfolder.label),
+            href: subfolder.url,
+            ...(root && description !== undefined ? { description: t(description) } : {}),
+            ...(root && subfolder.image !== undefined ? { image: subfolder.image } : {}),
+            posts: posts.flatMap((post) => cards[post.url] ?? []),
+            ...(more === undefined ? {} : { more }),
+          },
+        ];
+      }),
+    ),
   );
 }
 
@@ -110,9 +159,10 @@ export function listingLocalesOf<
 }
 
 /**
- * A subcategory's listing in each locale (`listingLocalesOf`).
+ * A paginated folder in each locale (`listingLocalesOf`): a subcategory's listing, or a folder of folders, whose pages
+ * the browser shows from their batches.
  *
- * @param folder - A page of the subcategory.
+ * @param folder - A page of the folder.
  * @returns Each locale's first page and count of pages.
  */
 export const folderLocalesOf = (folder: BlogFolder): ListingLocales =>

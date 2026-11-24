@@ -105,6 +105,11 @@ export function explain(diagnostic: Diagnostic): Explanation {
             ? 'remove this file, or `root` from the collection’s folderPages'
             : `remove this file, or "${d.data.level}" from the collection’s folderPages levels`,
       };
+    case 'listing-index-collision':
+      return {
+        message: `this file's listing has its index at ${d.data.url}, the URL of a batch of ${d.data.folder}`,
+        hint: 'rename its folders: `pages` followed by a number is where folder pages keep their batches',
+      };
     case 'term-page-collision':
       return {
         message: `${d.sourcePath === null ? 'a folder page' : 'this file'} has the URL of the ${d.data.taxonomy} page of "${d.data.term}" (${d.data.url})`,

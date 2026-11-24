@@ -1,15 +1,17 @@
 /**
  * A listing's index: every post of a subcategory, as the items its engine filters and sorts and as their cards' data,
  * one static JSON per listing and locale (`/listing/news/bot`, `/en/listing/news/bot`). A listing's page carries only
- * its slice; the browser fetches this on the first filter or sort (`blog/listing-index.ts`, which checks it). The
- * route itself is `listingIndexRoute` of `@figatellultimate/next16`.
+ * its slice; the browser fetches this on the first filter or sort (`blog/listing-index.ts`, which checks it). Beside
+ * it, every paginated folder's batches: a listing's runs of posts, the blog's or a category's runs of sections
+ * (`/listing/pages/1`, `/listing/maquis/pages/1`), hence an optional catch-all. The route itself is
+ * `listingIndexRoute` of `@figatellultimate/next16`.
  */
 import { batchPath } from '@figatellultimate/facets';
 import { listingIndexRoute } from '@figatellultimate/next16/listing-index';
 
-import { blogListingIndexes } from '#figatellultimate/blog';
+import { blogFolderBatches, blogListingIndexes } from '#figatellultimate/blog';
 
-import { cardDataOf, itemsOf, postsOf } from '../../../../blog/posts-data';
+import { cardDataOf, itemsOf, postsOf, sectionDataOf, subfolderKey } from '../../../../blog/posts-data';
 
 export const dynamic = 'force-static';
 export const dynamicParams = false;
@@ -23,15 +25,28 @@ export const { GET, generateStaticParams } = listingIndexRoute({
 
     return { items: itemsOf(posts), cards: await cardDataOf(posts, folder.locale) };
   },
-  // Its batches, ten pages each, in the server's order: `/listing/news/bot/pages/11`.
+  // Every paginated folder's batches, ten pages each, in the server's order: `/listing/news/bot/pages/11`.
   pages: {
+    listings: blogFolderBatches,
     count: (folder) => folder.pages,
     params: (folder, from) => ({
       locale: folder.locale,
       folder: [...Object.values(folder.segments), ...batchPath(from)],
     }),
     build: async (folder, { from, to }) => {
-      const size = folder.perPage ?? folder.entries.length;
+      const items = folder.subfolders.length === 0 ? folder.entries.length : folder.subfolders.length;
+      const size = folder.perPage ?? items;
+
+      // A folder of folders: its subfolders' sections.
+      if (folder.subfolders.length > 0) {
+        const subfolders = folder.subfolders.slice((from - 1) * size, to * size);
+
+        return {
+          keys: subfolders.map(subfolderKey),
+          sections: await sectionDataOf(subfolders, folder.locale, folder.level === null),
+        };
+      }
+
       const posts = await postsOf(folder.entries.slice((from - 1) * size, to * size));
 
       return { keys: posts.map((post) => post.url), cards: await cardDataOf(posts, folder.locale) };

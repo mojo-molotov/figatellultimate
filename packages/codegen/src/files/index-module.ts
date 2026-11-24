@@ -403,6 +403,12 @@ function addFolders(
           "Its listing's index URL (`folderPages.index`), shared by its every page: every entry a filter or a sort needs.",
         ],
       },
+      {
+        ...property('batches', 'string', true),
+        docs: [
+          'The URL its batches live under (`folderPages.index`), shared by its every page: each batch at `<batches>/pages/<its first page>`, the runs of pages the browser shows itself.',
+        ],
+      },
     ],
   });
   file.addVariableStatement({
@@ -440,7 +446,7 @@ function addFolders(
   });
   file.addTypeAlias({
     name: 'FolderData',
-    type: `{ readonly url: string; readonly locale: Locale; readonly segments: Readonly<Record<string, string>>; readonly level: ${[...levels.map(literal), 'null'].join(' | ')}; readonly label: ${key} | null; readonly messages: ${messagesType}; readonly metadata: { readonly description?: ${key} }; readonly image?: string; readonly alternates: Readonly<Partial<Record<Locale, string>>>; readonly subfolders: readonly { readonly segments: Readonly<Record<string, string>>; readonly level: string; readonly label: ${key}; readonly messages: ${messagesType}; readonly url?: string; readonly image?: string; readonly total: number; readonly latest: readonly string[] }[]; readonly entries: readonly string[]; readonly pages: number; readonly perPage?: number; readonly index?: string }`,
+    type: `{ readonly url: string; readonly locale: Locale; readonly segments: Readonly<Record<string, string>>; readonly level: ${[...levels.map(literal), 'null'].join(' | ')}; readonly label: ${key} | null; readonly messages: ${messagesType}; readonly metadata: { readonly description?: ${key} }; readonly image?: string; readonly alternates: Readonly<Partial<Record<Locale, string>>>; readonly subfolders: readonly { readonly segments: Readonly<Record<string, string>>; readonly level: string; readonly label: ${key}; readonly messages: ${messagesType}; readonly url?: string; readonly image?: string; readonly total: number; readonly latest: readonly string[] }[]; readonly entries: readonly string[]; readonly pages: number; readonly perPage?: number; readonly index?: string; readonly batches?: string }`,
   });
   file.addFunction({
     name: `find${folderType}FolderByUrl`,
@@ -471,6 +477,19 @@ function addFolders(
       returnType: `readonly ${folderType}Folder[]`,
       statements: [
         `return [...folderData.values()].flatMap((data) => (data.index === undefined ? [] : [find${folderType}FolderByUrl(data.url) ?? []].flat()));`,
+      ],
+    });
+
+  if (collection.folderPages?.index !== undefined)
+    file.addFunction({
+      name: `${name}FolderBatches`,
+      isExported: true,
+      docs: [
+        `The ${name} folders with batches (\`folderPages.index\`): each paginated folder's first page, in each locale, every item listed; for the route serving the batches (\`listingIndexRoute\`'s \`pages\`).`,
+      ],
+      returnType: `readonly ${folderType}Folder[]`,
+      statements: [
+        `return [...folderData.values()].flatMap((data) => (data.batches === undefined ? [] : [find${folderType}FolderByUrl(data.url) ?? []].flat()));`,
       ],
     });
 }

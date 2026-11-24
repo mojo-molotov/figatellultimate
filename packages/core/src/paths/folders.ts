@@ -7,8 +7,14 @@
  * its slice only, rather than every item in one page. Its items are its entries when no named segment lies below it,
  * else its subfolders. A page is one more folder page: mounted, in the sitemap, translated, checked for collisions.
  *
+ * Key design decision, as chosen with the user: every folder its level paginates gets batches under the index's prefix
+ * (`folderPages.index`), no option of its own: a listing's at its index, a folder of folders' at its own place there.
+ * The one URL they can share, a listing's index with a batch two levels up (a category named `pages`, a subcategory
+ * named by a page's number), is an error on the listing's entries (`listing-index-collision`).
+ *
  * Invariants (`folders.test.ts`): only where an entry is kept; each URL once; an entry at a folder page's URL is a
- * collision, a slice's included; a folder's pages by its page size.
+ * collision, a slice's included; a folder's pages by its page size; batches for every paginated folder, an index for
+ * a listing of entries; a listing's index at a batch's URL is a collision.
  */
 import type { Collection } from '../declarations/collection.js';
 import type { Locales } from '../declarations/locales.js';
@@ -37,6 +43,12 @@ export interface FolderPage {
    * `/<index>/<its segments>` in its locale. None otherwise.
    */
   readonly index?: string;
+  /**
+   * The URL its batches live under (`folderPages.index`), shared by every page of a folder its level paginates: a
+   * listing's index, `/<index>/<its segments>` in its locale (`/listing`, `/listing/news`); each batch at
+   * `<batches>/pages/<its first page>`, which the browser loads to show those pages itself. None otherwise.
+   */
+  readonly batches?: string;
 }
 
 /** What `folderPagesOf` reads: the declarations, the URL strategy and the kept entries. */
@@ -139,16 +151,12 @@ function slicesOf(folder: FolderPage, input: FolderPagesInput, urls: UrlBuilder)
   const items = next === undefined ? inside.length : new Set(inside.map((entry) => entry.segments[next] ?? '')).size;
   const pages = Math.max(1, Math.ceil(items / size));
   const prefix = collection.folderPages?.index;
-  // A listing of entries (no named segment below) has an index, its every page sharing it.
-  const index =
-    prefix === undefined || next !== undefined
-      ? {}
-      : {
-          index: urls.url({
-            locale: folder.locale,
-            route: `/${[prefix, ...Object.values(folder.segments)].join('/')}`,
-          }),
-        };
+  // Under the index's prefix, every page sharing them: a paginated folder's batches; a listing of entries' index too.
+  const data =
+    prefix === undefined
+      ? undefined
+      : urls.url({ locale: folder.locale, route: `/${[prefix, ...Object.values(folder.segments)].join('/')}` });
+  const index = data === undefined ? {} : next === undefined ? { index: data, batches: data } : { batches: data };
 
   return Array.from({ length: pages }, (_, position): FolderPage => {
     const page = position + 1;

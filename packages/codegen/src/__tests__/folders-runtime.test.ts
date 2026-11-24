@@ -43,8 +43,9 @@ const config = defineConfig({
         metadata: { description: 'description' },
         levels: ['category', 'subcategory'],
         images: { news: '/covers/news.jpeg' },
-        // One entry a page in a subcategory: bot has two in French, one in English.
-        perPage: { subcategory: 1 },
+        // One entry a page in a subcategory: bot has two in French, one in English. One category a page at the root:
+        // a single page, but batched; a category has no page size.
+        perPage: { root: 1, subcategory: 1 },
         // Its listings' indexes, at `/listing/<segments>`.
         index: 'listing',
       },
@@ -68,6 +69,7 @@ const Found = v.optional(
     folder: v.optional(
       v.looseObject({
         index: v.optional(v.string()),
+        batches: v.optional(v.string()),
         level: v.nullable(v.string()),
         label: v.nullable(v.string()),
         entries: v.array(Item),
@@ -107,6 +109,7 @@ let urls: {
   readonly mountedUrls: v.InferOutput<typeof UrlsModule>['mountedUrls'];
 };
 let listingIndexes: () => readonly { readonly url: string; readonly index: string }[];
+let folderBatches: () => readonly { readonly url: string; readonly batches: string }[];
 
 beforeAll(async () => {
   const sources = Object.keys(DATES).map((sourcePath) => ({ collection: 'blog', sourcePath }));
@@ -139,12 +142,14 @@ beforeAll(async () => {
     findByUrl: async (url) => v.parse(Found, await module.findByUrl(url)),
   };
   const blog = v.parse(
-    v.looseObject({ blogListingIndexes: v.function() }),
+    v.looseObject({ blogListingIndexes: v.function(), blogFolderBatches: v.function() }),
     await import(pathToFileURL(join(folder.basePath, 'blog', 'index.js')).href),
   );
 
   listingIndexes = () =>
     v.parse(v.array(v.looseObject({ url: v.string(), index: v.string() })), blog.blogListingIndexes());
+  folderBatches = () =>
+    v.parse(v.array(v.looseObject({ url: v.string(), batches: v.string() })), blog.blogFolderBatches());
 });
 afterAll(() => folder.cleanup());
 
@@ -195,6 +200,23 @@ describe('generated folder pages, run', () => {
     expect(indexes).toEqual(['/listing/news/bot', '/listing/news/bot', '/en/listing/news/bot', undefined]);
     expect(listingIndexes().map((folder) => [folder.url, folder.index])).toEqual([
       ['/blog/news/bot', '/listing/news/bot'],
+      ['/en/blog/news/bot', '/en/listing/news/bot'],
+    ]);
+  });
+
+  it('gives every page of a paginated folder its batches, and lists those folders once, for their route', async () => {
+    const batches = await Promise.all(
+      ['/blog', '/blog/news/bot/page/2', '/en/blog', '/blog/news'].map(
+        async (url) => (await urls.findByUrl(url))?.folder?.batches,
+      ),
+    );
+
+    // Under the index's prefix, in its locale; a listing's at its index; none for a level without a page size.
+    expect(batches).toEqual(['/listing', '/listing/news/bot', '/en/listing', undefined]);
+    expect(folderBatches().map((folder) => [folder.url, folder.batches])).toEqual([
+      ['/blog', '/listing'],
+      ['/blog/news/bot', '/listing/news/bot'],
+      ['/en/blog', '/en/listing'],
       ['/en/blog/news/bot', '/en/listing/news/bot'],
     ]);
   });

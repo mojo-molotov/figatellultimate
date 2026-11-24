@@ -80,6 +80,12 @@ export type FolderPageCollisionDiagnostic = DiagnosticOf<
   'error',
   { readonly url: string; readonly level: string | null }
 >;
+/** A listing's index at a folder's batch URL (`<index>/pages/<n>`): on each of the listing's entries. */
+export type ListingIndexCollisionDiagnostic = DiagnosticOf<
+  'listing-index-collision',
+  'error',
+  { readonly url: string; readonly folder: string }
+>;
 /** A term page whose URL is an entry's or a folder page's: on the entry, or on the folder's collection. */
 export type TermPageCollisionDiagnostic = DiagnosticOf<
   'term-page-collision',
@@ -228,6 +234,7 @@ export type ErrorDiagnostic =
   | KeyCollisionDiagnostic
   | UrlCollisionDiagnostic
   | FolderPageCollisionDiagnostic
+  | ListingIndexCollisionDiagnostic
   | TermPageCollisionDiagnostic
   | CaseCollisionDiagnostic
   | MissingFrontmatterFieldDiagnostic

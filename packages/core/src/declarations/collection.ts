@@ -147,7 +147,9 @@ export interface FolderPagesInput<N extends string = string> {
   /**
    * The URL segment of the listings' indexes, e.g. `'listing'`: each paginated folder listing entries gets one, at
    * `/<index>/<its segments>` in each locale (`/listing/news/bot`), every entry a filter or a sort needs, which the
-   * browser fetches instead of the page. Its route is the app's (`listingIndexRoute`). None without it.
+   * browser fetches instead of the page; and, under the same prefix, each paginated folder's batches
+   * (`<its URL there>/pages/<n>`: `/listing`, `/listing/news`), the runs of pages the browser shows itself. Its route
+   * is the app's (`listingIndexRoute`). None without it.
    */
   readonly index?: string;
 }

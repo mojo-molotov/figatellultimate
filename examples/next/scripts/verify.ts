@@ -217,6 +217,50 @@ check(indexed.length === decrees.length, "/listing/empire/decrees: the listing's
   );
 }
 
+// The folder pages' batches: the blog's and a category's runs of sections, each section's link on its prerendered page.
+for (const url of ['/blog', '/blog/maquis']) {
+  const folder = findBlogFolderByUrl(url);
+  const segments = Object.values(folder?.segments ?? {});
+  const batchOf = (from: number): unknown => {
+    try {
+      return JSON.parse(readFileSync(join(app, 'fr', 'listing', ...segments, 'pages', `${String(from)}.body`), 'utf8'));
+    } catch {
+      return undefined;
+    }
+  };
+  const first = batchOf(1);
+  const keys =
+    typeof first === 'object' && first !== null && 'keys' in first && Array.isArray(first.keys) ? first.keys : [];
+  const sections: unknown =
+    typeof first === 'object' && first !== null && 'sections' in first ? first.sections : undefined;
+  const hrefs = keys.map((key: unknown) => {
+    const section: unknown =
+      typeof sections === 'object' && sections !== null ? Reflect.get(sections, String(key)) : undefined;
+
+    return typeof section === 'object' && section !== null && 'href' in section ? section.href : undefined;
+  });
+  const page = (number: number): string => htmlOf(number === 1 ? url : `${url}/page/${String(number)}`) ?? '';
+  const perPage = folder?.perPage ?? 1;
+
+  // Precondition: the folder has pages to batch.
+  check((folder?.pages ?? 0) > 1, `${url}: a single page`);
+  check(
+    keys.length === folder?.subfolders.length || keys.length === perPage * 10,
+    `${url}: its first batch misses sections`,
+  );
+  check(
+    hrefs.every(
+      (href: unknown, index: number) =>
+        typeof href === 'string' && page(Math.floor(index / perPage) + 1).includes(`href="${href}"`),
+    ),
+    `${url}: a section of its first batch is not on its prerendered page`,
+  );
+  check(
+    batchOf(11 + 10 * Math.floor(((folder?.pages ?? 1) - 1) / 10)) === undefined,
+    `${url}: a batch past the last page`,
+  );
+}
+
 // The unstyled components are prerendered: the pagination's real links, the sort, the gear holding the facets.
 for (const slot of [
   'sort-select-trigger',
@@ -1066,6 +1110,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    `✓ ${String(mountedUrls.length)} mounted URLs prerendered with canonical, alternates, x-default and Open Graph; subcategory pages with their default view and pagination links; sitemap (dated, noindex left out), structured data, feeds, robots.txt, drafts, the footer, the listings' batches, one search bundle per locale (French and English queries, stemming, collection filter), images through next/image with their sizes, a meta description on every folder and author page, with plain spaces, and the navbar from the content in each page's language as expected.`,
+    `✓ ${String(mountedUrls.length)} mounted URLs prerendered with canonical, alternates, x-default and Open Graph; subcategory pages with their default view and pagination links; sitemap (dated, noindex left out), structured data, feeds, robots.txt, drafts, the footer, the listings' and the folder pages' batches, one search bundle per locale (French and English queries, stemming, collection filter), images through next/image with their sizes, a meta description on every folder and author page, with plain spaces, and the navbar from the content in each page's language as expected.`,
   );
 }

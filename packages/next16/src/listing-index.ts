@@ -15,9 +15,12 @@
  *     - The params are the app's own (its route's segments), matched exactly, arrays element by element.
  *     - The segment config (`dynamic`, `dynamicParams`) stays in the route file: Next only reads it there, as literals.
  *
- * Invariants (`listing-index.test.ts`): one index per listing, at its params, then its batches when `pages` is given,
- * each built from its own range; a listing's index built from it alone, as JSON; a 404 for unknown params, nothing
- * built.
+ *     - Batches without an index: a folder of folders has nothing to filter, but its pages are batched alike
+ *       (`pages.listings`), under the same route.
+ *
+ * Invariants (`listing-index.test.ts`): one index per listing, at its params, then the batches when `pages` is given,
+ * each built from its own range, of other listings when `pages.listings` says so, without an index; a listing's index
+ * built from it alone, as JSON; a 404 for unknown params, nothing built.
  */
 import { PAGES_PER_BATCH, batchesOf } from '@figatellultimate/facets';
 
@@ -41,6 +44,11 @@ export interface ListingIndexRouteOptions<L, P extends Params> {
 
 /** What a listing's batches are made of: its count of pages, each batch's params and content. */
 export interface ListingBatches<L, P extends Params> {
+  /**
+   * The listings with batches, when they are not those with an index: e.g. every paginated folder, a folder of folders
+   * having nothing to filter. Default: `listings`.
+   */
+  readonly listings?: (() => readonly L[]) | undefined;
   /** The listing's count of pages, its default view's. */
   readonly count: (listing: L) => number;
   /** Pages per batch; default `PAGES_PER_BATCH`. */
@@ -82,17 +90,18 @@ const same = (a: string | readonly string[] | undefined, b: string | readonly st
  */
 export function listingIndexRoute<L, P extends Params>(options: ListingIndexRouteOptions<L, P>): ListingIndexRoute<P> {
   const { listings, params, build, pages } = options;
-  // Every file the route serves: each listing's index, then its batches.
-  const files = (): { readonly params: P; readonly content: () => unknown }[] =>
-    listings().flatMap((listing) => [
-      { params: params(listing), content: () => build(listing) },
-      ...(pages === undefined
-        ? []
-        : batchesOf(pages.count(listing), pages.size ?? PAGES_PER_BATCH).map((range) => ({
+  // Every file the route serves: each listing's index, then the batches of each listing with batches.
+  const files = (): { readonly params: P; readonly content: () => unknown }[] => [
+    ...listings().map((listing) => ({ params: params(listing), content: () => build(listing) })),
+    ...(pages === undefined
+      ? []
+      : (pages.listings ?? listings)().flatMap((listing) =>
+          batchesOf(pages.count(listing), pages.size ?? PAGES_PER_BATCH).map((range) => ({
             params: pages.params(listing, range.from),
             content: () => pages.build(listing, range),
-          }))),
-    ]);
+          })),
+        )),
+  ];
   const matches = (own: P, asked: Params): boolean =>
     [...new Set([...Object.keys(own), ...Object.keys(asked)])].every((name) => same(own[name], asked[name]));
 
