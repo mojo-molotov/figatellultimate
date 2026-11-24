@@ -13,13 +13,17 @@
  *     - An identifier's words, split at its case and underscores (`centreOf` holds `centre`).
  *     - In tests, every string too: a test's title is a name.
  *
+ * Invariant: the tests' disposable trees are left out, or a tree removed mid-scan fails it (this file's own test).
+ *
  * Limitations: a word outside the list is not checked; prose (comments, JSDoc, READMEs) is not either.
  */
+import { randomUUID } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
+import { FileSystem } from '@japa/file-system';
 import ts from 'typescript';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 
@@ -38,9 +42,20 @@ const BRITISH: Readonly<Record<string, string>> = {
 /** A word of the list, with its endings (`centres`, `centred`). */
 const SPELLING = new RegExp(`^(${Object.keys(BRITISH).join('|')})(s|d)?$`, 'i');
 
-/** Folders where code lives, and what is left out: dependencies, builds and generated code. */
+/**
+ * Folders where code lives, and what is left out: dependencies, builds, generated code, and the tests' disposable
+ * trees (`.tmp`), which other tests create and remove while this one scans.
+ */
 const ROOTS = ['packages', join('examples', 'next'), 'tooling'];
-const SKIPPED = new Set(['node_modules', 'dist', '.next', '.figatellultimate', '.content-collections', 'coverage']);
+const SKIPPED = new Set([
+  'node_modules',
+  'dist',
+  '.next',
+  '.figatellultimate',
+  '.content-collections',
+  'coverage',
+  '.tmp',
+]);
 
 function sources(folder: string): string[] {
   return readdirSync(folder, { withFileTypes: true }).flatMap((entry) => {
@@ -89,6 +104,22 @@ function findings(text: string, test: boolean): string[] {
 }
 
 describe('American spelling in code', () => {
+  // A test's disposable tree, as the other tests write theirs while this one runs.
+  const disposable = new FileSystem(join(ROOT, 'tooling', '.tmp', randomUUID()));
+
+  afterEach(async () => {
+    await disposable.cleanup();
+  });
+
+  it("leaves out the tests' disposable trees, which other tests create and remove while it scans", async () => {
+    await disposable.create('british.ts', 'export const centreOf = 1;\n');
+    const planted = join(disposable.basePath, 'british.ts');
+
+    // Precondition: the planted file holds a finding.
+    expect(findings(readFileSync(planted, 'utf8'), false)).toEqual(['centre (center)']);
+    expect(sources(join(ROOT, 'tooling'))).not.toContain(planted);
+  });
+
   it('finds a British spelling in an identifier and in a test title, and nothing in a comment (the control)', () => {
     expect(findings('const centreOf = 1; // the centre', false)).toEqual(['centre (center)']);
     expect(findings("it('centres a card', () => undefined);", true)).toEqual(['centres (center)']);
