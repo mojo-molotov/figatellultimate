@@ -53,11 +53,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     # Shared by every workflow that publishes a report: one publication at a time, none cancelled.
     concurrency:
       group: allure-reports
@@ -68,14 +63,15 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 26
+      # None when the load test stopped before writing it: the publication then has nothing to publish.
       - uses: actions/download-artifact@v8
         with:
           name: load-report
           path: load-report
+        continue-on-error: true
       - id: report
         run: echo "path=$(find load-report -name load-report.md | head -1)" >> "$GITHUB_OUTPUT"
       - if: steps.report.outputs.path != ''
-        id: deployment
         uses: ./.github/actions/reports-publish
         with:
           family: load

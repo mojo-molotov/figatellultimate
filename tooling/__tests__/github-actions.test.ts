@@ -79,36 +79,23 @@ describe('GitHub Actions', () => {
     );
   });
 
-  it('deploys the reports from the publication, again after a failure: the listing it reads lags the upload', () => {
-    const action = join('.github', 'actions', 'reports-publish', 'action.yml');
-    const publish = readFileSync(join(ROOT, action), 'utf8');
-    const deploys = [
-      ...publish.matchAll(/\n {4}- name: [^\n]+\n((?: {6}[^\n]+\n)*) {6}uses: actions\/deploy-pages@v\d+\n/g),
-    ];
+  it('publishes the reports by their branch alone, which Pages serves: no artifact, no deployment to fail', () => {
     const publishers = files.filter((file) =>
       readFileSync(file, 'utf8').includes('uses: ./.github/actions/reports-publish'),
     );
 
-    // The artifact listing deploy-pages reads lags the upload's end, apart from the REST API's: a deployment half a
-    // second after it found no artifact. Tried again after a pause, twice, each attempt but the last allowed to fail.
-    expect(deploys.map(([, lines]) => /continue-on-error: true/.test(lines ?? ''))).toEqual([true, true, false]);
-    expect(deploys.slice(1).every(([, lines]) => /if: .*outcome == 'failure'/.test(lines ?? ''))).toBe(true);
-    expect(publish.indexOf('actions/deploy-pages')).toBeGreaterThan(publish.indexOf('upload-pages-artifact'));
     // Precondition: the workflows publishing a report were found.
     expect(publishers.length).toBeGreaterThanOrEqual(4);
 
-    // Deployed in one place: no workflow deploys on its own, each shows the publication's URL.
-    for (const file of files.filter((path) => !path.endsWith(action))) {
-      expect(readFileSync(file, 'utf8'), relative(ROOT, file)).not.toContain('actions/deploy-pages');
+    // Pages deploys the `allure-reports` branch on each push: a pages artifact deployed by a job lagged, the
+    // deployment not finding it, or finding two after a rerun.
+    for (const file of files) {
+      expect(readFileSync(file, 'utf8'), relative(ROOT, file)).not.toMatch(/deploy-pages|upload-pages-artifact/);
     }
 
+    // A publication only pushes: no environment, no Pages permission.
     for (const file of publishers) {
-      expect(readFileSync(file, 'utf8'), relative(ROOT, file)).toContain(
-        'url: ${{ steps.deployment.outputs.page_url }}',
-      );
-      expect(readFileSync(file, 'utf8'), relative(ROOT, file)).toMatch(
-        /- (?:if: [^\n]+\n {8})?id: deployment\n(?: {8}[^\n]+\n)* {8}uses: \.\/\.github\/actions\/reports-publish/,
-      );
+      expect(readFileSync(file, 'utf8'), relative(ROOT, file)).not.toMatch(/pages: write|id-token: write|environment:/);
     }
   });
 

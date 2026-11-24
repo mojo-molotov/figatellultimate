@@ -107,11 +107,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     # Shared by every workflow that publishes a report: one publication at a time, none cancelled.
     concurrency:
       group: allure-reports
@@ -134,8 +129,7 @@ jobs:
           name: coverage
           path: coverage
         continue-on-error: true
-      - id: deployment
-        uses: ./.github/actions/reports-publish
+      - uses: ./.github/actions/reports-publish
         with:
           family: ci
           title: CI (every pull request and push to main)

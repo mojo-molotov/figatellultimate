@@ -42,11 +42,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     concurrency:
       group: allure-reports
       cancel-in-progress: false
@@ -63,8 +58,7 @@ jobs:
           pattern: allure-results-lab-*
           path: allure-results
           merge-multiple: true
-      - id: deployment
-        uses: ./.github/actions/reports-publish
+      - uses: ./.github/actions/reports-publish
         with:
           family: watch-lab
           title: Watch lab (weekly)
