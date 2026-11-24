@@ -20,7 +20,8 @@
 
 import { env } from 'node:process';
 
-const OS = { linux: 'Linux', darwin: 'macOS', win32: 'Windows' };
+// The CI's test matrix (`.github/workflows/ci.yml`): Linux and Windows.
+const OS = { linux: 'Linux', win32: 'Windows' };
 const NODES = ['24', '26'];
 
 const has = (labels, name, value) => labels.some((label) => label.name === name && label.value === value);

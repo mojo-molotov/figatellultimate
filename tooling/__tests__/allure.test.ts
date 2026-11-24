@@ -213,7 +213,7 @@ describe('allurerc.mjs', () => {
     const ci = readFileSync(join(ROOT, '.github', 'workflows', 'ci.yml'), 'utf8');
     const list = (key: string): string[] =>
       (new RegExp(`^\\s+${key}: \\[([^\\]]+)\\]`, 'm').exec(ci)?.[1] ?? '').split(',').map((item) => item.trim());
-    const runner: Readonly<Record<string, string>> = { ubuntu: 'linux', macos: 'darwin', windows: 'win32' };
+    const runner: Readonly<Record<string, string>> = { ubuntu: 'linux', windows: 'win32' };
     const expected = list('os').flatMap((os) => {
       const platform = runner[os.replace(/-latest$/, '')] ?? os;
 

@@ -43,7 +43,7 @@ const ROOT = join(import.meta.dirname, '..');
 const MESSAGES = 'allureRuntimeMessages';
 
 /** The operating systems of the CI matrix, as the report names them. */
-export const OS_NAMES: Readonly<Record<string, string>> = { linux: 'Linux', darwin: 'macOS', win32: 'Windows' };
+export const OS_NAMES: Readonly<Record<string, string>> = { linux: 'Linux', win32: 'Windows' };
 
 /** A suite or module of a run, as far as labeling goes. */
 interface ParentShape {

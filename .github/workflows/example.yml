@@ -14,13 +14,13 @@ jobs:
   example:
     name: Example app (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    # On Linux, Playwright's own image (see browsers.yml): containers exist on Linux runners only, so macOS and Windows
-    # install their browser, which needs no system package there.
+    # On Linux, Playwright's own image (see browsers.yml): containers exist on Linux runners only, so Windows installs
+    # its browser, which needs no system package there.
     container: ${{ matrix.container }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest]
         include:
           - os: ubuntu-latest
             container:

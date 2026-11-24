@@ -48,7 +48,7 @@ pnpm check   # format, lint, boundaries, dead code, typecheck, tests, build, pac
 
 ### Tests
 
-Every pull request runs the scenarios (every package, happy-dom, type tests and properties) and the command line's surface against the built binary, on Linux, macOS and Windows; real browsers, the watch lab, the example's build and the load test run weekly. The reports of `main`:
+Every pull request runs the scenarios (every package, happy-dom, type tests and properties) and the command line's surface against the built binary, on Linux and Windows; real browsers, the watch lab, the example's build and the load test run weekly. The reports of `main`:
 
 - [CI report](https://mojo-molotov.github.io/figatellultimate/ci/): every test of the last build on main, with its trend.
 - [Coverage](https://mojo-molotov.github.io/figatellultimate/ci/coverage/): branches included, on the pure code (`pnpm test:coverage`).

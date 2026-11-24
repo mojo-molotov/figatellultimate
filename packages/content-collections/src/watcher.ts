@@ -1,6 +1,6 @@
 /**
- * The adapter's own file watcher: native recursive `fs.watch` (Node ≥ 24: ReadDirectoryChangesW on Windows, FSEvents
- * on macOS, inotify on Linux), one handle per root.
+ * The adapter's own file watcher: native recursive `fs.watch` (Node ≥ 24: each platform's own events,
+ * ReadDirectoryChangesW on Windows, inotify on Linux), one handle per root.
  *
  * Key design decision: one handle on the root, never one per folder. Windows refuses to rename or move a folder
  * whose descendant is watched: with a watcher per folder (chokidar, Content Collections' own), an author could not

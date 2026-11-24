@@ -113,7 +113,7 @@ export function explain(diagnostic: Diagnostic): Explanation {
     case 'case-collision':
       return {
         message: `this file and ${d.data.others.join(', ')} only differ by case`,
-        hint: 'case-insensitive file systems (macOS, Windows) see them as one file: rename one',
+        hint: "a case-insensitive file system (Windows' among them) sees them as one file: rename one",
       };
     case 'ugly-index':
       return {

@@ -32,7 +32,7 @@ pnpm --filter figatellultimate-example-next dev                # the packages it
 | `scripts/verify.ts`                                              | checks the prerendered HTML, the sitemap, the search bundles and the navbar (plain Node)                                                                                                                                   |
 | `scripts/load-test.ts`                                           | `pnpm example:load --posts N`: the example copied to `.tmp/`, N generated posts per locale, build and typecheck times, page weights and a navigation's bytes in Chromium, against budgets; weekly in the `Load test` workflow |
 
-Checked weekly on Linux, macOS and Windows by the `Example app` workflow.
+Checked weekly on Linux and Windows by the `Example app` workflow.
 
 ## Static generation, or Cache Components
 
