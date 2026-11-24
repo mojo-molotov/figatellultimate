@@ -29,6 +29,8 @@ export const schema = {
     footer: { nav: _, made: _, love: _ },
     pager: { nav: _, previous: _, next: _ },
     feed: { title: _, description: _ },
+    // What the site exposes to LLMs (`/llms.txt`, `/llms-full.txt`): its summary, and its documentation's list.
+    llms: { summary: _, docs: _ },
     notFound: { title: _, text: _, home: _ },
     collections: { pages: _, blog: _ },
     search: {

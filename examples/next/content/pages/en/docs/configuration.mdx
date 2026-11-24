@@ -58,20 +58,21 @@ From `news/releases/first.mdx`, figatellultimate infers the category, the subcat
 
 ### Options
 
-| Option                                        | Effect                                                                                    |
-| --------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `route`                                       | How the URL is composed from the grammar’s parts.                                         |
-| `reserved`                                    | Keys served by a dedicated route instead of the shared one: still typed and readable.     |
-| `indexForbiddenUnder`, `indexForbiddenAtRoot` | Where an `index.mdx` is not allowed.                                                      |
-| `draft`                                       | The boolean field marking drafts, left out of production builds.                          |
-| `testOnly`                                    | Keys of test content, left out of production builds.                                      |
-| `shared`                                      | Fields translations take from the default language when they leave them out.              |
-| `references`                                  | Frontmatter fields referencing a taxonomy.                                                |
-| `metadata`                                    | The fields holding the title, description, image, dates, robots, canonical URL and order. |
-| `searchable`                                  | Whether the local search indexes the collection (default `true`).                         |
-| `folderPages`                                 | Folders with a page of their own (below).                                                 |
-| `mounted`                                     | `false`: no page at all, read through its getters only (a taxonomy’s content).            |
-| `messages`                                    | Fields each folder must have in every language’s messages.                                |
+| Option                                        | Effect                                                                                              |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `route`                                       | How the URL is composed from the grammar’s parts.                                                   |
+| `reserved`                                    | Keys served by a dedicated route instead of the shared one: still typed and readable.               |
+| `indexForbiddenUnder`, `indexForbiddenAtRoot` | Where an `index.mdx` is not allowed.                                                                |
+| `draft`                                       | The boolean field marking drafts, left out of production builds.                                    |
+| `testOnly`                                    | Keys of test content, left out of production builds.                                                |
+| `shared`                                      | Fields translations take from the default language when they leave them out.                        |
+| `references`                                  | Frontmatter fields referencing a taxonomy.                                                          |
+| `metadata`                                    | The fields holding the title, description, image, dates, robots, canonical URL and order.           |
+| `llms`                                        | What it exposes to LLMs: its keys, as `reserved`, and the boolean field leaving a page out (below). |
+| `searchable`                                  | Whether the local search indexes the collection (default `true`).                                   |
+| `folderPages`                                 | Folders with a page of their own (below).                                                           |
+| `mounted`                                     | `false`: no page at all, read through its getters only (a taxonomy’s content).                      |
+| `messages`                                    | Fields each folder must have in every language’s messages.                                          |
 
 ### Metadata
 
@@ -103,6 +104,40 @@ A folder page has no frontmatter: its SEO is declared like an entry's `metadata`
 messages: { $root: ['description'], category: ['title', 'description'], subcategory: ['title', 'description'] },
 folderPages: { root: true, levels: ['category', 'subcategory'], metadata: { description: 'description' } },
 ```
+
+### Exposing to LLMs
+
+`llms` says what a collection exposes to LLMs, after the [llms.txt](https://llmstxt.org) convention: an `llms.txt` file per language listing its pages, and each page as Markdown, at its URL followed by `.md`. Its keys are named as `reserved`’s, a key or `prefix/*` for its descendants; `exclude` names the boolean frontmatter field leaving a page out.
+
+```ts
+pages: defineCollection({
+  entry: 'page',
+  base: '',
+  grammar: [locale({ optional: true }), rest('path'), slug()],
+  llms: { include: ['docs', 'docs/*'], exclude: 'llmExclude' },
+}),
+```
+
+A whole page leaves itself out by its frontmatter:
+
+```mdx
+---
+title: 'Internal notes'
+llmExclude: true
+---
+```
+
+A passage leaves itself out with the `<llm-exclude>` tag: the page shows it, without the tag, and its Markdown version leaves it out. A blank line around its content, so that it stays Markdown:
+
+```mdx
+<llm-exclude>
+
+The package manager you pick in a tab holds for the whole documentation.
+
+</llm-exclude>
+```
+
+The generated code marks every exposed URL (`llms` in `mountedUrls`); the app serves the files through its routes ([Next.js](/en/docs/nextjs#llmstxt)).
 
 ## Taxonomies
 

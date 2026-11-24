@@ -520,6 +520,46 @@ try {
     await context.close();
   }
 
+  // What the site exposes to LLMs at its public URLs, through the proxy: each llms.txt, and a page's Markdown at its
+  // URL with `.md` in either locale; a page left out has none.
+  {
+    const served = async (path: string): Promise<{ status: number; type: string; text: string }> => {
+      const response = await fetch(`${base}${path}`);
+
+      return { status: response.status, type: response.headers.get('content-type') ?? '', text: await response.text() };
+    };
+    const [llms, english, markdown, englishMarkdown, left] = await Promise.all([
+      served('/llms.txt'),
+      served('/en/llms.txt'),
+      served('/docs/installation.md'),
+      served('/en/docs/cli.md'),
+      served('/docs.md'),
+    ]);
+
+    check(
+      llms.status === 200 &&
+        llms.type.startsWith('text/plain') &&
+        llms.text.startsWith('# ') &&
+        llms.text.includes('/docs/installation.md'),
+      `/llms.txt: ${String(llms.status)} ${llms.type}`,
+    );
+    check(
+      english.status === 200 && english.text.includes('/en/docs/cli.md'),
+      `/en/llms.txt: ${String(english.status)}`,
+    );
+    check(
+      markdown.status === 200 &&
+        markdown.type.startsWith('text/markdown') &&
+        markdown.text.startsWith('# Installation'),
+      `/docs/installation.md: ${String(markdown.status)} ${markdown.type}`,
+    );
+    check(
+      englishMarkdown.status === 200 && englishMarkdown.text.startsWith('# '),
+      `/en/docs/cli.md: ${String(englishMarkdown.status)}`,
+    );
+    check(left.status === 404, `/docs.md: ${String(left.status)}, the page left out of llms.txt`);
+  }
+
   // The search's shortcut after its label, the reader's keys (⌘K on an Apple device, Ctrl K elsewhere) on the
   // trigger's line, on a desktop; never on a touch screen, where no keyboard is at hand.
   for (const [device, options, shown] of [
@@ -1027,6 +1067,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, those of a category too, a listing reached from its category at once, the switcher following, Back restoring; Tab straight to the copy buttons, a region a stop only while it overflows; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit, always for a category, its full pagination on its last line on a desktop, every see more as far below its cards, every full pagination at the end of its line; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; the navbar on one line at any width, compact once its links do not fit; a zoom preloaded on hover; the chosen theme shown before hydration; the code at AA contrast in every theme, light and dark; the search placeholder shown where the text begins, never heard; the shortcut of the search, the keys of the reader, on a desktop only; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
+    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, those of a category too, a listing reached from its category at once, the switcher following, Back restoring; Tab straight to the copy buttons, a region a stop only while it overflows; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit, always for a category, its full pagination on its last line on a desktop, every see more as far below its cards, every full pagination at the end of its line; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; the navbar on one line at any width, compact once its links do not fit; a zoom preloaded on hover; the chosen theme shown before hydration; the code at AA contrast in every theme, light and dark; the search placeholder shown where the text begins, never heard; the shortcut of the search, the keys of the reader, on a desktop only; llms.txt and each page as Markdown at their public URLs; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
   );
 }

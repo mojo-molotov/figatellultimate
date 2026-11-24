@@ -7,6 +7,7 @@ import remarkGfm from 'remark-gfm';
 import {
   compileWithHeadings,
   rehypeCodeGroups,
+  rehypeLlmExclude,
   withFigatellultimate,
 } from '@figatellultimate/content-collections/config';
 import { rehypeImageSizes } from '@figatellultimate/content-collections/images';
@@ -25,6 +26,8 @@ const common = {
   canonical: v.optional(v.string()),
   // A page's place among its siblings (the documentation's reading order).
   order: v.optional(v.number()),
+  // A page of the documentation left out of what the site exposes to LLMs (`llms` in the configuration).
+  llmExclude: v.optional(v.boolean(), false),
   content: v.string(),
 };
 // The code and its headings compiled in one pass, cached together (`compileWithHeadings`): the ids in the HTML are
@@ -41,6 +44,8 @@ const transform = async <D extends { content: string; _meta: Meta }>(
       rehypePlugins: [
         // Consecutive blocks marked npm, pnpm, yarn, bun: one block in tabs.
         rehypeCodeGroups,
+        // `<llm-exclude>`: its content shown in the page, the tag gone; left out of the page's Markdown for LLMs.
+        rehypeLlmExclude,
         headings,
         // Each local image's width and height, from its file in `public/`: `next/image` reserves its room. The
         // build runs from the example's folder (`figatellultimate build`), as Next serves `public/` from it.

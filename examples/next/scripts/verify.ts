@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { createSearch, type SearchResult, type SearchSort } from '@figatellultimate/search';
-import { localeLinksOf } from '@figatellultimate/site';
+import { localeLinksOf, markdownUrlOf } from '@figatellultimate/site';
 
 import { defaultLocale, locales } from '#figatellultimate/locales';
 import { navigationOf } from '#figatellultimate/navigation';
@@ -15,7 +15,7 @@ import { navigationOf } from '#figatellultimate/navigation';
 import { blogIndex } from '#figatellultimate/blog';
 import { taxonomies } from '#figatellultimate/taxonomies';
 import { findAuthorsTermByUrl } from '#figatellultimate/terms';
-import { mountedUrls } from '#figatellultimate/urls';
+import { mountedUrls, segmentsOf } from '#figatellultimate/urls';
 
 import { site } from '../site.ts';
 import { findBlogFolderByUrl } from '#figatellultimate/blog';
@@ -964,6 +964,82 @@ for (const locale of locales) {
   check(feed.includes(`<language>${locale}</language>`), `feed ${locale}: no language`);
 }
 
+// What the site exposes to LLMs (llms.txt): exactly the documentation pages the configuration exposes, its own page
+// left out by its frontmatter (`llmExclude`); per locale, an llms.txt after the proposal (its H1, its summary, its
+// documentation's list), each link the served Markdown of an exposed page, and an llms-full.txt holding them all.
+const exposed = mountedUrls.filter((item) => item.llms);
+const readBody = (path: string): string => (existsSync(path) ? readFileSync(path, 'utf8') : '');
+
+check(
+  exposed.length > 0 && exposed.every((item) => item.collection === 'pages' && item.key.startsWith('docs/')),
+  `llms: exposes ${exposed.map((item) => item.url).join(', ')}, not the documentation's pages`,
+);
+check(
+  mountedUrls.some((item) => item.key === 'docs') && !exposed.some((item) => item.key === 'docs'),
+  'llms: the documentation’s own page is exposed despite its llmExclude',
+);
+
+for (const locale of locales) {
+  const llms = readBody(join(app, locale, 'llms.txt.body'));
+  const full = readBody(join(app, locale, 'llms-full.txt.body'));
+  const lines = llms.split('\n');
+  const links = [...llms.matchAll(/^- \[[^\]]+\]\(([^)]+)\): \S/gm)].map((match) => match[1] ?? '');
+  const expected = exposed
+    .filter((item) => item.locale === locale)
+    .map((item) => absolute(markdownUrlOf(item.url)))
+    .sort();
+
+  check(
+    lines[0]?.startsWith('# ') === true && lines[2]?.startsWith('> ') === true && /^## \S/m.test(llms),
+    `${locale}/llms.txt: not an H1, a summary, then a file list`,
+  );
+  check(
+    [...links].sort().join() === expected.join(),
+    `${locale}/llms.txt: links [${links.join()}] ≠ the exposed pages' Markdown [${expected.join()}]`,
+  );
+
+  for (const item of exposed.filter((page) => page.locale === locale)) {
+    const markdown = readBody(join(app, locale, 'llms', ...segmentsOf(item.url, locale)) + '.body');
+
+    check(markdown.startsWith('# '), `${markdownUrlOf(item.url)}: no Markdown served`);
+    check(full.includes(`Source: ${absolute(markdownUrlOf(item.url))}`), `${locale}/llms-full.txt: no ${item.url}`);
+  }
+}
+
+// `<llm-exclude>`: shown in the page without its tag, gone from the Markdown; an exposed page links its Markdown and
+// its locale's llms.txt (the proposal's discovery), a page left out links neither.
+const installation = htmlOf('/docs/installation') ?? '';
+const installationMarkdown = readBody(join(app, 'fr', 'llms', 'docs', 'installation.body'));
+
+check(
+  !installation.includes('llm-exclude') && installation.includes('vaut pour toute la documentation'),
+  '/docs/installation: <llm-exclude> left in the page, or its content gone from it',
+);
+check(
+  installationMarkdown.includes('Ajoutez la CLI') &&
+    !installationMarkdown.includes('vaut pour toute la documentation') &&
+    !installationMarkdown.includes('llm-exclude'),
+  '/docs/installation.md: what <llm-exclude> holds is exposed',
+);
+check(
+  installation.includes('<link rel="alternate" type="text/markdown" href="/docs/installation.md"/>') &&
+    installation.includes('<link rel="describedby" href="/llms.txt"/>') &&
+    htmlOf('/en/docs/cli')?.includes('<link rel="describedby" href="/en/llms.txt"/>') === true,
+  '/docs/installation, /en/docs/cli: no link to their Markdown or their llms.txt',
+);
+check(htmlOf('/docs')?.includes('text/markdown') === false, '/docs: links a Markdown version it leaves out');
+
+// The pages documenting the tag show it, in code, never apply it: their Markdown keeps what follows its mentions.
+const configuration = readBody(join(app, 'fr', 'llms', 'docs', 'configuration.body'));
+const nextjs = readBody(join(app, 'en', 'llms', 'docs', 'nextjs.body'));
+
+check(
+  configuration.includes('<llm-exclude>') &&
+    configuration.includes('## Les taxonomies') &&
+    nextjs.includes('## Redirects'),
+  '/docs/configuration.md, /en/docs/nextjs.md: a tag in code applied, the page after it lost',
+);
+
 const feedLink = '<link rel="alternate" type="application/rss+xml" href="/en/feed.xml"/>';
 
 check(htmlOf('/en/docs')?.includes(feedLink) === true, '/en/docs: no link to its feed');
@@ -1126,6 +1202,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    `✓ ${String(mountedUrls.length)} mounted URLs prerendered with canonical, alternates, x-default and Open Graph; subcategory pages with their default view and pagination links; sitemap (dated, noindex left out), structured data, feeds, robots.txt, drafts, the footer, the listings' and the folder pages' batches, one search bundle per locale (French and English queries, stemming, collection filter), images through next/image with their sizes, a meta description on every folder and author page, with plain spaces, and the navbar from the content in each page's language as expected.`,
+    `✓ ${String(mountedUrls.length)} mounted URLs prerendered with canonical, alternates, x-default and Open Graph; subcategory pages with their default view and pagination links; sitemap (dated, noindex left out), structured data, feeds, robots.txt, drafts, the footer, the listings' and the folder pages' batches, one search bundle per locale (French and English queries, stemming, collection filter), an llms.txt per locale listing the documentation's Markdown, each page's Markdown without what <llm-exclude> holds, images through next/image with their sizes, a meta description on every folder and author page, with plain spaces, and the navbar from the content in each page's language as expected.`,
   );
 }

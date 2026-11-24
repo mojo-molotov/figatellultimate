@@ -70,6 +70,7 @@ De `news/releases/first.mdx`, figatellultimate déduit la catégorie, la sous-ca
 | `shared`                                      | Les champs que les traductions prennent de la langue par défaut quand elles les omettent.                               |
 | `references`                                  | Les champs du frontmatter qui référencent une taxonomie.                                                                |
 | `metadata`                                    | Les champs du titre, de la description, de l’image, des dates, des directives robots, de l’URL canonique et de l’ordre. |
+| `llms`                                        | Ce qu’elle expose aux LLM : ses clés, comme `reserved`, et le champ booléen qui en écarte une page (ci-dessous).        |
 | `searchable`                                  | Si la recherche locale indexe la collection (`true` par défaut).                                                        |
 | `folderPages`                                 | Des dossiers qui ont leur propre page (ci-dessous).                                                                     |
 | `mounted`                                     | `false` : aucune page, lue par ses getters seulement (le contenu d’une taxonomie).                                      |
@@ -105,6 +106,40 @@ Une page de dossier n’a pas de frontmatter : son SEO se déclare comme le `me
 messages: { $root: ['description'], category: ['title', 'description'], subcategory: ['title', 'description'] },
 folderPages: { root: true, levels: ['category', 'subcategory'], metadata: { description: 'description' } },
 ```
+
+### Exposer aux LLM
+
+`llms` dit ce qu’une collection expose aux LLM, d’après la convention [llms.txt](https://llmstxt.org) : un fichier `llms.txt` par langue qui liste ses pages, et chaque page en Markdown, à son URL suivie de `.md`. Ses clés se désignent comme celles de `reserved`, une clé ou `préfixe/*` pour ses descendants ; `exclude` nomme le champ booléen du frontmatter qui en écarte une page.
+
+```ts
+pages: defineCollection({
+  entry: 'page',
+  base: '',
+  grammar: [locale({ optional: true }), rest('path'), slug()],
+  llms: { include: ['docs', 'docs/*'], exclude: 'llmExclude' },
+}),
+```
+
+Une page s’écarte entière par son frontmatter :
+
+```mdx
+---
+title: 'Notes internes'
+llmExclude: true
+---
+```
+
+Un passage s’écarte par la balise `<llm-exclude>` : la page le montre, sans la balise, et sa version Markdown le laisse de côté. Une ligne vide autour de son contenu, pour qu’il reste du Markdown :
+
+```mdx
+<llm-exclude>
+
+Le gestionnaire choisi dans un onglet vaut pour toute la documentation.
+
+</llm-exclude>
+```
+
+Le code généré marque chaque URL exposée (`llms` dans `mountedUrls`) ; l’application sert les fichiers par ses routes ([Next.js](/docs/nextjs#llmstxt)).
 
 ## Les taxonomies
 

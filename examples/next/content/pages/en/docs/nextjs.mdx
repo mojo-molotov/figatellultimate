@@ -86,6 +86,19 @@ The sitemap lists every indexable page with its translations and its modificatio
 
 `structuredDataOf` gives an entry’s schema.org data (a `BlogPosting` with its authors, a `WebPage`), `breadcrumbListOf` its breadcrumb; `jsonLd` serializes them for a `<script type="application/ld+json">`. `rssOf` writes a collection’s RSS feed per language.
 
+## llms.txt
+
+What a collection exposes to LLMs ([the configuration](/en/docs/configuration#exposing-to-llms)) is served by three routes, as the feed is: `llms.txt` per language, `llms-full.txt`, every page in one file (an addition to the convention, which many tools read), and each page’s Markdown version. `mountedUrls` marks the exposed URLs (`llms`); `@figatellultimate/site` writes the files.
+
+| Function         | What it writes                                                                                         |
+| ---------------- | ------------------------------------------------------------------------------------------------------ |
+| `llmsTxtOf`      | The `llms.txt` file, after the convention: a title, a summary, lists of links.                         |
+| `llmsMarkdownOf` | A page’s Markdown, from its source: without what `<llm-exclude>` holds, nor MDX’s imports and exports. |
+| `llmsFullOf`     | The `llms-full.txt` file.                                                                              |
+| `markdownUrlOf`  | The URL of a page’s Markdown version: its own followed by `.md`.                                       |
+
+A route cannot share the shared route’s segment: the proxy rewrites `/docs/cli.md` to a dedicated route, in the page’s language (`app/[locale]/llms/[[...url]]`). Each exposed page links its Markdown version and its language’s `llms.txt`, with `<link rel="alternate" type="text/markdown">` and `<link rel="describedby">`.
+
 ## Redirects
 
 `figatellultimate migrate` writes `redirects.json` when URLs change. Next serves it as permanent redirects:

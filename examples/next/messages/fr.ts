@@ -227,6 +227,11 @@ const ui = {
     home: 'Retour à l’accueil',
   },
   feed: { title: 'Le blog de Figatellultimate', description: 'Les nouvelles de l’Empire d’Igoristan.' },
+  llms: {
+    summary:
+      'figatellultimate : du contenu MDX typé, dans des dossiers, traduit et cherchable, pour Next.js. Chaque page de sa documentation, en Markdown.',
+    docs: 'Documentation',
+  },
   collections: { pages: 'Pages', blog: SHARED.blog },
   search: {
     trigger: 'Rechercher',

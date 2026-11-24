@@ -38,6 +38,9 @@ export default defineConfig({
       metadata: { ...metadata, order: 'order' },
       // Written once, in French: a translation takes what it leaves out of these from the French version.
       shared: ['featuredPictureUrl', 'order'],
+      // Exposed to LLMs (`/llms.txt`, each page's Markdown): the documentation only, a page leaving itself out with
+      // `llmExclude: true`.
+      llms: { include: ['docs', 'docs/*'], exclude: 'llmExclude' },
     }),
     blog: defineCollection({
       entry: 'blogPost',

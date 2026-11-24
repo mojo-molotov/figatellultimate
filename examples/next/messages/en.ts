@@ -237,6 +237,11 @@ const ui = {
     home: 'Back to the home page',
   },
   feed: { title: 'The Figatellultimate blog', description: 'News from the Empire of Igoristan.' },
+  llms: {
+    summary:
+      'figatellultimate: typed MDX content, in folders, translated and searchable, for Next.js. Each page of its documentation, as Markdown.',
+    docs: 'Documentation',
+  },
   collections: { pages: 'Pages', blog: SHARED.blog },
   search: {
     trigger: 'Search',

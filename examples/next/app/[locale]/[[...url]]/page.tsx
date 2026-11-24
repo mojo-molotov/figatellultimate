@@ -1,6 +1,7 @@
 /** The single catch-all route: every content URL, folder page and author page, prerendered with its metadata. */
 import { toNextMetadata } from '@figatellultimate/next16';
 import {
+  markdownUrlOf,
   metadataOf,
   neighboursOf,
   pageMetadataOf,
@@ -26,6 +27,7 @@ import { BlogFolderPage, folderTitle } from '../../../blog/folder-page';
 import { PostFooter } from '../../../blog/post-footer';
 import { Body } from '../../../components/mdx';
 import { SectionPages } from '../../../components/section-pages';
+import { isExposed } from '../../../components/llms';
 import { breadcrumbDataOf, StructuredDataScript } from '../../../components/structured-data';
 import { trailOf } from '../../../components/trail';
 import { PrintMargins } from '../../../components/print-margins';
@@ -157,6 +159,13 @@ export default async function Page(props: PageProps<'/[locale]/[[...url]]'>): Pr
       : [];
   const data = (
     <>
+      {/* Exposed to LLMs: its Markdown version, and the llms.txt that lists it (llms.txt's discovery links). */}
+      {isExposed(entry.url) ? (
+        <>
+          <link rel="alternate" type="text/markdown" href={markdownUrlOf(entry.url)} />
+          <link rel="describedby" href={urlOf(entry.locale, ['llms.txt'])} />
+        </>
+      ) : null}
       <PrintMargins title={entry.data.title} url={entry.url} />
       <StructuredDataScript
         data={[
