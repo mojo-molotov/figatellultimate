@@ -14,9 +14,11 @@
  *       this page and the next ones (remembered in `localStorage`, where it is allowed). Before hydration, and for a
  *       label a block does not have, its first tab.
  *     - Every panel prerendered: the code is in the HTML without JavaScript; the hidden ones stay out of print.
+ *     - The tabs' names out of a Pagefind index (`data-pagefind-ignore="all"`), as the search leaves code blocks out:
+ *       an excerpt never reads « npm pnpm yarn bun » between two sentences.
  *
  * Invariants (`code-tabs.test.tsx`): the panels' labels as tabs; the choice synchronized between blocks and
- * remembered; the first tab without one; the keyboard and axe.
+ * remembered; the first tab without one; the keyboard and axe; the tabs' names out of a search index.
  */
 import { Tabs } from 'radix-ui';
 import { Children, isValidElement, useSyncExternalStore, type ReactNode } from 'react';
@@ -112,7 +114,7 @@ export function CodeTabs({
 
   return (
     <Tabs.Root data-slot="code-tabs" value={value} onValueChange={choose} {...(dir === undefined ? {} : { dir })}>
-      <Tabs.List data-slot="code-tabs-list" aria-label={labels.list}>
+      <Tabs.List data-slot="code-tabs-list" aria-label={labels.list} data-pagefind-ignore="all">
         {panels.map((panel) => (
           <Tabs.Trigger key={panel.label} data-slot="code-tabs-trigger" value={panel.label}>
             {panel.label}

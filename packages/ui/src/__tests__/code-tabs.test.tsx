@@ -61,6 +61,14 @@ describe('CodeTabs', () => {
     expect(screen.getByRole('region', { name: 'a' }).querySelectorAll('pre')).toHaveLength(3);
   });
 
+  it("keeps its tabs' names out of a search index, as a search leaves code blocks out", () => {
+    render(<Block name="a" labels={['npm', 'pnpm']} />);
+
+    expect(block('a').getByRole('tablist', { name: '«gestionnaire»' }).getAttribute('data-pagefind-ignore')).toBe(
+      'all',
+    );
+  });
+
   it('a choice in one block chooses it in every block that has it, and is remembered', async () => {
     const user = userEvent.setup();
 
