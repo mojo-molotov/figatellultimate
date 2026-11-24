@@ -11,13 +11,21 @@ export const schema = {
   ui: {
     folder: { more: _ },
     breadcrumb: { nav: _ },
-    toc: { title: _ },
+    // The table of contents' title, and its button's own name (an icon).
+    toc: { title: _, toggle: _ },
     code: { copy: _, copied: _, tabs: _ },
     image: { open: _, close: _ },
     card: { tags: _, authors: _, more: _ },
     navbar: { nav: _, menu: _ },
     locales: { language: _ },
-    theme: { toggle: { light: _, dark: _, unknown: _ }, site: _, maquis: _, paper: _ },
+    // The site theme picker's options as spoken: as the light and dark toggle says its own (`toggle`).
+    theme: {
+      toggle: { light: _, dark: _, unknown: _ },
+      pick: { on: _, choose: _, unknown: _ },
+      site: _,
+      maquis: _,
+      paper: _,
+    },
     footer: { nav: _, made: _, love: _ },
     pager: { nav: _, previous: _, next: _ },
     feed: { title: _, description: _ },
@@ -54,7 +62,8 @@ export const schema = {
       spoken: { 'title-asc': _, 'title-desc': _ },
     },
     listing: { total: _ },
-    pagination: { nav: _, previous: _, next: _, page: _, current: _, more: _, jump: _, short: _ },
+    // `short`, the page select's text; `spoken`, the same as a screen reader says it (no slash read aloud).
+    pagination: { nav: _, previous: _, next: _, page: _, current: _, more: _, jump: _, short: _, spoken: _ },
   },
 } as const satisfies MessageSchema;
 

@@ -8,6 +8,13 @@ import { SITE_THEME_STORAGE_KEY, siteThemeScript } from '../scripts.js';
 
 const THEMES = ['maquis', 'paper'] as const;
 const NAMES = { maquis: '«Maquis»', paper: '«Papier»' };
+/** Each option's spoken names: the theme shown, the one a press gives, and before the theme is known. */
+const SPOKEN = {
+  maquis: { on: '«thème Maquis, actuel»', choose: '«passer au thème Maquis»', unknown: '«thème Maquis»' },
+  paper: { on: '«thème Papier, actuel»', choose: '«passer au thème Papier»', unknown: '«thème Papier»' },
+};
+/** happy-dom runs `react-dom/server`; the browser family's pages do not. */
+const inBrowser = !navigator.userAgent.includes('HappyDOM');
 const root = document.documentElement;
 
 afterEach(() => {
@@ -98,4 +105,33 @@ describe('SiteThemePicker', () => {
     await userEvent.click(screen.getByRole('button', { name: '«Papier»' }));
     expect(root.dataset['siteTheme']).toBe('paper');
   });
+
+  it('names each option by what it is or does when given spoken names, nothing pressed to announce', async () => {
+    root.dataset['siteTheme'] = 'maquis';
+    render(<SiteThemePicker themes={THEMES} names={NAMES} label="«Thème»" spoken={SPOKEN} />);
+
+    const shown = await screen.findByRole('button', { name: '«thème Maquis, actuel»' });
+    const other = screen.getByRole('button', { name: '«passer au thème Papier»' });
+
+    // Seen: the short names; the current one marked for the stylesheet, not announced as pressed.
+    expect([shown.textContent, other.textContent]).toEqual(['«Maquis»', '«Papier»']);
+    expect(shown.hasAttribute('data-current')).toBe(true);
+    expect(other.hasAttribute('data-current')).toBe(false);
+    expect([shown.hasAttribute('aria-pressed'), other.hasAttribute('aria-pressed')]).toEqual([false, false]);
+    await userEvent.click(other);
+    expect(await screen.findByRole('button', { name: '«thème Papier, actuel»' })).toBe(other);
+    expect(screen.getByRole('button', { name: '«passer au thème Maquis»' })).toBe(shown);
+  });
+
+  it.skipIf(inBrowser)(
+    'names each option by its theme alone before the theme is known, the prerendered page',
+    async () => {
+      const { renderToString } = await import('react-dom/server');
+      const html = renderToString(<SiteThemePicker themes={THEMES} names={NAMES} label="«Thème»" spoken={SPOKEN} />);
+
+      expect(html).toContain('aria-label="«thème Maquis»"');
+      expect(html).toContain('aria-label="«thème Papier»"');
+      expect(html).not.toContain('data-current');
+    },
+  );
 });

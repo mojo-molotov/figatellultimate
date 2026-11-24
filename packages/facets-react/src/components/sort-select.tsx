@@ -8,11 +8,14 @@
  * wraps on a narrow screen never moves the page below it (the pagination keeps its place across a page change).
  *
  * Key design decision, as chosen with the user: a sort may have a spoken name (`labels.spoken`) apart from its display
- * name, shown short (`A → Z`) and read whole ("alphabetical order"), in the trigger and in its list alike.
+ * name. The closed trigger shows it short (`A → Z`) and reads it whole ("alphabetical order"): a toolbar keeps its
+ * width. Its list, which has the room, shows the spoken name: an option's name holds its visible text (WCAG 2.5.3,
+ * a voice control saying what it sees). Rejected: the short text in the list too, named otherwise (axe's
+ * `label-content-name-mismatch`).
  *
  * Invariants (`components.test.tsx`): axe open and closed; Enter opens on the current sort, arrows and Enter choose,
  * focus back to the trigger; Escape closes without changing the sort; the current sort's name in the first render;
- * each sort read by its spoken name, shown by its display name.
+ * the trigger showing a sort's display name and reading its spoken one, its list showing the spoken name.
  */
 import { Select, VisuallyHidden } from 'radix-ui';
 import type { ComponentProps, ReactNode } from 'react';
@@ -27,8 +30,8 @@ export interface SortSelectLabels {
   /** A sort's display name, from its name in the registry. */
   readonly sort: (sort: string) => string;
   /**
-   * A sort's spoken name, when its display name reads badly aloud (`A → Z`, read "A right arrow Z"): the screen
-   * reader's, its display name the screen's. Default: the display name.
+   * A sort's spoken name, when its display name reads badly aloud (`A → Z`, read "A right arrow Z"): the closed
+   * select shows the display name and reads this one; its list shows this one (WCAG 2.5.3). Default: the display name.
    */
   readonly spoken?: ((sort: string) => string) | undefined;
 }
@@ -173,7 +176,8 @@ export function SortSelectItem({ children, value, ...props }: ComponentProps<typ
 
   return (
     <Select.Item data-slot="sort-select-item" value={value} {...props}>
-      <Select.ItemText>{children ?? <SortText labels={labels} sort={value} />}</Select.ItemText>
+      {/* The list has the room: the spoken name, shown and read alike (a voice control says what it sees). */}
+      <Select.ItemText>{children ?? labels.spoken?.(value) ?? labels.sort(value)}</Select.ItemText>
       <Select.ItemIndicator data-slot="sort-select-indicator" />
     </Select.Item>
   );

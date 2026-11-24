@@ -106,7 +106,7 @@ body > [data-layout] {
   cursor: pointer;
 }
 
-[data-slot='site-theme-option'][aria-pressed='true'] {
+[data-slot='site-theme-option']:is([aria-pressed='true'], [data-current]) {
   border-color: var(--fig-accent);
   color: var(--fig-accent);
 }

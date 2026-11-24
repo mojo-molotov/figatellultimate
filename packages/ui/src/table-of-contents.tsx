@@ -18,7 +18,7 @@
  *
  * Invariants (`table-of-contents.test.tsx`, `table-of-contents-layout.test.tsx` in Chromium, Firefox and WebKit):
  * reading, the bottom of the page, a hash on load, a click locking the followed heading, the range line, the panel's
- * own scroll, axe and the keyboard.
+ * own scroll, axe and the keyboard; its button named by its own label when given one.
  */
 import {
   activeHeading,
@@ -49,8 +49,10 @@ import { TOC_STORAGE_KEY as STORAGE_KEY } from './scripts.js';
 
 /** The table of contents' own texts: no default, no English. */
 export interface TableOfContentsLabels {
-  /** The landmark's name and its disclosure button (e.g. "Sur cette page"). */
+  /** The landmark's name, and its disclosure button's unless `toggle` names it (e.g. "Sur cette page"). */
   readonly title: string;
+  /** The disclosure button's own name, an icon showing nothing to match (e.g. "Sommaire"). Default: the title. */
+  readonly toggle?: string | undefined;
 }
 
 /** The table of contents' props: a `<nav>`'s, plus the headings, the labels, its side and its storage key. */
@@ -540,7 +542,7 @@ export function TableOfContents({
         data-slot="toc-toggle"
         aria-expanded={open}
         aria-controls={panelId}
-        aria-labelledby={titleId}
+        {...(labels.toggle === undefined ? { 'aria-labelledby': titleId } : { 'aria-label': labels.toggle })}
         onClick={() => {
           setChosen({ wide, open: !open });
 

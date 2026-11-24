@@ -370,7 +370,7 @@ describe('sort select', () => {
     },
   );
 
-  it('reads each sort by its spoken name when given one, its shown text left to sight (an arrow, read as is)', async () => {
+  it('shows a sort short when closed, read by its spoken name, and its list by the spoken names', async () => {
     const { user } = renderListing('', (binding) => (
       <SortSelect binding={binding} labels={{ ...SORT, spoken: (sort) => `«nom ${sort}»` }} />
     ));
@@ -384,7 +384,8 @@ describe('sort select', () => {
       false,
       false,
     ]);
-    expect(screen.getByRole('option', { name: '«nom date-asc»' }).textContent).toContain('«tri date-asc»');
+    // The list shows the spoken name: an option's name holds what it shows (WCAG 2.5.3).
+    expect(screen.getByRole('option', { name: '«nom date-asc»' }).textContent).toBe('«nom date-asc»');
     expect(await violations(screen.getByRole('listbox'))).toEqual([]);
   });
 
@@ -399,6 +400,20 @@ describe('sort select', () => {
 });
 
 describe('page select', () => {
+  it('reads its page by its spoken text when given one, the short one left to sight ("3 / 10" read "3 slash 10")', () => {
+    renderListing('?page=5', (binding) => (
+      <PageSelect
+        binding={binding}
+        labels={{ ...JUMP, spoken: (page, pages) => `«page ${String(page)} sur ${String(pages)}»` }}
+        locale="fr"
+      />
+    ));
+    const trigger = screen.getByRole('combobox', { name: JUMP.trigger });
+
+    expect(trigger.querySelector('[aria-hidden="true"]')?.textContent).toBe(JUMP.current(5, 10));
+    expect(trigger.textContent).toContain('«page 5 sur 10»');
+  });
+
   it('closes on a tap on its trigger while open, never reopening at once (a touch screen)', async () => {
     // On a touch screen, the tap's pointerdown closed it as outside, then its click on the trigger opened it again.
     renderListing('?page=5', (binding) => <PageSelect binding={binding} labels={JUMP} locale="fr" />);

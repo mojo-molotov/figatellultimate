@@ -46,6 +46,8 @@ export interface ListingLabels {
     /** The compact pagination's name, and what it shows. */
     readonly jump: string;
     readonly short: Precompiled<'ui.pagination.short'>;
+    /** The compact pagination as a screen reader says it: "Page 3 of 10", not "3 slash 10". */
+    readonly spoken: Precompiled<'ui.pagination.spoken'>;
   };
 }
 
@@ -94,6 +96,7 @@ export async function listingLabels(locale: Locale): Promise<ListingLabels> {
       more: await compiled(locale, 'ui.pagination.more'),
       jump: t('ui.pagination.jump'),
       short: await compiled(locale, 'ui.pagination.short'),
+      spoken: await compiled(locale, 'ui.pagination.spoken'),
     },
   };
 }

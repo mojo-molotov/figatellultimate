@@ -19,6 +19,12 @@ import { SiteThemePicker } from './site-theme-picker';
  */
 export async function SiteFooter({ locale }: { readonly locale: Locale }): Promise<ReactNode> {
   const t = await getTranslations({ locale });
+  // A theme option as spoken, as the light and dark toggle says its own: what it is, or what a press does.
+  const spokenOf = (name: string) => ({
+    on: t('ui.theme.pick.on', { name }),
+    choose: t('ui.theme.pick.choose', { name }),
+    unknown: t('ui.theme.pick.unknown', { name }),
+  });
   const items = navigationOf(locale);
   // The sections with a page (the documentation, the blog), then the pages at the root (home).
   const links = [
@@ -43,6 +49,7 @@ export async function SiteFooter({ locale }: { readonly locale: Locale }): Promi
         <SiteThemePicker
           label={t('ui.theme.site')}
           names={{ maquis: t('ui.theme.maquis'), paper: t('ui.theme.paper') }}
+          spoken={{ maquis: spokenOf(t('ui.theme.maquis')), paper: spokenOf(t('ui.theme.paper')) }}
         />
         <p data-slot="site-footer-signature">
           {site.name} · {t('ui.footer.made')} <Hearts label={t('ui.footer.love')} />

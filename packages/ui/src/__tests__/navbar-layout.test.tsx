@@ -103,7 +103,7 @@ describe('Navbar layout with styles.css', () => {
       screen.getByRole('link', { name: 'Accueil' }),
       screen.getByRole('button', { name: 'docs' }),
       screen.getByRole('button', { name: /Français/ }),
-      screen.getByRole('button', { name: 'Sombre' }),
+      screen.getByRole('button', { name: /^(Clair|Sombre|Thème)$/ }),
     ].map((element) => element.getBoundingClientRect());
     const [first] = boxes;
 

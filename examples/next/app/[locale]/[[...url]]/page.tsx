@@ -198,7 +198,7 @@ export default async function Page(props: PageProps<'/[locale]/[[...url]]'>): Pr
     <div data-layout="article">
       {data}
       <SiteHeader locale={entry.locale} url={entry.url} breadcrumb={false} />
-      <Toc headings={entry.data.headings} labels={{ title: t('ui.toc.title') }} />
+      <Toc headings={entry.data.headings} labels={{ title: t('ui.toc.title'), toggle: t('ui.toc.toggle') }} />
       <main data-collection={found.collection}>
         <PageCrumbs locale={entry.locale} url={entry.url} title={entry.data.title} />
         {body}

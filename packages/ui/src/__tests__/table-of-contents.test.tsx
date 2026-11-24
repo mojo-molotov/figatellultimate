@@ -98,6 +98,15 @@ describe('TableOfContents', () => {
     expect(nav.getAttribute('data-pagefind-ignore')).toBe('all');
   });
 
+  it('names its button by its own label when given one, the landmark still by its title', () => {
+    render(
+      <TableOfContents headings={HEADINGS} labels={{ ...LABELS, toggle: '«Sommaire»' }} storageKey="test:toc-named" />,
+    );
+    const nav = screen.getByRole('navigation', { name: '«Sur cette page»' });
+
+    expect(within(nav).getByRole('button', { name: '«Sommaire»' }).getAttribute('data-slot')).toBe('toc-toggle');
+  });
+
   it('passes axe, the panel closed and open', async () => {
     wideScreen(false);
     const { user, nav } = renderToc();

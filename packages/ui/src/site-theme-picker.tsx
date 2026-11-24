@@ -11,10 +11,14 @@
  *     - The change goes through the app's `transition`, as chosen with the user: a look is decorative, out of the
  *       design system (`siteThemeTransition` of `@figatellultimate/effects` blurs the page); none applies at once.
  *     - Storage wrapped: without it, the choice lasts the visit.
+ *     - Spoken names (`spoken`), as chosen with the user, said as the light and dark toggle says its own: the shown
+ *       theme says what it is, another what a press does; nothing announced as pressed then. The current option is
+ *       marked `data-current` for the stylesheet either way.
  *
  * Invariants (`site-theme-picker.test.tsx`): its group named, the page's theme pressed once mounted; a theme applied
  * through the transition and remembered; the theme shown ignored; a page without storage still works; the script
- * applying only a theme the site offers, never throwing.
+ * applying only a theme the site offers, never throwing; with spoken names, each option named by what it is or does,
+ * by its theme alone before the theme is known.
  */
 import { useSyncExternalStore, type ReactNode } from 'react';
 
@@ -46,6 +50,19 @@ export interface SiteThemePickerProps<T extends string> {
   readonly storageKey?: string | undefined;
   /** How the change is applied, e.g. `siteThemeTransition` of `@figatellultimate/effects`; default at once. */
   readonly transition?: ((apply: () => void) => void) | undefined;
+  /**
+   * Each option's spoken names, as a light and dark toggle says them: `on` while its theme is shown ("Maquis theme,
+   * current"), `choose` while another is ("Switch to the Paper theme"), `unknown` before the theme is known (the
+   * prerendered page). Given, nothing is announced as pressed: the names say it. Default: `names`, pressed.
+   */
+  readonly spoken?: Readonly<Record<T, SiteThemeSpoken>> | undefined;
+}
+
+/** An option's spoken names (`SiteThemePickerProps['spoken']`). */
+export interface SiteThemeSpoken {
+  readonly on: string;
+  readonly choose: string;
+  readonly unknown: string;
 }
 
 /**
@@ -65,6 +82,7 @@ export function SiteThemePicker<T extends string>({
   transition = (apply) => {
     apply();
   },
+  spoken,
 }: SiteThemePickerProps<T>): ReactNode {
   // The theme the page shows, read once mounted (the server cannot know the visitor's choice), followed as it changes.
   const shown = useSyncExternalStore(subscribe, siteTheme, () => undefined);
@@ -95,7 +113,17 @@ export function SiteThemePicker<T extends string>({
           type="button"
           data-slot="site-theme-option"
           value={theme}
-          aria-pressed={current === undefined ? undefined : current === theme}
+          {...(spoken === undefined
+            ? { 'aria-pressed': current === undefined ? undefined : current === theme }
+            : {
+                'aria-label':
+                  current === undefined
+                    ? spoken[theme].unknown
+                    : current === theme
+                      ? spoken[theme].on
+                      : spoken[theme].choose,
+              })}
+          {...(current === theme ? { 'data-current': '' } : {})}
           onClick={() => {
             choose(theme);
           }}

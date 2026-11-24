@@ -202,7 +202,7 @@ const ui = {
     more: '{count, plural, one {Voir le billet} many {Voir les # billets} other {Voir les # billets}}',
   },
   breadcrumb: { nav: 'Fil d’Ariane' },
-  toc: { title: 'Sur cette page' },
+  toc: { title: 'Sur cette page', toggle: 'Sommaire' },
   code: { copy: 'Copier le code', copied: 'Code copié', tabs: 'Gestionnaire de paquets' },
   image: { open: 'Agrandir l’image : {alt}', close: 'Fermer l’image' },
   card: { tags: 'Tags', authors: 'Auteurs', more: 'Autres tags' },
@@ -214,6 +214,7 @@ const ui = {
       dark: 'Thème sombre, passer au thème clair',
       unknown: 'Changer de thème',
     },
+    pick: { on: 'Thème {name}, thème actuel', choose: 'Passer au thème {name}', unknown: 'Thème {name}' },
     site: 'Thème du site',
     maquis: 'Maquis',
     paper: 'Papier',
@@ -281,6 +282,7 @@ const ui = {
     more: 'Pages {from} à {to}',
     jump: 'Aller à la page',
     short: '{page} / {pages}',
+    spoken: 'Page {page} sur {pages}',
   },
 } as const satisfies AppMessages['ui'];
 

@@ -212,7 +212,7 @@ const taxonomies = {
 const ui = {
   folder: { more: '{count, plural, one {See the post} other {See the # posts}}' },
   breadcrumb: { nav: 'Breadcrumb' },
-  toc: { title: 'On this page' },
+  toc: { title: 'On this page', toggle: 'Contents' },
   code: { copy: 'Copy the code', copied: 'Code copied', tabs: 'Package manager' },
   image: { open: 'Enlarge the image: {alt}', close: 'Close the image' },
   card: { tags: 'Tags', authors: 'Authors', more: 'More tags' },
@@ -224,6 +224,7 @@ const ui = {
       dark: 'Dark theme, switch to the light theme',
       unknown: 'Switch the theme',
     },
+    pick: { on: '{name} theme, current theme', choose: 'Switch to the {name} theme', unknown: '{name} theme' },
     site: 'Site theme',
     maquis: 'Maquis',
     paper: 'Paper',
@@ -291,6 +292,7 @@ const ui = {
     more: 'Pages {from} to {to}',
     jump: 'Go to page',
     short: '{page} / {pages}',
+    spoken: 'Page {page} of {pages}',
   },
 } as const satisfies AppMessages['ui'];
 

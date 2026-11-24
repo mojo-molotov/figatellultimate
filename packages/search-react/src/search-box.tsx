@@ -109,8 +109,9 @@ export interface SearchBoxSort {
     /** A sort's display name. */
     readonly sort: (sort: SearchSort) => string;
     /**
-     * A sort's spoken name, when its display name reads badly aloud (`A → Z`, read "A right arrow Z"). Default: the
-     * display name.
+     * A sort's spoken name, when its display name reads badly aloud (`A → Z`, read "A right arrow Z"): the closed
+     * select shows the display name and reads this one; its list shows this one (WCAG 2.5.3). Default: the display
+     * name.
      */
     readonly spoken?: ((sort: SearchSort) => string) | undefined;
   };
@@ -435,9 +436,8 @@ export function SearchBoxSort(props: ComponentProps<typeof Select.Trigger>): Rea
           <Select.Viewport>
             {sortBy.sorts.map((name) => (
               <Select.Item key={name} value={name} data-slot="search-box-sort-item">
-                <Select.ItemText>
-                  <SortText labels={sortBy.labels} sort={name} />
-                </Select.ItemText>
+                {/* The list has the room: the spoken name, shown and read alike (WCAG 2.5.3). */}
+                <Select.ItemText>{sortBy.labels.spoken?.(name) ?? sortBy.labels.sort(name)}</Select.ItemText>
               </Select.Item>
             ))}
           </Select.Viewport>

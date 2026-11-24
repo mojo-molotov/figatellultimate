@@ -13,9 +13,10 @@
  *     - Nothing for a single page, as the pagination.
  *
  * Invariants (`components.test.tsx`): axe open and closed; the current page shown; Enter opens on it, arrows and
- * Enter go to another, focus back to the trigger; Escape changes nothing; none for a single page; the locale's digits.
+ * Enter go to another, focus back to the trigger; Escape changes nothing; none for a single page; the locale's digits;
+ * the current page read by its spoken text when given one.
  */
-import { Select } from 'radix-ui';
+import { Select, VisuallyHidden } from 'radix-ui';
 import { useMemo, type ComponentProps, type ReactNode } from 'react';
 
 import { useTapToClose } from './tap-to-close.js';
@@ -29,6 +30,11 @@ export interface PageSelectLabels {
   readonly trigger: string;
   /** What the trigger shows, from the current page and the count of pages, e.g. "3 / 10". */
   readonly current: (page: number, pages: number) => string;
+  /**
+   * What a screen reader says of it, when the shown text reads badly aloud ("3 / 10", read "3 slash 10"), e.g.
+   * "Page 3 of 10". Default: the shown text.
+   */
+  readonly spoken?: ((page: number, pages: number) => string) | undefined;
 }
 
 /** The page select's props: a Radix Select root's, plus the binding, the labels and the locale. */
@@ -73,7 +79,16 @@ export function PageSelect({ binding, labels, locale, ...props }: PageSelectProp
         aria-label={labels.trigger}
         onClick={swallowsReopen}
       >
-        <Select.Value data-slot="page-select-value">{labels.current(page, pages)}</Select.Value>
+        <Select.Value data-slot="page-select-value">
+          {labels.spoken === undefined ? (
+            labels.current(page, pages)
+          ) : (
+            <>
+              <span aria-hidden>{labels.current(page, pages)}</span>
+              <VisuallyHidden.Root>{labels.spoken(page, pages)}</VisuallyHidden.Root>
+            </>
+          )}
+        </Select.Value>
         <Select.Icon asChild data-slot="page-select-icon">
           <span />
         </Select.Icon>

@@ -256,14 +256,18 @@ describe('SearchBox', () => {
     expect(await violations()).toEqual([]);
   });
 
-  it('reads each sort by its spoken name when given one, its shown text left to sight', async () => {
+  it('shows a sort short when closed, read by its spoken name, and its list by the spoken names', async () => {
     const { user } = renderBox({ sort: 'spoken' });
     const select = screen.getByRole('combobox', { name: '«trier»' });
 
     expect(select.querySelector('[aria-hidden="true"]')?.textContent).toBe('«tri relevance»');
     expect(select.textContent).toContain('«nom relevance»');
     await user.click(select);
-    expect(screen.getByRole('option', { name: '«nom title-asc»' }).textContent).toContain('«tri title-asc»');
+    expect(screen.getByRole('option', { name: '«nom title-asc»' }).textContent).toBe('«nom title-asc»');
+    // The list alone: while it is open, Radix hides the rest of the page from assistive technologies.
+    const list = await axe.run(screen.getByRole('listbox', { name: '' }));
+
+    expect(list.violations.map((violation) => violation.id)).toEqual([]);
   });
 
   it('closes its sort on a tap on its trigger while open, never reopening at once (a touch screen)', async () => {
