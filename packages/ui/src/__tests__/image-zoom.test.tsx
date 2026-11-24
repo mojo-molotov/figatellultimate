@@ -296,19 +296,6 @@ describe('ImageZoom', () => {
     // An image component as `next/image`: its variants follow `sizes`, so the preload must say the same.
     const AppImage = (props: ImageProps) => <img data-app="" {...props} />;
     const user = userEvent.setup();
-    // What reached the image before the visitor showed an interest, said by a failure: what could have preloaded it.
-    const reached: string[] = [];
-    const record = (event: Event): void => {
-      const target =
-        event.target instanceof Element ? (event.target.getAttribute('data-slot') ?? event.target.tagName) : '?';
-      const where =
-        event instanceof PointerEvent ? ` ${event.pointerType} ${String(event.clientX)},${String(event.clientY)}` : '';
-
-      reached.push(`${event.type} ${target} trusted=${String(event.isTrusted)}${where}`);
-    };
-    const types = ['pointerover', 'pointerenter', 'focusin'] as const;
-
-    for (const type of types) document.addEventListener(type, record, true);
 
     // Away from the page's corner, where a real browser's pointer rests (0,0): an image appearing under it gets a
     // pointer's entering, a real interest the component rightly answers (Chromium in CI preloaded so).
@@ -326,11 +313,9 @@ describe('ImageZoom', () => {
     // Precondition: the image is not under the corner's pointer (happy-dom lays nothing out: every box is empty).
     expect(box.width === 0 || (box.left > 0 && box.top > 0)).toBe(true);
 
-    for (const type of types) document.removeEventListener(type, record, true);
-
     // Precondition: nothing fetched before the visitor shows an interest. A count, not the elements: a failure
     // serializing DOM nodes overflows the report's string.
-    expect(preloads().length, `before any interest: ${reached.join('; ') || 'no event'}`).toBe(0);
+    expect(preloads().length).toBe(0);
     await user.hover(button);
     const [preload] = preloads();
 
