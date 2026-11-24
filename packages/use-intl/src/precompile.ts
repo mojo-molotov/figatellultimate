@@ -14,7 +14,8 @@
  *     - A message for the client carries its key (`Precompiled<K>`): `formatPrecompiled` types its arguments by it.
  *
  * Invariants (`precompile.test.ts`, `precompile.test-d.ts`): every message compiled, as plain data; a key naming a
- * group throws; the key's type carried to the client.
+ * group throws; the key's type carried to the client; each locale loaded and compiled once, again after a failure
+ * (`precompiledLoader`).
  */
 import compile from 'icu-minify/compile';
 import type { CompiledMessage } from 'icu-minify/format';
@@ -85,4 +86,36 @@ export function precompiled<K extends Extract<keyof RegisteredTable, string>>(
   if (typeof node !== 'string' && !Array.isArray(node)) throw new Error(`"${key}" is not a message.`);
 
   return { key, message: node };
+}
+
+/**
+ * A loader of each locale's messages, precompiled once per process: the server's translator and the client's
+ * messages read the same tree.
+ *
+ * @param load - Loads a locale's messages, e.g. the generated `loadMessages`.
+ * @returns A function giving a locale's precompiled messages, loaded and compiled on its first call (one load for
+ *   calls at once); a failed load is loaded again on the next call.
+ *
+ * @example
+ * export const precompiledMessages = precompiledLoader(loadMessages);
+ */
+export function precompiledLoader<L extends string>(
+  load: (locale: L) => Promise<AbstractIntlMessages>,
+): (locale: L) => Promise<PrecompiledMessages> {
+  const known = new Map<L, Promise<PrecompiledMessages>>();
+
+  return (locale) => {
+    const cached = known.get(locale);
+
+    if (cached !== undefined) return cached;
+
+    const tree = load(locale).then(precompileMessages);
+
+    known.set(locale, tree);
+    tree.catch(() => {
+      known.delete(locale);
+    });
+
+    return tree;
+  };
 }

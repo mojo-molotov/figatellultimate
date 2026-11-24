@@ -4,7 +4,7 @@
  * author's page carries only its slice; the browser fetches this on the first filter or sort, as a subcategory's
  * (`../../listing/[[...folder]]/route.ts`). The route itself is `listingIndexRoute` of `@figatellultimate/next16`.
  */
-import { batchPath } from '@figatellultimate/facets';
+import { batchItems, batchPath } from '@figatellultimate/facets';
 import { listingIndexRoute } from '@figatellultimate/next16/listing-index';
 
 import { authorsListingIndexes } from '#figatellultimate/terms';
@@ -27,9 +27,8 @@ export const { GET, generateStaticParams } = listingIndexRoute({
   pages: {
     count: (page) => page.pages,
     params: (page, from) => ({ locale: page.locale, term: [page.term, ...batchPath(from)] }),
-    build: async (page, { from, to }) => {
-      const size = page.perPage ?? page.entries.length;
-      const posts = await postsOf(page.entries.slice((from - 1) * size, to * size).map((entry) => entry.item));
+    build: async (page, range) => {
+      const posts = await postsOf(batchItems(page.entries, range, page.perPage).map((entry) => entry.item));
 
       return { keys: posts.map((post) => post.url), cards: await cardDataOf(posts, page.locale, page.term) };
     },

@@ -42,7 +42,7 @@ const components = {
   th: (props: ComponentProps<'th'>): ReactNode => <th data-slot="mdx-th" {...props} />,
   td: (props: ComponentProps<'td'>): ReactNode => <td data-slot="mdx-td" {...props} />,
   hr: (props: ComponentProps<'hr'>): ReactNode => <hr data-slot="mdx-hr" {...props} />,
-  // A group of code blocks (`rehype-code-groups.ts`) as tabs; any other `div` as is (a group's labelled panels too).
+  // A group of code blocks (`rehypeCodeGroups` of `@figatellultimate/content-collections/config`) as tabs; any other `div` as is (a group's labelled panels too).
   div: ({
     'data-code-group': group,
     ...props

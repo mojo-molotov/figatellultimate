@@ -19,7 +19,7 @@ export async function Code(props: ComponentProps<'pre'>): Promise<ReactNode> {
 }
 
 /**
- * A group of code blocks (`rehype-code-groups.ts`: npm, pnpm, yarn, bun) as tabs, its list named from the messages,
+ * A group of code blocks (`rehypeCodeGroups` of `@figatellultimate/content-collections/config`: npm, pnpm, yarn, bun) as tabs, its list named from the messages,
  * its arrows moving the page's reading way.
  */
 export async function CodeGroup({ children }: { readonly children: ReactNode }): Promise<ReactNode> {

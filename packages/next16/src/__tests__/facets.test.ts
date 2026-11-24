@@ -1,22 +1,30 @@
 // @vitest-environment happy-dom
-import { renderHook } from '@testing-library/react';
+import { render, renderHook } from '@testing-library/react';
+import { createElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const router = { push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() };
-// The page's location, as Next gives it: changed by a test to read another one.
-const at = { pathname: '/blog/news', search: 'tags=bot' };
+// The page's location, as Next gives it: changed by a test to read another one. `prerendering`: the search unknown, as
+// in a static prerender, where Next suspends the component reading it.
+const at = { pathname: '/blog/news', search: 'tags=bot', prerendering: false };
 
 vi.mock('next/navigation.js', () => ({
   usePathname: () => at.pathname,
   useRouter: () => router,
-  useSearchParams: () => new URLSearchParams(at.search),
+  useSearchParams: () => {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- how React suspends: a pending promise thrown.
+    if (at.prerendering) throw new Promise(() => undefined);
+
+    return new URLSearchParams(at.search);
+  },
 }));
 
-const { useNextUrl } = await import('../facets.js');
+const { NextUrlBoundary, useNextUrl, usePagedLocaleLinks } = await import('../facets.js');
 
 afterEach(() => {
   at.pathname = '/blog/news';
   at.search = 'tags=bot';
+  at.prerendering = false;
   vi.restoreAllMocks();
   router.push.mockClear();
   router.replace.mockClear();
@@ -122,5 +130,63 @@ describe('useNextUrl', () => {
 
     expect(replace).not.toHaveBeenCalled();
     expect(router.replace).not.toHaveBeenCalled();
+  });
+});
+
+describe('usePagedLocaleLinks', () => {
+  const links = [
+    { locale: 'fr', url: '/blog/news/page/2', kind: 'entry', current: true },
+    { locale: 'en', url: '/en/blog/news/page/2', kind: 'entry', current: false },
+  ] as const;
+  const listing = { fr: { first: '/blog/news', pages: 9 }, en: { first: '/en/blog/news', pages: 4 } };
+
+  it.each([
+    ['a page the browser moved to', '/blog/news/page/3', ['/blog/news/page/3', '/en/blog/news/page/3']],
+    ['the first page', '/blog/news', ['/blog/news', '/en/blog/news']],
+    ['a page past the other locale’s last', '/blog/news/page/6', ['/blog/news/page/6', '/en/blog/news']],
+  ])('leads the switcher from %s to that page in each locale', (_, pathname, urls) => {
+    at.pathname = pathname;
+    at.search = '';
+
+    expect(
+      renderHook(() => usePagedLocaleLinks(links, { locale: 'fr', listing })).result.current.map((link) => link.url),
+    ).toEqual(urls);
+  });
+
+  it.each([
+    ['without a listing', '/blog/news/page/3', undefined],
+    ['on a page outside the listing', '/blog/other', listing],
+  ])('keeps the server’s links %s', (_, pathname, given) => {
+    at.pathname = pathname;
+
+    expect(renderHook(() => usePagedLocaleLinks(links, { locale: 'fr', listing: given })).result.current).toBe(links);
+  });
+});
+
+describe('NextUrlBoundary', () => {
+  /** What a listing renders from its adapter: the search it reads and the href of page 3. */
+  const shown = (props: { readonly first?: string; readonly page?: number }): string | null => {
+    const { container } = render(
+      createElement(NextUrlBoundary, {
+        ...props,
+        children: (url) => createElement('p', null, `${url.search} ${url.href?.('?page=3') ?? '-'}`),
+      }),
+    );
+
+    return container.textContent;
+  };
+
+  it('renders the landed page from its props while the search is unknown, its links real', () => {
+    at.prerendering = true;
+
+    expect(shown({ first: '/blog/news', page: 2 })).toBe('?page=2 /blog/news/page/3');
+    expect(shown({})).toBe(' -');
+  });
+
+  it('renders from the address once it is known', () => {
+    at.pathname = '/blog/news/page/4';
+    at.search = '';
+
+    expect(shown({ first: '/blog/news', page: 2 })).toBe('?page=4 /blog/news/page/3');
   });
 });

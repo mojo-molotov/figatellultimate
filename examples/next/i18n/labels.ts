@@ -6,7 +6,7 @@
  */
 import {
   precompiled,
-  precompileMessages,
+  precompiledLoader,
   type Precompiled,
   type PrecompiledMessages,
 } from '@figatellultimate/use-intl/precompile';
@@ -14,25 +14,13 @@ import {
 import type { Locale } from '#figatellultimate/locales';
 import { loadMessages, type MessageKey } from '#figatellultimate/messages';
 
-/** Each locale's precompiled messages, compiled once per process. */
-const cache = new Map<Locale, PrecompiledMessages>();
-
 /**
- * A locale's messages, precompiled.
+ * A locale's messages, precompiled, once per process.
  *
  * @param locale - The locale.
  * @returns Its messages, every ICU message compiled.
  */
-export async function precompiledMessages(locale: Locale): Promise<PrecompiledMessages> {
-  let tree = cache.get(locale);
-
-  if (tree === undefined) {
-    tree = precompileMessages(await loadMessages(locale));
-    cache.set(locale, tree);
-  }
-
-  return tree;
-}
+export const precompiledMessages: (locale: Locale) => Promise<PrecompiledMessages> = precompiledLoader(loadMessages);
 
 /**
  * A message precompiled, for a client component to format with values only the browser knows.

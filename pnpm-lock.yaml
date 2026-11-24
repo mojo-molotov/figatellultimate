@@ -544,6 +544,9 @@ importers:
         specifier: workspace:*
         version: link:../site
     devDependencies:
+      '@japa/file-system':
+        specifier: 3.0.0
+        version: 3.0.0(@japa/assert@4.2.0(@japa/runner@5.4.0))(@japa/runner@5.4.0)
       '@testing-library/dom':
         specifier: 10.4.2
         version: 10.4.2

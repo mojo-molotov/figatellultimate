@@ -1,6 +1,6 @@
 /**
  * Every text of a listing (server): formatted here, and, for those that take a count or a page, precompiled for the
- * client listing to format (`components/format.ts`). The listing never imports next-intl.
+ * client listing to format (`formatPrecompiled` of `@figatellultimate/use-intl/format`). The listing never imports next-intl.
  */
 import { getTranslations } from 'next-intl/server';
 

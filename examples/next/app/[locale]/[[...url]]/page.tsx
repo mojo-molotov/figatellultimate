@@ -34,17 +34,16 @@ import { PageCrumbs, SiteHeader } from '../../../components/site-header';
 import { routing } from '../../../i18n/routing';
 import { site } from '../../../site';
 
-// Every content route (pages, blog, landing pages), the blog's folder pages and the authors' pages,
-// from configuration only: one
-// optional catch-all per locale.
+// Every content route (pages, blog, landing pages), the blog's folder pages and the authors' pages, from configuration
+// only: one optional catch-all per locale.
 
 // Every mounted URL is prerendered; an unknown one is let through to `notFound()`, which renders the locale's 404
 // (`../not-found.tsx`) on demand, with a real 404 status.
 export const dynamicParams = true;
 
 export function generateStaticParams(): { locale: string; url: string[] }[] {
-  // Every mounted URL under its locale, entries and folder pages; reserved entries are left to their dedicated routes
-  //, each once.
+  // Every mounted URL under its locale, entries and folder pages, each once; reserved entries are left to their
+  // dedicated routes.
   return mountedUrls.map((item) => ({ locale: item.locale, url: segmentsOf(item.url, item.locale) }));
 }
 

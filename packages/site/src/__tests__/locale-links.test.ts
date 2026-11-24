@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { localeLinksOf, pageLocaleLinks, type MountedUrl } from '../index.js';
+import { listingLocalesOf, localeLinksOf, pageLocaleLinks, type MountedUrl } from '../index.js';
 
 const item = (collection: string, key: string, locale: string, url: string): MountedUrl => ({
   collection,
@@ -148,6 +148,34 @@ describe('pageLocaleLinks', () => {
       url: '/en/blog/news/page/3',
       kind: 'entry',
       current: false,
+    });
+  });
+});
+
+describe('listingLocalesOf', () => {
+  interface Page {
+    readonly first: string;
+    readonly pages: number;
+    readonly alternates: Readonly<Partial<Record<string, string>>>;
+  }
+
+  const pages: Readonly<Record<string, Page>> = {
+    '/blog/news': {
+      first: '/blog/news',
+      pages: 9,
+      alternates: { fr: '/blog/news', en: '/en/blog/news', de: '/de/blog/news' },
+    },
+    '/en/blog/news': { first: '/en/blog/news', pages: 4, alternates: {} },
+  };
+
+  it('gives the listing in each locale its first page has, as its first page and pages; one not found is left out', () => {
+    const first = pages['/blog/news'];
+
+    // Precondition: the listing has a German translation the lookup does not find.
+    expect(first?.alternates['de']).toBeDefined();
+    expect(listingLocalesOf(first ?? { first: '', pages: 0, alternates: {} }, (url) => pages[url])).toEqual({
+      fr: { first: '/blog/news', pages: 9 },
+      en: { first: '/en/blog/news', pages: 4 },
     });
   });
 });

@@ -59,7 +59,7 @@ export {
   type ResponsivePaginationItem,
 } from './pagination.js';
 export { isDefaultView, pagedHref, pagedSearch } from './paged.js';
-export { PAGES_PER_BATCH, batchPath, batchStart, batchesOf } from './batches.js';
+export { PAGES_PER_BATCH, batchItems, batchPath, batchStart, batchesOf, pageItems } from './batches.js';
 export { readPage } from './codec.js';
 export { backToFirstPage, keepReadingPosition } from './reconcile.js';
 export type {

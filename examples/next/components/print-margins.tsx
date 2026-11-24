@@ -1,14 +1,8 @@
 /** What a printed page shows in its margins: its title and its address, for the maquis theme's margin boxes. */
+import { cssString } from '@figatellultimate/site';
 import type { ReactNode } from 'react';
 
 import { site } from '../site';
-
-/** A CSS string: quotes, backslashes and line breaks escaped, and `<` too, so that it never closes the `<style>`. */
-const cssString = (value: string): string =>
-  `"${value
-    .replaceAll(/["\\]/g, (character) => `\\${character}`)
-    .replaceAll(/[\n\r]+/g, ' ')
-    .replaceAll('<', '\\3C ')}"`;
 
 /**
  * The page's title (top right of each printed page) and its absolute address (bottom left), as the maquis theme

@@ -112,7 +112,7 @@ body > [data-layout] {
 }
 
 /*
- * A change of the site's theme (the app's picker sets `<html data-site-theme-switch>` while its view transition
+ * A change of the site's theme (`siteThemeTransition` of effects sets `<html data-site-theme-switch>` while its view transition
  * plays): the page loses its focus as a lens does (a soft blur, a slight zoom in, a glow), changes theme while out of
  * focus, then comes back into focus; nothing else moves. On a desktop
  * only (a mouse or a trackpad), never with reduced motion. Longhands

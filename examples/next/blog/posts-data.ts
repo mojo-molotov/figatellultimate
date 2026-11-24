@@ -5,7 +5,7 @@
  */
 import { getTranslations } from 'next-intl/server';
 
-import type { ListingLocales } from '@figatellultimate/site';
+import { listingLocalesOf, type ListingLocales } from '@figatellultimate/site';
 import {
   findBlogFolderByUrl,
   findBlogPostByUrl,
@@ -132,30 +132,6 @@ export function indexOf(page: { readonly url: string; readonly index?: string })
     throw new Error(`${page.url} has no listing index: declare \`index\` in its folderPages or its taxonomy's pages.`);
 
   return page.index;
-}
-
-/**
- * A paginated listing in each locale that has it, from its first page's translations: where the locale switcher leads
- * from a page the browser shows (`pageLocaleLinks` of `@figatellultimate/site`).
- *
- * @param first - The listing's first page in the page's locale.
- * @param find - Its kind of page at a URL (a folder, an author's page).
- * @returns Each locale's first page and count of pages.
- */
-export function listingLocalesOf<
-  P extends {
-    readonly first: string;
-    readonly pages: number;
-    readonly alternates: Readonly<Partial<Record<string, string>>>;
-  },
->(first: P, find: (url: string) => P | undefined): ListingLocales {
-  return Object.fromEntries(
-    Object.entries(first.alternates).flatMap(([locale, url]) => {
-      const there = url === undefined ? undefined : find(url);
-
-      return there === undefined ? [] : [[locale, { first: there.first, pages: there.pages }]];
-    }),
-  );
 }
 
 /**

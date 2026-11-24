@@ -102,3 +102,20 @@ export function w3cDate(value: string): string | undefined {
 
   return parseDate(value)?.toISOString();
 }
+
+/**
+ * A value as a CSS string, safe inside a `<style>`: quotes and backslashes escaped, line breaks as a space, and `<`
+ * as its escape, so that no value can close the element it is written in.
+ *
+ * @param value - Any text, e.g. a page's title.
+ * @returns The quoted CSS string, which a browser reads back as the value.
+ *
+ * @example
+ * `<style>:root{--print-title:${cssString(title)}}</style>`;
+ */
+export function cssString(value: string): string {
+  return `"${value
+    .replaceAll(/["\\]/g, (character) => `\\${character}`)
+    .replaceAll(/[\n\r]+/g, ' ')
+    .replaceAll('<', '\\3C ')}"`;
+}

@@ -10,6 +10,7 @@
  *     Hearts ──── a heart changing color every few seconds, cross-fading (a footer's "made with ❤️")
  *     Reveal ──── a footer revealed from under the page as it scrolls into view, where the page has the room
  *     Backdrop ── an image behind a section's content, faint, vignetted and faded in (a 404)
+ *     siteThemeTransition ── the site theme's change as a blur (`SiteThemePicker`'s `transition`), its motion the theme's
  *     styles.css ── positions, masks, motion; colors and sizes as tokens (--fig-glow-*, --fig-collector-color,
  *                   --fig-sparkles-*,
  *                   --fig-backdrop-*)
@@ -21,7 +22,8 @@
  *     - Decorative: hidden from assistive technologies, never catching a click, still or absent with
  *       `prefers-reduced-motion`.
  *
- * Invariants: see `effects.tsx`, `cursor-glow.tsx`, `sparkles.tsx`, `collector.tsx`, `hearts.tsx`, `reveal.tsx`, `backdrop.tsx` and `styles.test.ts`.
+ * Invariants: see `effects.tsx`, `cursor-glow.tsx`, `sparkles.tsx`, `collector.tsx`, `hearts.tsx`, `reveal.tsx`, `backdrop.tsx`,
+ * `site-theme-transition.ts` and `styles.test.ts`.
  */
 export { Backdrop, type BackdropImageProps } from './backdrop.js';
 export { Collector } from './collector.js';
@@ -29,4 +31,5 @@ export { CursorGlow } from './cursor-glow.js';
 export { Effects } from './effects.js';
 export { HEARTS, Hearts, type HeartsProps } from './hearts.js';
 export { Reveal } from './reveal.js';
+export { siteThemeTransition } from './site-theme-transition.js';
 export { Sparkles } from './sparkles.js';

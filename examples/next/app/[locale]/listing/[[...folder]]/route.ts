@@ -6,7 +6,7 @@
  * (`/listing/pages/1`, `/listing/maquis/pages/1`), hence an optional catch-all. The route itself is
  * `listingIndexRoute` of `@figatellultimate/next16`.
  */
-import { batchPath } from '@figatellultimate/facets';
+import { batchItems, batchPath } from '@figatellultimate/facets';
 import { listingIndexRoute } from '@figatellultimate/next16/listing-index';
 
 import { blogFolderBatches, blogListingIndexes } from '#figatellultimate/blog';
@@ -33,13 +33,10 @@ export const { GET, generateStaticParams } = listingIndexRoute({
       locale: folder.locale,
       folder: [...Object.values(folder.segments), ...batchPath(from)],
     }),
-    build: async (folder, { from, to }) => {
-      const items = folder.subfolders.length === 0 ? folder.entries.length : folder.subfolders.length;
-      const size = folder.perPage ?? items;
-
+    build: async (folder, range) => {
       // A folder of folders: its subfolders' sections.
       if (folder.subfolders.length > 0) {
-        const subfolders = folder.subfolders.slice((from - 1) * size, to * size);
+        const subfolders = batchItems(folder.subfolders, range, folder.perPage);
 
         return {
           keys: subfolders.map(subfolderKey),
@@ -47,7 +44,7 @@ export const { GET, generateStaticParams } = listingIndexRoute({
         };
       }
 
-      const posts = await postsOf(folder.entries.slice((from - 1) * size, to * size));
+      const posts = await postsOf(batchItems(folder.entries, range, folder.perPage));
 
       return { keys: posts.map((post) => post.url), cards: await cardDataOf(posts, folder.locale) };
     },

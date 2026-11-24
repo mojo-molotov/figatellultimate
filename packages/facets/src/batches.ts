@@ -13,7 +13,8 @@
  *     - Named by its first page, under `pages/`: readable, and computed alike by the route and the browser.
  *
  * Invariants (`batches.test.ts`): every page in exactly one batch, the batches in order, covering the pages; a page's
- * batch starts at most `size - 1` pages before it; the path the same on both sides.
+ * batch starts at most `size - 1` pages before it; the path the same on both sides; each page's and each batch's items
+ * in order, together every item once (`pageItems`, `batchItems`), a list without a page size whole.
  */
 
 /** Pages a batch holds, by default: ten pages of a listing in one small request. */
@@ -67,4 +68,38 @@ export function batchesOf(
  */
 export function batchPath(from: number): readonly ['pages', string] {
   return ['pages', String(from)];
+}
+
+/**
+ * A page's items: what its prerendered page shows.
+ *
+ * @param items - The listing's items, in the default order.
+ * @param page - The page, from 1.
+ * @param perPage - Items per page; none: the whole list, one page.
+ * @returns The page's items, in order.
+ *
+ * @example
+ * pageItems(folder.entries, folder.page, folder.perPage);
+ */
+export function pageItems<T>(items: readonly T[], page: number, perPage: number | undefined): readonly T[] {
+  return perPage === undefined ? items : items.slice((page - 1) * perPage, page * perPage);
+}
+
+/**
+ * A batch's items: its pages', in order, what its file holds.
+ *
+ * @param items - The listing's items, in the default order.
+ * @param range - The batch's first and last pages (`batchesOf`).
+ * @param perPage - Items per page; none: the whole list, one page.
+ * @returns The items of its pages, in order.
+ *
+ * @example
+ * build: (folder, range) => ({ keys: batchItems(folder.entries, range, folder.perPage).map((entry) => entry.url) }),
+ */
+export function batchItems<T>(
+  items: readonly T[],
+  range: { readonly from: number; readonly to: number },
+  perPage: number | undefined,
+): readonly T[] {
+  return perPage === undefined ? items : items.slice((range.from - 1) * perPage, range.to * perPage);
 }

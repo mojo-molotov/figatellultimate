@@ -3,6 +3,7 @@
  * its slice, prerendered; the pages around it come from their batches (`folder.batches`), shown in the browser, a
  * listing's posts (`posts.tsx`) or a folder's sections (`folder-sections.tsx`).
  */
+import { pageItems } from '@figatellultimate/facets';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 
@@ -34,10 +35,6 @@ export async function folderTitle(folder: BlogFolder): Promise<string> {
   return folder.label === null ? t('nav.blog') : t(folder.label);
 }
 
-/** The part of a folder's items its page shows: the whole list without a page size. */
-const sliceOf = <T,>(items: readonly T[], folder: BlogFolder): readonly T[] =>
-  folder.perPage === undefined ? items : items.slice((folder.page - 1) * folder.perPage, folder.page * folder.perPage);
-
 /**
  * A blog folder page, rendered from figatellultimate's neutral data, one page at a time (`perPage`, each page prerendered
  * with its slice): the blog lists its categories, each with its description; a category shows each subcategory with
@@ -55,7 +52,7 @@ export async function BlogFolderPage({ folder }: { readonly folder: BlogFolder }
 
   if (folder.subfolders.length === 0) {
     // The page's posts only: the others are their own pages, or the index for a filter.
-    const posts = await postsOf(sliceOf(folder.entries, folder));
+    const posts = await postsOf(pageItems(folder.entries, folder.page, folder.perPage));
 
     return (
       <>
@@ -82,7 +79,7 @@ export async function BlogFolderPage({ folder }: { readonly folder: BlogFolder }
   }
 
   // The page's subfolders, in the folders' order: each page is a fixed slice of it; the others from their batches.
-  const subfolders = sliceOf(folder.subfolders, folder);
+  const subfolders = pageItems(folder.subfolders, folder.page, folder.perPage);
 
   return (
     <>

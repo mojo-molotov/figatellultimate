@@ -34,4 +34,5 @@ export * from './locale-switcher.js';
 export * from './navbar.js';
 export * from './pager.js';
 export * from './table-of-contents.js';
+export * from './site-theme-picker.js';
 export * from './theme-toggle.js';

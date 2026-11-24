@@ -1,7 +1,7 @@
 {
   "name": "@figatellultimate/next16",
   "version": "0.0.0",
-  "description": "Next.js 16 adapter of figatellultimate: site metadata, sitemap, redirects and the facets URL adapter. The major version of Next is in the name.",
+  "description": "Next.js 16 adapter of figatellultimate: site metadata, sitemap, redirects, the facets URL adapter, the listings' indexes and the build's folders. The major version of Next is in the name.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
@@ -26,6 +26,11 @@
       "types": "./dist/listing-index.d.ts",
       "default": "./dist/listing-index.js"
     },
+    "./build": {
+      "@figatellultimate/source": "./src/build.ts",
+      "types": "./dist/build.d.ts",
+      "default": "./dist/build.js"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -45,6 +50,10 @@
       "./listing-index": {
         "types": "./dist/listing-index.d.ts",
         "default": "./dist/listing-index.js"
+      },
+      "./build": {
+        "types": "./dist/build.d.ts",
+        "default": "./dist/build.js"
       },
       "./package.json": "./package.json"
     }
@@ -66,6 +75,7 @@
     "role": "adapter"
   },
   "devDependencies": {
+    "@japa/file-system": "3.0.0",
     "@testing-library/dom": "10.4.2",
     "@testing-library/react": "16.3.3",
     "@types/react": "19.3.0",

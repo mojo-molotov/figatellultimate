@@ -6,11 +6,11 @@
  */
 import { createSearch, SEARCH_SORTS, type SearchSort } from '@figatellultimate/search';
 import { SearchDialog } from '@figatellultimate/search-react';
-import { pagedHref, pagedSearch, readPage } from '@figatellultimate/facets';
-import { pageLocaleLinks, type ListingLocales, type LocaleLink } from '@figatellultimate/site';
+import { usePagedLocaleLinks } from '@figatellultimate/next16/facets';
+import type { ListingLocales, LocaleLink } from '@figatellultimate/site';
 import { LocaleSwitcher, Navbar, ThemeToggle, type NavigationNode } from '@figatellultimate/ui';
 import { useTheme } from 'next-themes';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { localeInfo, locales, type Locale } from '#figatellultimate/locales';
@@ -62,21 +62,8 @@ export function HeaderBar(props: {
   readonly listing?: ListingLocales | undefined;
 }): ReactNode {
   const { locale, url, items, labels, listing } = props;
-  const pathname = usePathname();
   // A page of the listing shown in the browser moved the address, not the server's links: they follow the page.
-  const links = useMemo(() => {
-    const first = listing?.[locale]?.first;
-
-    if (listing === undefined || first === undefined || (pathname !== first && !pathname.startsWith(`${first}/page/`)))
-      return props.links;
-
-    return pageLocaleLinks(props.links, {
-      page: readPage(pagedSearch({ pathname, search: '' }, first)),
-      locale,
-      listing,
-      href: (start, page) => pagedHref(start, page === 1 ? '' : `?page=${String(page)}`),
-    });
-  }, [listing, locale, pathname, props.links]);
+  const links = usePagedLocaleLinks(props.links, { locale, listing });
   const { search: text } = labels;
   const router = useRouter();
   // next-themes owns the page's theme: the toggle shows it once mounted (the server cannot know it, and

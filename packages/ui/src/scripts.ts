@@ -1,6 +1,6 @@
 /**
  * `@figatellultimate/ui/scripts`: the inline scripts a page puts in its `<head>`, run before the first paint, so that a
- * remembered choice (the theme, a closed table of contents) never flashes on load.
+ * remembered choice (the theme, the site's theme, a closed table of contents) never flashes on load.
  *
  * Key design decision: an entry of its own, without `'use client'`: a server component (a root layout) calls these,
  * which it cannot do through the client components' entry.
@@ -33,4 +33,22 @@ export const themeScript: string = `try{var t=localStorage.getItem('${THEME_STOR
  */
 export function tocScript(storageKey: string = TOC_STORAGE_KEY): string {
   return `try{if(localStorage.getItem(${JSON.stringify(storageKey)})==='closed')document.documentElement.dataset.toc='closed'}catch(e){}`;
+}
+
+/** Where `SiteThemePicker` remembers the visitor's site theme by default. */
+export const SITE_THEME_STORAGE_KEY = 'figatellultimate-site-theme';
+
+/**
+ * The inline script that applies the remembered site theme (a stylesheet of `@figatellultimate/themes`, picked by
+ * `<html data-site-theme>`) before the first paint, so that the page never flashes the default one.
+ *
+ * @param themes - The themes the site offers: a remembered value outside them is ignored.
+ * @param storageKey - Where the picker stores the choice; the same as its `storageKey`.
+ * @returns The script's text, for a `<script>` in the `<head>`.
+ *
+ * @example
+ * <script dangerouslySetInnerHTML={{ __html: siteThemeScript(['maquis', 'paper']) }} />
+ */
+export function siteThemeScript(themes: readonly string[], storageKey: string = SITE_THEME_STORAGE_KEY): string {
+  return `try{var t=localStorage.getItem(${JSON.stringify(storageKey)});if(${JSON.stringify(themes)}.indexOf(t)>-1)document.documentElement.dataset.siteTheme=t}catch(e){}`;
 }

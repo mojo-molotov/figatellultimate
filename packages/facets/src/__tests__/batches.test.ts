@@ -1,7 +1,7 @@
 import * as fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
-import { batchPath, batchStart, batchesOf } from '../index.js';
+import { batchItems, batchPath, batchStart, batchesOf, pageItems } from '../index.js';
 
 describe('batches', () => {
   it('puts every page in exactly one batch, in order, the batches covering every page', () => {
@@ -42,5 +42,38 @@ describe('batches', () => {
 
   it('names a batch by its first page, under pages/', () => {
     expect(batchPath(11)).toEqual(['pages', '11']);
+  });
+
+  it('gives each page its items and each batch its pages’ items: in order, together every item once', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 300 }),
+        fc.integer({ min: 1, max: 12 }),
+        fc.integer({ min: 1, max: 5 }),
+        (count, perPage, size) => {
+          const items = Array.from({ length: count }, (_, index) => index);
+          const pages = Math.max(1, Math.ceil(count / perPage));
+          const byPage = Array.from({ length: pages }, (_, index) => pageItems(items, index + 1, perPage));
+          const byBatch = batchesOf(pages, size).map((range) => batchItems(items, range, perPage));
+
+          expect(byPage.flat()).toEqual(items);
+          expect(byPage.every((slice) => slice.length <= perPage)).toBe(true);
+          expect(byBatch.flat()).toEqual(items);
+        },
+      ),
+      {
+        examples: [
+          [0, 5, 10],
+          [12, 5, 2],
+          [7, 7, 1],
+        ],
+      },
+    );
+  });
+
+  it('gives a list without a page size whole, as its one page and its one batch', () => {
+    expect(pageItems(['a', 'b', 'c'], 1, undefined)).toEqual(['a', 'b', 'c']);
+    expect(batchItems(['a', 'b', 'c'], { from: 1, to: 1 }, undefined)).toEqual(['a', 'b', 'c']);
+    expect(pageItems(['a', 'b', 'c'], 2, 2)).toEqual(['c']);
   });
 });

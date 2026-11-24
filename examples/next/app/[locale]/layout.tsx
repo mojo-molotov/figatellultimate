@@ -2,7 +2,7 @@
 import { Effects } from '@figatellultimate/effects';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { hasLocale } from 'next-intl';
-import { tocScript } from '@figatellultimate/ui/scripts';
+import { siteThemeScript, tocScript } from '@figatellultimate/ui/scripts';
 import { ThemeProvider } from 'next-themes';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
@@ -12,7 +12,7 @@ import { urlOf } from '#figatellultimate/urls';
 
 import { AppImages } from '../../components/images';
 import { AppLinks } from '../../components/links';
-import { SITE_THEMES, siteThemeScript } from '../../components/site-themes';
+import { SITE_THEMES } from '../../components/site-themes';
 import { routing } from '../../i18n/routing';
 import { SiteFooter } from '../../components/site-footer';
 
@@ -50,7 +50,7 @@ export default async function LocaleLayout(props: LayoutProps<'/[locale]'>): Pro
         {/* A table of contents the visitor closed is closed from the first paint: it never slides shut on load. */}
         <script dangerouslySetInnerHTML={{ __html: tocScript() }} />
         {/* The visitor's theme from the first paint: the page never flashes the default one. */}
-        <script dangerouslySetInnerHTML={{ __html: siteThemeScript() }} />
+        <script dangerouslySetInnerHTML={{ __html: siteThemeScript(SITE_THEMES) }} />
         {/* The blog's feed in this locale, for feed readers to find from any page. */}
         <link rel="alternate" type="application/rss+xml" href={urlOf(locale, ['feed.xml'])} />
       </head>

@@ -1,9 +1,9 @@
 import * as fc from 'fast-check';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { formatPrecompiled } from '../format.js';
 import { createTranslator } from '../index.js';
-import { precompiled, precompileMessages } from '../precompile.js';
+import { precompiled, precompiledLoader, precompileMessages } from '../precompile.js';
 import { FR } from './register.js';
 
 // The oracle: use-intl's own formatting of the source messages (in the environment's time zone, as in a browser).
@@ -62,5 +62,26 @@ describe('precompiled messages', () => {
   it('throws for a key naming a group of messages, not a message', () => {
     // @ts-expect-error a group, not a message
     expect(() => precompiled(tree, 'home')).toThrow('"home" is not a message.');
+  });
+});
+
+describe('precompiledLoader', () => {
+  it('loads and compiles each locale’s messages once, even asked twice at once', async () => {
+    const load = vi.fn((locale: 'fr' | 'en') => Promise.resolve(locale === 'fr' ? FR : {}));
+    const messagesOf = precompiledLoader(load);
+    const [first, second] = await Promise.all([messagesOf('fr'), messagesOf('fr')]);
+
+    expect(first).toBe(second);
+    expect(first).toEqual(tree);
+    await messagesOf('en');
+    expect(load.mock.calls).toEqual([['fr'], ['en']]);
+  });
+
+  it('loads a locale again after a failed load', async () => {
+    const load = vi.fn().mockRejectedValueOnce(new Error('offline')).mockResolvedValue(FR);
+    const messagesOf = precompiledLoader(load);
+
+    await expect(messagesOf('fr')).rejects.toThrow('offline');
+    expect(await messagesOf('fr')).toEqual(tree);
   });
 });

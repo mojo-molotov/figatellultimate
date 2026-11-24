@@ -11,7 +11,7 @@
  *       cards of that view from it. `usePagedCollection` of `@figatellultimate/facets-react` does the orchestration.
  */
 import type { UrlAdapter } from '@figatellultimate/facets';
-import { isDefaultView, pagedHref, batchPath } from '@figatellultimate/facets';
+import { isDefaultView, batchPath } from '@figatellultimate/facets';
 import {
   FacetOptions,
   FacetsReset,
@@ -21,7 +21,7 @@ import {
   SortSelect,
   usePagedCollection,
 } from '@figatellultimate/facets-react';
-import { useNextUrl } from '@figatellultimate/next16/facets';
+import { NextUrlBoundary } from '@figatellultimate/next16/facets';
 import { formatPrecompiled } from '@figatellultimate/use-intl/format';
 import { Cog6ToothIcon } from '@heroicons/react/24/outline';
 import { useCallback, useMemo, type ReactNode } from 'react';
@@ -60,27 +60,18 @@ interface PostsProps {
   readonly heading?: ReactNode;
 }
 
-/** The interactive list: its state from the URL. */
+/**
+ * The interactive list: the default view prerendered (real pagination links), its state from the URL once hydrated.
+ *
+ * @param props - The posts' items, the locale, the cards rendered on the server, the texts and the page.
+ * @returns The listing.
+ */
 export function Posts(props: PostsProps): ReactNode {
-  return <PostsView {...props} url={useNextUrl({ first: props.paged?.first })} />;
-}
-
-/** The default view, prerendered (the `<Suspense>` fallback): the same components, real pagination links. */
-export function PrerenderedPosts(props: PostsProps): ReactNode {
-  const { paged } = props;
-  const url = useMemo(
-    (): UrlAdapter =>
-      paged === undefined
-        ? { search: '', navigate: () => undefined }
-        : {
-            search: paged.page > 1 ? `?page=${String(paged.page)}` : '',
-            navigate: () => undefined,
-            href: (search) => pagedHref(paged.first, search),
-          },
-    [paged],
+  return (
+    <NextUrlBoundary first={props.paged?.first} page={props.paged?.page}>
+      {(url) => <PostsView {...props} url={url} />}
+    </NextUrlBoundary>
   );
-
-  return <PostsView {...props} url={url} />;
 }
 
 function PostsView({

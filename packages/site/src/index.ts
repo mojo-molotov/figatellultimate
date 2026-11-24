@@ -9,7 +9,7 @@
  *     index.ts            metadataOf, pageMetadataOf, sitemapOf, catchAllParamsOf, localeLinksOf, sectionOf, breadcrumbOf
  *     structured-data.ts  structuredDataOf, breadcrumbListOf, personOf, jsonLd
  *     feed.ts             rssOf
- *     shared.ts           absolute URLs, dates, robots
+ *     shared.ts           absolute URLs, dates, robots, cssString
  *
  * Key design decisions:
  *     - One URL rule: every URL comes from the build (the generated modules); none is parsed or rebuilt here.
@@ -56,6 +56,7 @@ import { absoluteAlternates, absoluteOn, plainSpaces, text, texts, w3cDate } fro
 
 export { breadcrumbListOf, jsonLd, personOf, structuredDataOf, type Person } from './structured-data.js';
 export { rssOf, type FeedChannel, type FeedInput } from './feed.js';
+export { cssString } from './shared.js';
 export type {
   EntryMetadata,
   LocaleLink,
@@ -335,6 +336,34 @@ export function localeLinksOf(
 
 /** A paginated listing in each locale that has it: its first page's URL and its count of pages. */
 export type ListingLocales = Readonly<Record<string, { readonly first: string; readonly pages: number }>>;
+
+/**
+ * A paginated listing in each locale that has it, from its first page's translations: what `pageLocaleLinks` reads.
+ *
+ * @param first - The listing's first page in the page's locale: its first page, its pages and its translations.
+ * @param find - Its kind of page at a URL (a folder, a term's page), e.g. the generated `findBlogFolderByUrl`.
+ * @returns Each locale's first page and count of pages; a translation `find` does not know is left out.
+ *
+ * @example
+ * const listing = listingLocalesOf(findBlogFolderByUrl(folder.first) ?? folder, findBlogFolderByUrl);
+ */
+export function listingLocalesOf<
+  P extends {
+    readonly first: string;
+    readonly pages: number;
+    readonly alternates: Readonly<Partial<Record<string, string>>>;
+  },
+>(first: P, find: (url: string) => P | undefined): ListingLocales {
+  return Object.freeze(
+    Object.fromEntries(
+      Object.entries(first.alternates).flatMap(([locale, url]) => {
+        const there = url === undefined ? undefined : find(url);
+
+        return there === undefined ? [] : [[locale, Object.freeze({ first: there.first, pages: there.pages })]];
+      }),
+    ),
+  );
+}
 
 /**
  * Where a locale switcher leads from a page of a paginated listing shown in the browser (`usePagedCollection`'s

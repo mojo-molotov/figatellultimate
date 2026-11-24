@@ -16,14 +16,16 @@
  * Invariants (`facets.test.ts`): the History API for any view in the query, never the router; with `first`, the
  * router for a default page, its number read from the path, its links in the path, a default page loaded ahead
  * through the router and nothing for a view in the query; a location it never writes corrected, the others left
- * alone.
+ * alone; a locale switcher's links following the listing's page in the address (`usePagedLocaleLinks`), the server's
+ * outside it; the landed page's adapter while the search is unknown, the address's once known (`NextUrlBoundary`).
  */
 'use client';
 
-import { pagedHref, pagedSearch, type UrlAdapter } from '@figatellultimate/facets';
+import { pagedHref, pagedSearch, readPage, type UrlAdapter } from '@figatellultimate/facets';
+import { pageLocaleLinks, type ListingLocales, type LocaleLink } from '@figatellultimate/site';
 // With its extension: `next` declares no `exports`, and an ES module resolved as `nodenext` needs the real file.
 import { usePathname, useRouter, useSearchParams } from 'next/navigation.js';
-import { useEffect, useMemo } from 'react';
+import { createElement, Suspense, useEffect, useMemo, type ReactNode } from 'react';
 
 /** Options of `useNextUrl`. */
 export interface NextUrlOptions {
@@ -95,4 +97,78 @@ export function useNextUrl(options: NextUrlOptions = {}): UrlAdapter {
   }, [adapter, first, pathname, raw]);
 
   return adapter;
+}
+
+/**
+ * A locale switcher's links following a paginated listing's page shown in the browser (its batches): the address
+ * moved, the server's links did not (`pageLocaleLinks` of `@figatellultimate/site`).
+ *
+ * @param links - The server's links, for the page the reader landed on (`localeLinksOf`).
+ * @param at - The page's locale, and its listing in each locale (`listingLocalesOf`); none for a page that is not one.
+ * @returns The links for the page the address shows: the server's, outside the listing or without one.
+ *
+ * @example
+ * const links = usePagedLocaleLinks(props.links, { locale, listing });
+ */
+export function usePagedLocaleLinks(
+  links: readonly LocaleLink[],
+  at: { readonly locale: string; readonly listing?: ListingLocales | undefined },
+): readonly LocaleLink[] {
+  const pathname = usePathname();
+  const { locale, listing } = at;
+
+  return useMemo(() => {
+    const first = listing?.[locale]?.first;
+
+    if (listing === undefined || first === undefined || (pathname !== first && !pathname.startsWith(`${first}/page/`)))
+      return links;
+
+    return pageLocaleLinks(links, {
+      page: readPage(pagedSearch({ pathname, search: '' }, first)),
+      locale,
+      listing,
+      href: (start, page) => pagedHref(start, page === 1 ? '' : `?page=${String(page)}`),
+    });
+  }, [links, listing, locale, pathname]);
+}
+
+/** What `NextUrlBoundary` takes. */
+export interface NextUrlBoundaryProps {
+  /** A listing paginated in its path: its own URL, its first page (`useNextUrl`'s `first`). */
+  readonly first?: string | undefined;
+  /** The landed page's number, from 1: what the prerendered HTML shows. Default 1. */
+  readonly page?: number | undefined;
+  /** Renders the listing from a URL adapter: the landed page's while the search is unknown, then the address's. */
+  readonly children: (url: UrlAdapter) => ReactNode;
+}
+
+/** The adapter of a prerendered page: its own page, real links, nothing to navigate before hydration. */
+function prerenderedUrl(first: string | undefined, page: number): UrlAdapter {
+  return {
+    search: page > 1 ? `?page=${String(page)}` : '',
+    navigate: () => undefined,
+    ...(first === undefined ? {} : { href: (search: string) => pagedHref(first, search) }),
+  };
+}
+
+function LiveUrl({ first, children }: NextUrlBoundaryProps): ReactNode {
+  return children(useNextUrl({ first }));
+}
+
+/**
+ * A listing's URL in a statically generated page: rendered from the landed page while the search is unknown (the
+ * prerendered HTML, where Next suspends `useSearchParams`), then from the address once hydrated.
+ *
+ * @param props - The listing's first page and the landed page's number, and what to render from the adapter.
+ * @returns The listing inside the `<Suspense>` Next 16 requires around `useSearchParams`, its fallback the landed
+ *   page with real links.
+ *
+ * @example
+ * <NextUrlBoundary first={folder.first} page={folder.page}>{(url) => <Listing url={url} />}</NextUrlBoundary>
+ */
+export function NextUrlBoundary(props: NextUrlBoundaryProps): ReactNode {
+  const { first, page = 1, children } = props;
+  const prerendered = useMemo(() => prerenderedUrl(first, page), [first, page]);
+
+  return createElement(Suspense, { fallback: children(prerendered) }, createElement(LiveUrl, props));
 }

@@ -1,4 +1,6 @@
 /** An author's page: their avatar, name, short and long bios, and posts. */
+import { pageItems } from '@figatellultimate/facets';
+import { listingLocalesOf } from '@figatellultimate/site';
 import { getTranslations } from 'next-intl/server';
 import NextImage from 'next/image';
 import type { ReactNode } from 'react';
@@ -9,7 +11,7 @@ import { findAuthorsTermByUrl, type AuthorsTermPage } from '#figatellultimate/te
 import { Body } from '../components/mdx';
 import { SiteHeader } from '../components/site-header';
 import { cardsOf } from './folder-page';
-import { indexOf, itemsOf, listingLocalesOf, postsOf } from './posts-data';
+import { indexOf, itemsOf, postsOf } from './posts-data';
 import { Listing } from './listing';
 import { listingLabels } from './listing-labels';
 
@@ -31,9 +33,8 @@ export async function AuthorPage({ page }: { readonly page: AuthorsTermPage }): 
   const { locale, term } = page;
   const t = await getTranslations({ locale });
   const name = await authorName(page);
-  const perPage = page.perPage ?? page.entries.length;
   // The page's posts only: the others are their own pages, or the index for a filter.
-  const slice = page.entries.slice((page.page - 1) * perPage, page.page * perPage);
+  const slice = pageItems(page.entries, page.page, page.perPage);
   const posts = await postsOf(slice.map((entry) => entry.item));
   const items = itemsOf(posts);
   const cards = await cardsOf(posts, locale, term);
@@ -70,7 +71,7 @@ export async function AuthorPage({ page }: { readonly page: AuthorsTermPage }): 
             page: page.page,
             pages: page.pages,
             total: page.entries.length,
-            perPage,
+            perPage: page.perPage ?? page.entries.length,
             first: page.first,
             index: indexOf(page),
           }}

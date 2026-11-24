@@ -10,14 +10,14 @@
  * Key design decision, as chosen with the user: the sections are data rendered alike on both sides (`SectionData`),
  * rather than rendered on the server only, so that a batch can show a page the server never sent.
  */
-import { batchPath, defineFacetedCollection, pagedHref, type Engine, type UrlAdapter } from '@figatellultimate/facets';
+import { batchPath, defineFacetedCollection, type Engine, type UrlAdapter } from '@figatellultimate/facets';
 import { Pagination, usePagedCollection } from '@figatellultimate/facets-react';
-import { useNextUrl } from '@figatellultimate/next16/facets';
+import { NextUrlBoundary } from '@figatellultimate/next16/facets';
 import { Collector } from '@figatellultimate/effects';
 import { EntryCard, type EntryCardLabels } from '@figatellultimate/ui';
 import { formatPrecompiled } from '@figatellultimate/use-intl/format';
 import NextLink from 'next/link';
-import { Suspense, useMemo, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 
 import { localeInfo, type Locale } from '#figatellultimate/locales';
 
@@ -67,30 +67,10 @@ const enginesOf =
  */
 export function FolderSections(props: FolderSectionsProps): ReactNode {
   return (
-    <Suspense fallback={<PrerenderedSections {...props} />}>
-      <LiveSections {...props} />
-    </Suspense>
+    <NextUrlBoundary first={props.paged.first} page={props.paged.page}>
+      {(url) => <SectionsView {...props} url={url} />}
+    </NextUrlBoundary>
   );
-}
-
-/** The interactive sections: the page from the address. */
-function LiveSections(props: FolderSectionsProps): ReactNode {
-  return <SectionsView {...props} url={useNextUrl({ first: props.paged.first })} />;
-}
-
-/** The landed page, prerendered (the `<Suspense>` fallback): real pagination links. */
-function PrerenderedSections(props: FolderSectionsProps): ReactNode {
-  const { page, first } = props.paged;
-  const url = useMemo(
-    (): UrlAdapter => ({
-      search: page > 1 ? `?page=${String(page)}` : '',
-      navigate: () => undefined,
-      href: (search) => pagedHref(first, search),
-    }),
-    [page, first],
-  );
-
-  return <SectionsView {...props} url={url} />;
 }
 
 function SectionsView({

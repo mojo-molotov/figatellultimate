@@ -168,3 +168,5 @@ export function withFigatellultimate<C extends WrappableCollection>(collection: 
 }
 
 export { rehypeHeadings, type HastNode } from './headings.js';
+export { rehypeCodeGroups, type CodeGroupNode } from './code-groups.js';
+export { compileWithHeadings, type CacheFn, type HeadingsPlugin, type MdxHeading } from './mdx.js';
