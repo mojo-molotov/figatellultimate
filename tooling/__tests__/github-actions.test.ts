@@ -135,9 +135,12 @@ describe('GitHub Actions', () => {
     expect(dependabot.match(/commit-message:\n\s+prefix: (build|ci)\n\s+include: scope/g)).toHaveLength(2);
     // Its pull requests change packages without a changeset (none before the first release), their bodies quote
     // release notes over commitlint's line length: those two checks are skipped for them alone.
-    expect(ci.match(/if: github\.event_name == 'pull_request' && github\.actor != 'dependabot\[bot\]'/g)).toHaveLength(
-      2,
-    );
+    // By the pull request's author, not the run's actor: a commit pushed on one by someone else keeps it Dependabot's.
+    expect(
+      ci.match(
+        /if: github\.event_name == 'pull_request' && github\.event\.pull_request\.user\.login != 'dependabot\[bot\]'/g,
+      ),
+    ).toHaveLength(2);
   });
 
   it("runs Playwright's image pinned by digest, of the repository's playwright release, so that its browsers match", () => {
