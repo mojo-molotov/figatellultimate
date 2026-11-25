@@ -3,9 +3,17 @@
  * remembered choice (the theme, the site's theme, a closed table of contents) never flashes on load, and a navbar
  * that does not fit is compact from the first paint.
  *
- * Key design decision: an entry of its own, without `'use client'`: a server component (a root layout) calls these,
- * which it cannot do through the client components' entry.
+ * Key design decisions:
+ *     - An entry of its own, without `'use client'`: a server component (a root layout) calls these, which it cannot do
+ *       through the client components' entry.
+ *     - A value the app passes is written as a literal with `<` escaped: whatever it holds, it never closes the
+ *       `<script>` element (`scripts.test.ts`).
  */
+
+/**
+ * A value as a script literal that can never close its `<script>` element: `<` written `\u003c`, which reads the same.
+ */
+const literal = (value: unknown): string => JSON.stringify(value).replaceAll('<', '\\u003c');
 
 /** Where `ThemeToggle` remembers the visitor's theme (a per-visitor convenience). */
 export const THEME_STORAGE_KEY = 'figatellultimate-theme';
@@ -33,7 +41,7 @@ export const themeScript: string = `try{var t=localStorage.getItem('${THEME_STOR
  * <script dangerouslySetInnerHTML={{ __html: tocScript() }} />
  */
 export function tocScript(storageKey: string = TOC_STORAGE_KEY): string {
-  return `try{if(localStorage.getItem(${JSON.stringify(storageKey)})==='closed')document.documentElement.dataset.toc='closed'}catch(e){}`;
+  return `try{if(localStorage.getItem(${literal(storageKey)})==='closed')document.documentElement.dataset.toc='closed'}catch(e){}`;
 }
 
 /**
@@ -64,5 +72,5 @@ export const SITE_THEME_STORAGE_KEY = 'figatellultimate-site-theme';
  * <script dangerouslySetInnerHTML={{ __html: siteThemeScript(['maquis', 'paper']) }} />
  */
 export function siteThemeScript(themes: readonly string[], storageKey: string = SITE_THEME_STORAGE_KEY): string {
-  return `try{var t=localStorage.getItem(${JSON.stringify(storageKey)});if(${JSON.stringify(themes)}.indexOf(t)>-1)document.documentElement.dataset.siteTheme=t}catch(e){}`;
+  return `try{var t=localStorage.getItem(${literal(storageKey)});if(${literal(themes)}.indexOf(t)>-1)document.documentElement.dataset.siteTheme=t}catch(e){}`;
 }
