@@ -8,6 +8,9 @@
  *       never touched, and no stale module lingers.
  *     - A failing run leaves the previous files as they were: the last valid generation stays usable.
  *
+ * Limitation: each file is atomic, not the whole set. A disk failing in the middle of a commit (full, a permission)
+ * leaves the files already renamed new and the others old, until the next run; a content error writes nothing.
+ *
  * Invariants: changed-only writes, removal of obsolete generated files and their folders, user files kept
  * (`file-writer.test.ts`).
  */
