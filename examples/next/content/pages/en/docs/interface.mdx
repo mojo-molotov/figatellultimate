@@ -25,18 +25,18 @@ bun add @figatellultimate/ui @figatellultimate/effects @figatellultimate/themes 
 
 ## The design system
 
-| Component               | Role                                                                                                                     |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `Navbar`                | The navigation generated from the content (`navigationOf(locale)`), with menus and a narrow-screen toggle.               |
-| `LocaleSwitcher`        | The page in the other languages, never a link to a missing translation.                                                  |
-| `ThemeToggle`           | Light and dark, with `themeScript` applied before the first paint; its name says the theme on and the one a press gives. |
-| `SiteThemePicker`       | The choice between several site themes, with `siteThemeScript` applied before the first paint.                           |
-| `Breadcrumb`            | Where the page sits, from the navigation.                                                                                |
-| `TableOfContents`       | The page’s headings, the one being read highlighted, docked in the margin; its button may have its own name (`toggle`).  |
-| `EntryCard`             | A post’s preview: image, title, date, tags, authors.                                                                     |
-| `CodeBlock`, `CodeTabs` | A code block with a copy button; variants of one block in tabs.                                                          |
-| `ImageZoom`             | An image enlarged in a modal on desktops.                                                                                |
-| `ScrollRegion`          | A region scrolling on its own (a wide table), in the Tab order only while it overflows.                                  |
+| Component               | Role                                                                                                                                                                                              |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Navbar`                | The navigation generated from the content (`navigationOf(locale)`), with menus; compact, behind a button, as soon as its links no longer fit on one line (`navbarScript` before the first paint). |
+| `LocaleSwitcher`        | The page in the other languages, never a link to a missing translation.                                                                                                                           |
+| `ThemeToggle`           | Light and dark, with `themeScript` applied before the first paint; its name says the theme on and the one a press gives.                                                                          |
+| `SiteThemePicker`       | The choice between several site themes, with `siteThemeScript` applied before the first paint.                                                                                                    |
+| `Breadcrumb`            | Where the page sits, from the navigation.                                                                                                                                                         |
+| `TableOfContents`       | The page’s headings, the one being read highlighted, docked in the margin; its button may have its own name (`toggle`).                                                                           |
+| `EntryCard`             | A post’s preview: image, title, date, tags, authors; its title at the heading level the page gives it (`headingLevel`, h2 by default).                                                            |
+| `CodeBlock`, `CodeTabs` | A code block with a copy button; variants of one block in tabs.                                                                                                                                   |
+| `ImageZoom`             | An image enlarged in a modal on desktops.                                                                                                                                                         |
+| `ScrollRegion`          | A region scrolling on its own (a wide table), in the Tab order only while it overflows.                                                                                                           |
 
 One stylesheet styles them all, through `data-slot` attributes and tokens:
 

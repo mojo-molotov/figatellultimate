@@ -27,7 +27,7 @@ yarn figatellultimate search --site .next/server/app --out public/pagefind --loc
 bunx figatellultimate search --site .next/server/app --out public/pagefind --locale-folders
 ```
 
-`--locale-folders` is for builds that write every language in its own folder, the default one included, as next-intl does. A collection declaring `searchable: false` is left out. The indexed text is the element marked `data-pagefind-body`: the navigation, the footer and the lists of pages stay out of the results.
+`--locale-folders` is for builds that write every language in its own folder, the default one included, as next-intl does. A collection declaring `searchable: false` is left out. The indexed text is the element marked `data-pagefind-body`: the navigation, the footer and the lists of pages stay out of the results. Its code blocks are left out, and the code tabs’ names with them: an excerpt is the page’s text, never a command.
 
 With a deployment adapter (Vercel’s), Next writes the prerendered pages elsewhere, under a folder hashed by route: `prerenderedPages` of `@figatellultimate/next16/build` gives the folder holding them, with an adapter or without, and `copyIntoOutput` copies the index into the adapter’s output, which the deployment serves.
 
@@ -67,3 +67,5 @@ import { SearchDialog } from '@figatellultimate/search-react';
 ```
 
 Each result is named by its title, its place and its date, short to hear from one arrow to the next; its excerpt is its description, read after a pause. `trail` gives the place: a list of steps, drawn with chevrons a screen reader does not say, or a text as is. `pause` is what is heard between those parts without being seen, a comma for instance, and `spoken` the sorts’ names read aloud, as for `SortSelect`.
+
+In the field, ↓ on the last result reaches “See more”, ↑ from it comes back to the last one, and ↑ on the first one leaves the field alone. `labels.shortcut` shows the shortcut after the button’s label, the reader’s keys (⌘K on an Apple device, Ctrl K elsewhere), marked before the first paint by `searchShortcutScript` of `@figatellultimate/search-react/scripts`; `labels.spoken.placeholder` gives the field a text read instead of its placeholder, which an ellipsis makes read badly.

@@ -29,7 +29,7 @@ yarn figatellultimate search --site .next/server/app --out public/pagefind --loc
 bunx figatellultimate search --site .next/server/app --out public/pagefind --locale-folders
 ```
 
-`--locale-folders` sert aux builds qui écrivent chaque langue dans son propre dossier, celle par défaut comprise, comme next-intl. Une collection qui déclare `searchable: false` est exclue. Le texte indexé est l’élément marqué `data-pagefind-body` : la navigation, le pied de page et les listes de pages restent hors des résultats.
+`--locale-folders` sert aux builds qui écrivent chaque langue dans son propre dossier, celle par défaut comprise, comme next-intl. Une collection qui déclare `searchable: false` est exclue. Le texte indexé est l’élément marqué `data-pagefind-body` : la navigation, le pied de page et les listes de pages restent hors des résultats. Ses blocs de code en sont exclus, et les noms des onglets de code avec eux : un extrait est le texte de la page, jamais une commande.
 
 Avec un adaptateur de déploiement (celui de Vercel), Next écrit les pages prérendues ailleurs, sous un dossier haché par route : `prerenderedPages` de `@figatellultimate/next16/build` donne le dossier qui les contient, avec ou sans adaptateur, et `copyIntoOutput` copie l’index dans la sortie de l’adaptateur, que le déploiement sert.
 
@@ -69,3 +69,5 @@ import { SearchDialog } from '@figatellultimate/search-react';
 ```
 
 Chaque résultat est nommé par son titre, son emplacement et sa date, courts à entendre d’une flèche à l’autre ; son extrait est sa description, lue après une pause. `trail` donne l’emplacement : une liste d’étapes, dessinées avec des chevrons qu’un lecteur d’écran ne dit pas, ou un texte tel quel. `pause` est ce qu’on entend entre ces parties sans le voir, une virgule par exemple, et `spoken` les noms lus des tris, comme pour `SortSelect`.
+
+Dans le champ, ↓ sur le dernier résultat atteint « Voir plus », ↑ depuis lui revient au dernier, et ↑ sur le premier rend le champ seul. `labels.shortcut` montre le raccourci après le libellé du bouton, les touches du lecteur (⌘K sur un appareil Apple, Ctrl K ailleurs), marquées avant le premier affichage par `searchShortcutScript` de `@figatellultimate/search-react/scripts` ; `labels.spoken.placeholder` donne au champ un texte lu à la place de son placeholder, que des points de suspension rendent mal à l’oreille.
