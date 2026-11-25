@@ -306,4 +306,58 @@ describe('Navbar layout with styles.css', () => {
       expect(getComputedStyle(icon, '::after').transform).not.toBe(before);
     });
   });
+
+  it.skipIf(!inBrowser)(
+    "shows a popup item's focus by its highlight alone, and a navbar menu's link by its outline",
+    async () => {
+      const user = userEvent.setup();
+
+      render(
+        <Navbar items={ITEMS} t={(key) => key} labels={{ nav: 'Navigation', menu: 'Menu' }}>
+          <LocaleSwitcher
+            links={[
+              { locale: 'fr', url: '/', kind: 'entry', current: true },
+              { locale: 'en', url: '/en', kind: 'home', current: false },
+            ]}
+            names={(locale) => (locale === 'fr' ? 'Français' : 'English')}
+            labels={{ language: 'Langue' }}
+          />
+        </Navbar>,
+      );
+      const switcher = screen.getByRole('button', { name: /Français/ });
+
+      switcher.focus();
+      await user.keyboard('{Enter}');
+      await waitFor(() => {
+        expect(document.activeElement?.getAttribute('data-slot')).toBe('locale-switcher-item');
+      });
+      const item = document.activeElement;
+
+      if (item === null) throw new Error('no focused item');
+
+      // Its highlight shows the focus: an outline over it would draw it twice.
+      expect(item.hasAttribute('data-highlighted')).toBe(true);
+      expect(getComputedStyle(item).outlineStyle).toBe('none');
+      // The highlight fades in (the generic color transition), however slow the runner.
+      await waitFor(() => {
+        expect(getComputedStyle(item).backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+      });
+      await user.keyboard('{Escape}');
+      const trigger = screen.getByRole('button', { name: 'docs' });
+
+      trigger.focus();
+      await user.keyboard('{Enter}');
+      await waitFor(() => {
+        expect(trigger.getAttribute('data-state')).toBe('open');
+      });
+      await user.tab();
+      const link = screen.getByRole('link', { name: 'Installation' });
+
+      await waitFor(() => {
+        expect(document.activeElement).toBe(link);
+      });
+      // A menu's link has no highlight of its own: its outline is its focus.
+      expect(getComputedStyle(link).outlineStyle).toBe('solid');
+    },
+  );
 });
