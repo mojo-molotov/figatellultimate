@@ -1,6 +1,15 @@
 /**
  * The list of generated files: one model per collection, then every module derived from the models, the folder and
  * term pages, and the analyzed messages.
+ *
+ * Key design decision, as chosen with the user: each entry's module is yielded as soon as it is built, the other
+ * modules then, sorted by path. Entry modules are most of the output (an entry's compiled MDX, ~15 kB each): held
+ * until the end to be sorted, 10,000 entries needed a heap of more than 384 MB; yielded at once to the writer, 384 MB
+ * is enough. The order still writes every entry before the index importing it, so that a bundler watching the output
+ * never sees an import of a file not written yet.
+ *
+ * Invariants (`emit.test.ts`): each file once, every entry module before its collection's index, the same output
+ * whatever the order of the documents.
  */
 import {
   createUrlBuilder,
@@ -39,13 +48,14 @@ export interface EmitInput {
 }
 
 /**
- * Pure codegen: the files of `.figatellultimate/`, built as ts-morph declarations in memory, sorted by path and
- * byte-identical for the same input.
+ * Pure codegen: the files of `.figatellultimate/`, built as ts-morph declarations in memory, byte-identical for the
+ * same input.
  *
  * @param input - The config, the assembly (`loadContent`), the absolute output folder (only to compute relative
  *   type imports, never emitted), and the analyzed messages when the config declares them.
- * @returns Every file of `.figatellultimate/`, sorted by path and byte-identical for the same input; pass them to a
- *   writer.
+ * @returns Every file of `.figatellultimate/` once, byte-identical for the same input: each entry's module as soon as
+ *   it is built, before its collection's index, then the other modules sorted by path; pass them to a writer, which
+ *   takes each as it comes.
  *
  * @example
  * const result = await createNodeFileWriter(out).commit(emit({ config, assembly, outputDirectory: out, messages }));
@@ -85,7 +95,8 @@ export function* emit(input: EmitInput): Generator<GeneratedFile, void, undefine
       ),
     );
 
-    for (const entry of model.entries) files.push(...entryFile(project, model, entry));
+    // At once: the bulk of the output, never held (the writer takes each file as it comes).
+    for (const entry of model.entries) yield* entryFile(project, model, entry);
   }
 
   // Term pages: from the kept entries and their resolved terms.

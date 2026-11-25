@@ -122,7 +122,11 @@ function typecheck(app: string): string[] {
 
 describe('emit', () => {
   it('emits locales, then per collection an index (.js + .d.ts), types (.d.ts) and one data module per entry (.js)', () => {
-    expect(generate().map((f) => f.path)).toEqual([
+    expect(
+      generate()
+        .map((f) => f.path)
+        .sort(),
+    ).toEqual([
       'blog/entries/en/patch-notes/dashboard/post-01.js',
       'blog/entries/fr/patch-notes/bot/post-02.js',
       'blog/entries/fr/patch-notes/dashboard/post-01.js',
@@ -144,6 +148,20 @@ describe('emit', () => {
       'urls/index.d.ts',
       'urls/index.js',
     ]);
+  });
+
+  it('emits each file once, every entry module before the index importing it: a watching bundler never sees an import of a file not yet written', () => {
+    const paths = generate().map((f) => f.path);
+
+    expect(new Set(paths).size).toBe(paths.length);
+
+    for (const collection of ['blog', 'pages']) {
+      const entries = paths.flatMap((path, at) => (path.startsWith(`${collection}/entries/`) ? [at] : []));
+
+      // Precondition: the collection has entries.
+      expect(entries.length).toBeGreaterThan(0);
+      expect(Math.max(...entries)).toBeLessThan(paths.indexOf(`${collection}/index.js`));
+    }
   });
 
   it('emits the facet indexes of collections that reference taxonomies, keyed by entry URL', () => {
