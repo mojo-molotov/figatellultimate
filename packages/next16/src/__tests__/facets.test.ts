@@ -75,6 +75,17 @@ describe('useNextUrl', () => {
     expect(router.push).toHaveBeenCalledTimes(1);
   });
 
+  it("reads and writes the project's own names: its page segment (`pageSegment`) and its engine's page parameter", () => {
+    at.pathname = '/blog/news/seite/2';
+    at.search = '';
+    const { result } = renderHook(() => useNextUrl({ first: '/blog/news', segment: 'seite', param: 'p' }));
+
+    expect(result.current.search).toBe('?p=2');
+    expect(result.current.href?.('?p=3')).toBe('/blog/news/seite/3');
+    result.current.navigate('?p=3', { mode: 'push' });
+    expect(router.push).toHaveBeenCalledWith('/blog/news/seite/3', { scroll: false });
+  });
+
   it('moves only the address for a default page the app renders itself, never through the router', () => {
     at.pathname = '/blog/news/page/2';
     at.search = '';
@@ -153,6 +164,17 @@ describe('usePagedLocaleLinks', () => {
     ).toEqual(urls);
   });
 
+  it("follows a page under the project's own segment", () => {
+    at.pathname = '/blog/news/seite/3';
+    at.search = '';
+
+    expect(
+      renderHook(() =>
+        usePagedLocaleLinks(links, { locale: 'fr', listing, segment: 'seite', param: 'p' }),
+      ).result.current.map((link) => link.url),
+    ).toEqual(['/blog/news/seite/3', '/en/blog/news/seite/3']);
+  });
+
   it.each([
     ['without a listing', '/blog/news/page/3', undefined],
     ['on a page outside the listing', '/blog/other', listing],
@@ -181,6 +203,21 @@ describe('NextUrlBoundary', () => {
 
     expect(shown({ first: '/blog/news', page: 2 })).toBe('?page=2 /blog/news/page/3');
     expect(shown({})).toBe(' -');
+  });
+
+  it("renders the landed page under the project's own names", () => {
+    at.prerendering = true;
+    const { container } = render(
+      createElement(NextUrlBoundary, {
+        first: '/blog/news',
+        page: 2,
+        segment: 'seite',
+        param: 'p',
+        children: (url) => createElement('p', null, `${url.search} ${url.href?.('?p=3') ?? '-'}`),
+      }),
+    );
+
+    expect(container.textContent).toBe('?p=2 /blog/news/seite/3');
   });
 
   it('renders from the address once it is known', () => {
