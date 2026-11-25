@@ -1,7 +1,12 @@
 import * as fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
-import { defineFacetedCollection, type SelectionState } from '../index.js';
+import {
+  defineFacetedCollection,
+  FacetedCollectionError,
+  type FacetedCollection,
+  type SelectionState,
+} from '../index.js';
 import { engine, PER_PAGE, POSTS, type Post } from './scenario.js';
 
 const url = (i: number): string => `/blog/news/sub/post-${String(i).padStart(2, '0')}`;
@@ -286,3 +291,40 @@ function defineWith(items: readonly Post[]) {
     perPage: PER_PAGE,
   });
 }
+
+describe('the URL parameters of the page and the sort', () => {
+  const definition = (params?: FacetedCollection<Post>['params']): FacetedCollection<Post> => ({
+    items: POSTS,
+    key: (post) => post.url,
+    facets: { tags: { values: (post) => post.tags } },
+    sorts: {
+      'date-desc': (a, b) => b.date.localeCompare(a.date),
+      'title-asc': (a, b) => a.title.localeCompare(b.title),
+    },
+    perPage: PER_PAGE,
+    ...(params === undefined ? {} : { params }),
+  });
+
+  it('are `page` and `sort` by default, the names an app links with', () => {
+    expect(defineFacetedCollection(definition()).params).toEqual({ page: 'page', sort: 'sort' });
+  });
+
+  it("reads and writes the project's own names, never the defaults", () => {
+    const custom = defineFacetedCollection(definition({ page: 'p', sort: 'order' }));
+    const state = custom.read('?order=title-asc&p=2');
+
+    expect(state).toMatchObject({ sort: 'title-asc', page: 2 });
+    expect(custom.write(state)).toBe('?order=title-asc&p=2');
+    // The default names are no longer read.
+    expect(custom.read('?sort=title-asc&page=2')).toMatchObject({ sort: 'date-desc', page: 1 });
+  });
+
+  it.each<[string, FacetedCollection<Post>['params']]>([
+    ["a facet's name", { page: 'tags' }],
+    ['one name for both', { page: 'x', sort: 'x' }],
+    ['an empty name', { sort: '' }],
+    ['a name with a space', { page: 'my page' }],
+  ])('throws FacetedCollectionError on %s', (_, params) => {
+    expect(() => defineFacetedCollection(definition(params))).toThrow(FacetedCollectionError);
+  });
+});

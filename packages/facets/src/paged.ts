@@ -10,11 +10,23 @@
  *     - A location mixing both (`/page/3?tags=bot`) reads as the selection on its first page: a selection already
  *       resets the page, and nothing published links there.
  *     - The listing's own trailing slash, when it has one, is kept on its pages (`/blog/news/page/2/`).
+ *     - The names are the project's (`PagedNames`): the page segment of its URLs (`urls.page`, the generated
+ *       `pageSegment`) and the page parameter of its engine (`params.page`); `page` for both by default.
  *
  * Invariants (`paged.test.ts`): a round trip for every state (written, then read back); a default page in the path,
  * never in the query; a mixed location on its first page; a default view told from the query alone.
  */
 import type { Search } from './codec.js';
+
+/** The names a paginated listing's location uses: the page segment in its path, the page parameter in its query. */
+export interface PagedNames {
+  /** The segment before a page's number in the path (`urls.page`); default `page`. */
+  readonly segment?: string | undefined;
+  /** The engine's page parameter (`params.page`); default `page`. */
+  readonly param?: string | undefined;
+}
+
+const escape = (text: string): string => text.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /** The query's parameter names, the malformed ones left out, without a DOM or Node type. */
 function names(search: string): string[] {
@@ -41,14 +53,17 @@ function split(path: string): { readonly base: string; readonly slash: string } 
  * whatever items are loaded, so that a selection is told apart before the whole collection is there.
  *
  * @param search - A query string (`''`, `?page=2`, `?tags=bot`…).
- * @returns `true` when it holds no parameter but `page` (the views a build prerenders), `false` otherwise.
+ * @param paged - The engine's page parameter; default `page`.
+ * @returns `true` when it holds no parameter but the page's (the views a build prerenders), `false` otherwise.
  *
  * @example
  * isDefaultView('?page=2'); // true
  * isDefaultView('?tags=bot'); // false
  */
-export function isDefaultView(search: Search): boolean {
-  return names(search.toString()).every((name) => name === 'page');
+export function isDefaultView(search: Search, paged: PagedNames = {}): boolean {
+  const param = paged.param ?? 'page';
+
+  return names(search.toString()).every((name) => name === param);
 }
 
 /**
@@ -56,6 +71,7 @@ export function isDefaultView(search: Search): boolean {
  *
  * @param first - The listing's own URL, its first page (e.g. `/blog/news`).
  * @param search - The view's canonical query string, as the engine writes it (`''`, `?page=2`, `?tags=bot`…).
+ * @param paged - The page segment and parameter; default `page` for both.
  * @returns The listing's URL for its first default page, `<first>/page/N` for another default page, else the
  *   listing's URL with the query string.
  *
@@ -63,18 +79,19 @@ export function isDefaultView(search: Search): boolean {
  * pagedHref('/blog/news', '?page=2'); // '/blog/news/page/2'
  * pagedHref('/blog/news', '?tags=bot&page=2'); // '/blog/news?tags=bot&page=2'
  */
-export function pagedHref(first: string, search: Search): string {
+export function pagedHref(first: string, search: Search, paged: PagedNames = {}): string {
   const query = search.toString();
   const params = names(query);
+  const segment = paged.segment ?? 'page';
 
   if (params.length === 0) return first;
 
-  const page = /^\??page=(\d{1,9})$/.exec(query)?.[1];
+  const page = new RegExp(`^\\??${escape(paged.param ?? 'page')}=(\\d{1,9})$`).exec(query)?.[1];
 
   if (page !== undefined && params.length === 1) {
     const { base, slash } = split(first);
 
-    return Number(page) > 1 ? `${base === '/' ? '' : base}/page/${String(Number(page))}${slash}` : first;
+    return Number(page) > 1 ? `${base === '/' ? '' : base}/${segment}/${String(Number(page))}${slash}` : first;
   }
 
   return `${first}${query.startsWith('?') ? query : `?${query}`}`;
@@ -85,6 +102,7 @@ export function pagedHref(first: string, search: Search): string {
  *
  * @param location - The location's path and query string.
  * @param first - The listing's own URL, its first page.
+ * @param paged - The page segment and parameter; default `page` for both.
  * @returns `?page=N` for a default page in the path, the query string otherwise; a location mixing a page in the path
  *   with a selection or a sort reads as that selection on its first page.
  *
@@ -92,26 +110,30 @@ export function pagedHref(first: string, search: Search): string {
  * pagedSearch({ pathname: '/blog/news/page/2', search: '' }, '/blog/news'); // '?page=2'
  * pagedSearch({ pathname: '/blog/news/page/3', search: '?tags=bot' }, '/blog/news'); // '?tags=bot'
  */
-export function pagedSearch(location: { readonly pathname: string; readonly search: Search }, first: string): string {
+export function pagedSearch(
+  location: { readonly pathname: string; readonly search: Search },
+  first: string,
+  paged: PagedNames = {},
+): string {
   const search = location.search.toString();
+  const param = paged.param ?? 'page';
   const { base } = split(first);
   const { base: path } = split(location.pathname);
-  const page = path.startsWith(`${base === '/' ? '' : base}/page/`)
-    ? /^\d{1,9}$/.exec(path.slice(`${base === '/' ? '' : base}/page/`.length))?.[0]
-    : undefined;
+  const prefix = `${base === '/' ? '' : base}/${paged.segment ?? 'page'}/`;
+  const page = path.startsWith(prefix) ? /^\d{1,9}$/.exec(path.slice(prefix.length))?.[0] : undefined;
 
   if (page === undefined) return search;
 
-  const params = names(search).filter((name) => name !== 'page');
+  const params = names(search).filter((name) => name !== param);
 
   if (params.length > 0) {
     const query = (search.startsWith('?') ? search.slice(1) : search)
       .split('&')
-      .filter((pair) => !/^page(=|$)/.test(pair))
+      .filter((pair) => !new RegExp(`^${escape(param)}(=|$)`).test(pair))
       .join('&');
 
     return query === '' ? '' : `?${query}`;
   }
 
-  return Number(page) > 1 ? `?page=${String(Number(page))}` : '';
+  return Number(page) > 1 ? `?${param}=${String(Number(page))}` : '';
 }

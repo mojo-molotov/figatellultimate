@@ -18,7 +18,8 @@
  *       maps keys to what it renders (e.g. cards rendered once on the server, reordered on the client).
  *     - The URL is the state: one repeated query parameter per selected value
  *       (`?tags=bot&tags=release&sort=date-asc&page=2`); page 1, the default sort and empty facets are not written.
- *       No separator, so no term key can break decoding.
+ *       No separator, so no term key can break decoding. The page's and the sort's parameters are named by the
+ *       collection (`params`, `page` and `sort` by default), checked to be distinct URL names that no facet takes.
  *     - Facet values are term keys, never numeric ids: adding or renaming a term never changes what an existing URL
  *       means (an id taken from a sorted list would).
  *     - Within a facet, `any` (default) or `all`; across facets, always AND.
@@ -49,7 +50,7 @@
  */
 import { readFacets, readPage, readSort, writeState } from './codec.js';
 import { keepReadingPosition } from './reconcile.js';
-import type { Action, Engine, FacetedCollection, SelectionState, View } from './types.js';
+import type { Action, Engine, FacetedCollection, FacetedParams, SelectionState, View } from './types.js';
 
 export {
   paginationItems,
@@ -58,7 +59,7 @@ export {
   type PaginationItem,
   type ResponsivePaginationItem,
 } from './pagination.js';
-export { isDefaultView, pagedHref, pagedSearch } from './paged.js';
+export { isDefaultView, pagedHref, pagedSearch, type PagedNames } from './paged.js';
 export { PAGES_PER_BATCH, batchItems, batchPath, batchStart, batchesOf, pageItems } from './batches.js';
 export { readPage } from './codec.js';
 export { backToFirstPage, keepReadingPosition } from './reconcile.js';
@@ -67,12 +68,41 @@ export type {
   Engine,
   FacetDefinition,
   FacetedCollection,
+  FacetedParams,
   Reconcile,
   ReconcileInput,
   SelectionState,
   UrlAdapter,
   View,
 } from './types.js';
+
+/** Thrown by `defineFacetedCollection` on an invalid declaration: the only case where the engine throws. */
+export class FacetedCollectionError extends Error {
+  override readonly name = 'FacetedCollectionError';
+}
+
+/** A URL parameter's name: letters, digits, `-` and `_`, so that it is never encoded. */
+const PARAMETER = /^[A-Za-z0-9_-]+$/;
+
+/** The URL parameters of the page and the sort, validated: names of the URL, distinct, none a facet's. */
+function paramsOf(input: FacetedCollection<unknown>['params'], facets: readonly string[]): FacetedParams {
+  const params = Object.freeze({ page: input?.page ?? 'page', sort: input?.sort ?? 'sort' });
+
+  for (const [role, name] of Object.entries(params)) {
+    if (!PARAMETER.test(name))
+      throw new FacetedCollectionError(`params.${role} must be letters, digits, "-" or "_", received "${name}".`);
+
+    if (facets.includes(name))
+      throw new FacetedCollectionError(
+        `params.${role} "${name}" is a facet's name: the URL could not tell them apart.`,
+      );
+  }
+
+  if (params.page === params.sort)
+    throw new FacetedCollectionError(`params.page and params.sort are both "${params.page}": one name each.`);
+
+  return params;
+}
 
 /**
  * Builds the engine of a faceted collection.
@@ -82,7 +112,8 @@ export type {
  *
  * @param definition - The items and their key, the facets, the sort registry (its first sort is the default), the
  *   page size, and optionally a reconciliation strategy and precomputed indexes.
- * @returns A frozen engine: `read`, `write`, `view`, `transition`, its items and its sorts' names.
+ * @returns A frozen engine: `read`, `write`, `view`, `transition`, its items, its sorts' names and its URL parameters.
+ * @throws {FacetedCollectionError} When `params` are not URL names, are the same name, or one is a facet's.
  *
  * @example
  * const engine = defineFacetedCollection({
@@ -102,6 +133,7 @@ export function defineFacetedCollection<I>(definition: FacetedCollection<I>): En
   const sortNames = Object.keys(definition.sorts);
   const defaultSort = sortNames[0] ?? '';
   const reconcile = definition.reconcile ?? keepReadingPosition;
+  const params = paramsOf(definition.params, facetNames);
   const keys = items.map(key);
   const pairs = items.map((item, index) => ({ key: keys[index] ?? '', item }));
 
@@ -239,15 +271,20 @@ export function defineFacetedCollection<I>(definition: FacetedCollection<I>): En
   const engine: Engine<I> = {
     items,
     sorts: Object.freeze([...sortNames]),
+    params,
     read(search) {
       const facets = readFacets(search, allowed);
-      const sort = readSort(search, sortNames);
+      const sort = readSort(search, sortNames, params.sort);
       const pages = pagesOf(order({ facets, sort, page: 1 }).length);
 
-      return Object.freeze({ facets: Object.freeze(facets), sort, page: Math.min(readPage(search), pages) });
+      return Object.freeze({
+        facets: Object.freeze(facets),
+        sort,
+        page: Math.min(readPage(search, params.page), pages),
+      });
     },
     write(state) {
-      return writeState(state, facetNames, defaultSort);
+      return writeState(state, facetNames, defaultSort, params);
     },
     view,
     transition(state, action: Action) {
@@ -277,7 +314,7 @@ export function defineFacetedCollection<I>(definition: FacetedCollection<I>): En
           ...(selected || state.remembered === undefined ? {} : { remembered: state.remembered }),
         });
 
-        return { state: paged, search: writeState(paged, facetNames, defaultSort) };
+        return { state: paged, search: writeState(paged, facetNames, defaultSort, params) };
       }
 
       const after: SelectionState = { facets, sort, page: state.page };
@@ -300,7 +337,7 @@ export function defineFacetedCollection<I>(definition: FacetedCollection<I>): En
         ...(remembered === undefined ? {} : { remembered }),
       });
 
-      return { state: next, search: writeState(next, facetNames, defaultSort) };
+      return { state: next, search: writeState(next, facetNames, defaultSort, params) };
     },
   };
 

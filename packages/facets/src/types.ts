@@ -117,6 +117,17 @@ export interface FacetedCollection<I> {
    * built from the items otherwise.
    */
   readonly indexes?: Readonly<Record<string, Readonly<Record<string, readonly string[]>>>> | undefined;
+  /**
+   * The URL parameters of the page and the sort; default `page` and `sort`. Names of the URL (letters, digits, `-`,
+   * `_`), distinct, and none a facet's.
+   */
+  readonly params?: { readonly page?: string | undefined; readonly sort?: string | undefined } | undefined;
+}
+
+/** The URL parameters of the page and the sort, resolved. */
+export interface FacetedParams {
+  readonly page: string;
+  readonly sort: string;
 }
 
 /**
@@ -207,4 +218,6 @@ export interface Engine<I> {
   readonly items: readonly I[];
   /** The sort registry's names, in order: the default first. */
   readonly sorts: readonly string[];
+  /** The URL parameters of the page and the sort (`params`, `page` and `sort` by default). */
+  readonly params: FacetedParams;
 }

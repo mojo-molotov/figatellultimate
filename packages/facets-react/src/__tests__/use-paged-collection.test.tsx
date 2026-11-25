@@ -17,13 +17,14 @@ const POSTS: readonly Post[] = Array.from({ length: 12 }, (_, i) => ({
   date: `2026-10-${String(30 - i).padStart(2, '0')}`,
   tags: i >= 10 ? ['harp'] : ['bot'],
 }));
-const engineOf = (items: readonly Post[]): Engine<Post> =>
+const engineOf = (items: readonly Post[], params?: { readonly page: string }): Engine<Post> =>
   defineFacetedCollection<Post>({
     items,
     key: (post) => post.url,
     facets: { tags: { values: (post) => post.tags } },
     sorts: { 'date-desc': (a, b) => (a.date < b.date ? 1 : -1), 'date-asc': (a, b) => (a.date < b.date ? -1 : 1) },
     perPage: 5,
+    ...(params === undefined ? {} : { params }),
   });
 const SLICE = POSTS.slice(0, 5);
 const PAGED: PagedSlice = { page: 1, pages: 3, total: 12 };
@@ -109,6 +110,22 @@ describe('usePagedCollection', () => {
 
     expect(result.current.binding.view).toMatchObject({ keys: SLICE.map((post) => post.url), total: 12, pages: 3 });
     expect(result.current.index).toBeUndefined();
+    expect(load).not.toHaveBeenCalled();
+  });
+
+  it("reads its engine's own page parameter: a default page, never a selection loading the index", () => {
+    const load = vi.fn(() => Promise.resolve(INDEX));
+    const { result } = renderHook(() =>
+      usePagedCollection({
+        engine: (items: readonly Post[]) => engineOf(items, { page: 'p' }),
+        items: SLICE,
+        paged: { page: 2, pages: 3, total: 12 },
+        load,
+        url: { search: '?p=2', navigate: () => undefined },
+      }),
+    );
+
+    expect(result.current.binding.state.page).toBe(2);
     expect(load).not.toHaveBeenCalled();
   });
 

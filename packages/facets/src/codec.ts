@@ -90,13 +90,14 @@ export function readFacets(
  *
  * @param search - The query string.
  * @param sorts - The registry's names, the default first.
+ * @param name - The sort's URL parameter; default `sort`.
  * @returns The named sort when the registry has it, the default otherwise.
  *
  * @example
  * readSort('?sort=title-asc', ['date-desc', 'title-asc']); // 'title-asc'
  */
-export function readSort(search: Search, sorts: readonly string[]): string {
-  const sort = parameters(search).get('sort')?.[0];
+export function readSort(search: Search, sorts: readonly string[], name = 'sort'): string {
+  const sort = parameters(search).get(name)?.[0];
 
   return sort !== undefined && sorts.includes(sort) ? sort : (sorts[0] ?? '');
 }
@@ -105,13 +106,14 @@ export function readSort(search: Search, sorts: readonly string[]): string {
  * The page in the search.
  *
  * @param search - The query string.
+ * @param name - The page's URL parameter; default `page`.
  * @returns A positive whole number of at most nine digits, 1 otherwise; the caller clamps it to the view's pages.
  *
  * @example
  * readPage('?page=-3'); // 1
  */
-export function readPage(search: Search): number {
-  const raw = parameters(search).get('page')?.[0];
+export function readPage(search: Search, name = 'page'): number {
+  const raw = parameters(search).get(name)?.[0];
 
   if (raw === undefined || !/^\d{1,9}$/.test(raw)) return 1;
 
@@ -124,6 +126,7 @@ export function readPage(search: Search): number {
  * @param state - The state.
  * @param facets - The facets' names, in their declared order.
  * @param defaultSort - The sort never written.
+ * @param params - The URL parameters of the page and the sort; default `page` and `sort`.
  * @returns `''`, or `?…`: facets in their declared order, values sorted, then the sort and the page when not the
  *   defaults.
  *
@@ -131,7 +134,12 @@ export function readPage(search: Search): number {
  * writeState({ facets: { tags: ['release', 'bot'] }, sort: 'date-desc', page: 1 }, ['tags'], 'date-desc');
  * // '?tags=bot&tags=release'
  */
-export function writeState(state: SelectionState, facets: readonly string[], defaultSort: string): string {
+export function writeState(
+  state: SelectionState,
+  facets: readonly string[],
+  defaultSort: string,
+  params: { readonly page: string; readonly sort: string } = { page: 'page', sort: 'sort' },
+): string {
   const pairs: string[] = [];
 
   for (const facet of facets) {
@@ -139,9 +147,9 @@ export function writeState(state: SelectionState, facets: readonly string[], def
       pairs.push(`${encode(facet)}=${encode(value)}`);
   }
 
-  if (state.sort !== defaultSort) pairs.push(`sort=${encode(state.sort)}`);
+  if (state.sort !== defaultSort) pairs.push(`${encode(params.sort)}=${encode(state.sort)}`);
 
-  if (state.page > 1) pairs.push(`page=${String(state.page)}`);
+  if (state.page > 1) pairs.push(`${encode(params.page)}=${String(state.page)}`);
 
   return pairs.length === 0 ? '' : `?${pairs.join('&')}`;
 }

@@ -73,6 +73,18 @@ describe('a listing paginated in its path', () => {
     expect(pagedSearch({ pathname, search: query }, '/blog/news')).toBe(expected);
   });
 
+  it("writes and reads the project's own names: its page segment in the path, its page parameter in the query", () => {
+    const names = { segment: 'seite', param: 'p' };
+
+    expect(pagedHref('/blog/news', '?p=2', names)).toBe('/blog/news/seite/2');
+    expect(pagedHref('/blog/news', '?tags=bot&p=2', names)).toBe('/blog/news?tags=bot&p=2');
+    expect(pagedSearch({ pathname: '/blog/news/seite/3', search: '' }, '/blog/news', names)).toBe('?p=3');
+    // The default names are no longer read: `/page/3` is not a page of this listing.
+    expect(pagedSearch({ pathname: '/blog/news/page/3', search: '' }, '/blog/news', names)).toBe('');
+    expect(isDefaultView('?p=2', names)).toBe(true);
+    expect(isDefaultView('?page=2', names)).toBe(false);
+  });
+
   it('tells a default view, the ones in the path, from any selection or sort', () => {
     fc.assert(
       fc.property(search, fc.constantFrom(...FIRSTS), (query, first) => {

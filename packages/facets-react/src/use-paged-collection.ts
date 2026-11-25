@@ -224,9 +224,9 @@ export function usePagedCollection<
   );
   const live = useFacetedCollection(engine, everywhere);
   // Without an index, nothing to select: a query it never writes is read as the default view.
-  const selecting = load !== undefined && !isDefaultView(url.search);
+  const selecting = load !== undefined && !isDefaultView(url.search, { param: engine.params.page });
   // The page the address shows: a page shown here moves the address, never the server's props.
-  const current = paged === undefined ? 1 : readPage(url.search);
+  const current = paged === undefined ? 1 : readPage(url.search, engine.params.page);
 
   // The current page's batch on idle, then, as the reader moves, the next or previous one near its edges.
   useEffect(() => {
