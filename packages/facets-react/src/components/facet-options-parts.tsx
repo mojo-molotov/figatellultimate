@@ -4,14 +4,17 @@
  * The facet options' parts that hold the cmdk list: the content, the filter, the terms and "clear". Their own module
  * (and chunk), loaded when the popover opens: a listing page ships the trigger alone until the reader filters.
  *
- * Key design decision: no term active on opening, as chosen with the user. cmdk makes the first one active as its
- * list mounts, highlighted without the field telling it (no `aria-activedescendant`): a screen reader said nothing of
- * it, and Enter toggled a term never heard. Its value is held here, from one no term has (`NONE`): ↓, typing (the
- * first match) or the pointer make a term active, told to assistive technologies.
+ * Key design decisions:
+ *     - No term active on opening, as chosen with the user. cmdk makes the first one active as its list mounts,
+ *       highlighted without the field telling it (no `aria-activedescendant`): a screen reader said nothing of it,
+ *       and Enter toggled a term never heard. Its value is held here, from one no term has (`NONE`): ↓, typing (the
+ *       first match) or the pointer make a term active, told to assistive technologies.
+ *     - "clear" is the list's last option, never a sibling of the list: cmdk's arrows, Home and End move only through
+ *       the options inside its list, so a "clear" beside it was out of the keyboard's reach.
  *
  * Invariants (`components.test.tsx`, in happy-dom and in real browsers): axe, keyboard (Enter opens and focuses the
- * filter, none active, arrows move, Enter toggles, Escape closes back to the trigger), no text of its own, slots and
- * props.
+ * filter, none active, arrows move, Enter toggles, "clear" reached by the arrows, Escape closes back to the trigger),
+ * no text of its own, slots and props.
  */
 import { Command } from 'cmdk';
 import { Popover, VisuallyHidden } from 'radix-ui';
@@ -25,7 +28,7 @@ const NONE = '\u0000none';
 /**
  * The popover's content: a cmdk list, the filter field first.
  *
- * @param props - The Radix content's props; `children` replace the default filter, list and "clear".
+ * @param props - The Radix content's props; `children` replace the default filter and list (its terms, then "clear").
  * @returns The content, labelled by the trigger; no term active until ↓, typing or the pointer makes one.
  *
  * @example
@@ -35,8 +38,8 @@ const NONE = '\u0000none';
  *     <FacetOptionsInput />
  *     <FacetOptionsList>
  *       <FacetOptionsItem term="guide" count={4}><FacetOptionsIndicator /> Guide</FacetOptionsItem>
+ *       <FacetOptionsClear />
  *     </FacetOptionsList>
- *     <FacetOptionsClear />
  *   </FacetOptionsContent>
  * </FacetOptions>
  */
@@ -65,7 +68,6 @@ export function FacetOptionsContent({ children, ...props }: ComponentProps<typeo
             <>
               <FacetOptionsInput />
               <FacetOptionsList />
-              <FacetOptionsClear />
             </>
           )}
         </Command>
@@ -97,7 +99,7 @@ export interface FacetOptionsListProps extends ComponentProps<typeof Command.Lis
 /**
  * The terms, each with its count, then "clear" while something is selected.
  *
- * @param props - cmdk's list props; `children` replace the default items.
+ * @param props - cmdk's list props; `children` replace the default items and "clear".
  * @returns The listbox, named by the labels; the empty label when no term matches.
  */
 export function FacetOptionsList({ children, ...props }: FacetOptionsListProps): ReactNode {
@@ -107,8 +109,14 @@ export function FacetOptionsList({ children, ...props }: FacetOptionsListProps):
   return (
     <Command.List data-slot="facet-options-list" label={context.labels.list} {...props}>
       <Command.Empty data-slot="facet-options-empty">{context.labels.empty}</Command.Empty>
-      {children ??
-        Object.entries(counts).map(([term, count]) => <FacetOptionsItem key={term} term={term} count={count} />)}
+      {children ?? (
+        <>
+          {Object.entries(counts).map(([term, count]) => (
+            <FacetOptionsItem key={term} term={term} count={count} />
+          ))}
+          <FacetOptionsClear />
+        </>
+      )}
     </Command.List>
   );
 }
@@ -174,7 +182,8 @@ export function FacetOptionsIndicator(props: ComponentProps<'span'>): ReactNode 
 }
 
 /**
- * Clears the facet's selection.
+ * Clears the facet's selection. Its place is in the list, after the terms: cmdk's arrows reach only the list's
+ * options.
  *
  * @param props - cmdk's item props; `children` replace the label.
  * @returns An option rendered only while something is selected, whatever the filter.

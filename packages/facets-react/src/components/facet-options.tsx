@@ -99,8 +99,8 @@ export interface FacetOptionsProps extends Omit<ComponentProps<typeof Popover.Ro
  *     <FacetOptionsInput />
  *     <FacetOptionsList>
  *       <FacetOptionsItem term="guide" count={4}><FacetOptionsIndicator /> Guide</FacetOptionsItem>
+ *       <FacetOptionsClear />
  *     </FacetOptionsList>
- *     <FacetOptionsClear />
  *   </FacetOptionsContent>
  * </FacetOptions>
  */

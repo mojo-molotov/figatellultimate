@@ -281,6 +281,20 @@ describe('facet options', () => {
     expect(screen.queryByRole('option', { name: '«effacer»' })).toBeNull();
   });
 
+  it('keyboard: "clear" is the last option of the list, reached by the arrows, Enter clears', async () => {
+    const { user, history } = renderListing('?tags=bot');
+
+    await user.click(screen.getByRole('button', { name: '«déclencheur 1»' }));
+    const clear = screen.getByRole('option', { name: '«effacer»' });
+
+    expect(screen.getByRole('listbox').contains(clear)).toBe(true);
+    await user.keyboard('{End}');
+    expect(clear.getAttribute('aria-selected')).toBe('true');
+    await user.keyboard('{Enter}');
+    expect(history.at(-1)).toBe('?page=2');
+    expect(screen.queryByRole('option', { name: '«effacer»' })).toBeNull();
+  });
+
   it('shows each term with its count, from the view', async () => {
     const { user } = renderListing();
 
