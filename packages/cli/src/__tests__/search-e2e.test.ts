@@ -158,6 +158,23 @@ describe('figatellultimate search, end to end', () => {
     expect(plain.output).toContain('/docs/guide (localized/docs/guide.html) missing-built-page');
   });
 
+  it('reads each page from the first --site folder holding it: an app with a route per base, each one its folder', async () => {
+    // The documentation built by a route of its own, in its own folder (Next under an adapter).
+    for (const url of ['/docs/guide', '/en/docs/guide'])
+      await project.create(`routes/docs/${builtFileOf(url)}`, BUILT[url] ?? '');
+
+    await project.remove(`site/${builtFileOf('/docs/guide')}`);
+    await project.remove(`site/${builtFileOf('/en/docs/guide')}`);
+    // Precondition: the root folder alone misses the documentation.
+    expect((await run('search', '--site', 'site')).code).toBe(EXIT.content);
+
+    const { code, output } = await run('search', '--site', 'site', '--site', 'routes/docs');
+
+    expect(output).toContain('fr: 2 pages');
+    expect(output).toContain('en: 2 pages');
+    expect(code).toBe(EXIT.ok);
+  });
+
   it('fails when a mounted entry was not built statically, without an absolute path', async () => {
     await project.remove(`site/${builtFileOf('/en/docs/guide')}`);
     const { code, output } = await run('search', '--site', 'site');

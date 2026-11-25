@@ -2,7 +2,8 @@
  * `figatellultimate search`: after the framework's static build, the mounted entries of searchable collections read from
  * the built site and indexed per locale by `@figatellultimate/pagefind`, each with its title and date as sort keys.
  *
- * Invariants (`search-e2e.test.ts`, real Pagefind): only mounted, searchable entries; a missing page or one without
+ * Invariants (`search-e2e.test.ts`, real Pagefind): only mounted, searchable entries; each page read from the first
+ * built folder holding it (a route per base, each writing its own under an adapter); a missing page or one without
  * `data-pagefind-body` content fails, without absolute paths.
  */
 import { readFile } from 'node:fs/promises';
@@ -22,8 +23,11 @@ export interface SearchInput {
   readonly config: FigatellultimateConfig;
   /** Absolute project root. */
   readonly directory: string;
-  /** The framework's built HTML (relative to the working directory, or absolute). */
-  readonly site: string;
+  /**
+   * The folders of the framework's built HTML (relative to the working directory, or absolute): one per route writing
+   * its own (Next under an adapter); each page read from the first holding it.
+   */
+  readonly sites: readonly string[];
   /** Where to write one Pagefind bundle per locale. */
   readonly out: string;
   /** The build writes every locale in its own folder, the default one included (e.g. next-intl's `app/[locale]`). */
@@ -80,7 +84,7 @@ export async function runSearch(input: SearchInput): Promise<SearchResult> {
   if (run.hasErrors) return { run, diagnostics: [], skipped: 0 };
 
   const urls = createUrlBuilder(config.locales, config.urls);
-  const site = resolve(cwd, input.site);
+  const sites = input.sites.map((site) => resolve(cwd, site));
   // Relative to the working directory; on another drive (Windows), only the built file's own name (no leak).
   const shown = (path: string, url: string): string => {
     const rel = relative(cwd, path).replaceAll('\\', '/');
@@ -104,14 +108,23 @@ export async function runSearch(input: SearchInput): Promise<SearchResult> {
     // Where the framework wrote it: at the public URL, or under its locale's folder (`/about` → `fr/about.html`).
     const built =
       input.localeFolders === true ? builtFileOf(`/${descriptor.locale}${descriptor.route}`) : builtFileOf(url);
-    const path = join(site, ...built.split('/'));
+    const paths = sites.map((site) => join(site, ...built.split('/')));
+    let html: string | undefined;
+    let path = paths[0] ?? built;
+
+    for (const candidate of paths) {
+      html = await readFile(candidate, 'utf8').catch(() => undefined);
+
+      if (html !== undefined) {
+        path = candidate;
+        break;
+      }
+    }
 
     files.set(url, shown(path, url));
-    let html: string;
 
-    try {
-      html = await readFile(path, 'utf8');
-    } catch {
+    // Missing from every folder: shown where the first one would hold it.
+    if (html === undefined) {
       diagnostics.push({ code: 'missing-built-page', url, file: shown(path, url) });
       continue;
     }

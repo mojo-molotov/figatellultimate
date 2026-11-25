@@ -28,8 +28,12 @@ export interface Command {
   readonly config: string;
   /** Derives the injected environment: drafts and test content are excluded in production. */
   readonly mode: Mode;
-  /** `search` only: the framework's built HTML, and where to write the Pagefind bundles. */
-  readonly search?: { readonly site: string; readonly out: string; readonly localeFolders: boolean } | undefined;
+  /**
+   * `search` only: the folders of the framework's built HTML (one per route that writes its own, each page read from
+   * the first holding it), and where to write the Pagefind bundles.
+   */
+  readonly search?:
+    { readonly sites: readonly string[]; readonly out: string; readonly localeFolders: boolean } | undefined;
   /** `build` and `check` only: `false` with `--no-unused`, which skips the scan of the app's unused messages. */
   readonly unused?: false | undefined;
   /** `migrate` only: what to migrate to, and whether to apply the plan. */
@@ -53,7 +57,7 @@ export type ParsedArgs =
 const OPTIONS = {
   config: { type: 'string', short: 'c' },
   mode: { type: 'string', short: 'm' },
-  site: { type: 'string' },
+  site: { type: 'string', multiple: true },
   out: { type: 'string' },
   'locale-folders': { type: 'boolean' },
   write: { type: 'boolean' },
@@ -151,9 +155,10 @@ export function parseCli(argv: readonly string[]): ParsedArgs {
     };
   }
 
-  const site = values.site?.trim() ?? '';
+  const sites = (values.site ?? []).map((site) => site.trim());
 
-  if (site === '') return usageError('The search command needs --site <built HTML directory>, e.g. .next/server/app.');
+  if (sites.length === 0 || sites.includes(''))
+    return usageError('The search command needs --site <built HTML directory>, e.g. .next/server/app.');
 
   const out = values.out ?? DEFAULT_SEARCH_OUT;
 
@@ -161,7 +166,7 @@ export function parseCli(argv: readonly string[]): ParsedArgs {
 
   const localeFolders = values['locale-folders'] === true;
 
-  return { kind: 'command', command: { name, config, mode, search: { site, out, localeFolders } } };
+  return { kind: 'command', command: { name, config, mode, search: { sites, out, localeFolders } } };
 }
 
 /** `default-locale <locale>` or `notation <implicit|explicit>`: a target, or a usage error with suggestions. */
@@ -206,7 +211,8 @@ Options:
   -c, --config <path>   Config file (default: ${DEFAULT_CONFIG})
   -m, --mode <mode>     production (default for build and check) or development (default for watch):
                         production excludes drafts and test content
-      --site <path>     search: the built HTML (e.g. .next/server/app)
+      --site <path>     search: the built HTML (e.g. .next/server/app); repeated, a folder per route that
+                        writes its own, each page read from the first holding it
       --out <path>      search: where to write the bundles (default: ${DEFAULT_SEARCH_OUT})
       --locale-folders  search: the build writes every locale in its own folder, the default one included
                         (e.g. next-intl's app/[locale]: /about is built as fr/about.html)

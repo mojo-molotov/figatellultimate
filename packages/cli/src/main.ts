@@ -176,7 +176,7 @@ async function runSearchCommand(ui: Ui, command: Command, cwd: string): Promise<
     return EXIT.usage;
   }
 
-  const options = command.search ?? { site: '.', out: 'public/pagefind', localeFolders: false };
+  const options = command.search ?? { sites: ['.'], out: 'public/pagefind', localeFolders: false };
   const phase = ui.phase('Indexing the built site');
   const result = await runSearch({ config: loaded.value.config, directory: loaded.value.directory, cwd, ...options });
 
