@@ -53,7 +53,8 @@ export async function SectionPages({
                 <EntryCard
                   // The page's first cards (subfolder headings aside): its largest paint, loaded at once.
                   priority={
-                    section.children.slice(0, index).filter((above) => above.url !== undefined).length < PRIORITY_CARDS
+                    section.children.slice(0, index).filter((above) => above.url !== undefined).length <
+                    PRIORITY_CARDS.section
                   }
                   href={node.url}
                   title={label}

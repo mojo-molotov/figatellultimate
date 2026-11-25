@@ -11,6 +11,7 @@ import { pageSegment } from '#figatellultimate/urls';
 
 import { Body } from '../components/mdx';
 import { SiteHeader } from '../components/site-header';
+import { PRIORITY_CARDS } from '../components/priority';
 import { cardsOf } from './folder-page';
 import { indexOf, itemsOf, postsOf } from './posts-data';
 import { Listing } from './listing';
@@ -38,7 +39,7 @@ export async function AuthorPage({ page }: { readonly page: AuthorsTermPage }): 
   const slice = pageItems(page.entries, page.page, page.perPage);
   const posts = await postsOf(slice.map((entry) => entry.item));
   const items = itemsOf(posts);
-  const cards = await cardsOf(posts, locale, term);
+  const cards = await cardsOf(posts, locale, PRIORITY_CARDS.author, term);
   const bio = await page.content?.load();
 
   return (
@@ -67,6 +68,7 @@ export async function AuthorPage({ page }: { readonly page: AuthorsTermPage }): 
           items={items}
           locale={locale}
           cards={cards}
+          priorityCards={PRIORITY_CARDS.author}
           facets={['tags']}
           paged={{
             page: page.page,

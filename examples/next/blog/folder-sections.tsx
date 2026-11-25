@@ -165,7 +165,7 @@ function SectionsView({
               <Collector>
                 <EntryCard
                   // The first categories' images: the page's largest paint, loaded at once.
-                  priority={index < PRIORITY_CARDS}
+                  priority={index < PRIORITY_CARDS.blog}
                   href={section.href ?? paged.first}
                   title={section.title}
                   {...(section.description === undefined ? {} : { description: section.description })}
@@ -201,7 +201,7 @@ function SectionsView({
               {section.posts.map((card, at) => (
                 <li key={card.href}>
                   {/* Under the section's own heading; the page's first cards, its largest paint, loaded at once. */}
-                  <PostCard card={card} headingLevel={3} priority={before + at < PRIORITY_CARDS} />
+                  <PostCard card={card} headingLevel={3} priority={before + at < PRIORITY_CARDS.category} />
                 </li>
               ))}
             </ol>

@@ -19,10 +19,19 @@ import { Listing } from './listing';
 import { listingLabels } from './listing-labels';
 import { cardDataOf, folderLocalesOf, indexOf, itemsOf, postsOf, sectionDataOf, subfolderKey } from './posts-data';
 
-/** The cards of some posts, keyed by URL: rendered once on the server, reordered by key on the client. */
+/**
+ * The cards of some posts, keyed by URL: rendered once on the server, reordered by key on the client.
+ *
+ * @param posts - The page's posts, in its order.
+ * @param locale - The page's locale.
+ * @param first - How many of the first cards load their images at once (`PRIORITY_CARDS`).
+ * @param currentAuthor - On an author's page, the author, left out of each card's authors.
+ * @returns Each post's card, by URL.
+ */
 export async function cardsOf(
   posts: readonly BlogPost[],
   locale: Locale,
+  first: number,
   currentAuthor?: string,
 ): Promise<Record<string, ReactNode>> {
   const data = await cardDataOf(posts, locale, currentAuthor);
@@ -31,7 +40,7 @@ export async function cardsOf(
   return Object.fromEntries(
     Object.entries(data).map(([url, card], index) => [
       url,
-      <PostCard key={url} card={card} priority={index < PRIORITY_CARDS} />,
+      <PostCard key={url} card={card} priority={index < first} />,
     ]),
   );
 }
@@ -71,7 +80,8 @@ export async function BlogFolderPage({ folder }: { readonly folder: BlogFolder }
             labels={labels}
             items={itemsOf(posts)}
             locale={locale}
-            cards={await cardsOf(posts, locale)}
+            cards={await cardsOf(posts, locale, PRIORITY_CARDS.subcategory)}
+            priorityCards={PRIORITY_CARDS.subcategory}
             paged={{
               page: folder.page,
               pages: folder.pages,
