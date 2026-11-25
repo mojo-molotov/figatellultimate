@@ -91,6 +91,7 @@ describe('editLocalesConfig', () => {
 // The project's locales.
 export default defineConfig({
   locales: defineLocales({ list: { fr: { label: 'Français' }, en: { label: 'English' } }, default: 'fr' }),
+  splitRoutes: false,
   collections: {},
 });
 `;

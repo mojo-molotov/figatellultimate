@@ -86,6 +86,27 @@ describe('loadContent', () => {
     ]);
   });
 
+  it.each([
+    [true, ['route-shadowed']],
+    [false, []],
+    [undefined, []],
+  ])('checks the routes once every page is known, when they are split (%s)', async (splitRoutes, expected) => {
+    const paths = memoryLister({ 'content/blog': ['cat/sub/a.mdx'], 'content/cat': [] });
+    const source = fakeSource({ blog: 'content/blog', cat: 'content/cat' }, [doc('cat/sub/a.mdx')]);
+    // A collection based at the blog's category: it takes the post's URL, `/blog/cat/sub/a`, over.
+    const cat = defineCollection({ entry: 'catPage', base: 'blog/cat', grammar: [locale({ optional: true }), slug()] });
+    const assembly = await loadContent({
+      ...base,
+      collections: { blog: blogWithContent, cat },
+      ...(splitRoutes === undefined ? {} : { splitRoutes }),
+      paths,
+      source,
+    });
+
+    expect(assembly.entries).toHaveLength(1);
+    expect(assembly.diagnostics.filter((d) => d.code === 'route-shadowed').map((d) => d.code)).toEqual(expected);
+  });
+
   it('reports a directory that cannot be listed and keeps going', async () => {
     const assembly = await loadContent({ ...base, paths: memoryLister({}), source: fakeSource({ blog: 'nope' }, []) });
 

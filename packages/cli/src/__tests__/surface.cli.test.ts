@@ -62,6 +62,7 @@ import { defineCollection, defineConfig, defineLocales, locale, rest, slug } fro
 
 export default defineConfig({
   locales: defineLocales({ list: ['fr', 'en'], default: 'fr' }),
+  splitRoutes: false,
   collections: {
     pages: defineCollection({ entry: 'page', base: '', grammar: [locale({ optional: true }), rest('path'), slug()] }),
   },

@@ -1,6 +1,6 @@
 /**
  * Loading the content through the ports: list, analyze, join, then the checks that need every entry (term page
- * collisions).
+ * collisions, and the routes when the app splits them).
  *
  * Architecture:
  *     PathLister.list ──> paths ──> analyze (structure, in memory)
@@ -38,6 +38,7 @@ import { createUrlBuilder, type UrlBuilder } from '../paths/url.js';
 import { INHERIT_FIELD } from '../shared/inherit-field.js';
 import { err, ok, type Result } from '../shared/result.js';
 import { folderPagesOf } from '../paths/folders.js';
+import { routeShadowings } from './routes.js';
 import { termPageCollisions, termPagesOf, type TermsOf } from './term-pages.js';
 import { completeFrontmatter, type WrittenVersion } from './inherit.js';
 
@@ -60,6 +61,8 @@ export interface LoadContentInput {
   readonly extensions?: readonly string[] | undefined;
   readonly paths: PathLister;
   readonly source: ContentSource;
+  /** Whether the app has a route per base (`splitRoutes` of the config): every page is then checked to be served. */
+  readonly splitRoutes?: boolean | undefined;
   /** Cancels the run at its next checkpoint (after listing, between documents): watch mode supersedes stale runs. */
   readonly signal?: AbortSignalLike | undefined;
 }
@@ -272,7 +275,7 @@ export async function* streamContent(input: LoadContentInput): AsyncGenerator<Co
   }
 
   diagnostics.push(...unusedTestOnly(collections, analysis.entries));
-  diagnostics.push(...termPagesDiagnostics(input, taxonomies, kept));
+  diagnostics.push(...pagesDiagnostics(input, taxonomies, kept));
 
   yield Object.freeze({
     kind: 'summary',
@@ -316,21 +319,29 @@ export async function loadContent(input: LoadContentInput): Promise<Assembly> {
   });
 }
 
-/** Term pages colliding with an entry or a folder page, among the kept entries. */
-function termPagesDiagnostics(
+/**
+ * The checks of every mounted page, among the kept entries: term pages colliding with an entry or a folder page, and,
+ * when the app splits its routes, a page another route's prefix takes.
+ */
+function pagesDiagnostics(
   input: LoadContentInput,
   taxonomies: Readonly<Record<string, Taxonomy>>,
   kept: readonly TermsOf[],
 ): Diagnostic[] {
   const { locales, collections } = input;
   const urls = input.urls ?? createUrlBuilder(locales);
-  const pages = termPagesOf({ locales, collections, taxonomies, urls, entries: kept });
+  const terms = termPagesOf({ locales, collections, taxonomies, urls, entries: kept });
+  const split = input.splitRoutes === true;
 
-  if (pages.length === 0) return [];
+  if (terms.length === 0 && !split) return [];
 
-  const folders = folderPagesOf({ locales, collections, urls, entries: kept.map((entry) => entry.descriptor) });
+  const entries = kept.map((entry) => entry.descriptor);
+  const folders = folderPagesOf({ locales, collections, urls, entries });
 
-  return termPageCollisions(pages, kept, folders, urls);
+  return [
+    ...termPageCollisions(terms, kept, folders, urls),
+    ...(split ? routeShadowings({ collections, taxonomies, entries, folders, terms, urls }) : []),
+  ];
 }
 
 /** Whether a version takes fields from another one: an `inherit:` marker, or a shared field it leaves out. */

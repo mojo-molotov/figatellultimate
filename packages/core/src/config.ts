@@ -9,6 +9,10 @@
  *       validate and freeze each part, so that an invalid declaration fails at once, where it is written.
  *     - Core throws only for an invalid configuration or a broken caller contract; every content problem is a
  *       diagnostic.
+ *     - The routes are a choice the config states, as chosen with the user: `splitRoutes` is required, never
+ *       defaulted, since each choice has a cost the other avoids (one route ships every page kind's client code to
+ *       every page; split routes forbid a page under another route's prefix). Split, every page is checked to be served
+ *       (`content/routes.ts`).
  *     - Entries are `.mdx` files unless `extensions` says otherwise, opt-in: a project choosing Markdown lists `.md`,
  *       so that a stray `README.md` in a content folder never becomes a page by surprise.
  *
@@ -48,6 +52,11 @@ export interface FigatellultimateConfig {
    * MDX by the content tool. Default: `['.mdx']`.
    */
   readonly extensions?: readonly string[];
+  /**
+   * How the app routes its pages, a choice the config must state: `false`, one catch-all route serving every page;
+   * `true`, a route per base (`routesOf`), each page then checked to be served by its own (`route-shadowed`).
+   */
+  readonly splitRoutes: boolean;
 }
 
 /** One collection of the navigation. */
@@ -127,8 +136,25 @@ function contentProblem(taxonomy: string, name: string, collection: unknown): vo
 function validate(config: unknown): asserts config is FigatellultimateConfig {
   if (!isRecord(config)) fail('the default export must be an object (use defineConfig)');
 
-  const { locales, collections, taxonomies, source, output, publicDirectory, messages, navigation, extensions } =
-    config;
+  const {
+    locales,
+    collections,
+    taxonomies,
+    source,
+    output,
+    publicDirectory,
+    messages,
+    navigation,
+    extensions,
+    splitRoutes,
+  } = config;
+
+  if (typeof splitRoutes !== 'boolean')
+    fail(
+      '`splitRoutes` must say how the app routes its pages: `false` for one route serving every page (one catch-all), ' +
+        '`true` for a route per base (a route for the blog, one for the authors…), each page then checked to be ' +
+        'served by its own',
+    );
 
   if (
     extensions !== undefined &&

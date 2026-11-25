@@ -49,6 +49,7 @@ const config = defineConfig({
   },
   taxonomies: { authors: defineTaxonomy(['gustave'], { pages: { base: 'authors' } }) },
   source,
+  splitRoutes: false,
 });
 
 /** a: published then updated; b: newer, but `noindex`; c: in another category, published only. */

@@ -15,7 +15,13 @@ const source: ContentSource = {
   },
 };
 
-const valid: FigatellultimateConfig = { locales, collections: { pages, blog }, taxonomies: { tags }, source };
+const valid: FigatellultimateConfig = {
+  locales,
+  collections: { pages, blog },
+  taxonomies: { tags },
+  source,
+  splitRoutes: false,
+};
 
 describe('defineConfig', () => {
   it('returns the config frozen, with the default output folder', () => {
@@ -33,6 +39,17 @@ describe('defineConfig', () => {
 
     expect(config.extensions).toEqual(['.mdx', '.md']);
     expect(Object.isFrozen(config.extensions)).toBe(true);
+  });
+
+  it('keeps the routes the app chose, one or split, as it was written', () => {
+    expect(defineConfig({ ...valid, splitRoutes: true }).splitRoutes).toBe(true);
+    expect(defineConfig(valid).splitRoutes).toBe(false);
+  });
+
+  it('asks for the routes to be chosen, naming both choices, when they are not', () => {
+    const unchosen = Object.fromEntries(Object.entries(valid).filter(([key]) => key !== 'splitRoutes'));
+
+    expect(() => parseConfig(unchosen)).toThrow(/`splitRoutes`.*one route.*a route per base/);
   });
 
   it('keeps an explicit output folder and URL options', () => {
@@ -64,6 +81,7 @@ describe('defineConfig', () => {
     ['an extension without its dot', { ...valid, extensions: ['md'] }],
     ['an extension in capitals', { ...valid, extensions: ['.MD'] }],
     ['the same extension twice', { ...valid, extensions: ['.md', '.md'] }],
+    ['routes chosen by a string', { ...valid, splitRoutes: 'true' }],
   ])('throws InvalidConfigError on %s', (_, input) => {
     // Runtime validation of what the types already reject: configs are loaded from user files.
     expect(() => parseConfig(input)).toThrow(InvalidConfigError);

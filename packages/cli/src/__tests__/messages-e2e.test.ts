@@ -41,6 +41,7 @@ import { createContentCollectionsSource } from '@figatellultimate/content-collec
 
 export default defineConfig({
   locales: defineLocales({ list: { fr: { label: 'Français' }, en: { label: 'English' } }, default: 'fr' }),
+  splitRoutes: false,
   collections: {
     blog: defineCollection({
       entry: 'blogPost', base: 'blog',

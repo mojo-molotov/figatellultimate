@@ -43,6 +43,7 @@ async function helpersFor(urls: UrlOptions) {
       pages: defineCollection({ entry: 'page', base: '', grammar: [locale({ optional: true }), rest('path'), slug()] }),
     },
     source,
+    splitRoutes: false,
   });
   const sources = [{ collection: 'pages', sourcePath: 'index.mdx' }];
   const assembly = assemble({

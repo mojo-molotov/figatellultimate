@@ -52,6 +52,7 @@ const config = defineConfig({
     }),
   },
   source,
+  splitRoutes: false,
 });
 
 const DATES: Readonly<Record<string, string>> = {

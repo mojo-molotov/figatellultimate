@@ -44,6 +44,7 @@ const config: FigatellultimateConfig = defineConfig({
   },
   taxonomies: { tags: defineTaxonomy(['cello', 'drums']) },
   source,
+  splitRoutes: false,
 });
 
 /** pages: `lp/sign-up` exists in both locales, `about` only in French (a missing translation). */

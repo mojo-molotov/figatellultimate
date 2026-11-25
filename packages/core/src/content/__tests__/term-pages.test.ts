@@ -201,11 +201,17 @@ describe('defineConfig: a taxonomy with pages', () => {
   };
 
   it('cannot share its name with a collection: a mounted URL names one or the other', () => {
-    expect(() => defineConfig({ locales, collections: { authors: pages }, taxonomies: { authors }, source })).toThrow(
-      InvalidConfigError,
-    );
     expect(() =>
-      defineConfig({ locales, collections: { authors: pages }, taxonomies: { authors: tags }, source }),
+      defineConfig({ locales, collections: { authors: pages }, taxonomies: { authors }, source, splitRoutes: false }),
+    ).toThrow(InvalidConfigError);
+    expect(() =>
+      defineConfig({
+        locales,
+        collections: { authors: pages },
+        taxonomies: { authors: tags },
+        source,
+        splitRoutes: false,
+      }),
     ).not.toThrow();
   });
 });

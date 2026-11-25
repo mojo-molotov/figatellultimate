@@ -40,6 +40,7 @@ import { createContentCollectionsSource } from '@figatellultimate/content-collec
 
 export default defineConfig({
   locales: defineLocales({ list: ['fr', 'en'], default: 'fr' }),
+  splitRoutes: false,
   collections: {
     pages: defineCollection({
       entry: 'page', base: '', grammar: [locale({ optional: true }), rest('path'), slug()], reserved: ['lp/sign-up'],

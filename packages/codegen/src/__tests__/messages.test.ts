@@ -41,6 +41,7 @@ const config: FigatellultimateConfig = defineConfig({
   taxonomies: { tags: defineTaxonomy(['bot'], { messages: ['label'] }) },
   messages: { directory: 'messages' },
   source,
+  splitRoutes: false,
 });
 
 const SOURCES = ['patch-notes/bot/post.mdx'].map((sourcePath) => ({ collection: 'blog', sourcePath }));

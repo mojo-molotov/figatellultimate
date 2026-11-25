@@ -74,6 +74,7 @@ export type {
   MissingLocaleDiagnostic,
   NameTooLongDiagnostic,
   TermPageCollisionDiagnostic,
+  RouteShadowedDiagnostic,
   UglyIndexDiagnostic,
   UnexpectedDepthDiagnostic,
   UnknownLocaleDiagnostic,
@@ -124,6 +125,7 @@ export { contentMessageTree, type MessageNode, type MessageTree } from './messag
 export type { EntryDescriptor } from './paths/descriptor.js';
 export { folderPagesOf, type FolderPage, type FolderPagesInput } from './paths/folders.js';
 export { termPagesOf, type TermPage, type TermPagesInput, type TermsOf } from './content/term-pages.js';
+export { routeShadowings, routesOf, type Route, type RouteShadowingsInput } from './content/routes.js';
 export { parseEntryPath } from './paths/parse.js';
 export {
   entryPathOf,

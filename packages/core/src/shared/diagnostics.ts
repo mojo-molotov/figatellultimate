@@ -93,6 +93,16 @@ export type TermPageCollisionDiagnostic = DiagnosticOf<
   { readonly url: string; readonly taxonomy: string; readonly term: string },
   string | null
 >;
+/**
+ * A page of a split app under another route's prefix, which answers its path first: its own route never serves it.
+ * `route` is its own route's base, `shadowedBy` the one taking it; `sourcePath` is `null` for a folder or term page.
+ */
+export type RouteShadowedDiagnostic = DiagnosticOf<
+  'route-shadowed',
+  'error',
+  { readonly url: string; readonly route: string; readonly shadowedBy: string },
+  string | null
+>;
 /** Two files differing only by case: one file on case-insensitive file systems. */
 export type CaseCollisionDiagnostic = DiagnosticOf<'case-collision', 'error', { readonly others: readonly string[] }>;
 /** A file next to a folder of the same name: `a.mdx` beside `a/`, better moved to `a/index.mdx`. */
@@ -236,6 +246,7 @@ export type ErrorDiagnostic =
   | FolderPageCollisionDiagnostic
   | ListingIndexCollisionDiagnostic
   | TermPageCollisionDiagnostic
+  | RouteShadowedDiagnostic
   | CaseCollisionDiagnostic
   | MissingFrontmatterFieldDiagnostic
   | InvalidFrontmatterFieldDiagnostic

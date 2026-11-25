@@ -58,6 +58,7 @@ const config = defineConfig({
     authors: defineTaxonomy({ gustave: { avatar: '/a/gustave.svg', socials: ['x'] } }),
   },
   source,
+  splitRoutes: false,
 });
 
 /** The sample shapes: the home in both locales, `about` in French only, a reserved page, a flat landing page URL. */
