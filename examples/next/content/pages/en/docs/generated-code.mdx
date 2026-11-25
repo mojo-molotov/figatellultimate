@@ -31,7 +31,7 @@ Data and bodies are separate modules, loaded only when an entry is read: listing
 
 ## URLs
 
-`#figatellultimate/urls` serves every page from one route:
+`#figatellultimate/urls` serves every page, from one route or a route per base:
 
 ```ts
 import { findByUrl, mountedUrls, segmentsOf, urlOf } from '#figatellultimate/urls';
@@ -40,7 +40,7 @@ const found = await findByUrl(urlOf('en', ['blog', 'news', 'launch']));
 // found.kind: 'entry', 'folder' or 'term'
 ```
 
-`mountedUrls` lists every page once, entries, folder pages and term pages, with its translations: the source of static params, the sitemap and the search index. `urlOf` and `segmentsOf` write and read URLs with the project’s strategy.
+`mountedUrls` lists every page once, entries, folder pages and term pages, with its translations and its route’s base (`routeBase`): the source of static params, the sitemap and the search index. `routeParamsOf(base)` gives a route’s static params when the routes are split (`splitRoutes`). `urlOf` and `segmentsOf` write and read URLs with the project’s strategy.
 
 ## Locales, navigation, taxonomies
 

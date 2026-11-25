@@ -23,9 +23,13 @@ yarn add @figatellultimate/next16 @figatellultimate/site
 bun add @figatellultimate/next16 @figatellultimate/site
 ```
 
-## One route for every page
+## Routes: one, or one per base
 
-An optional catch-all per language serves every entry, folder page and term page, all prerendered:
+The config states how the app routes its pages, `splitRoutes`, a required choice: each way has a cost the other avoids.
+
+### One route for every page
+
+`splitRoutes: false`. An optional catch-all per language serves every entry, folder page and term page, all prerendered:
 
 ```tsx
 // app/[locale]/[[...url]]/page.tsx
@@ -47,6 +51,31 @@ export default async function Page(props: PageProps<'/[locale]/[[...url]]'>) {
 ```
 
 With `dynamicParams = false`, an unknown URL is a real 404, never rendered on demand.
+
+One file, and any layout of the content: a page may sit anywhere, `/blog/about` included. The cost: Next cannot know which kind of page the route renders, so every page loads the client code of every kind. A documentation page loads the blog's pagination, its sort and its cards.
+
+### A route per base
+
+`splitRoutes: true`. A route per base of a collection or of a taxonomy's pages, the root one serving the collections based at `''`. `routeParamsOf` gives each route its pages, their path below its base:
+
+```tsx
+// app/[locale]/blog/[[...url]]/page.tsx
+import { findByUrl, routeParamsOf, urlOf } from '#figatellultimate/urls';
+
+export function generateStaticParams() {
+  return routeParamsOf('blog');
+}
+
+export default async function Page(props: PageProps<'/[locale]/blog/[[...url]]'>) {
+  const { locale, url = [] } = await props.params;
+  const found = await findByUrl(urlOf(locale, ['blog', ...url]));
+  // a post or a folder page of the blog
+}
+```
+
+Each page loads only the client code of its own kind: on this site, a documentation page weighs 13 kB gzip less than with one route. The costs: a file per base, and a constraint on the content. Next answers a path from its most specific route, so a page under another route's prefix, such as a page `content/pages/blog/about.mdx` at `/blog/about`, would be answered by the blog's route, which does not know it: a 404. `figatellultimate build` reports each such page (`route-shadowed`), with its two ways out: move it, or give its collection another base.
+
+Each mounted URL carries its route's base (`routeBase` in `mountedUrls`). Collections sharing a base share a route.
 
 ## Metadata
 

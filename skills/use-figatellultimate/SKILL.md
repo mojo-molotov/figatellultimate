@@ -9,7 +9,7 @@ figatellultimate turns folders of MDX files into a typed site. A file's path is 
 
 ```text
 content/**/*.mdx ──> figatellultimate.config.ts (grammar per collection) ──> figatellultimate build
-    ──> .figatellultimate/ (typed modules) ──> the app: one catch-all route, metadata, sitemap, feeds, llms.txt
+    ──> .figatellultimate/ (typed modules) ──> the app: one catch-all route or one per base, metadata, sitemap, feeds, llms.txt
 ```
 
 Generic content work is delegated: Content Collections reads the files, validates the frontmatter with its schema and compiles the MDX (`content-collections.ts`); figatellultimate adds the structure, the URLs, the translations and the checks.
@@ -73,6 +73,8 @@ export default defineConfig({
   },
   taxonomies: { tags: defineTaxonomy(['release', 'guide'], { messages: ['label'] }) },
   navigation: [{ collection: 'pages', depth: 1, menus: false }],
+  // Required: one route serves every page (`false`), or a route per base (`true`).
+  splitRoutes: false,
   messages: { directory: 'messages', schema: 'schema.ts', runtime: 'use-intl' },
   source: createContentCollectionsSource({
     configPath: join(import.meta.dirname, 'content-collections.ts'),
@@ -150,7 +152,7 @@ To change the default language or the notation (implicit or explicit language fo
 | Module                          | Gives                                                                                                    |
 | ------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | `#figatellultimate/<collection>` | `getBlogPost(query)` (typed, known to exist), `findBlogPost(query)`, `findBlogPostByUrl(url)`, `blogIndex` (light items, data and body loaded on demand with `load()`), `listBlog(filter)`, `findBlogFolderByUrl(url)`. |
-| `#figatellultimate/urls`        | `findByUrl(url)` (`kind`: `'entry'`, `'folder'` or `'term'`), `mountedUrls` (every page once, with `alternates`, `searchable`, `indexed`, `llms`), `urlOf(locale, segments)`, `segmentsOf(url, locale)`, `metadataFields`. |
+| `#figatellultimate/urls`        | `findByUrl(url)` (`kind`: `'entry'`, `'folder'` or `'term'`), `mountedUrls` (every page once, with `alternates`, `searchable`, `indexed`, `llms`, `routeBase`), `routeParamsOf(base)` (a split route's static params), `urlOf(locale, segments)`, `segmentsOf(url, locale)`, `metadataFields`. |
 | `#figatellultimate/locales`     | `locales`, `defaultLocale`, `localeInfo`, the `Locale` type.                                             |
 | `#figatellultimate/navigation`  | `navigationOf(locale)`: the navbar's tree.                                                               |
 | `#figatellultimate/taxonomies`  | Each taxonomy's terms and data.                                                                          |
@@ -175,7 +177,7 @@ Each language file must satisfy the schema exactly: a missing or extra key does 
 
 ## Next.js
 
-One optional catch-all per language serves every entry, folder page and term page, prerendered:
+`splitRoutes`, required in the config, says how the app routes its pages. `false`: one optional catch-all per language serves every entry, folder page and term page, prerendered (below); simple, and any page may sit anywhere, but every page loads every page kind's client code. `true`: a route per base (`app/[locale]/blog/[[...url]]` with `generateStaticParams() { return routeParamsOf('blog'); }` and `findByUrl(urlOf(locale, ['blog', ...url]))`, the root route for base `''`), each page loading its own kind's code only; then a page under another route's prefix (a page at `/blog/about`) is a `route-shadowed` error: move it or change its collection's base.
 
 ```tsx
 // app/[locale]/[[...url]]/page.tsx

@@ -25,9 +25,13 @@ yarn add @figatellultimate/next16 @figatellultimate/site
 bun add @figatellultimate/next16 @figatellultimate/site
 ```
 
-## Une route pour toutes les pages
+## Les routes : une, ou une par base
 
-Un catch-all facultatif par langue sert chaque entrée, page de dossier et page de terme, toutes prérendues :
+La configuration dit comment l’application route ses pages, `splitRoutes`, un choix obligatoire : chaque façon a un coût que l’autre évite.
+
+### Une route pour toutes les pages
+
+`splitRoutes: false`. Un catch-all facultatif par langue sert chaque entrée, page de dossier et page de terme, toutes prérendues :
 
 ```tsx
 // app/[locale]/[[...url]]/page.tsx
@@ -49,6 +53,31 @@ export default async function Page(props: PageProps<'/[locale]/[[...url]]'>) {
 ```
 
 Avec `dynamicParams = false`, une URL inconnue est une vraie 404, jamais rendue à la demande.
+
+Un seul fichier, et n’importe quelle disposition du contenu : une page peut se trouver n’importe où, `/blog/about` compris. Le coût : Next ne peut pas savoir quel type de page la route rend, alors chaque page charge le code client de tous les types. Une page de documentation charge la pagination du blog, son tri et ses cartes.
+
+### Une route par base
+
+`splitRoutes: true`. Une route par base d’une collection ou des pages d’une taxonomie, la route racine servant les collections de base `''`. `routeParamsOf` donne à chaque route ses pages, leur chemin sous sa base :
+
+```tsx
+// app/[locale]/blog/[[...url]]/page.tsx
+import { findByUrl, routeParamsOf, urlOf } from '#figatellultimate/urls';
+
+export function generateStaticParams() {
+  return routeParamsOf('blog');
+}
+
+export default async function Page(props: PageProps<'/[locale]/blog/[[...url]]'>) {
+  const { locale, url = [] } = await props.params;
+  const found = await findByUrl(urlOf(locale, ['blog', ...url]));
+  // un billet ou une page de dossier du blog
+}
+```
+
+Chaque page ne charge que le code client de son propre type : sur ce site, une page de documentation pèse 13 ko gzip de moins qu’avec une seule route. Les coûts : un fichier par base, et une contrainte sur le contenu. Next répond à un chemin par sa route la plus précise, alors une page sous le préfixe d’une autre route, comme une page `content/pages/blog/about.mdx` à `/blog/about`, recevrait la réponse de la route du blog, qui ne la connaît pas : une 404. `figatellultimate build` signale chacune de ces pages (`route-shadowed`), avec ses deux issues : la déplacer, ou donner une autre base à sa collection.
+
+Chaque URL montée porte la base de sa route (`routeBase` dans `mountedUrls`). Des collections qui partagent une base partagent une route.
 
 ## Les métadonnées
 

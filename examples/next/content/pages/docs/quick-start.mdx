@@ -100,6 +100,8 @@ export default defineConfig({
       metadata: { title: 'title' },
     }),
   },
+  // Une seule route sert toutes les pages (`app/[[...url]]`).
+  splitRoutes: false,
   source: createContentCollectionsSource({
     configPath: join(import.meta.dirname, 'content-collections.ts'),
     projectRoot: import.meta.dirname,

@@ -16,6 +16,7 @@ export default defineConfig({
   collections: {
     pages: defineCollection({ entry: 'page', base: '', grammar: [locale({ optional: true }), rest('path'), slug()] }),
   },
+  splitRoutes: false,
   source: createContentCollectionsSource({ configPath: 'content-collections.ts', projectRoot: import.meta.dirname }),
 });
 ```
@@ -39,6 +40,10 @@ figatellultimate reads `.mdx` files. `extensions` adds Markdown: `.md` files are
 ```ts
 defineConfig({ /* … */ extensions: ['.mdx', '.md'] });
 ```
+
+### Routes
+
+`splitRoutes` is required: `false` when one route serves every page, `true` for a route per base, each page then checked to be served by its own. [Next.js](/en/docs/nextjs#routes-one-or-one-per-base) compares the two.
 
 ## Collections
 
