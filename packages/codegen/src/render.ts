@@ -2,9 +2,33 @@
  * Rendering: an in-memory ts-morph project, a module built from declarations then transpiled file by file into
  * JavaScript, declarations, or both; every file starts with the generated header (the writer only ever removes such
  * files).
+ *
+ * Key design decision, as chosen with the user: a module's declarations are recorded as ts-morph structures, then
+ * printed and parsed once (`ModuleBuilder`), never added one by one to a source file. Each addition re-parses the
+ * whole file: a collection's index of 10,000 entries, built by about twenty additions, took seconds, its data parsed
+ * twenty times. Rejected: writing the big data as text outside ts-morph, faster still but without the parse that
+ * catches a malformed module, and with two ways of generating code.
+ *
+ * Invariant: every generated module typechecks, its order and its documentation kept (`emit.test.ts`).
  */
 import { GENERATED_HEADER } from '@figatellultimate/core';
-import { IndentationText, NewLineKind, Project, QuoteKind, ts, type SourceFile } from 'ts-morph';
+import {
+  IndentationText,
+  NewLineKind,
+  Project,
+  QuoteKind,
+  StructureKind,
+  ts,
+  type ExportDeclarationStructure,
+  type FunctionDeclarationStructure,
+  type ImportDeclarationStructure,
+  type InterfaceDeclarationStructure,
+  type ModuleDeclarationStructure,
+  type OptionalKind,
+  type StatementStructures,
+  type TypeAliasDeclarationStructure,
+  type VariableStatementStructure,
+} from 'ts-morph';
 
 /** One generated file, path relative to the output folder (POSIX). */
 export interface GeneratedFile {
@@ -62,6 +86,43 @@ function formatted(project: Project, path: string, text: string): string {
 }
 
 /**
+ * What a module's builder adds, as ts-morph's structures: recorded in order, then printed and parsed once.
+ */
+export interface ModuleBuilder {
+  /** Adds an import after the imports already added, as ts-morph does. */
+  addImportDeclaration(structure: OptionalKind<ImportDeclarationStructure>): void;
+  /** Inserts an import at a statement's index. */
+  insertImportDeclaration(index: number, structure: OptionalKind<ImportDeclarationStructure>): void;
+  addExportDeclaration(structure: OptionalKind<ExportDeclarationStructure>): void;
+  addTypeAlias(structure: OptionalKind<TypeAliasDeclarationStructure>): void;
+  addInterface(structure: OptionalKind<InterfaceDeclarationStructure>): void;
+  addFunction(structure: OptionalKind<FunctionDeclarationStructure>): void;
+  addVariableStatement(structure: OptionalKind<VariableStatementStructure>): void;
+  addModule(structure: OptionalKind<ModuleDeclarationStructure>): void;
+}
+
+/** A builder recording its statements, for one print and one parse. */
+function recorder(): { readonly builder: ModuleBuilder; readonly statements: StatementStructures[] } {
+  const statements: StatementStructures[] = [];
+  const imports = (): number => statements.filter((s) => s.kind === StructureKind.ImportDeclaration).length;
+
+  return {
+    statements,
+    builder: {
+      addImportDeclaration: (s) => statements.splice(imports(), 0, { ...s, kind: StructureKind.ImportDeclaration }),
+      insertImportDeclaration: (index, s) =>
+        statements.splice(index, 0, { ...s, kind: StructureKind.ImportDeclaration }),
+      addExportDeclaration: (s) => statements.push({ ...s, kind: StructureKind.ExportDeclaration }),
+      addTypeAlias: (s) => statements.push({ ...s, kind: StructureKind.TypeAlias }),
+      addInterface: (s) => statements.push({ ...s, kind: StructureKind.Interface }),
+      addFunction: (s) => statements.push({ ...s, kind: StructureKind.Function }),
+      addVariableStatement: (s) => statements.push({ ...s, kind: StructureKind.VariableStatement }),
+      addModule: (s) => statements.push({ ...s, kind: StructureKind.Module }),
+    },
+  };
+}
+
+/**
  * Builds a module from declarations (`build`), as TypeScript, then transpiles it file by file into what `output`
  * asks for: no program, so it stays fast and deterministic. Data modules carry no type: they are built
  * directly as JavaScript, without transpilation (one per entry, kept cheap). Every file starts with the generated
@@ -70,7 +131,7 @@ function formatted(project: Project, path: string, text: string): string {
  * @param project - The in-memory ts-morph project.
  * @param path - The module's path in the output, POSIX, ending in `.ts`.
  * @param output - `module` (`.js` and `.d.ts`), `types` (`.d.ts` only) or `data` (`.js` only).
- * @param build - Adds the declarations to the source file.
+ * @param build - Adds the declarations, recorded then printed once.
  * @returns The files, each starting with the generated header.
  * @throws {Error} When a declaration cannot be emitted in isolation: a broken contract of the code generator.
  */
@@ -78,12 +139,17 @@ export function render(
   project: Project,
   path: string,
   output: Output,
-  build: (file: SourceFile) => void,
+  build: (file: ModuleBuilder) => void,
 ): GeneratedFile[] {
   const base = path.replace(/\.ts$/, '');
-  const file = project.createSourceFile(`/${base}.${output === 'data' ? 'js' : 'ts'}`, '', { overwrite: true });
+  const { builder, statements } = recorder();
 
-  build(file);
+  build(builder);
+  const file = project.createSourceFile(
+    `/${base}.${output === 'data' ? 'js' : 'ts'}`,
+    { statements },
+    { overwrite: true },
+  );
   const text = file.getFullText();
 
   project.removeSourceFile(file);

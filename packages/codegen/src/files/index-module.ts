@@ -3,11 +3,11 @@
  * facet indexes keyed by entry URL, and the folder pages.
  */
 import type { Entry, UrlBuilder } from '@figatellultimate/core';
-import { VariableDeclarationKind, Writers, type CodeBlockWriter, type Project, type SourceFile } from 'ts-morph';
+import { VariableDeclarationKind, Writers, type CodeBlockWriter, type Project } from 'ts-morph';
 
 import { entryModule, literal, parameterValues, pascal, type CollectionModel } from '../model.js';
 import type { FolderData } from '../folders.js';
-import { render, type GeneratedFile } from '../render.js';
+import { render, type GeneratedFile, type ModuleBuilder } from '../render.js';
 import { indexedAccess, keysAtDepth, property, union } from './type-builders.js';
 
 const RECORD = 'Readonly<Record<string, unknown>>';
@@ -37,7 +37,7 @@ function indexItem(
   });
 }
 
-function addImports(file: SourceFile, type: string): void {
+function addImports(file: ModuleBuilder, type: string): void {
   const types = [type, `${type}IndexItem`, `${type}Tree`, `Validated${type}Query`];
 
   file.addImportDeclaration({ isTypeOnly: true, moduleSpecifier: '../locales/index.js', namedImports: ['Locale'] });
@@ -79,18 +79,19 @@ function alternatesOf(
   );
 }
 
-function addLookup(file: SourceFile, model: CollectionModel, urls: UrlBuilder, locales: readonly string[]): void {
+function addLookup(file: ModuleBuilder, model: CollectionModel, urls: UrlBuilder, locales: readonly string[]): void {
   const { name, type, parameters, entries } = model;
   const alternates = alternatesOf(model, urls, locales);
   const constant = (
     declaration: { name: string; type?: string; initializer: string | ((w: CodeBlockWriter) => void) },
     docs?: string,
-  ) =>
+  ) => {
     file.addVariableStatement({
       declarationKind: VariableDeclarationKind.Const,
       ...(docs === undefined ? {} : { docs: [docs] }),
       declarations: [declaration],
     });
+  };
 
   file.addVariableStatement({
     declarationKind: VariableDeclarationKind.Const,
@@ -144,7 +145,7 @@ function addLookup(file: SourceFile, model: CollectionModel, urls: UrlBuilder, l
 }
 
 /** `isX`, `getX` (generic overload narrowed level by level, plus the validated overload), `findX`. */
-function addGetters(file: SourceFile, model: CollectionModel): void {
+function addGetters(file: ModuleBuilder, model: CollectionModel): void {
   const { type, levels } = model;
   const tree = `${type}Tree`;
   const validated = `Validated${type}Query`;
@@ -229,7 +230,7 @@ function addGetters(file: SourceFile, model: CollectionModel): void {
  * `xFacets`: for each taxonomy reference, term → URLs of the entries carrying it, sorted; built once
  * from the resolved terms. Nothing for a collection without references (no phony export).
  */
-function addFacets(file: SourceFile, model: CollectionModel, urls: UrlBuilder): void {
+function addFacets(file: ModuleBuilder, model: CollectionModel, urls: UrlBuilder): void {
   const fields = Object.keys(model.collection.references);
 
   if (fields.length === 0) return;
@@ -272,7 +273,7 @@ function addFacets(file: SourceFile, model: CollectionModel, urls: UrlBuilder): 
 }
 
 /** `listX`: light items of a locale, optionally filtered by leading levels (all but the last). */
-function addList(file: SourceFile, model: CollectionModel): void {
+function addList(file: ModuleBuilder, model: CollectionModel): void {
   const { name, type, levels } = model;
 
   file.addFunction({
@@ -333,7 +334,7 @@ export function indexFile(
  * light index (nothing duplicated), its labels typed as message keys when the project declares messages.
  */
 function addFolders(
-  file: SourceFile,
+  file: ModuleBuilder,
   model: CollectionModel,
   folders: readonly FolderData[],
   messageKeys: boolean,
