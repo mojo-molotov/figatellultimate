@@ -69,6 +69,7 @@ const config = defineConfig({
     tags: defineTaxonomy(['bot']),
   },
   source,
+  splitRoutes: false,
 });
 
 /** Each document's collection, date and authors: gustave writes in both locales, arnaud in French only. */
@@ -107,6 +108,7 @@ const Found = v.optional(
 );
 const UrlsModule = v.looseObject({
   findByUrl: v.function(),
+  routeParamsOf: v.function(),
   mountedUrls: v.array(
     v.looseObject({
       kind: v.string(),
@@ -116,15 +118,18 @@ const UrlsModule = v.looseObject({
       alternates: v.unknown(),
       searchable: v.boolean(),
       key: v.string(),
+      routeBase: v.string(),
     }),
   ),
 });
+const RouteParams = v.array(v.object({ locale: v.string(), url: v.array(v.string()) }));
 
 const folder = new FileSystem(join(import.meta.dirname, '..', '..', '.tmp', randomUUID()));
 let termUrl: (term: string, locale: string) => unknown;
 let listingIndexes: () => readonly { readonly url: string; readonly index: string }[];
 let urls: {
   readonly findByUrl: (url: string) => Promise<v.InferOutput<typeof Found>>;
+  readonly routeParamsOf: (base: string) => v.InferOutput<typeof RouteParams>;
   readonly mountedUrls: v.InferOutput<typeof UrlsModule>['mountedUrls'];
 };
 
@@ -152,7 +157,11 @@ beforeAll(async () => {
 
   const module = v.parse(UrlsModule, await import(pathToFileURL(join(folder.basePath, 'urls', 'index.js')).href));
 
-  urls = { mountedUrls: module.mountedUrls, findByUrl: async (url) => v.parse(Found, await module.findByUrl(url)) };
+  urls = {
+    mountedUrls: module.mountedUrls,
+    findByUrl: async (url) => v.parse(Found, await module.findByUrl(url)),
+    routeParamsOf: (base) => v.parse(RouteParams, module.routeParamsOf(base)),
+  };
   const terms = v.parse(
     v.looseObject({ authorsTermUrl: v.function(), authorsListingIndexes: v.function() }),
     await import(pathToFileURL(join(folder.basePath, 'terms', 'index.js')).href),
@@ -184,10 +193,30 @@ describe('generated term pages, run', () => {
       searchable: false,
       llms: false,
       key: 'gustave',
+      routeBase: 'authors',
       // Its newest post's date: news/b.
       modified: '2026-03-01',
       indexed: true,
     });
+  });
+
+  it("gives each route of a split app its pages' params, its own base left out, every page in one route", () => {
+    expect(urls.routeParamsOf('')).toEqual([{ locale: 'fr', url: ['about'] }]);
+    expect(urls.routeParamsOf('blog')).toEqual([
+      { locale: 'en', url: ['news', 'a'] },
+      { locale: 'fr', url: ['news', 'a'] },
+      { locale: 'fr', url: ['news', 'b'] },
+    ]);
+    expect(urls.routeParamsOf('authors')).toEqual([
+      { locale: 'fr', url: ['arnaud'] },
+      { locale: 'fr', url: ['arnaud', 'page', '2'] },
+      { locale: 'fr', url: ['gustave'] },
+      { locale: 'fr', url: ['gustave', 'page', '2'] },
+      { locale: 'en', url: ['gustave'] },
+    ]);
+    expect(['', 'blog', 'authors'].map((base) => urls.routeParamsOf(base).length).reduce((a, b) => a + b)).toBe(
+      urls.mountedUrls.length,
+    );
   });
 
   it('findByUrl finds a term page, its entries from every collection, resolved, newest first', async () => {

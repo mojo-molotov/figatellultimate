@@ -1,11 +1,18 @@
 /**
- * `urls/index`: one catch-all route for every collection: `findByUrl`, `mountedUrls` (entries, folder pages, term
- * pages; reserved entries out), `metadataFields`, and `urlOf` / `segmentsOf`, the project's URL strategy written
- * once so that an app never rewrites it, and `pageSegment`, the segment of a further page. Each URL tells whether it is searchable, indexed, and exposed to LLMs
- * (`llms`: an entry its collection's `llms` takes, its exclusion field not set, and indexed; never a folder or
- * term page).
+ * `urls/index`: every mounted page, for one catch-all route serving them all (`findByUrl`) or a route per base
+ * (`routeParamsOf`, `splitRoutes`); `mountedUrls` (entries, folder pages, term pages; reserved entries out), each with
+ * its route's base (`routeBase`); `metadataFields`; `urlOf` / `segmentsOf`, the project's URL strategy written once
+ * so that an app never rewrites it; and `pageSegment`, the segment of a further page. Each URL tells whether it is
+ * searchable, indexed, and exposed to LLMs (`llms`: an entry its collection's `llms` takes, its exclusion field not
+ * set, and indexed; never a folder or term page).
  */
-import { exposedToLlms, type FigatellultimateConfig, type FolderPage, type TermPage } from '@figatellultimate/core';
+import {
+  exposedToLlms,
+  routesOf,
+  type FigatellultimateConfig,
+  type FolderPage,
+  type TermPage,
+} from '@figatellultimate/core';
 import { VariableDeclarationKind, Writers, type Project } from 'ts-morph';
 
 import { literal, pascal, type CollectionModel } from '../model.js';
@@ -15,8 +22,9 @@ import { termTaxonomies } from './terms.js';
 import { property, union } from './type-builders.js';
 
 /**
- * `urls/index.ts`: one catch-all route for every collection. `findByUrl` finds a mounted entry by its URL,
- * `mountedUrls` lists every mounted URL once (reserved entries and unmounted collections excluded),
+ * `urls/index.ts`: the app's routes, one catch-all or one per base. `findByUrl` finds a mounted entry by its URL,
+ * `routeParamsOf` gives a route's static params, `mountedUrls` lists every mounted URL once (reserved entries and
+ * unmounted collections excluded),
  * `metadataFields` carries each collection's declared metadata fields so that an app never imports the config at
  * runtime.
  *
@@ -42,6 +50,10 @@ export function urlsFile(
   const withFolders = new Set(folders.map((folder) => folder.collection));
   // Taxonomies with pages: their name stands for `collection` in a term page's mounted URL.
   const taxonomies = termTaxonomies(config).map(({ name }) => name);
+  // The bases a split app routes by: each page's own, the root one `''`.
+  const bases = routesOf(config.collections, config.taxonomies ?? {}).map((route) => route.base);
+  const baseOf = (collection: string): string => config.collections[collection]?.base ?? '';
+  const termBaseOf = (taxonomy: string): string => config.taxonomies?.[taxonomy]?.pages?.base ?? '';
 
   return render(project, 'urls/index.ts', 'module', (file) => {
     file.addImportDeclaration({ isTypeOnly: true, moduleSpecifier: '../locales/index.js', namedImports: ['Locale'] });
@@ -113,6 +125,14 @@ export function urlsFile(
         ]),
       ]),
     });
+    file.addTypeAlias({
+      name: 'RouteBase',
+      isExported: true,
+      docs: [
+        "The base of each route of a split app (`splitRoutes`): a collection's or a term page's, `''` for the root route.",
+      ],
+      type: union(bases.map(literal)),
+    });
     file.addInterface({
       name: 'UrlItem',
       isExported: true,
@@ -131,6 +151,10 @@ export function urlsFile(
           docs: ["Exposed to LLMs (`llms.txt`, its Markdown): its collection's `llms` takes it, and it is indexed."],
         },
         property('key', 'string'),
+        {
+          ...property('routeBase', 'RouteBase'),
+          docs: ["The base of the route serving it in a split app: its collection's, or its taxonomy's pages'."],
+        },
         property('modified', 'string', true),
         property('indexed', 'boolean'),
         {
@@ -244,10 +268,14 @@ export function urlsFile(
           initializer: `[${mounted
             .map(
               ({ name }) =>
-                `...${name}Index.filter((item) => !item.reserved).map((item): UrlItem => { const seo = entrySeo.get(item.url) ?? { indexed: true }; return { kind: 'entry', collection: ${literal(name)}, url: item.url, locale: item.locale, alternates: item.alternates, searchable: ${String(config.collections[name]?.searchable ?? true)} && seo.indexed, llms: llms.has(\`${name}\\u0000\${item.locale}\\u0000\${item.key}\`) && seo.indexed, key: item.key, ...seo, ...(homes.has(\`${name}\\u0000\${item.locale}\\u0000\${item.key}\`) ? { home: true as const } : {}) }; })`,
+                `...${name}Index.filter((item) => !item.reserved).map((item): UrlItem => { const seo = entrySeo.get(item.url) ?? { indexed: true }; return { kind: 'entry', collection: ${literal(name)}, url: item.url, locale: item.locale, alternates: item.alternates, searchable: ${String(config.collections[name]?.searchable ?? true)} && seo.indexed, llms: llms.has(\`${name}\\u0000\${item.locale}\\u0000\${item.key}\`) && seo.indexed, key: item.key, routeBase: ${literal(baseOf(name))}, ...seo, ...(homes.has(\`${name}\\u0000\${item.locale}\\u0000\${item.key}\`) ? { home: true as const } : {}) }; })`,
             )
-            .concat(folders.length === 0 ? [] : [`...(${literal(folderItems(folders, seo))} as readonly UrlItem[])`])
-            .concat(terms.length === 0 ? [] : [`...(${literal(termItems(terms, seo))} as readonly UrlItem[])`])
+            .concat(
+              folders.length === 0 ? [] : [`...(${literal(folderItems(folders, seo, baseOf))} as readonly UrlItem[])`],
+            )
+            .concat(
+              terms.length === 0 ? [] : [`...(${literal(termItems(terms, seo, termBaseOf))} as readonly UrlItem[])`],
+            )
             .join(', ')}]`,
         },
       ],
@@ -309,6 +337,19 @@ export function urlsFile(
       ],
     });
     file.addFunction({
+      name: 'routeParamsOf',
+      isExported: true,
+      docs: [
+        "The static params of a split app's route (`splitRoutes`): each page it serves, its locale and its path below the route's base, e.g. `routeParamsOf('blog')` for `app/[locale]/blog/[[...url]]`.",
+      ],
+      parameters: [{ name: 'base', type: 'RouteBase' }],
+      returnType: '{ locale: Locale; url: string[] }[]',
+      statements: [
+        "const prefix = base.split('/').filter((part) => part !== '').length;",
+        'return mountedUrls.filter((item) => item.routeBase === base).map((item) => ({ locale: item.locale, url: segmentsOf(item.url, item.locale).slice(prefix) }));',
+      ],
+    });
+    file.addFunction({
       name: 'findByUrl',
       isExported: true,
       isAsync: true,
@@ -366,7 +407,11 @@ export function urlsFile(
 }
 
 /** Folder pages as mounted URLs: their translations, and their key (the folder's values) for the switcher. */
-function folderItems(folders: readonly FolderPage[], seo: ReadonlyMap<string, PageSeo>): unknown[] {
+function folderItems(
+  folders: readonly FolderPage[],
+  seo: ReadonlyMap<string, PageSeo>,
+  baseOf: (collection: string) => string,
+): unknown[] {
   return folders.map((folder) => ({
     kind: 'folder',
     collection: folder.collection,
@@ -381,12 +426,17 @@ function folderItems(folders: readonly FolderPage[], seo: ReadonlyMap<string, Pa
     llms: false,
     // The folder's values, and its page after the first: the switcher finds the same page in another locale.
     key: [...Object.values(folder.segments), ...(folder.page > 1 ? ['page', String(folder.page)] : [])].join('/'),
+    routeBase: baseOf(folder.collection),
     ...(seo.get(folder.url) ?? { indexed: true }),
   }));
 }
 
 /** Term pages as mounted URLs, further pages included: their translations, their taxonomy's name, and the term as their key. */
-function termItems(terms: readonly TermPage[], seo: ReadonlyMap<string, PageSeo>): unknown[] {
+function termItems(
+  terms: readonly TermPage[],
+  seo: ReadonlyMap<string, PageSeo>,
+  baseOf: (taxonomy: string) => string,
+): unknown[] {
   return terms.map((page) => ({
     kind: 'term',
     collection: page.taxonomy,
@@ -401,6 +451,7 @@ function termItems(terms: readonly TermPage[], seo: ReadonlyMap<string, PageSeo>
     searchable: false,
     llms: false,
     key: page.term,
+    routeBase: baseOf(page.taxonomy),
     ...(seo.get(page.url) ?? { indexed: true }),
   }));
 }
