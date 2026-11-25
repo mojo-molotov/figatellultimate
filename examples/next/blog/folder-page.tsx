@@ -12,6 +12,7 @@ import type { Locale } from '#figatellultimate/locales';
 import { pageSegment } from '#figatellultimate/urls';
 
 import { SiteHeader } from '../components/site-header';
+import { PRIORITY_CARDS } from '../components/priority';
 import { PostCard } from './cards';
 import { FolderSections } from './folder-sections';
 import { Listing } from './listing';
@@ -26,7 +27,13 @@ export async function cardsOf(
 ): Promise<Record<string, ReactNode>> {
   const data = await cardDataOf(posts, locale, currentAuthor);
 
-  return Object.fromEntries(Object.entries(data).map(([url, card]) => [url, <PostCard key={url} card={card} />]));
+  // The page's first posts: their cards' images are its largest paint, loaded at once.
+  return Object.fromEntries(
+    Object.entries(data).map(([url, card], index) => [
+      url,
+      <PostCard key={url} card={card} priority={index < PRIORITY_CARDS} />,
+    ]),
+  );
 }
 
 /** A folder page's title: its content message, or the blog's own for the root. */

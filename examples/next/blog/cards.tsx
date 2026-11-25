@@ -42,20 +42,22 @@ export interface SectionData {
 /**
  * A post's preview: its Open Graph image, title, localized date, description, tags, and authors.
  *
- * @param props - The card's data, and its title's heading level: 2 (default) right under the page's title, 3 under a
- *   section's heading.
+ * @param props - The card's data; its title's heading level: 2 (default) right under the page's title, 3 under a
+ *   section's heading; and whether it is the first card in view, its image then loaded at once (the page's LCP).
  * @returns The card, standing out while its link is hovered (the site's own effect).
  */
 export function PostCard({
   card,
   headingLevel = 2,
+  priority = false,
 }: {
   readonly card: CardData;
   readonly headingLevel?: EntryCardHeadingLevel;
+  readonly priority?: boolean;
 }): ReactNode {
   return (
     <Collector>
-      <EntryCard data-key={card.href} headingLevel={headingLevel} {...card} />
+      <EntryCard data-key={card.href} headingLevel={headingLevel} priority={priority} {...card} />
     </Collector>
   );
 }

@@ -26,6 +26,7 @@ import { useMemo, type ReactNode } from 'react';
 
 import { localeInfo, type Locale } from '#figatellultimate/locales';
 
+import { PRIORITY_CARDS } from '../components/priority';
 import { PostCard, type SectionData } from './cards';
 import { loadFolderBatch } from './listing-index';
 import type { ListingLabels } from './listing-labels';
@@ -159,10 +160,12 @@ function SectionsView({
         {withPageSelect(<h1>{title}</h1>)}
         {/* Each category as a post's preview: its image, its title, its description. */}
         <ul data-slot="folder-list">
-          {shown.map(({ key, section }) => (
+          {shown.map(({ key, section }, index) => (
             <li key={key}>
               <Collector>
                 <EntryCard
+                  // The first categories' images: the page's largest paint, loaded at once.
+                  priority={index < PRIORITY_CARDS}
                   href={section.href ?? paged.first}
                   title={section.title}
                   {...(section.description === undefined ? {} : { description: section.description })}
@@ -182,6 +185,8 @@ function SectionsView({
     <>
       <h1>{title}</h1>
       {shown.map(({ key, section }, index) => {
+        // The cards of the sections above: this section's first card's rank on the page.
+        const before = shown.slice(0, index).reduce((sum, above) => sum + above.section.posts.length, 0);
         const heading = (
           <h2>
             {section.href === undefined ? section.title : <NextLink href={section.href}>{section.title}</NextLink>}
@@ -193,10 +198,10 @@ function SectionsView({
             {/* The compact pagination on the first section's heading: the page's own title stands alone above them. */}
             {index === 0 ? withPageSelect(heading) : heading}
             <ol data-slot="listing-cards">
-              {section.posts.map((card) => (
+              {section.posts.map((card, at) => (
                 <li key={card.href}>
-                  {/* Under the section's own heading. */}
-                  <PostCard card={card} headingLevel={3} />
+                  {/* Under the section's own heading; the page's first cards, its largest paint, loaded at once. */}
+                  <PostCard card={card} headingLevel={3} priority={before + at < PRIORITY_CARDS} />
                 </li>
               ))}
             </ol>

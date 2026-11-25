@@ -28,6 +28,7 @@ import { useCallback, useMemo, type ReactNode } from 'react';
 
 import { localeInfo, type Locale } from '#figatellultimate/locales';
 
+import { PRIORITY_CARDS } from '../components/priority';
 import { PostCard } from './cards';
 import { postsEngine, type PostItem } from './facets';
 import { loadListingIndex, loadListingBatch } from './listing-index';
@@ -111,11 +112,12 @@ function PostsView({
     batches: batchesOf,
   });
   const selecting = !isDefaultView(url.search);
-  const cardOf = (key: string): ReactNode => {
+  // A card by its rank in the view: built here when the view is not the prerendered one, the first ones at once.
+  const cardOf = (key: string, rank: number): ReactNode => {
     const prerendered = cards[key];
     const data = index?.cards[key] ?? batches.find((batch) => key in batch.cards)?.cards[key];
 
-    return prerendered ?? (data === undefined ? null : <PostCard card={data} />);
+    return prerendered ?? (data === undefined ? null : <PostCard card={data} priority={rank < PRIORITY_CARDS} />);
   };
   // The locale's writing direction: arrow keys follow it in the components.
   const dir = localeInfo[locale].dir;
@@ -191,8 +193,8 @@ function PostsView({
         </ListingOptions>
       </div>
       <ol data-slot="listing-cards">
-        {binding.view.keys.map((key) => (
-          <li key={key}>{cardOf(key)}</li>
+        {binding.view.keys.map((key, rank) => (
+          <li key={key}>{cardOf(key, rank)}</li>
         ))}
       </ol>
       <Pagination
