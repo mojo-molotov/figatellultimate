@@ -1,0 +1,4 @@
+schema_version: '1.1'
+name: fix-build-diagnostics
+expected_outcome: |
+  The answer explains exit code 1 as content errors, renames the file to bad-name.mdx, fixes the tag to release (or declares the term in defineTaxonomy if it is new), says the last valid generated code stays in place, and recommends figatellultimate check in CI.

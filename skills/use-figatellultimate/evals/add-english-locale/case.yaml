@@ -1,0 +1,4 @@
+schema_version: '1.1'
+name: add-english-locale
+expected_outcome: |
+  The answer adds en to defineLocales, places the English files in en/ folders where the grammar puts the language (after the category for the blog), uses shared or inherit for the fields a translation leaves out, and moves to explicit notation with figatellultimate migrate notation explicit, then --write.

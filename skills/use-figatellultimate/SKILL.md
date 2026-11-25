@@ -21,6 +21,8 @@ Generic content work is delegated: Content Collections reads the files, validate
 3. **Run `figatellultimate build`** (or `figatellultimate check` to change nothing) at the project's root, and read every diagnostic: each names the file, the cause and the fix. They are all listed at once; fix them all, then build again.
 4. **Then typecheck the app** (`tsc --noEmit`): the generated types are what tell you a page, a locale or a message key is missing.
 
+In continuous integration, run `figatellultimate check`: the same analysis, writing nothing, exiting non-zero on any error, so that a broken file never gets merged. A job that also typechecks or builds the app runs `figatellultimate build` instead (the app needs `.figatellultimate/`, which `check` does not write), then `tsc --noEmit`.
+
 Exit codes: `0` no error; `1` content errors, each with its file; `2` an invalid config or a usage error; `3` an unexpected failure. An error keeps the last valid generated code in place; a warning (a reservation matching nothing, an unused message key) does not stop the build; an info only tells what the build chose on its own.
 
 Requirements: Node 24 or later (the config is TypeScript, loaded through Node's type stripping) and an ES module project (`"type": "module"`).
@@ -111,7 +113,7 @@ Key patterns (`reserved`, `testOnly`, `llms.include`) are an exact key, or `pref
 
 ### Locales, taxonomies, navigation, images
 
-- `defineLocales({ list, default })`: adding a language is one line, then following the diagnostics, which report every missing translation. `urls: { defaultLocale: 'implicit' | 'explicit', trailingSlash }` sets the URL strategy used everywhere.
+- `defineLocales({ list, default })`: adding a language is one line, then following the diagnostics, which report every missing translation. `urls: { defaultLocale: 'implicit' | 'explicit', trailingSlash }`, an option of `defineConfig` (not of `defineLocales`), sets the URL strategy used everywhere: `implicit` (the default) leaves the default language unprefixed.
 - `defineTaxonomy(terms, { messages, pages, content })`: tags and authors are closed lists; the frontmatter references terms by key and an unknown key is an error suggesting the closest one. A term may carry data (an avatar), message fields (a name), a page (`pages: { base: 'authors', perPage: 10 }`) and a long text (`content`, an unmounted collection keyed by term).
 - `navigation`: the collections in the navbar, their order and depth. A new folder appears by itself, in every language.
 - Images: every local image the content uses must exist in `publicDirectory` (`public`), or the build fails with `missing-image`, naming the file and suggesting the closest one.
@@ -196,9 +198,43 @@ export default async function Page(props: PageProps<'/[locale]/[[...url]]'>) {
 }
 ```
 
+`findByUrl` gives one of three kinds, each rendered by the app:
+
+- **`'entry'`**: `found.collection` and `found.entry`: its `url`, `locale`, `alternates`, `data` (the frontmatter, `data.mdx` the compiled MDX) and `body` (the MDX source).
+- **`'folder'`** (a collection's `folderPages`): `found.folder`: its `url`, `locale`, `segments`, `level` (`null` for the collection's own page), `messages` (the message keys of its title and description), `image`, `subfolders`, `entries` (light index items), and for a paginated listing `page`, `pages`, `first`, `index`.
+- **`'term'`** (a taxonomy's `pages`): `found.term`: its `taxonomy`, `term`, `entries`, `page`, `pages`, `first`, `metadata.description` (a message key) and `content` (the term's long text, when written).
+
+A folder or term page has no frontmatter: its title and description are messages, translated by the app, and its metadata comes from `pageMetadataOf`, not `metadataOf`:
+
+```tsx
+export async function generateMetadata(props: PageProps<'/[locale]/[[...url]]'>): Promise<Metadata> {
+  const { locale, url } = await props.params;
+  const found = await findByUrl(urlOf(locale, url));
+
+  if (found === undefined) return {};
+
+  if (found.kind === 'entry') return toNextMetadata(metadataOf(found.entry, metadataFields[found.collection], site));
+
+  const t = await getTranslations({ locale });
+  const page = found.kind === 'folder' ? found.folder : found.term;
+  const described = page.metadata.description;
+  const description = described === undefined ? undefined : t(described);
+
+  // A folder's title is its `title` message; a term's, the message field its taxonomy declares (here `name`).
+  const title =
+    found.kind === 'folder'
+      ? found.folder.messages.title === undefined
+        ? undefined
+        : t(found.folder.messages.title)
+      : t(`taxonomies.${found.term.taxonomy}.${found.term.term}.name`);
+
+  return toNextMetadata(pageMetadataOf({ ...page, title, description }, site));
+}
+```
+
 `@figatellultimate/site` computes the rest, framework-free; `@figatellultimate/next16` maps it to Next:
 
-- Metadata: `toNextMetadata(metadataOf(found.entry, metadataFields[found.collection], site))`, with `site = { origin, name, defaultLocale }`.
+- Metadata: `toNextMetadata(metadataOf(found.entry, metadataFields[found.collection], site))` for an entry, `pageMetadataOf` for a folder or term page (above), with `site = { origin, name, defaultLocale }`.
 - Sitemap and robots: `toNextSitemap(sitemapOf(mountedUrls, site))`, `toNextRobots(site)`; `noindex` pages are left out.
 - Structured data and feeds: `structuredDataOf`, `breadcrumbListOf`, `jsonLd`, `rssOf`.
 - llms.txt: `llmsTxtOf` and `llmsFullOf` (`@figatellultimate/site`) write the files, `llmsMarkdownOf(entry.body, { components })` (`@figatellultimate/content-collections/llms`) each page's Markdown, served at the page's URL plus `.md` (`markdownUrlOf`); the exposed pages are `mountedUrls` with `llms`.
