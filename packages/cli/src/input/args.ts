@@ -30,6 +30,8 @@ export interface Command {
   readonly mode: Mode;
   /** `search` only: the framework's built HTML, and where to write the Pagefind bundles. */
   readonly search?: { readonly site: string; readonly out: string; readonly localeFolders: boolean } | undefined;
+  /** `build` and `check` only: `false` with `--no-unused`, which skips the scan of the app's unused messages. */
+  readonly unused?: false | undefined;
   /** `migrate` only: what to migrate to, and whether to apply the plan. */
   readonly migration?: { readonly target: MigrationTarget; readonly write: boolean } | undefined;
 }
@@ -55,6 +57,7 @@ const OPTIONS = {
   out: { type: 'string' },
   'locale-folders': { type: 'boolean' },
   write: { type: 'boolean' },
+  'no-unused': { type: 'boolean' },
   help: { type: 'boolean', short: 'h' },
   version: { type: 'boolean', short: 'v' },
 } as const;
@@ -111,6 +114,9 @@ export function parseCli(argv: readonly string[]): ParsedArgs {
 
   if (name !== 'migrate' && values.write === true) return usageError('The --write option only applies to migrate.');
 
+  if (name !== 'build' && name !== 'check' && values['no-unused'] === true)
+    return usageError('The --no-unused option only applies to build and check.');
+
   const mode = values.mode ?? (name === 'watch' ? 'development' : 'production');
 
   if (!isMode(mode)) return usageError(`Unknown mode "${mode}".`, suggest(mode, MODES));
@@ -139,7 +145,10 @@ export function parseCli(argv: readonly string[]): ParsedArgs {
 
     if (misplaced !== undefined) return usageError(`The ${misplaced} option only applies to search.`);
 
-    return { kind: 'command', command: { name, config, mode } };
+    return {
+      kind: 'command',
+      command: { name, config, mode, ...(values['no-unused'] === true ? { unused: false } : {}) },
+    };
   }
 
   const site = values.site?.trim() ?? '';
@@ -202,5 +211,6 @@ Options:
       --locale-folders  search: the build writes every locale in its own folder, the default one included
                         (e.g. next-intl's app/[locale]: /about is built as fr/about.html)
       --write           migrate: move the files, edit the config, write redirects.json (all or nothing)
+      --no-unused       build, check: skip the scan of the app's unused messages (it compiles the app)
   -h, --help            Show this help
   -v, --version         Show the version`;

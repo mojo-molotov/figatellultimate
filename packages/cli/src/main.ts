@@ -20,11 +20,14 @@
  *     - The config is loaded by Node's native type stripping (erasable TypeScript only), validated, and reloaded
  * fresh by one-shot commands.
  *     - Exit codes: 0 no error, 1 content errors, 2 invalid config or usage, 3 unexpected failure.
+ *     - The unused messages are scanned by default in build and check, skipped by `--no-unused`: the scan compiles
+ *       the app, about half a build, and a project may run it in CI only. Opt-out rather than opt-in, so that a dead
+ *       message is warned unless the project chose otherwise.
  *
  * Invariants: the surface a user meets (help, usage errors, exit codes, each command's output, `watch` stopped by a
  * signal) against the built binary in real processes (`surface.cli.test.ts`); the generated output, the messages,
  * the search, the migrations and the unused messages in process (`e2e.test.ts`, `messages-e2e.test.ts`,
- * `search-e2e.test.ts`, `migrate-e2e.test.ts`, `unused-e2e.test.ts`, disposable projects); the watch against a build from scratch after bursts of changes, on
+ * `search-e2e.test.ts`, `migrate-e2e.test.ts`, `unused-e2e.test.ts` with `--no-unused`, disposable projects); the watch against a build from scratch after bursts of changes, on
  * every OS (`watch.lab.test.ts`, run weekly).
  */
 import { watch as watchFile } from 'node:fs';
@@ -87,8 +90,8 @@ async function runAndReport(ui: Ui, loaded: LoadedConfig, command: Command, sign
     mode: command.mode,
     write,
     signal,
-    // The app's unused messages compile the app: build and check, never each run of watch.
-    unused: command.name !== 'watch',
+    // The app's unused messages compile the app: build and check unless `--no-unused`, never each run of watch.
+    unused: command.name !== 'watch' && command.unused !== false,
   });
   const { assembly } = result;
   const counts = countDiagnostics(assembly.diagnostics, result.messageDiagnostics);

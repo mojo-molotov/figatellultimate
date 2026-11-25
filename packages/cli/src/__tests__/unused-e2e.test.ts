@@ -119,7 +119,7 @@ const TSCONFIG = {
 
 const project = new FileSystem(join(PACKAGE, '.tmp', randomUUID()));
 
-async function run(command: 'build' | 'check'): Promise<{ code: number; output: string }> {
+async function run(command: 'build' | 'check', ...options: string[]): Promise<{ code: number; output: string }> {
   let output = '';
   const stdout = new Writable({
     write(chunk: Buffer, _encoding, done) {
@@ -127,7 +127,7 @@ async function run(command: 'build' | 'check'): Promise<{ code: number; output: 
       done();
     },
   });
-  const code = await main([command, '--config', join(project.basePath, 'figatellultimate.config.ts')], {
+  const code = await main([command, '--config', join(project.basePath, 'figatellultimate.config.ts'), ...options], {
     stdout,
     fancy: false,
     cwd: project.basePath,
@@ -172,6 +172,14 @@ describe('unused messages, end to end', () => {
 
     expect(code).toBe(EXIT.ok);
     expect(unusedIn(output)).toEqual(['ui.dead']);
+  });
+
+  it.each(['build', 'check'] as const)('%s --no-unused skips the scan, silently', async (command) => {
+    const { code, output } = await run(command, '--no-unused');
+
+    expect(code).toBe(EXIT.ok);
+    expect(unusedIn(output)).toEqual([]);
+    expect(output).not.toContain('Unused messages not checked');
   });
 
   it('a call reaching the message silences it', async () => {

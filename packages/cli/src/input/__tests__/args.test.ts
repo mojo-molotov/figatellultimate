@@ -65,6 +65,20 @@ describe('parseCli', () => {
         },
       },
     ],
+    [
+      ['build', '--no-unused'],
+      {
+        kind: 'command',
+        command: { name: 'build', config: 'figatellultimate.config.ts', mode: 'production', unused: false },
+      },
+    ],
+    [
+      ['check', '--no-unused'],
+      {
+        kind: 'command',
+        command: { name: 'check', config: 'figatellultimate.config.ts', mode: 'production', unused: false },
+      },
+    ],
     [['--help'], { kind: 'help' }],
     [['build', '-h'], { kind: 'help' }],
     [['--version'], { kind: 'version' }],
@@ -84,6 +98,9 @@ describe('parseCli', () => {
     [['migrate', 'notation', 'explict'], 'Unknown notation "explict".', ['explicit']],
     [['migrate', 'notation', 'explicit', 'more'], 'Unexpected argument "more".', []],
     [['build', '--write'], 'The --write option only applies to migrate.', []],
+    [['watch', '--no-unused'], 'The --no-unused option only applies to build and check.', []],
+    [['search', '--site', 'x', '--no-unused'], 'The --no-unused option only applies to build and check.', []],
+    [['migrate', 'notation', 'explicit', '--no-unused'], 'The --no-unused option only applies to build and check.', []],
     [['search'], 'The search command needs --site <built HTML directory>, e.g. .next/server/app.', []],
     [['search', '--site', 'x', '--out', ''], 'The --out option needs a path.', []],
     [['build', '--site', 'x'], 'The --site option only applies to search.', []],
