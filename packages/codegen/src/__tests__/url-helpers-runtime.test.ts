@@ -31,7 +31,7 @@ const source: ContentSource = {
 };
 
 const locales = defineLocales({ list: ['fr', 'en'], default: 'fr' });
-const UrlHelpers = v.looseObject({ urlOf: v.function(), segmentsOf: v.function() });
+const UrlHelpers = v.looseObject({ urlOf: v.function(), segmentsOf: v.function(), pageSegment: v.string() });
 const folders: FileSystem[] = [];
 
 /** The generated `#figatellultimate/urls` of a project with these URL options, imported. */
@@ -65,6 +65,7 @@ async function helpersFor(urls: UrlOptions) {
   return {
     urlOf: (code: string, segments?: readonly string[]): unknown => module.urlOf(code, segments),
     segmentsOf: (url: string, code: string): unknown => module.segmentsOf(url, code),
+    pageSegment: module.pageSegment,
   };
 }
 
@@ -92,6 +93,13 @@ describe('generated urlOf and segmentsOf', () => {
         expect(helpers.segmentsOf(expected, code)).toEqual(segments);
       }
     }
+  });
+
+  it.each<[string, UrlOptions, string]>([
+    ['page by default', {}, 'page'],
+    ["the project's own", { page: 'p' }, 'p'],
+  ])('export the segment of a further page, for the listings that read it back: %s', async (_, options, segment) => {
+    expect((await helpersFor(options)).pageSegment).toBe(segment);
   });
 
   it('the home without segments', async () => {

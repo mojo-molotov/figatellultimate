@@ -187,6 +187,16 @@ describe('generated getters (types)', () => {
     expect(typecheck('export {};')).toEqual([]);
   });
 
+  it('type every metadata field a collection can declare, its order field included', () => {
+    const app = `
+import { metadataFields } from './.figatellultimate/urls/index.js';
+
+export const order: string | undefined = metadataFields.pages.order;
+`;
+
+    expect(typecheck(app)).toEqual([]);
+  });
+
   it('accept existing tuples only, with dependent narrowing, and require every locale for a union', () => {
     const app = `
 import { getBlogPost, findBlogPost, listBlog, isBlogPostQuery, type BlogPost } from './.figatellultimate/blog/index.js';

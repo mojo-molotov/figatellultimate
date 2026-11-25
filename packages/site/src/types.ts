@@ -66,6 +66,8 @@ export interface MetadataFields {
   readonly tags?: string;
   readonly robots?: string;
   readonly canonical?: string;
+  /** The number placing an entry among its siblings (the navigation, a section's list, the previous and next links). */
+  readonly order?: string;
   readonly type?: 'website' | 'article';
   readonly schema?: 'WebPage' | 'Article' | 'BlogPosting' | 'TechArticle' | 'NewsArticle';
 }

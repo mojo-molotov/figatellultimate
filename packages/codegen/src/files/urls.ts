@@ -1,7 +1,7 @@
 /**
  * `urls/index`: one catch-all route for every collection: `findByUrl`, `mountedUrls` (entries, folder pages, term
  * pages; reserved entries out), `metadataFields`, and `urlOf` / `segmentsOf`, the project's URL strategy written
- * once so that an app never rewrites it. Each URL tells whether it is searchable, indexed, and exposed to LLMs
+ * once so that an app never rewrites it, and `pageSegment`, the segment of a further page. Each URL tells whether it is searchable, indexed, and exposed to LLMs
  * (`llms`: an entry its collection's `llms` takes, its exclusion field not set, and indexed; never a folder or
  * term page).
  */
@@ -154,6 +154,12 @@ export function urlsFile(
         property('tags', 'string', true),
         property('robots', 'string', true),
         property('canonical', 'string', true),
+        {
+          ...property('order', 'string', true),
+          docs: [
+            "The number placing an entry among its siblings: the navigation, a section's list, the previous and next links.",
+          ],
+        },
         property('type', "'website' | 'article'", true),
         property('schema', "'WebPage' | 'Article' | 'BlogPosting' | 'TechArticle' | 'NewsArticle'", true),
       ],
@@ -261,6 +267,14 @@ export function urlsFile(
     const trailingSlash = config.urls?.trailingSlash === true;
     const prefixed = explicit ? 'true' : `locale !== ${literal(config.locales.default)}`;
 
+    file.addVariableStatement({
+      declarationKind: VariableDeclarationKind.Const,
+      isExported: true,
+      docs: [
+        "The segment before a further page's number (`urls.page`, `page` by default): for the listings that read a page in the path back (`pageSegment` of `useNextUrl`).",
+      ],
+      declarations: [{ name: 'pageSegment', type: 'string', initializer: literal(config.urls?.page ?? 'page') }],
+    });
     file.addFunction({
       name: 'urlOf',
       isExported: true,
