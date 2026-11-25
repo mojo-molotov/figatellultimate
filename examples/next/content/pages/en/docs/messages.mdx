@@ -45,7 +45,7 @@ ui: {
 },
 ```
 
-`check` reads the application’s types, so it needs `.figatellultimate/` up to date; otherwise it says it skipped the check (run `figatellultimate build`). Both need a `tsconfig.json` beside the config.
+`check` reads the application’s types, so it needs `.figatellultimate/` up to date; otherwise it says it skipped the check (run `figatellultimate build`). Both need a `tsconfig.json` beside the config. The check compiles the application, the longest part of a build: `--no-unused` skips it.
 
 ## ICU messages
 

@@ -21,7 +21,7 @@ Generic content work is delegated: Content Collections reads the files, validate
 3. **Run `figatellultimate build`** (or `figatellultimate check` to change nothing) at the project's root, and read every diagnostic: each names the file, the cause and the fix. They are all listed at once; fix them all, then build again.
 4. **Then typecheck the app** (`tsc --noEmit`): the generated types are what tell you a page, a locale or a message key is missing.
 
-In continuous integration, run `figatellultimate check`: the same analysis, writing nothing, exiting non-zero on any error, so that a broken file never gets merged. A job that also typechecks or builds the app runs `figatellultimate build` instead (the app needs `.figatellultimate/`, which `check` does not write), then `tsc --noEmit`.
+`build` and `check` also warn the messages no code uses, by compiling the app, their longest step; `--no-unused` skips it. In continuous integration, run `figatellultimate check`: the same analysis, writing nothing, exiting non-zero on any error, so that a broken file never gets merged. A job that also typechecks or builds the app runs `figatellultimate build` instead (the app needs `.figatellultimate/`, which `check` does not write), then `tsc --noEmit`.
 
 Exit codes: `0` no error; `1` content errors, each with its file; `2` an invalid config or a usage error; `3` an unexpected failure. An error keeps the last valid generated code in place; a warning (a reservation matching nothing, an unused message key) does not stop the build; an info only tells what the build chose on its own.
 
