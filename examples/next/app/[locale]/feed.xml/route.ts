@@ -5,7 +5,7 @@ import { getTranslations } from 'next-intl/server';
 
 import { blogIndex } from '#figatellultimate/blog';
 import { locales } from '#figatellultimate/locales';
-import { metadataFields, urlOf } from '#figatellultimate/urls';
+import { metadataFields, mountedUrls, urlOf } from '#figatellultimate/urls';
 
 import { routing } from '../../../i18n/routing';
 import { site } from '../../../site';
@@ -39,7 +39,11 @@ export async function GET(
     channel: {
       title: t('ui.feed.title'),
       description: t('ui.feed.description'),
-      url: urlOf(locale, ['blog']),
+      // The blog's own page in this locale, as the build mounted it: its URL never rewritten here.
+      url:
+        mountedUrls.find(
+          (page) => page.kind === 'folder' && page.collection === 'blog' && page.locale === locale && page.key === '',
+        )?.url ?? urlOf(locale),
       feed: urlOf(locale, ['feed.xml']),
       locale,
     },

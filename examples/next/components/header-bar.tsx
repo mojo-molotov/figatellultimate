@@ -39,7 +39,8 @@ export interface HeaderLabels {
     readonly sorts: Readonly<Record<string, string>>;
     /** The sorts whose name reads badly aloud (an arrow), as a screen reader says them. */
     readonly spoken: Readonly<Record<string, string>>;
-    readonly collections: Readonly<Record<'pages' | 'blog', string>>;
+    /** Each searchable collection's name, shown on its results; one without a message is shown by its name. */
+    readonly collections: Readonly<Partial<Record<string, string>>>;
     readonly tooShort: Precompiled<'ui.search.tooShort'>;
     readonly found: Precompiled<'ui.search.found'>;
   };
@@ -67,10 +68,14 @@ export function HeaderBar(props: {
   readonly labels: HeaderLabels;
   /** A paginated listing in each locale: the switcher follows its page shown in the browser (its batches). */
   readonly listing?: ListingLocales | undefined;
+  /** The collections the search covers: the searchable ones (`searchable` in the config), as the build mounted them. */
+  readonly searchable: readonly string[];
+  /** The segment a listing's pages carry in their URLs (`pageSegment` of `#figatellultimate/urls`). */
+  readonly segment: string;
 }): ReactNode {
-  const { locale, url, items, labels, listing } = props;
+  const { locale, url, items, labels, listing, searchable, segment } = props;
   // A page of the listing shown in the browser moved the address, not the server's links: they follow the page.
-  const links = usePagedLocaleLinks(props.links, { locale, listing });
+  const links = usePagedLocaleLinks(props.links, { locale, listing, segment });
   const { search: text } = labels;
   const router = useRouter();
   // next-themes owns the page's theme: the toggle shows it once mounted (the server cannot know it, and
@@ -81,7 +86,7 @@ export function HeaderBar(props: {
   useEffect(() => {
     setMounted(true);
   }, []);
-  const search = useMemo(() => createSearch({ locale, collections: ['pages', 'blog'] }), [locale]);
+  const search = useMemo(() => createSearch({ locale, collections: searchable }), [locale, searchable]);
   const dir = localeInfo[locale].dir;
 
   return (
@@ -118,7 +123,7 @@ export function HeaderBar(props: {
         boxLabels={{
           input: text.input,
           placeholder: text.placeholder,
-          collection: (collection) => text.collections[collection],
+          collection: (collection) => text.collections[collection] ?? collection,
           results: text.results,
           status: {
             tooShort: (minimum) => formatPrecompiled(text.tooShort, locale, { minimum }),

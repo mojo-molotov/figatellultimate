@@ -9,6 +9,7 @@ import type { ReactNode } from 'react';
 
 import type { BlogFolder, BlogPost } from '#figatellultimate/blog';
 import type { Locale } from '#figatellultimate/locales';
+import { pageSegment } from '#figatellultimate/urls';
 
 import { SiteHeader } from '../components/site-header';
 import { PostCard } from './cards';
@@ -70,6 +71,7 @@ export async function BlogFolderPage({ folder }: { readonly folder: BlogFolder }
               total: folder.entries.length,
               perPage: folder.perPage ?? folder.entries.length,
               first: folder.first,
+              segment: pageSegment,
               index: indexOf(folder),
             }}
           />
@@ -96,6 +98,7 @@ export async function BlogFolderPage({ folder }: { readonly folder: BlogFolder }
             total: folder.subfolders.length,
             perPage: folder.perPage ?? folder.subfolders.length,
             first: folder.first,
+            segment: pageSegment,
             batches: folder.batches,
           }}
           locale={locale}

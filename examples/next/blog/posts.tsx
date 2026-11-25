@@ -34,13 +34,17 @@ import { loadListingIndex, loadListingBatch } from './listing-index';
 import type { FacetLabels, ListingLabels } from './listing-labels';
 import { PAGINATION_ICONS } from './pagination-icons';
 
-/** A listing paginated in its path: its page, its pages, its posts' count, its first page's URL, its index's URL. */
+/**
+ * A listing paginated in its path: its page, its pages, its posts' count, its first page's URL, the segment its pages'
+ * URLs carry (`pageSegment` of `#figatellultimate/urls`, read on the server), its index's URL.
+ */
 export interface Paged {
   readonly page: number;
   readonly pages: number;
   readonly total: number;
   readonly perPage: number;
   readonly first: string;
+  readonly segment: string;
   readonly index: string;
 }
 
@@ -68,7 +72,7 @@ interface PostsProps {
  */
 export function Posts(props: PostsProps): ReactNode {
   return (
-    <NextUrlBoundary first={props.paged?.first} page={props.paged?.page}>
+    <NextUrlBoundary first={props.paged?.first} page={props.paged?.page} segment={props.paged?.segment}>
       {(url) => <PostsView {...props} url={url} />}
     </NextUrlBoundary>
   );

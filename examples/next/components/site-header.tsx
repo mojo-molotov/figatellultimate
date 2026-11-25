@@ -10,11 +10,16 @@ import type { ReactNode } from 'react';
 import { locales, type Locale } from '#figatellultimate/locales';
 import type { MessageKey } from '#figatellultimate/messages';
 import { navigationOf } from '#figatellultimate/navigation';
-import { mountedUrls } from '#figatellultimate/urls';
+import { mountedUrls, pageSegment } from '#figatellultimate/urls';
 
 import { compiled } from '../i18n/labels';
 import { Crumbs } from './crumbs';
 import { HeaderBar, type HeaderLabels } from './header-bar';
+
+/** The collections the search covers: those the config makes searchable, read from the build, never listed by hand. */
+const searchable = [
+  ...new Set(mountedUrls.flatMap((item) => (item.kind === 'entry' && item.searchable ? [item.collection] : []))),
+];
 
 /** The navigation with its sections' labels translated: the client header receives text, not message keys. */
 const translated = (items: readonly NavigationNode<MessageKey>[], t: (key: MessageKey) => string): NavigationNode[] =>
@@ -98,6 +103,8 @@ export async function SiteHeader({
         links={localeLinksOf(translates, mountedUrls, locales)}
         labels={await headerLabels(locale)}
         listing={listing}
+        searchable={searchable}
+        segment={pageSegment}
       />
       {/* The search's shortcut, the reader's keys from the first paint: marked before the navbar is measured. */}
       <script dangerouslySetInnerHTML={{ __html: searchShortcutScript }} />

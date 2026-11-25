@@ -7,6 +7,7 @@ import type { ReactNode } from 'react';
 
 import { taxonomies } from '#figatellultimate/taxonomies';
 import { findAuthorsTermByUrl, type AuthorsTermPage } from '#figatellultimate/terms';
+import { pageSegment } from '#figatellultimate/urls';
 
 import { Body } from '../components/mdx';
 import { SiteHeader } from '../components/site-header';
@@ -73,6 +74,7 @@ export async function AuthorPage({ page }: { readonly page: AuthorsTermPage }): 
             total: page.entries.length,
             perPage: page.perPage ?? page.entries.length,
             first: page.first,
+            segment: pageSegment,
             index: indexOf(page),
           }}
         />

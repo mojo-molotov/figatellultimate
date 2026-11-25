@@ -31,13 +31,17 @@ import { loadFolderBatch } from './listing-index';
 import type { ListingLabels } from './listing-labels';
 import { PAGINATION_ICONS } from './pagination-icons';
 
-/** A folder page: its page, its pages, its subfolders' count and page size, its first page, its batches if any. */
+/**
+ * A folder page: its page, its pages, its subfolders' count and page size, its first page, the segment its pages'
+ * URLs carry (`pageSegment` of `#figatellultimate/urls`, read on the server), its batches if any.
+ */
 export interface FolderPaged {
   readonly page: number;
   readonly pages: number;
   readonly total: number;
   readonly perPage: number;
   readonly first: string;
+  readonly segment: string;
   /** The URL its batches live under (`folder.batches`); none for a level without a page size. */
   readonly batches?: string | undefined;
 }
@@ -72,7 +76,7 @@ const enginesOf =
  */
 export function FolderSections(props: FolderSectionsProps): ReactNode {
   return (
-    <NextUrlBoundary first={props.paged.first} page={props.paged.page}>
+    <NextUrlBoundary first={props.paged.first} page={props.paged.page} segment={props.paged.segment}>
       {(url) => <SectionsView {...props} url={url} />}
     </NextUrlBoundary>
   );

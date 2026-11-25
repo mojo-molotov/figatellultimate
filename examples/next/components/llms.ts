@@ -5,15 +5,19 @@
  */
 import { llmsMarkdownOf } from '@figatellultimate/content-collections/llms';
 
-import { findByUrl, mountedUrls } from '#figatellultimate/urls';
+import { findByUrl, metadataFields, mountedUrls } from '#figatellultimate/urls';
 
 /** An exposed page: its URL, title and description, and its Markdown for LLMs. */
 export interface ExposedPage {
   readonly url: string;
   readonly title: string;
-  readonly description: string;
+  readonly description?: string | undefined;
   readonly markdown: string;
 }
+
+/** A frontmatter field, by the name its collection declares (`metadataFields`): never written here. */
+const fieldOf = (data: object, name: string | undefined): unknown =>
+  name === undefined ? undefined : Reflect.get(data, name);
 
 /**
  * Whether a URL is exposed to LLMs.
@@ -38,7 +42,7 @@ export async function exposedMarkdownOf(url: string): Promise<string | undefined
 }
 
 /**
- * A locale's exposed pages, in the documentation's reading order (`order`), then by title.
+ * A locale's exposed pages, in their reading order (the collection's `order` field), then by title.
  *
  * @param locale - The locale.
  * @returns Its exposed pages, each with its Markdown.
@@ -47,18 +51,32 @@ export async function exposedPagesOf(locale: string): Promise<readonly ExposedPa
   const found = await Promise.all(
     mountedUrls.filter((item) => item.llms && item.locale === locale).map((item) => findByUrl(item.url)),
   );
-  const pages = found.flatMap((page) => (page?.kind === 'entry' ? [page.entry] : []));
+  const pages = found.flatMap((page) => {
+    if (page?.kind !== 'entry') return [];
+
+    // Read through the fields the collection declares: its title, description and order.
+    const fields = metadataFields[page.collection];
+    const title = fieldOf(page.entry.data, fields.title);
+    const description = fieldOf(page.entry.data, fields.description);
+    const order = fieldOf(page.entry.data, fields.order);
+
+    return [
+      {
+        url: page.entry.url,
+        title: typeof title === 'string' ? title : page.entry.url,
+        ...(typeof description === 'string' ? { description } : {}),
+        order: typeof order === 'number' ? order : Number.POSITIVE_INFINITY,
+        markdown: llmsMarkdownOf(page.entry.body),
+      },
+    ];
+  });
 
   return pages
-    .toSorted(
-      (a, b) =>
-        (a.data.order ?? Number.POSITIVE_INFINITY) - (b.data.order ?? Number.POSITIVE_INFINITY) ||
-        a.data.title.localeCompare(b.data.title, locale),
-    )
-    .map((entry) => ({
-      url: entry.url,
-      title: entry.data.title,
-      description: entry.data.metadescription,
-      markdown: llmsMarkdownOf(entry.body),
+    .toSorted((a, b) => a.order - b.order || a.title.localeCompare(b.title, locale))
+    .map((page) => ({
+      url: page.url,
+      title: page.title,
+      ...(page.description === undefined ? {} : { description: page.description }),
+      markdown: page.markdown,
     }));
 }
