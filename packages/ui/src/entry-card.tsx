@@ -8,10 +8,13 @@
  *       outline it lands in, a listing right under the page's `<h1>` or under a section's `<h2>`, and a fixed level
  *       would skip one. Never 1: the page's title is its `<h1>`. The look is the `data-slot`'s, never the element's,
  *       so every level looks the same.
+ *     - Its image is lazy, unless the page says the card is among the first in view (`priority`): only the page knows,
+ *       and the first card's image is often its largest contentful paint, which lazy loading delays until layout.
  *
  * Invariants (`entry-card.test.tsx` and `entry-card-layout.test.tsx` in real browsers): the title links the entry,
  * at the heading level given, looking the same at every level; the date in the locale, the lists named by the
- * labels, the author preview on hover and focus, axe; a level 1 rejected by the types (`entry-card.test-d.tsx`).
+ * labels, the author preview on hover and focus, axe; the image lazy, or eager with a high priority; a level 1
+ * rejected by the types (`entry-card.test-d.tsx`).
  */
 import type { ComponentProps, ReactNode } from 'react';
 
@@ -49,6 +52,11 @@ export interface EntryCardProps extends Omit<ComponentProps<'article'>, 'title'>
   readonly labels: EntryCardLabels;
   /** The title's heading level, where the card lands in the page's outline: 2 (default) right under its `<h1>`. */
   readonly headingLevel?: EntryCardHeadingLevel | undefined;
+  /**
+   * One of the first cards in view: its image loaded at once, with a high priority, since it is likely the page's
+   * largest contentful paint. Default: `false`, loaded lazily as it nears the viewport.
+   */
+  readonly priority?: boolean | undefined;
 }
 
 /** Each heading level's element. */
@@ -90,6 +98,7 @@ export function EntryCard({
   authors = [],
   labels,
   headingLevel = 2,
+  priority = false,
   ...props
 }: EntryCardProps): ReactNode {
   const Heading = HEADINGS[headingLevel];
@@ -109,7 +118,7 @@ export function EntryCard({
             data-slot="entry-card-image"
             src={image}
             alt=""
-            loading="lazy"
+            {...(priority ? { loading: 'eager', fetchPriority: 'high' } : { loading: 'lazy' })}
             fill
             sizes="(max-width: 36rem) 100vw, 12rem"
           />

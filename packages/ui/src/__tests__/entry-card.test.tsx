@@ -48,6 +48,29 @@ describe('EntryCard', () => {
     expect((await axe.run(document.body, { rules: { region: { enabled: false } } })).violations).toEqual([]);
   });
 
+  it.each([
+    [undefined, 'lazy', null],
+    [true, 'eager', 'high'],
+  ])(
+    'loads its image lazily, or at once with a high priority as one of the first cards in view (priority: %s)',
+    (priority, loading, fetchPriority) => {
+      render(
+        <EntryCard
+          href="/blog/a"
+          title="«A»"
+          image="/covers/a.svg"
+          locale="fr"
+          labels={{ tags: '«Tags»', authors: '«Auteurs»', more: '«Autres tags»' }}
+          {...(priority === undefined ? {} : { priority })}
+        />,
+      );
+      const image = document.querySelector('[data-slot="entry-card-image"]');
+
+      expect(image?.getAttribute('loading')).toBe(loading);
+      expect(image?.getAttribute('fetchpriority')).toBe(fetchPriority);
+    },
+  );
+
   it('shows the date for the locale, without shifting it by a day', () => {
     renderCard('fr');
     expect(screen.getByText('12 novembre 2026').getAttribute('datetime')).toBe('2026-11-12');
