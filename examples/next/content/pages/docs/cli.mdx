@@ -45,7 +45,7 @@ bunx figatellultimate watch
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `-c`, `--config <path>` | Le fichier de config (`figatellultimate.config.ts` par défaut).                                                                              |
 | `-m`, `--mode <mode>`   | `production` (par défaut pour build et check) exclut les brouillons et le contenu de test ; `development` (par défaut pour watch) les garde. |
-| `--site <path>`         | search : le HTML construit.                                                                                                                  |
+| `--site <path>`         | search : le HTML construit ; répété, un dossier par route, chaque page lue dans le premier qui la contient.                                  |
 | `--out <path>`          | search : où écrire les index (`public/pagefind` par défaut).                                                                                 |
 | `--locale-folders`      | search : chaque langue est construite dans son propre dossier, celle par défaut comprise.                                                    |
 | `--no-unused`           | build, check : saute la recherche des messages qu’aucun code n’utilise, qui compile l’application.                                           |

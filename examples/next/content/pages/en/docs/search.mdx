@@ -29,7 +29,7 @@ bunx figatellultimate search --site .next/server/app --out public/pagefind --loc
 
 `--locale-folders` is for builds that write every language in its own folder, the default one included, as next-intl does. A collection declaring `searchable: false` is left out. The indexed text is the element marked `data-pagefind-body`: the navigation, the footer and the lists of pages stay out of the results. Its code blocks are left out, and the code tabs’ names with them: an excerpt is the page’s text, never a command.
 
-With a deployment adapter (Vercel’s), Next writes the prerendered pages elsewhere, under a folder hashed by route: `prerenderedPages` of `@figatellultimate/next16/build` gives the folder holding them, with an adapter or without, and `copyIntoOutput` copies the index into the adapter’s output, which the deployment serves.
+With a deployment adapter (Vercel’s), Next writes the prerendered pages elsewhere, under a folder hashed by route: `prerenderedPages` of `@figatellultimate/next16/build` gives the folder holding a route’s pages, with an adapter or without, and `copyIntoOutput` copies the index into the adapter’s output, which the deployment serves. With a route per base (`splitRoutes`), each route has its own folder under an adapter: give each indexed route’s folder, `--site` repeated, and each page is read from the first holding it.
 
 ## The client
 
