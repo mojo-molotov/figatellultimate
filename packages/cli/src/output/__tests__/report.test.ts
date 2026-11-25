@@ -36,6 +36,23 @@ describe('report', () => {
     ).toBe('did you mean "cello"?');
   });
 
+  it("explains a page another route's prefix takes: where it is served, by which route, and the two ways out", () => {
+    const shadowed = explain({
+      ...base,
+      collection: 'pages',
+      code: 'route-shadowed',
+      sourcePath: 'blog/about.mdx',
+      data: { url: '/blog/about', route: '', shadowedBy: 'blog' },
+    });
+
+    expect(shadowed.message).toBe(
+      'this file is served at /blog/about, under the prefix of the "blog" route: that route answers it, and does not know it (a 404)',
+    );
+    expect(shadowed.hint).toBe(
+      'move this file out of "/blog", or give its collection another base; with one route serving every page, set `splitRoutes: false`',
+    );
+  });
+
   it('summarizes a problem repeated in many files once, and groups the others by file', () => {
     const diagnostics: Diagnostic[] = [
       missingTitle('a.mdx'),

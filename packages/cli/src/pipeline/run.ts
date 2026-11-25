@@ -187,6 +187,7 @@ export async function runOnce(input: RunInput): Promise<RunResult> {
     environment: environmentOf(mode),
     urls: createUrlBuilder(config.locales, config.urls),
     ...(config.extensions === undefined ? {} : { extensions: config.extensions }),
+    splitRoutes: config.splitRoutes,
     paths: createNodePathLister(directory),
     source: config.source,
     signal,

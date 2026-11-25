@@ -115,6 +115,11 @@ export function explain(diagnostic: Diagnostic): Explanation {
         message: `${d.sourcePath === null ? 'a folder page' : 'this file'} has the URL of the ${d.data.taxonomy} page of "${d.data.term}" (${d.data.url})`,
         hint: `move ${d.sourcePath === null ? 'the folder' : 'this file'}, or change \`pages.base\` of the ${d.data.taxonomy} taxonomy`,
       };
+    case 'route-shadowed':
+      return {
+        message: `${d.sourcePath === null ? 'a page' : 'this file'} is served at ${d.data.url}, under the prefix of the ${quote(d.data.shadowedBy)} route: that route answers it, and does not know it (a 404)`,
+        hint: `move ${d.sourcePath === null ? 'its folder' : 'this file'} out of ${quote(`/${d.data.shadowedBy}`)}, or give its collection another base; with one route serving every page, set \`splitRoutes: false\``,
+      };
     case 'case-collision':
       return {
         message: `this file and ${d.data.others.join(', ')} only differ by case`,
