@@ -6,7 +6,7 @@ import type { GrammarPart, LocalePart, RestPart, SegmentPart } from '../../decla
 import type { Locales } from '../../declarations/locales.js';
 import { ok, type Err, type Result } from '../../shared/result.js';
 import { suggest } from '../../shared/suggest.js';
-import { EXTENSION, fail, INDEX, isIndexForbidden, type Context, type ErrorDiagnostic } from './context.js';
+import { fail, INDEX, isIndexForbidden, type Context, type ErrorDiagnostic } from './context.js';
 
 /** Folders and file name assigned to the grammar parts. */
 export interface Assignment {
@@ -18,7 +18,9 @@ export interface Assignment {
 }
 
 /** Human-readable shape of a grammar, e.g. `<category>/<subcategory>/[<locale>/]<slug>.mdx`. */
-function grammarShape(grammar: readonly GrammarPart[]): string {
+function grammarShape(grammar: readonly GrammarPart[], extensions: readonly string[]): string {
+  const extension = extensions.length === 1 ? (extensions[0] ?? '') : `{${extensions.join(',')}}`;
+
   return grammar
     .map((part) => {
       switch (part.kind) {
@@ -29,7 +31,7 @@ function grammarShape(grammar: readonly GrammarPart[]): string {
         case 'locale':
           return part.optional ? '[<locale>/]' : '<locale>/';
         case 'slug':
-          return `<slug>${EXTENSION}`;
+          return `<slug>${extension}`;
       }
     })
     .join('');
@@ -91,7 +93,7 @@ function wrongDepth(
       : fail(ctx, {
           code: 'unexpected-depth',
           severity: 'error',
-          data: { expected: grammarShape(ctx.collection.grammar), folders: folders.length },
+          data: { expected: grammarShape(ctx.collection.grammar, ctx.extensions), folders: folders.length },
           suggestions: [],
         }),
     locale: NO_LOCALE_ERROR,

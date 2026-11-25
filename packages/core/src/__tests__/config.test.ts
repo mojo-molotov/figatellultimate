@@ -27,6 +27,14 @@ describe('defineConfig', () => {
     expect(Object.isFrozen(config)).toBe(true);
   });
 
+  it('reads `.mdx` files only by default, and the extensions a project adds', () => {
+    expect(defineConfig(valid).extensions).toEqual(['.mdx']);
+    const config = defineConfig({ ...valid, extensions: ['.mdx', '.md'] });
+
+    expect(config.extensions).toEqual(['.mdx', '.md']);
+    expect(Object.isFrozen(config.extensions)).toBe(true);
+  });
+
   it('keeps an explicit output folder and URL options', () => {
     const config = defineConfig({
       ...valid,
@@ -52,6 +60,10 @@ describe('defineConfig', () => {
     ['an absolute public folder', { ...valid, publicDirectory: '/srv/public' }],
     ['a public folder outside the project', { ...valid, publicDirectory: '../public' }],
     ['a taxonomy not made with defineTaxonomy', { ...valid, taxonomies: { tags: ['a'] } }],
+    ['no extension at all', { ...valid, extensions: [] }],
+    ['an extension without its dot', { ...valid, extensions: ['md'] }],
+    ['an extension in capitals', { ...valid, extensions: ['.MD'] }],
+    ['the same extension twice', { ...valid, extensions: ['.md', '.md'] }],
   ])('throws InvalidConfigError on %s', (_, input) => {
     // Runtime validation of what the types already reject: configs are loaded from user files.
     expect(() => parseConfig(input)).toThrow(InvalidConfigError);

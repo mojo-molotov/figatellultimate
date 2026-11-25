@@ -325,7 +325,7 @@ export async function runMigrate(input: MigrateInput): Promise<MigrateResult> {
 
     const files = (await fs.readdir(join(directory, ...folder.split('/')))).filter((entry) => entry.file);
 
-    if (!files.some((entry) => entry.name.endsWith('.mdx')))
+    if (!files.some((entry) => (config.extensions ?? ['.mdx']).some((extension) => entry.name.endsWith(extension))))
       leftovers.push(...files.map((entry) => `${folder}/${entry.name}`));
   }
 

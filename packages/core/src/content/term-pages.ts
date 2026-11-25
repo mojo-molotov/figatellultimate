@@ -107,7 +107,7 @@ export function termPagesOf(input: TermPagesInput): readonly TermPage[] {
     return Array.from({ length: pages }, (_, index): TermPage => {
       if (index === 0) return Object.freeze({ ...page, pages });
 
-      const route = `${page.route}/page/${String(index + 1)}`;
+      const route = `${page.route}/${urls.options.page}/${String(index + 1)}`;
 
       return Object.freeze({
         ...page,

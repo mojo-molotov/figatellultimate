@@ -12,12 +12,24 @@ export interface Context {
   readonly collection: Collection;
   readonly locales: Locales;
   readonly sourcePath: string;
+  /** The extensions of a content file (`extensions` of the config); any other file is ignored. */
+  readonly extensions: readonly string[];
 }
 
 /** The file name of a folder's own entry (`index.mdx`). */
 export const INDEX = 'index';
-/** The extension of a content file; any other file is ignored. */
-export const EXTENSION = '.mdx';
+/** The extensions of a content file by default: MDX only. */
+export const DEFAULT_EXTENSIONS: readonly string[] = Object.freeze(['.mdx']);
+
+/**
+ * The extension a path ends with, among those given.
+ *
+ * @param sourcePath - A path.
+ * @param extensions - The extensions of a content file.
+ * @returns The longest one it ends with, `undefined` when none.
+ */
+export const extensionOf = (sourcePath: string, extensions: readonly string[]): string | undefined =>
+  [...extensions].sort((a, b) => b.length - a.length).find((extension) => sourcePath.endsWith(extension));
 
 /** The errors parsing a path can give: about one file only. */
 export type ErrorDiagnostic = FileErrorDiagnostic;

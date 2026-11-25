@@ -186,6 +186,7 @@ export async function runOnce(input: RunInput): Promise<RunResult> {
     ...(config.taxonomies === undefined ? {} : { taxonomies: config.taxonomies }),
     environment: environmentOf(mode),
     urls: createUrlBuilder(config.locales, config.urls),
+    ...(config.extensions === undefined ? {} : { extensions: config.extensions }),
     paths: createNodePathLister(directory),
     source: config.source,
     signal,

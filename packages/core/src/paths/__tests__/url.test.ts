@@ -22,7 +22,7 @@ describe('createUrlBuilder', () => {
   it('is built once from data: the resolved options are exposed and frozen', () => {
     const urls = createUrlBuilder(locales);
 
-    expect(urls.options).toEqual({ defaultLocale: 'implicit', trailingSlash: false });
+    expect(urls.options).toEqual({ defaultLocale: 'implicit', trailingSlash: false, page: 'page' });
     expect(urls.locales).toBe(locales);
     expect(Object.isFrozen(urls)).toBe(true);
     expect(Object.isFrozen(urls.options)).toBe(true);
@@ -36,6 +36,22 @@ describe('createUrlBuilder', () => {
     expect(() =>
       // @ts-expect-error -- an untyped (JS or JSON) caller: validated at runtime.
       createUrlBuilder(locales, { trailingSlash: 'yes' }),
+    ).toThrow(InvalidUrlOptionsError);
+  });
+
+  it('keeps the segment a page past the first takes, a name of the content: `page` by default', () => {
+    expect(createUrlBuilder(locales, { page: 'p' }).options.page).toBe('p');
+  });
+
+  it.each([
+    ['an empty name', ''],
+    ['a name with a capital', 'Page'],
+    ['a path', 'a/b'],
+    ['a number', 2],
+  ])('throws InvalidUrlOptionsError on a page segment that is %s', (_, page) => {
+    expect(() =>
+      // @ts-expect-error -- an untyped (JS or JSON) caller: validated at runtime.
+      createUrlBuilder(locales, { page }),
     ).toThrow(InvalidUrlOptionsError);
   });
 });

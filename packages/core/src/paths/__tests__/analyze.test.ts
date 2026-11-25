@@ -86,6 +86,33 @@ describe('analyze', () => {
     ]);
   });
 
+  it('ignores a `.md` file unless the project reads `.md` files, then reads it like a `.mdx` one', () => {
+    const sources = src('pages', 'guide/setup.md', 'guide/index.md');
+
+    expect(analyze({ locales, collections: focused, sources }).entries).toEqual([]);
+    const read = analyze({ locales, collections: focused, sources, extensions: ['.mdx', '.md'] });
+
+    expect(read.diagnostics).toEqual([]);
+    expect(read.entries.map((entry) => [entry.sourcePath, entry.route])).toEqual([
+      ['guide/index.md', '/guide'],
+      ['guide/setup.md', '/guide/setup'],
+    ]);
+  });
+
+  it('reports `foo.md` and `foo.mdx` as a key collision: one page, two files', () => {
+    expect(
+      analyze({
+        locales,
+        collections: focused,
+        sources: src('pages', 'foo.md', 'foo.mdx'),
+        extensions: ['.mdx', '.md'],
+      }).diagnostics.map((d) => [d.sourcePath, d.code]),
+    ).toEqual([
+      ['foo.md', 'key-collision'],
+      ['foo.mdx', 'key-collision'],
+    ]);
+  });
+
   it('reports case-only collisions, for case-insensitive file systems', () => {
     expect(codesOf(src('pages', 'Foo.mdx', 'foo.mdx'))).toEqual([
       ['pages', 'Foo.mdx', 'case-collision'],

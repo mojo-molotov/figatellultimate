@@ -4,9 +4,9 @@ import { blog, locales, pages } from '../../__tests__/scenarios/collections.js';
 import { defineConfig, InvalidConfigError } from '../../config.js';
 import { defineCollection } from '../../declarations/collection.js';
 import { defineTaxonomy, InvalidTaxonomyError } from '../../declarations/taxonomy.js';
+import { createUrlBuilder } from '../../paths/url.js';
 import { analyze, type SourceInput } from '../../paths/analyze.js';
 import { folderPagesOf } from '../../paths/folders.js';
-import { createUrlBuilder } from '../../paths/url.js';
 import type { ContentSource } from '../ports.js';
 import { termPageCollisions, termPagesOf, type TermsOf } from '../term-pages.js';
 
@@ -102,6 +102,18 @@ describe('termPagesOf', () => {
       '/en/authors/gustave 1/1 /en/authors/gustave',
     ]);
     expect(found[1]?.route).toBe('/authors/arnaud/page/2');
+    // The segment the project chose (`urls.page`).
+    expect(
+      termPagesOf({
+        locales,
+        collections,
+        taxonomies: paged,
+        urls: createUrlBuilder(locales, { page: 'p' }),
+        entries: kept(),
+      })
+        .filter((page) => page.term === 'arnaud')
+        .map((page) => page.url),
+    ).toEqual(['/authors/arnaud', '/authors/arnaud/p/2']);
   });
 
   it('never mounts a term without an entry, nor through a reserved one, nor a taxonomy without pages', () => {

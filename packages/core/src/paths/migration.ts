@@ -19,9 +19,14 @@ import { createUrlBuilder, type UrlOptions } from './url.js';
 export interface EntryPathParts {
   readonly locale: string;
   readonly segments: Readonly<Record<string, string>>;
-  /** The file name without `.mdx`; `'index'` for an index file. */
+  /** The file name without its extension; `'index'` for an index file. */
   readonly slug: string;
+  /** Its path now, whose extension it keeps (a `.md` file stays one); `.mdx` without it. */
+  readonly sourcePath?: string | undefined;
 }
+
+/** A path's extension (`.mdx`, `.md`): what follows its file name's last dot. */
+const extensionOfPath = (sourcePath: string): string => /\.[^./]+$/.exec(sourcePath)?.[0] ?? '.mdx';
 
 /**
  * The source path of an entry under a locale declaration: `parseEntryPath`'s inverse.
@@ -30,7 +35,7 @@ export interface EntryPathParts {
  * @param locales - The locale declaration (default locale, notation).
  * @param entry - The entry's locale, segments and slug.
  * @returns Its path: the locale folder where the grammar places it, left out only for the default locale of an
- *   optional locale part in the implicit notation.
+ *   optional locale part in the implicit notation; the extension of its current path, `.mdx` without one.
  *
  * @example
  * entryPathOf(blog, defineLocales({ list: ['fr', 'en'], default: 'en' }), { locale: 'en', segments, slug: 'v0-1-0' });
@@ -52,7 +57,10 @@ export function entryPathOf(collection: Collection, locales: Locales, entry: Ent
     }
   });
 
-  return [...folders, `${entry.slug}.mdx`].join('/');
+  return [
+    ...folders,
+    `${entry.slug}${entry.sourcePath === undefined ? '.mdx' : extensionOfPath(entry.sourcePath)}`,
+  ].join('/');
 }
 
 /** What a migration changes: the default locale, or the notation (implicit or explicit locale folders). */
@@ -193,7 +201,9 @@ export function planMigration(input: MigrationInput): Result<MigrationPlan, Migr
   });
 
   const newUrls = createUrlBuilder(migrated, input.urls);
-  const analysis = analyze({ locales: migrated, collections, sources, urls: newUrls });
+  // The moved tree read with its own files' extensions (`.md` included, when the project reads them).
+  const extensions = [...new Set(sources.map((source) => extensionOfPath(source.sourcePath)))];
+  const analysis = analyze({ locales: migrated, collections, sources, urls: newUrls, extensions });
   const errors = analysis.diagnostics.filter((d) => d.severity === 'error');
 
   if (errors.length > 0 || analysis.entries.length !== entries.length) {

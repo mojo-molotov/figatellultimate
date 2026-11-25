@@ -4,6 +4,7 @@ import { blog, locales, pages } from '../../__tests__/scenarios/collections.js';
 import { defineCollection } from '../../declarations/collection.js';
 import { analyze, type SourceInput } from '../analyze.js';
 import { folderPagesOf } from '../folders.js';
+import { createUrlBuilder } from '../url.js';
 
 const blogWithPages = defineCollection({ ...blog, folderPages: { root: true, levels: ['category', 'subcategory'] } });
 const collections = { pages, blog: blogWithPages };
@@ -293,6 +294,18 @@ describe('unused-folder-image', () => {
     // news: two subcategories (bot, site); the root: two categories (guides, news).
     expect(of('/blog/news')).toEqual(['1/2 /blog/news', '2/2 /blog/news/page/2']);
     expect(of('/blog')).toEqual(['1/2 /blog', '2/2 /blog/page/2']);
+    // The segment the project chose (`urls.page`): every further page under it.
+    const custom = folderPagesOf({
+      locales,
+      collections: { pages, blog: paged },
+      urls: createUrlBuilder(locales, { page: 'p' }),
+      entries: analysis.entries,
+    });
+
+    expect(custom.filter((f) => f.first === '/blog/news/bot').map((f) => f.url)).toEqual([
+      '/blog/news/bot',
+      '/blog/news/bot/p/2',
+    ]);
     expect(all.find((f) => f.url === '/blog/news/bot/page/2')).toMatchObject({
       level: 'subcategory',
       segments: { category: 'news', subcategory: 'bot' },

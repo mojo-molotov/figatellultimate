@@ -24,6 +24,7 @@ import {
 import type { Locales } from '../declarations/locales.js';
 import type { EntryDescriptor } from './descriptor.js';
 import { parseEntryPath } from './parse.js';
+import { DEFAULT_EXTENSIONS, extensionOf } from './parse/context.js';
 import { suggest } from '../shared/suggest.js';
 import { folderPagesOf } from './folders.js';
 import { createUrlBuilder, type UrlBuilder } from './url.js';
@@ -50,9 +51,9 @@ export interface AnalyzeInput {
   readonly sources: readonly SourceInput[];
   /** The project's URL strategy, needed to detect URL collisions. Default: `createUrlBuilder(locales)`. */
   readonly urls?: UrlBuilder | undefined;
+  /** The extensions of a content file (`extensions` of the config); any other path is ignored. Default: `.mdx`. */
+  readonly extensions?: readonly string[] | undefined;
 }
-
-const EXTENSION = '.mdx';
 
 function sameLocales(a: Locales, b: Locales): boolean {
   return (
@@ -144,7 +145,11 @@ function urlCollisions(entries: readonly EntryDescriptor[], urls: UrlBuilder): F
 }
 
 /** `foo.mdx` next to a `foo/` folder without `foo/index.mdx` (the "ugly index" warning: renaming a section should mean renaming one folder). */
-function uglyIndexes(entries: readonly EntryDescriptor[], sources: readonly SourceInput[]): Diagnostic[] {
+function uglyIndexes(
+  entries: readonly EntryDescriptor[],
+  sources: readonly SourceInput[],
+  extensions: readonly string[],
+): Diagnostic[] {
   const folders = new Set<string>();
   const paths = new Set(sources.map(idOf));
 
@@ -156,11 +161,16 @@ function uglyIndexes(entries: readonly EntryDescriptor[], sources: readonly Sour
   }
 
   return entries.flatMap((entry) => {
-    const folder = entry.sourcePath.slice(0, -EXTENSION.length);
-    const index = `${folder}/index${EXTENSION}`;
+    const extension = extensionOf(entry.sourcePath, extensions) ?? '';
+    const folder = entry.sourcePath.slice(0, -extension.length);
+    // The fix: the entry moved into its folder as its index, its own extension kept.
+    const index = `${folder}/index${extension}`;
     const hasFolder = folders.has(`${entry.collection}\u0000${folder}`);
+    const hasIndex = extensions.some((extension) =>
+      paths.has(idOf({ collection: entry.collection, sourcePath: `${folder}/index${extension}` })),
+    );
 
-    if (entry.isIndex || !hasFolder || paths.has(idOf({ collection: entry.collection, sourcePath: index }))) return [];
+    if (entry.isIndex || !hasFolder || hasIndex) return [];
 
     return [
       diagnostic({
@@ -301,8 +311,8 @@ function compareEntries(a: EntryDescriptor, b: EntryDescriptor): number {
 /**
  * Analyzes every source path of the content.
  *
- * @param input - The locales, the collections, the source paths (collection and collection-relative path), and the
- *   URL strategy (default: `createUrlBuilder(locales)`).
+ * @param input - The locales, the collections, the source paths (collection and collection-relative path), the URL
+ *   strategy (default: `createUrlBuilder(locales)`), and the extensions of a content file (default `.mdx`).
  * @returns Every valid entry descriptor and every diagnostic: each path's, then the global checks (URL and key
  *   collisions across collections, an implicit and explicit twin of a default-locale entry, case collisions, ugly
  *   index, unused reservations). A failing source never removes another valid entry. Sorted and frozen, whatever
@@ -320,8 +330,9 @@ export function analyze(input: AnalyzeInput): Analysis {
     throw new TypeError('analyze: the URL builder was created with other locales than the ones given to analyze.');
   }
 
+  const extensions = input.extensions ?? DEFAULT_EXTENSIONS;
   const unique = new Map(
-    input.sources.filter((s) => s.sourcePath.endsWith(EXTENSION)).map((s) => [idOf(s), s] as const),
+    input.sources.filter((s) => extensionOf(s.sourcePath, extensions) !== undefined).map((s) => [idOf(s), s] as const),
   );
   const sources = [...unique.values()];
 
@@ -337,7 +348,7 @@ export function analyze(input: AnalyzeInput): Analysis {
       );
     }
 
-    const result = parseEntryPath(source.collection, collection, locales, source.sourcePath);
+    const result = parseEntryPath(source.collection, collection, locales, source.sourcePath, extensions);
 
     diagnostics.push(...result.warnings);
 
@@ -361,7 +372,7 @@ export function analyze(input: AnalyzeInput): Analysis {
 
   diagnostics.push(
     ...globalErrors,
-    ...uglyIndexes(entries, sources),
+    ...uglyIndexes(entries, sources, extensions),
     ...unusedReservations(collections, parsed),
     ...unusedFolderImages(collections, parsed),
     ...folderImageFallbacks(collections, parsed),

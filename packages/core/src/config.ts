@@ -9,6 +9,8 @@
  *       validate and freeze each part, so that an invalid declaration fails at once, where it is written.
  *     - Core throws only for an invalid configuration or a broken caller contract; every content problem is a
  *       diagnostic.
+ *     - Entries are `.mdx` files unless `extensions` says otherwise, opt-in: a project choosing Markdown lists `.md`,
+ *       so that a stray `README.md` in a content folder never becomes a page by surprise.
  *
  * Invariants (`config.test.ts`): every invalid configuration throws `InvalidConfigError` with what to fix.
  */
@@ -41,6 +43,11 @@ export interface FigatellultimateConfig {
   readonly publicDirectory?: string;
   /** The generated navigation: which collections, in which order, how deep. */
   readonly navigation?: readonly NavigationItem[];
+  /**
+   * The extensions of a content file (`['.mdx', '.md']`); any other file is ignored. A `.md` file is still compiled as
+   * MDX by the content tool. Default: `['.mdx']`.
+   */
+  readonly extensions?: readonly string[];
 }
 
 /** One collection of the navigation. */
@@ -120,7 +127,17 @@ function contentProblem(taxonomy: string, name: string, collection: unknown): vo
 function validate(config: unknown): asserts config is FigatellultimateConfig {
   if (!isRecord(config)) fail('the default export must be an object (use defineConfig)');
 
-  const { locales, collections, taxonomies, source, output, publicDirectory, messages, navigation } = config;
+  const { locales, collections, taxonomies, source, output, publicDirectory, messages, navigation, extensions } =
+    config;
+
+  if (
+    extensions !== undefined &&
+    (!Array.isArray(extensions) ||
+      extensions.length === 0 ||
+      !extensions.every((extension) => typeof extension === 'string' && /^\.[a-z0-9]+$/.test(extension)) ||
+      new Set(extensions).size !== extensions.length)
+  )
+    fail('`extensions` must list distinct lowercase extensions with their dot, e.g. [".mdx", ".md"]');
 
   if (!isFrozenRecord(locales) || !Array.isArray(locales['list'])) fail('`locales` must be made with defineLocales()');
 
@@ -303,6 +320,7 @@ export function parseConfig(value: unknown): FigatellultimateConfig {
     ...config,
     output: config.output ?? DEFAULT_OUTPUT,
     publicDirectory: config.publicDirectory ?? DEFAULT_PUBLIC_DIRECTORY,
+    extensions: Object.freeze([...(config.extensions ?? ['.mdx'])]),
     ...(config.navigation === undefined
       ? {}
       : {

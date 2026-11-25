@@ -163,7 +163,7 @@ function slicesOf(folder: FolderPage, input: FolderPagesInput, urls: UrlBuilder)
 
     if (page === 1) return Object.freeze({ ...folder, pages, ...index });
 
-    const route = `${folder.route === '/' ? '' : folder.route}/page/${String(page)}`;
+    const route = `${folder.route === '/' ? '' : folder.route}/${urls.options.page}/${String(page)}`;
 
     return Object.freeze({ ...folder, route, url: urls.url({ locale: folder.locale, route }), page, pages, ...index });
   });

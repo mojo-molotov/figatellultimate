@@ -56,6 +56,8 @@ export interface LoadContentInput {
   readonly taxonomies?: Readonly<Record<string, Taxonomy>>;
   readonly environment: Environment;
   readonly urls?: UrlBuilder;
+  /** The extensions of a content file (`extensions` of the config); default `.mdx`. */
+  readonly extensions?: readonly string[] | undefined;
   readonly paths: PathLister;
   readonly source: ContentSource;
   /** Cancels the run at its next checkpoint (after listing, between documents): watch mode supersedes stale runs. */
@@ -147,7 +149,13 @@ export async function* streamContent(input: LoadContentInput): AsyncGenerator<Co
   resolveTaxonomies(collections, taxonomies);
 
   const listing = await listSources(input);
-  const analysis = analyze({ locales, collections, sources: listing.sources, urls: input.urls });
+  const analysis = analyze({
+    locales,
+    collections,
+    sources: listing.sources,
+    urls: input.urls,
+    extensions: input.extensions,
+  });
   const descriptors = new Map<string, EntryDescriptor>(analysis.entries.map((d) => [idOf(d), d]));
 
   const diagnostics: Diagnostic[] = [...listing.diagnostics, ...analysis.diagnostics];

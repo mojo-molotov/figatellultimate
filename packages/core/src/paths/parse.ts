@@ -18,22 +18,24 @@ import type { EntryDescriptor } from './descriptor.js';
 import type { WarningDiagnostic } from '../shared/diagnostics.js';
 import type { Locales } from '../declarations/locales.js';
 import { checkIndexPosition, checkName } from './parse/checks.js';
-import { EXTENSION, type Context, type ErrorDiagnostic } from './parse/context.js';
+import { DEFAULT_EXTENSIONS, extensionOf, type Context, type ErrorDiagnostic } from './parse/context.js';
 import { describe } from './parse/describe.js';
 import { shapeFixed, shapeFree } from './parse/shape.js';
 import { combine, map, type Result } from '../shared/result.js';
 
 type ParseResult = Result<EntryDescriptor, ErrorDiagnostic, WarningDiagnostic>;
 
-function assertSourcePath(sourcePath: string): void {
+function assertSourcePath(sourcePath: string, extensions: readonly string[]): void {
   const valid =
-    sourcePath.endsWith(EXTENSION) &&
+    extensionOf(sourcePath, extensions) !== undefined &&
     !sourcePath.startsWith('/') &&
     !sourcePath.includes('\\') &&
     sourcePath.split('/').every((part) => part !== '' && part !== '.' && part !== '..');
 
   if (!valid) {
-    throw new TypeError(`parseEntryPath expects a relative POSIX ".mdx" path, received "${sourcePath}".`);
+    throw new TypeError(
+      `parseEntryPath expects a relative POSIX path ending with ${extensions.join(' or ')}, received "${sourcePath}".`,
+    );
   }
 }
 
@@ -44,10 +46,12 @@ function assertSourcePath(sourcePath: string): void {
  * @param collection - Its declaration.
  * @param locales - The locale declaration.
  * @param sourcePath - The file's POSIX path relative to the collection's root, e.g. `en/docs/setup.mdx`.
+ * @param extensions - The extensions of a content file (`extensions` of the config); default `.mdx` only.
  * @returns The descriptor (locale, segments, slug, key, route, reservation), or every problem of the path at once
  *   (locale, names, `index` position, depth). Global checks (collisions, ugly index, unused reservations) are
  *   `analyze`'s.
- * @throws {TypeError} When `sourcePath` is not a relative POSIX `.mdx` path: a broken caller contract.
+ * @throws {TypeError} When `sourcePath` is not a relative POSIX path with one of the extensions: a broken caller
+ *   contract.
  *
  * @example
  * parseEntryPath('blog', blog, locales, 'release-notes/core/en/v0-1-0.mdx');
@@ -58,10 +62,11 @@ export function parseEntryPath(
   collection: Collection,
   locales: Locales,
   sourcePath: string,
+  extensions: readonly string[] = DEFAULT_EXTENSIONS,
 ): ParseResult {
-  assertSourcePath(sourcePath);
-  const ctx: Context = { collectionName, collection, locales, sourcePath };
-  const parts = sourcePath.slice(0, -EXTENSION.length).split('/');
+  assertSourcePath(sourcePath, extensions);
+  const ctx: Context = { collectionName, collection, locales, sourcePath, extensions };
+  const parts = sourcePath.slice(0, -(extensionOf(sourcePath, extensions) ?? '').length).split('/');
   const slug = parts.at(-1) ?? '';
   const folders = parts.slice(0, -1);
   const isFree = collection.grammar.some((part) => part.kind === 'rest');

@@ -76,6 +76,23 @@ describe('entryPathOf, the inverse of parseEntryPath', () => {
     }
   });
 
+  it('keeps a file its own extension: a `.md` file stays one', () => {
+    const [entry] = analyze({
+      locales,
+      collections,
+      sources: [{ collection: 'pages', sourcePath: 'en/guide/setup.md' }],
+      extensions: ['.mdx', '.md'],
+    }).entries;
+    const collection = collections['pages'];
+
+    // Precondition: the entry is read.
+    expect(entry?.sourcePath).toBe('en/guide/setup.md');
+
+    if (entry === undefined || collection === undefined) return;
+
+    expect(entryPathOf(collection, locales, entry)).toBe('en/guide/setup.md');
+  });
+
   it('round trips under every declaration: the path it gives parses back to the same entry', () => {
     const entries = entriesOf(CONTENT, locales);
     let changed = 0;
