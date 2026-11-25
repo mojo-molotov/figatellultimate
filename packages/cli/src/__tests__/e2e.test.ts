@@ -204,6 +204,40 @@ export async function rejected(): Promise<void> {
     }
   });
 
+  it('never lists a folder out of the public one to suggest an image', async () => {
+    await project.create('public/maps/world.png', 'png');
+    await project.create('private/keys.png', 'png');
+    await project.create('content/pages/atlas.mdx', '---\ntitle: Atlas\n---\n![Keys](/../private/kyes.png)\n');
+
+    try {
+      const missing = await run('build');
+
+      expect(missing.code).toBe(EXIT.content);
+      expect(missing.output).toContain('/../private/kyes.png');
+      // Its folder is out of the public one: none of its files is ever suggested, under any spelling.
+      expect(missing.output).not.toContain('keys.png');
+    } finally {
+      await project.remove('content/pages/atlas.mdx');
+      await project.remove('private');
+      await project.remove('public');
+    }
+  });
+
+  it('finds an image whose name starts with two dots: inside the public folder, not out of it', async () => {
+    await project.create('public/..dots.png', 'png');
+    await project.create('content/pages/atlas.mdx', '---\ntitle: Atlas\n---\n![Dots](/..dots.png)\n');
+
+    try {
+      const { code, output } = await run('build');
+
+      expect(output).not.toContain('missing-image');
+      expect(code).toBe(EXIT.ok);
+    } finally {
+      await project.remove('content/pages/atlas.mdx');
+      await project.remove('public');
+    }
+  });
+
   it('never writes an absolute path into the generated modules', async () => {
     const generated = await project.readDir('.figatellultimate');
 

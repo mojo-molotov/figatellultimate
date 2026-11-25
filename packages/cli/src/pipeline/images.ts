@@ -7,13 +7,14 @@
  * Key design decisions:
  *     - In the CLI, which reads the disk; the core lists the references, purely.
  *     - An error, as any content error: nothing is written, the page would show a broken image.
- *     - A path that would leave the public folder (`/../secret.png`) is never read: missing, as it would be online.
+ *     - A path that would leave the public folder (`/../secret.png`) is never read, nor its folder listed for a
+ *       suggestion: missing, as it would be online. A name starting with two dots (`..cover.png`) stays inside.
  *
  * Invariant (`e2e.test.ts`): a missing cover, folder image or body image is an error naming its file and field, the
- * closest file suggested; an existing one passes.
+ * closest file suggested, never one out of the public folder; an existing one passes, `..cover.png` included.
  */
 import { access, readdir } from 'node:fs/promises';
-import { isAbsolute, join, posix, relative } from 'node:path';
+import { isAbsolute, join, posix, relative, sep } from 'node:path';
 
 import {
   localImageReferences,
@@ -29,6 +30,13 @@ const exists = (path: string): Promise<boolean> =>
     () => true,
     () => false,
   );
+
+/** Whether `path` is `root` or under it: `..` alone or followed by a separator leaves it, `..cover.png` does not. */
+function within(root: string, path: string): boolean {
+  const inside = relative(root, path);
+
+  return inside !== '..' && !inside.startsWith(`..${sep}`) && !isAbsolute(inside);
+}
 
 /** The files of a folder, by name; none when it cannot be listed. */
 const filesOf = (folder: string): Promise<string[]> => readdir(folder).catch(() => []);
@@ -61,16 +69,17 @@ export async function missingImages(
     }
 
     const file = join(root, ...path.split('/'));
-    const inside = relative(root, file);
     const found =
-      inside !== '' && !inside.startsWith('..') && !isAbsolute(inside)
+      file !== root && within(root, file)
         ? (checked.get(file) ?? checked.set(file, exists(file)).get(file) ?? Promise.resolve(false))
         : Promise.resolve(false);
 
     if (await found) continue;
 
     const folder = posix.dirname(path);
-    const names = await filesOf(join(root, ...folder.split('/')));
+    const absoluteFolder = join(root, ...folder.split('/'));
+    // A folder out of the public one is never listed: its files are none of the site's.
+    const names = within(root, absoluteFolder) ? await filesOf(absoluteFolder) : [];
 
     diagnostics.push({
       code: 'missing-image',

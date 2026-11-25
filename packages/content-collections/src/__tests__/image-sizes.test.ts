@@ -36,6 +36,7 @@ const put = async (path: string, bytes: Uint8Array): Promise<void> => {
 beforeAll(async () => {
   await put('public/covers/map.png', png(640, 480));
   await put('public/covers/a b.png', png(320, 200));
+  await put('public/..dots.png', png(48, 24));
   await put('secret.png', png(10, 10));
 });
 
@@ -62,6 +63,10 @@ describe('rehypeImageSizes', () => {
       [640, 480],
       [320, 200],
     ]);
+  });
+
+  it('measures a file whose name starts with two dots: inside the public folder, not out of it', () => {
+    expect(measured(img({ src: '/..dots.png' }))).toEqual([[48, 24]]);
   });
 
   it.each([

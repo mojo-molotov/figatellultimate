@@ -17,7 +17,7 @@
  * remote, inline or missing image and a path out of the public folder are left as they are.
  */
 import { readFileSync } from 'node:fs';
-import { isAbsolute, join, relative } from 'node:path';
+import { isAbsolute, join, relative, sep } from 'node:path';
 
 import { imageSize } from 'image-size';
 
@@ -39,7 +39,8 @@ function fileOf(src: string, publicDirectory: string): string | undefined {
   const file = join(publicDirectory, path);
   const inside = relative(publicDirectory, file);
 
-  return inside === '' || inside.startsWith('..') || isAbsolute(inside) ? undefined : file;
+  // `..` alone or followed by a separator leaves the folder; a name starting with two dots (`..cover.png`) does not.
+  return inside === '' || inside === '..' || inside.startsWith(`..${sep}`) || isAbsolute(inside) ? undefined : file;
 }
 
 /** An image's width and height, read from its file's header; `undefined` when it is missing or no image. */
