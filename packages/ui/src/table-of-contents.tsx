@@ -11,6 +11,9 @@
  *     - A click scrolls instantly to where its heading is the reading, mutes the measures until that scroll ends, then
  *       measures its landing; a quiet time ends a scroll where `scrollend` is missing.
  *     - Elements are reached through refs, a heading of the article by its id (the contract of its `#id` link).
+ *     - Its wide breakpoint (`TOC_WIDE_MEDIA`) is not an option: the stylesheets lay the page out at it from the first
+ *       paint, before any script, and a media query cannot read a custom property. One value, in the code and in the
+ *       stylesheets, checked by `styles.test.ts` and `themes.test.ts`; an app changing it overrides those rules.
  *     - A followed heading (the hash, a click) that lands at the very bottom of the page, headings still after it, is
  *       nudged back up a little (`NUDGE`) and lands there anew, still current: at the very bottom, no scroll down is
  *       left to give the next headings their turns, and the reader's attempts (an overscroll's bounce) fire no scroll
@@ -74,8 +77,11 @@ export interface TableOfContentsProps extends Omit<ComponentProps<'nav'>, 'child
   readonly side?: 'start' | 'end' | undefined;
 }
 
-/** Wide screens: the drawer docks in the page's margin (the stylesheet's breakpoint). */
-const WIDE = '(min-width: 80rem)';
+/**
+ * Wide screens: the drawer docks in the page's margin. The stylesheet's breakpoint too (`styles.css`, and the layout
+ * of `@figatellultimate/themes`' `base.css`): exported, for an app laying its own page out around it.
+ */
+export const TOC_WIDE_MEDIA = '(min-width: 80rem)';
 /**
  * A scroll has ended after this long without a scroll event: where `scrollend` is missing (older Safari), and while a
  * click mutes the measures, so that they always resume even if a browser fires no `scrollend` after an instant scroll.
@@ -150,7 +156,7 @@ function measure(
 
 const noSubscription = (): (() => void) => () => undefined;
 const subscribeWide = (onChange: () => void): (() => void) => {
-  const media = window.matchMedia(WIDE);
+  const media = window.matchMedia(TOC_WIDE_MEDIA);
 
   media.addEventListener('change', onChange);
 
@@ -276,7 +282,7 @@ export function TableOfContents({
   );
   const wide = useSyncExternalStore(
     subscribeWide,
-    () => window.matchMedia(WIDE).matches,
+    () => window.matchMedia(TOC_WIDE_MEDIA).matches,
     () => false,
   );
   const stored = useSyncExternalStore(
@@ -426,7 +432,7 @@ export function TableOfContents({
     };
     // A drawer over the content (narrow screens) closes on Escape, as a menu does.
     const onKey = (event: KeyboardEvent): void => {
-      if (event.key === 'Escape' && !window.matchMedia(WIDE).matches) setChosen({ wide: false, open: false });
+      if (event.key === 'Escape' && !window.matchMedia(TOC_WIDE_MEDIA).matches) setChosen({ wide: false, open: false });
     };
 
     fromHash();

@@ -77,6 +77,24 @@ describe('ImageZoom', () => {
     expect(screen.queryByRole('button')).toBeNull();
   });
 
+  it("follows the media query the app gives instead of the default desktop's", () => {
+    const custom = new SwitchableMediaQueryList(true, '(min-width: 40rem)');
+    const real = window.matchMedia.bind(window);
+
+    // The default desktop query does not match: only the app's own decides.
+    device(false);
+    vi.spyOn(window, 'matchMedia').mockImplementation((media) =>
+      media === '(min-width: 40rem)'
+        ? custom
+        : media === DESKTOP
+          ? new SwitchableMediaQueryList(false, DESKTOP)
+          : real(media),
+    );
+    render(<ImageZoom labels={LABELS} src={SRC} alt={ALT} media="(min-width: 40rem)" />);
+
+    expect(trigger().getAttribute('aria-haspopup')).toBe('dialog');
+  });
+
   it('becomes a button named from its alt on a desktop, and follows the query', () => {
     const query = device(false);
 

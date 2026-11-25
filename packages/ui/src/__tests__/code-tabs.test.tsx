@@ -4,7 +4,7 @@ import { userEvent } from '@testing-library/user-event';
 import axe from 'axe-core';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { CodeTabs } from '../index.js';
+import { CODE_TABS_STORAGE_KEY, CodeTabs } from '../index.js';
 
 const LABELS = { list: '«gestionnaire»' };
 
@@ -13,14 +13,20 @@ function Block({
   name,
   labels,
   dir,
+  storageKey,
 }: {
   readonly name: string;
   readonly labels: readonly string[];
   readonly dir?: 'ltr' | 'rtl';
+  readonly storageKey?: string;
 }) {
   return (
     <section aria-label={name} {...(dir === undefined ? {} : { dir })}>
-      <CodeTabs labels={LABELS} {...(dir === undefined ? {} : { dir })}>
+      <CodeTabs
+        labels={LABELS}
+        {...(dir === undefined ? {} : { dir })}
+        {...(storageKey === undefined ? {} : { storageKey })}
+      >
         {labels.map((label) => (
           <div key={label} data-label={label}>
             <pre>{`${label} install`}</pre>
@@ -90,6 +96,16 @@ describe('CodeTabs', () => {
     render(<Block name="later" labels={['npm', 'pnpm']} />);
 
     expect(selected('later')).toBe('pnpm');
+  });
+
+  it('remembers the choice under the key the app gives, apart from the default one', async () => {
+    const user = userEvent.setup();
+
+    render(<Block name="a" labels={['npm', 'pnpm']} storageKey="docs-manager" />);
+    await user.click(block('a').getByRole('tab', { name: 'pnpm' }));
+
+    expect(window.localStorage.getItem('docs-manager')).toBe('pnpm');
+    expect(window.localStorage.getItem(CODE_TABS_STORAGE_KEY)).toBeNull();
   });
 
   it('moves through the tabs the reading way: in a right-to-left page, ← goes to the next one', async () => {

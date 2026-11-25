@@ -406,3 +406,15 @@ describe('paper.css', () => {
     expect(palettes.print['--fig-bg']).toBe('#ffffff');
   });
 });
+
+describe('base.css and the design system', () => {
+  it('lays the article out at the width the design system docks its table of contents', () => {
+    const ui = readFileSync(join(import.meta.dirname, '..', '..', '..', 'ui', 'src', 'styles.css'), 'utf8');
+    const docked = /@media (\(min-width: \d+rem\)) \{\s*(?:\/\*[\s\S]*?\*\/\s*)?\[data-slot='toc'\]/.exec(ui)?.[1];
+    const laid = /@media (\(min-width: \d+rem\)) \{\s*\[data-layout='article'\] \{/.exec(sourceOf('base'))?.[1];
+
+    // Precondition: both read.
+    expect(docked).toBeDefined();
+    expect(laid).toBe(docked);
+  });
+});

@@ -33,6 +33,7 @@
 import { Dialog, VisuallyHidden } from 'radix-ui';
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
   useSyncExternalStore,
@@ -43,19 +44,21 @@ import {
 
 import { Image, pixelsOf } from './image.js';
 
-/** A desktop: a mouse or a trackpad, and a wide screen. */
-const DESKTOP = '(hover: hover) and (pointer: fine) and (min-width: 64rem)';
+/** Where an image zooms by default (`media`): a mouse or a trackpad, and a wide screen. */
+export const IMAGE_ZOOM_MEDIA = '(hover: hover) and (pointer: fine) and (min-width: 64rem)';
 
-const subscribe = (onChange: () => void): (() => void) => {
-  const media = window.matchMedia(DESKTOP);
+/** A media query's subscription, for `useSyncExternalStore`. */
+const subscribeTo =
+  (query: string) =>
+  (onChange: () => void): (() => void) => {
+    const media = window.matchMedia(query);
 
-  media.addEventListener('change', onChange);
+    media.addEventListener('change', onChange);
 
-  return () => {
-    media.removeEventListener('change', onChange);
+    return () => {
+      media.removeEventListener('change', onChange);
+    };
   };
-};
-const onDesktop = (): boolean => window.matchMedia(DESKTOP).matches;
 
 /** Every text of the zoom of its own. */
 export interface ImageZoomLabels {
@@ -66,7 +69,11 @@ export interface ImageZoomLabels {
 }
 
 /** The zoom's props: an `<img>`'s, plus the labels. */
-export type ImageZoomProps = ComponentProps<'img'> & { readonly labels: ImageZoomLabels };
+export type ImageZoomProps = ComponentProps<'img'> & {
+  readonly labels: ImageZoomLabels;
+  /** Where the image zooms: a media query; default `IMAGE_ZOOM_MEDIA`, a mouse or a trackpad and a wide screen. */
+  readonly media?: string | undefined;
+};
 
 /**
  * A content image that opens enlarged in a modal on desktops: the app's MDX `img`.
@@ -80,9 +87,14 @@ export type ImageZoomProps = ComponentProps<'img'> & { readonly labels: ImageZoo
  * @example
  * const components = { img: (props) => <ImageZoom {...props} labels={{ open: (alt) => `Agrandir : ${alt}`, close: 'Fermer' }} /> };
  */
-export function ImageZoom({ labels, ...props }: ImageZoomProps): ReactNode {
+export function ImageZoom({ labels, media = IMAGE_ZOOM_MEDIA, ...props }: ImageZoomProps): ReactNode {
   // The server cannot know the device: the plain image first, the button once hydrated where the query holds.
-  const desktop = useSyncExternalStore(subscribe, onDesktop, () => false);
+  const subscribe = useMemo(() => subscribeTo(media), [media]);
+  const desktop = useSyncExternalStore(
+    subscribe,
+    () => window.matchMedia(media).matches,
+    () => false,
+  );
   const trigger = useRef<HTMLButtonElement>(null);
   const { src, width: givenWidth, height: givenHeight, ...rest } = props;
   // Pixels only: an image component reads no `50%`.

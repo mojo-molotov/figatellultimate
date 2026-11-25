@@ -4,6 +4,8 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+import { TOC_WIDE_MEDIA } from '../index.js';
+
 /** The stylesheet, comments removed (a selector named in a comment is no rule). */
 const SOURCE_NO_COMMENTS = readFileSync(join(import.meta.dirname, '..', 'styles.css'), 'utf8').replace(
   /\/\*[\s\S]*?\*\//g,
@@ -377,6 +379,13 @@ describe('styles.css', () => {
     expect(placeholder['grid-area']).toBe('1 / 1');
     expect(`0 ${placeholder['padding-inline'] ?? ''}`).toBe(input['padding']);
     expect(placeholder['pointer-events']).toBe('none');
+  });
+
+  it("docks the table of contents at the width its component reads: one breakpoint, the stylesheet's and the code's", () => {
+    // A media query cannot read a custom property: the layout and the component name the same query.
+    expect(
+      [...SOURCE_NO_COMMENTS.matchAll(/@media (\(min-width: \d+rem\)) \{\s*\[data-slot='toc'\]/g)].map(([, m]) => m),
+    ).toEqual([TOC_WIDE_MEDIA]);
   });
 
   it('keeps focus visible on every component', () => {

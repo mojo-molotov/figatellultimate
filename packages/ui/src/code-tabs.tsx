@@ -23,26 +23,26 @@
 import { Tabs } from 'radix-ui';
 import { Children, isValidElement, useSyncExternalStore, type ReactNode } from 'react';
 
-/** Where the chosen label is remembered. */
-const STORAGE_KEY = 'figatellultimate-code-tab';
+/** Where the chosen label is remembered by default (`storageKey`). */
+export const CODE_TABS_STORAGE_KEY = 'figatellultimate-code-tab';
 
 const listeners = new Set<() => void>();
-/** The choice when `localStorage` is not allowed (private browsing, blocked storage): this page only. */
-let remembered: string | undefined;
+/** The choice when `localStorage` is not allowed (private browsing, blocked storage): this page only, by key. */
+const remembered = new Map<string, string>();
 
-function read(): string | undefined {
+function read(key: string): string | undefined {
   try {
-    return window.localStorage.getItem(STORAGE_KEY) ?? undefined;
+    return window.localStorage.getItem(key) ?? undefined;
   } catch {
-    return remembered;
+    return remembered.get(key);
   }
 }
 
-function choose(label: string): void {
-  remembered = label;
+function choose(key: string, label: string): void {
+  remembered.set(key, label);
 
   try {
-    window.localStorage.setItem(STORAGE_KEY, label);
+    window.localStorage.setItem(key, label);
   } catch {
     // Not allowed: this page only.
   }
@@ -101,19 +101,33 @@ function panelsOf(children: ReactNode): Panel[] {
 export function CodeTabs({
   labels,
   dir,
+  storageKey = CODE_TABS_STORAGE_KEY,
   children,
 }: {
   readonly labels: CodeTabsLabels;
   readonly dir?: 'ltr' | 'rtl' | undefined;
+  /** Where the choice is remembered; default `CODE_TABS_STORAGE_KEY`. Blocks sharing a key share their choice. */
+  readonly storageKey?: string | undefined;
   readonly children: ReactNode;
 }): ReactNode {
   const panels = panelsOf(children);
-  const chosen = useSyncExternalStore(subscribe, read, () => undefined);
+  const chosen = useSyncExternalStore(
+    subscribe,
+    () => read(storageKey),
+    () => undefined,
+  );
   const first = panels[0]?.label ?? '';
   const value = panels.some((panel) => panel.label === chosen) ? (chosen ?? first) : first;
 
   return (
-    <Tabs.Root data-slot="code-tabs" value={value} onValueChange={choose} {...(dir === undefined ? {} : { dir })}>
+    <Tabs.Root
+      data-slot="code-tabs"
+      value={value}
+      onValueChange={(label) => {
+        choose(storageKey, label);
+      }}
+      {...(dir === undefined ? {} : { dir })}
+    >
       <Tabs.List data-slot="code-tabs-list" aria-label={labels.list} data-pagefind-ignore="all">
         {panels.map((panel) => (
           <Tabs.Trigger key={panel.label} data-slot="code-tabs-trigger" value={panel.label}>
