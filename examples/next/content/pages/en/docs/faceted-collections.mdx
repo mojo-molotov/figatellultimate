@@ -52,6 +52,8 @@ const { keys, total, pages, counts } = engine.view(state);
 | `transition(state, action)` | The next state and its URL, for `toggle`, `clear`, `sort` or `page`.                                             |
 | `write(state)`              | The canonical URL of a state.                                                                                    |
 
+The page and the sort are read from `page` and `sort` in the query; `params: { page: 'p', sort: 'order' }` names them otherwise, never as a facet.
+
 A facet in `any` mode keeps an item carrying one of the checked values; in `all` mode, every one. Facets combine with AND.
 
 ### Where the page lands
@@ -132,4 +134,4 @@ usePagedCollection({ …, batches: { load: (from) => loadBatch(`${index}/${batch
 
 Folder pages have their batches too: the blog and a category, their subfolders’ sections ten pages at a time. Each paginated folder carries its batches’ URL under the indexes’ prefix (`folder.batches`: `/listing`, `/listing/news`), the generated code lists those folders (`blogFolderBatches()`), and the route serves them through `pages.listings`; hence the optional catch-all, for `/listing/pages/1`. A folder has nothing to filter: `usePagedCollection` does without an index there (no `load`).
 
-Outside Next, `pagedHref` and `pagedSearch` of `@figatellultimate/facets` map a view to this location and back.
+Outside Next, `pagedHref` and `pagedSearch` of `@figatellultimate/facets` map a view to this location and back. With a page segment other than `page` (`urls.page`) or a page parameter of the engine’s own (`params.page`), `useNextUrl`, `NextUrlBoundary` and `usePagedLocaleLinks` take them as `segment` and `param`: the generated `pageSegment` of `#figatellultimate/urls` gives the first.

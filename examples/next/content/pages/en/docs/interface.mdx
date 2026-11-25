@@ -32,10 +32,10 @@ bun add @figatellultimate/ui @figatellultimate/effects @figatellultimate/themes 
 | `ThemeToggle`           | Light and dark, with `themeScript` applied before the first paint; its name says the theme on and the one a press gives.                                                                          |
 | `SiteThemePicker`       | The choice between several site themes, with `siteThemeScript` applied before the first paint.                                                                                                    |
 | `Breadcrumb`            | Where the page sits, from the navigation.                                                                                                                                                         |
-| `TableOfContents`       | The page’s headings, the one being read highlighted, docked in the margin; its button may have its own name (`toggle`).                                                                           |
+| `TableOfContents`       | The page’s headings, the one being read highlighted, docked in the margin from `TOC_WIDE_MEDIA` on; its button may have its own name (`toggle`).                                                  |
 | `EntryCard`             | A post’s preview: image, title, date, tags, authors; its title at the heading level the page gives it (`headingLevel`, h2 by default).                                                            |
-| `CodeBlock`, `CodeTabs` | A code block with a copy button; variants of one block in tabs.                                                                                                                                   |
-| `ImageZoom`             | An image enlarged in a modal on desktops.                                                                                                                                                         |
+| `CodeBlock`, `CodeTabs` | A code block with a copy button; variants of one block in tabs, the reader’s choice remembered under `storageKey`.                                                                                |
+| `ImageZoom`             | An image enlarged in a modal on desktops (`media`, `IMAGE_ZOOM_MEDIA` by default).                                                                                                                |
 | `ScrollRegion`          | A region scrolling on its own (a wide table), in the Tab order only while it overflows.                                                                                                           |
 
 One stylesheet styles them all, through `data-slot` attributes and tokens:

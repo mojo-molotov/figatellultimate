@@ -54,6 +54,8 @@ const { keys, total, pages, counts } = engine.view(state);
 | `transition(state, action)` | L’état suivant et son URL, pour `toggle`, `clear`, `sort` ou `page`.                                                                    |
 | `write(state)`              | L’URL canonique d’un état.                                                                                                              |
 
+La page et le tri se lisent dans `page` et `sort` de la requête ; `params: { page: 'p', sort: 'order' }` les nomme autrement, jamais comme une facette.
+
 Une facette en mode `any` garde un élément qui porte l’une des valeurs cochées ; en mode `all`, toutes. Les facettes se combinent en ET.
 
 ### Où atterrit la page
@@ -134,4 +136,4 @@ usePagedCollection({ …, batches: { load: (from) => loadBatch(`${index}/${batch
 
 Les pages de dossiers ont leurs lots elles aussi : le blog et une catégorie, leurs sections de sous-dossiers dix pages par dix. Chaque dossier paginé porte l’URL de ses lots sous le même préfixe que les index (`folder.batches` : `/listing`, `/listing/news`), le code généré liste ces dossiers (`blogFolderBatches()`), et la route les sert par `pages.listings` ; d’où le catch-all facultatif, pour `/listing/pages/1`. Un dossier n’a rien à filtrer : `usePagedCollection` s’y passe d’index (`load` absent).
 
-Hors de Next, `pagedHref` et `pagedSearch` de `@figatellultimate/facets` font passer une vue à cet emplacement et inversement.
+Hors de Next, `pagedHref` et `pagedSearch` de `@figatellultimate/facets` font passer une vue à cet emplacement et inversement. Avec un segment de page autre que `page` (`urls.page`) ou un paramètre de page propre au moteur (`params.page`), `useNextUrl`, `NextUrlBoundary` et `usePagedLocaleLinks` les prennent en `segment` et `param` : le `pageSegment` généré de `#figatellultimate/urls` donne le premier.

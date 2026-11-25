@@ -113,7 +113,7 @@ Key patterns (`reserved`, `testOnly`, `llms.include`) are an exact key, or `pref
 
 ### Locales, taxonomies, navigation, images
 
-- `defineLocales({ list, default })`: adding a language is one line, then following the diagnostics, which report every missing translation. `urls: { defaultLocale: 'implicit' | 'explicit', trailingSlash }`, an option of `defineConfig` (not of `defineLocales`), sets the URL strategy used everywhere: `implicit` (the default) leaves the default language unprefixed.
+- `defineLocales({ list, default })`: adding a language is one line, then following the diagnostics, which report every missing translation. `urls: { defaultLocale: 'implicit' | 'explicit', trailingSlash, page }`, an option of `defineConfig` (not of `defineLocales`), sets the URL strategy used everywhere: `implicit` (the default) leaves the default language unprefixed; `page` names the segment of a paginated listing's pages (`page` by default). `extensions: ['.mdx', '.md']` also reads Markdown (`.mdx` only by default).
 - `defineTaxonomy(terms, { messages, pages, content })`: tags and authors are closed lists; the frontmatter references terms by key and an unknown key is an error suggesting the closest one. A term may carry data (an avatar), message fields (a name), a page (`pages: { base: 'authors', perPage: 10 }`) and a long text (`content`, an unmounted collection keyed by term).
 - `navigation`: the collections in the navbar, their order and depth. A new folder appears by itself, in every language.
 - Images: every local image the content uses must exist in `publicDirectory` (`public`), or the build fails with `missing-image`, naming the file and suggesting the closest one.

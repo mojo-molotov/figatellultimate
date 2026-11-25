@@ -26,10 +26,18 @@ export default defineConfig({
 
 ### URLs
 
-`urls` sets the URL strategy, used everywhere: the default language unprefixed (`implicit`, the default) or prefixed like the others (`explicit`), and trailing slashes.
+`urls` sets the URL strategy, used everywhere: the default language unprefixed (`implicit`, the default) or prefixed like the others (`explicit`), trailing slashes, and the segment a paginated listing’s pages carry (`page` by default: `/blog/news/page/2`), one name in every language.
 
 ```ts
-defineConfig({ /* … */ urls: { defaultLocale: 'explicit', trailingSlash: false } });
+defineConfig({ /* … */ urls: { defaultLocale: 'explicit', trailingSlash: false, page: 'p' } });
+```
+
+### Files
+
+figatellultimate reads `.mdx` files. `extensions` adds Markdown: `.md` files are then entries too, and two files at one URL (`launch.md` and `launch.mdx`) are an error naming both.
+
+```ts
+defineConfig({ /* … */ extensions: ['.mdx', '.md'] });
 ```
 
 ## Collections
