@@ -2,12 +2,14 @@
 
 /**
  * A listing's posts, loaded on demand: the facets, the sort and the pagination (`posts.tsx`) are a chunk of their own,
- * kept out of every page's first load. Still prerendered: React renders a lazy component on the server too.
+ * kept out of the first load of the blog's and the authors' pages (their routes, `splitRoutes`), which do not all show a
+ * listing. Still prerendered: React renders a lazy component on the server too.
  *
  * Key design decision, as chosen with the user: the chunk is also loaded once any page is idle (`ListingPreload`, in
  * the layout), so that a listing reached by a client navigation shows at once; awaited on arrival, its `<main>` stayed
- * empty a moment (~300 ms on the deployed site). Rejected: a plain import, every page's first load ~9 kB gzip heavier,
- * the content being one route. Checked by `scripts/browse.ts`: no empty `<main>` from a category to a listing.
+ * empty a moment (~300 ms on the deployed site). Rejected: a plain import, the first load of every page of the blog's
+ * route ~9 kB gzip heavier, a post included. Checked by `scripts/browse.ts`: no empty `<main>` from a category to a
+ * listing.
  */
 import { lazy, Suspense, useEffect, type ComponentProps, type ReactNode } from 'react';
 

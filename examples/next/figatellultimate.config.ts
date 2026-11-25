@@ -27,6 +27,9 @@ const metadata = {
 
 export default defineConfig({
   locales: defineLocales({ list: { fr: { label: 'Français' }, en: { label: 'English' } }, default: 'fr' }),
+  // A route per base (`app/[locale]/blog`, `lp`, `authors`, the root for the pages): each page ships only its own
+  // kind's client code; every page is checked to be served by its route.
+  splitRoutes: true,
   collections: {
     pages: defineCollection({
       entry: 'page',
