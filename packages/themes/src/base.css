@@ -192,6 +192,16 @@ body > [data-layout] {
   text-align: center;
 }
 
+[data-slot='site-footer-repo'] {
+  display: flex;
+  justify-content: center;
+  margin-block-start: calc(var(--fig-space) * 1.5);
+}
+
+[data-slot='site-footer-repo'] > a {
+  display: inline-flex;
+}
+
 main {
   max-width: 48rem;
   margin: 0 auto;

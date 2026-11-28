@@ -81,8 +81,18 @@
 
 :root:where(:not([data-site-theme]), [data-site-theme='paper'])
   [data-slot='navbar']
-  [data-slot='search-dialog-trigger'] {
+  :is(
+    [data-slot='search-dialog-trigger'],
+    [data-slot='locale-switcher'],
+    [data-slot='theme-toggle'],
+    [data-slot='navbar-toggle']
+  ) {
   border-color: rgb(255 255 255 / 0.22);
+}
+
+:root:where(:not([data-site-theme]), [data-site-theme='paper'])
+  [data-slot='navbar']
+  [data-slot='search-dialog-trigger'] {
   color: #c2d6e3;
 }
 
@@ -93,6 +103,7 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
+  /* Opaque blend (10% white over #002538): keeps the hovered toggle opaque during its view-transition. */
   :root:where(:not([data-site-theme]), [data-site-theme='paper'])
     [data-slot='navbar']
     :is(
@@ -103,8 +114,15 @@
       [data-slot='theme-toggle'],
       [data-slot='search-dialog-trigger']
     ):hover {
-    background: rgb(255 255 255 / 0.1);
+    background: #1a3b4c;
   }
+}
+
+/* During the theme switch view-transition, keep the toggle opaque in the navy bar's own color, not `--fig-bg`. */
+:root:where(:not([data-site-theme]), [data-site-theme='paper'])
+  [data-slot='navbar']
+  [data-slot='theme-toggle'][data-switching] {
+  background: #002538;
 }
 
 /* Elevated white rounded cards on the light grey canvas; elevated navy cards in dark mode. */
