@@ -50,6 +50,7 @@ const gateOf = (theme: string): string => `:root:where(:not([data-site-theme]), 
 describe.each([
   { theme: 'maquis', effects: true },
   { theme: 'calanque', effects: false },
+  { theme: 'scandola', effects: false },
 ])('the $theme theme', ({ theme, effects }) => {
   const source = sourceOf(theme);
   // The rules themselves, not a media block's own line (`@media … {` is parsed with the first rule inside it).
@@ -444,6 +445,128 @@ describe('calanque.css', () => {
     );
 
     expect(pills?.body).toBe('background: var(--fig-bg);');
+  });
+
+  it('tints the browser scrollbar with its primary accent color', () => {
+    expect(rules.find((rule) => rule.selector === gate)?.body).toContain(
+      'scrollbar-color: var(--fig-accent) var(--fig-bg);',
+    );
+  });
+});
+
+describe('scandola.css', () => {
+  const source = sourceOf('scandola');
+  const rules = rulesOf(source);
+  const gate = gateOf('scandola');
+  const tokensOf = (selector: string): Readonly<Record<string, string>> =>
+    Object.fromEntries(
+      [
+        ...(rules.find((rule) => rule.selector.endsWith(selector))?.body ?? '').matchAll(/(--fig-[\w-]+): ([^;]+);/g),
+      ].map(([, name, value]) => [name ?? '', value ?? '']),
+    );
+  const palettes = {
+    light: tokensOf(gate),
+    dark: tokensOf(`${gate}[data-theme='dark']`),
+    print: tokensOf(`${gate}:is([data-theme], :not([data-theme]))`),
+  };
+
+  it.each(Object.entries(palettes))(
+    'reads in its %s palette: text, muted text and links at least 4.5:1 on the page (WCAG AA)',
+    (_, tokens) => {
+      const bg = tokens['--fig-bg'] ?? '';
+
+      expect(bg).toMatch(/^#[0-9a-f]{6}$/);
+
+      for (const name of ['--fig-fg', '--fig-muted', '--fig-accent'])
+        expect(contrast(tokens[name] ?? bg, bg), name).toBeGreaterThanOrEqual(4.5);
+    },
+  );
+
+  it.each([
+    ['light', palettes.light, 2.5],
+    ['dark', palettes.dark, 1.8],
+  ] as const)(
+    'sets its %s accent apart from the text (the current page in the navbar): at least %d:1',
+    (_, tokens, ratio) => {
+      expect(contrast(tokens['--fig-accent'] ?? '', tokens['--fig-fg'] ?? '')).toBeGreaterThanOrEqual(ratio);
+    },
+  );
+
+  it("prints ink on white, whatever the screen's theme", () => {
+    expect(palettes.print['--fig-bg']).toBe('#ffffff');
+  });
+
+  it('expands the layout into fluid full-width adaptive grids with uniform cards and a wide reading stage', () => {
+    expect(rules.find((rule) => rule.selector === `${gate} main`)?.body).toContain('max-width: none;');
+    expect(source).toContain('grid-template-columns: repeat(4, minmax(0, 1fr));');
+    expect(source).toContain('grid-template-columns: repeat(3, minmax(0, 1fr));');
+    expect(source).not.toContain('translateY(');
+    expect(source).not.toContain('span 2');
+    expect(rules.find((rule) => rule.selector === `${gate} [data-slot='folder-list'] > li:has(> h2)`)?.body).toContain(
+      'grid-column: 1 / -1;',
+    );
+    expect(rules.find((rule) => rule.selector === `${gate} [data-layout='article'] > main`)?.body).toContain(
+      'max-width: none;',
+    );
+    expect(rules.find((rule) => rule.selector === `${gate} [data-layout='article']`)?.body).toContain(
+      'grid-template-columns: minmax(0, 1fr) var(--scandola-toc-col, 16rem);',
+    );
+    expect(rules.find((rule) => rule.selector === `${gate} [data-layout='article']`)?.body).toContain(
+      'overflow-x: clip;',
+    );
+    expect(
+      rules.find((rule) => rule.selector === `${gate} [data-layout='article'] > [data-slot='toc']`)?.body,
+    ).toContain('grid-column: 2; grid-row: 2; justify-self: end;');
+    expect(rules.find((rule) => rule.selector === `${gate} [data-slot='toc']`)?.body).toContain('inset-inline-end: 0;');
+  });
+
+  it('contrasts tag/author pills and listing controls against elevated surfaces in dark mode', () => {
+    const pills = rules.find(
+      (rule) =>
+        rule.selector.startsWith(`${gate}[data-theme='dark'] [data-slot='entry-card'] :is(`) &&
+        rule.selector.includes("[data-slot='entry-card-tag']") &&
+        rule.selector.includes("[data-slot='entry-card-author']"),
+    );
+    const controls = rules.find((rule) =>
+      rule.selector.startsWith(`${gate}[data-theme='dark'] [data-slot='listing-controls'] :is(`),
+    );
+
+    expect(pills?.body).toContain('background: var(--fig-bg);');
+    expect(controls?.body).toBe('background: var(--fig-bg);');
+  });
+
+  it('mirrors the folder-more arrow in RTL layouts', () => {
+    const rtl = rules.find(
+      (rule) => rule.selector.includes(':dir(rtl)') && rule.selector.includes("[data-slot='folder-more']::after"),
+    );
+
+    expect(rtl?.body).toBe("content: '\\2190';");
+  });
+
+  it('styles the search modal with an editorial card layout, blurred overlay, and subtle selected result frame', () => {
+    expect(rules.find((rule) => rule.selector === `${gate} [data-slot='search-dialog-overlay']`)?.body).toContain(
+      'backdrop-filter: blur(6px);',
+    );
+    expect(rules.find((rule) => rule.selector === `${gate} [data-slot='search-dialog-content']`)?.body).toContain(
+      'inset 0 3px 0 var(--fig-accent)',
+    );
+    expect(rules.find((rule) => rule.selector === `${gate} [data-slot='search-box-result-title']`)?.body).toContain(
+      'font-family: var(--fig-heading-font);',
+    );
+    expect(
+      rules.find((rule) => rule.selector === `${gate} [data-slot='search-box-result'][data-selected='true']`)?.body,
+    ).toContain('border-color: var(--fig-accent);');
+    expect(source).toContain('grid-template-columns: repeat(2, minmax(0, 1fr));');
+    expect(source).toContain('grid-template-columns: repeat(3, minmax(0, 1fr));');
+    expect(rules.find((rule) => rule.selector === `${gate} [data-slot='search-box-result-media']`)?.body).toContain(
+      'aspect-ratio: 16 / 10;',
+    );
+  });
+
+  it('tints the browser scrollbar with its primary accent color', () => {
+    expect(rules.find((rule) => rule.selector === gate)?.body).toContain(
+      'scrollbar-color: var(--fig-accent) var(--fig-bg);',
+    );
   });
 });
 

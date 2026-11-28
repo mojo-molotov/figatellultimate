@@ -1,7 +1,7 @@
 {
   "name": "@figatellultimate/themes",
   "version": "0.0.0",
-  "description": "Themes for figatellultimate apps: a shared base and one stylesheet per theme (maquis, calanque), over @figatellultimate/ui and @figatellultimate/effects, on their tokens and slots.",
+  "description": "Themes for figatellultimate apps: a shared base and one stylesheet per theme (maquis, calanque, scandola), over @figatellultimate/ui and @figatellultimate/effects, on their tokens and slots.",
   "license": "MIT",
   "type": "module",
   "sideEffects": [
@@ -20,6 +20,10 @@
       "@figatellultimate/source": "./src/calanque.css",
       "default": "./dist/calanque.css"
     },
+    "./scandola.css": {
+      "@figatellultimate/source": "./src/scandola.css",
+      "default": "./dist/scandola.css"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -33,6 +37,9 @@
       "./calanque.css": {
         "default": "./dist/calanque.css"
       },
+      "./scandola.css": {
+        "default": "./dist/scandola.css"
+      },
       "./package.json": "./package.json"
     }
   },
@@ -40,7 +47,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "node -e \"const fs=require('node:fs');fs.mkdirSync('dist',{recursive:true});for(const f of ['base','maquis','calanque'])fs.copyFileSync('src/'+f+'.css','dist/'+f+'.css')\"",
+    "build": "node -e \"const fs=require('node:fs');fs.mkdirSync('dist',{recursive:true});for(const f of ['base','maquis','calanque','scandola'])fs.copyFileSync('src/'+f+'.css','dist/'+f+'.css')\"",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --config ../../vitest.config.ts --project themes",
     "lint:package": "publint --strict"
