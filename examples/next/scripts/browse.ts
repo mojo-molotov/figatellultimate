@@ -1053,8 +1053,10 @@ try {
     await phone.close();
   }
 
-  // The documentation's section list (`/docs`): four cards prerendered on arrival; scrolling to the bottom fetches
-  // each static JSON batch until every card is rendered and the spinner sentinel disappears.
+  // The documentation's section list (`/docs`): four cards prerendered on arrival; on a phone, pagination controls
+  // stay hidden and scrolling to the bottom fetches each static JSON batch until every card is rendered and the
+  // spinner sentinel disappears; on a desktop, the observer stays off (four cards remain on arrival) and pagination
+  // controls switch pages via `?page=N`.
   {
     const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
 
@@ -1063,6 +1065,10 @@ try {
     const initial = await countCards();
 
     check(initial === 4, `/docs on a phone: expected 4 prerendered cards on arrival, got ${String(initial)}`);
+    check(
+      !(await phone.locator('[data-slot="section-list"] [data-slot="pagination"]').isVisible()),
+      '/docs on a phone: desktop pagination should be hidden',
+    );
 
     let shown = initial;
 
@@ -1081,6 +1087,65 @@ try {
 
     check(shown > 4, `/docs on a phone: expected more than 4 cards after scrolling, got ${String(shown)}`);
     await phone.close();
+
+    const desktop = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+    const titles = (): Promise<string[]> =>
+      desktop.evaluate(() =>
+        [...document.querySelectorAll('[data-slot="folder-list"] [data-slot="entry-card-title"]')].map(
+          (title) => title.textContent,
+        ),
+      );
+
+    await desktop.goto(`${base}/docs`, { waitUntil: 'networkidle' });
+    const page1 = await titles();
+
+    check(page1.length === 4, `/docs on a desktop: expected 4 cards on page 1, got ${String(page1.length)}`);
+    check(
+      (await desktop.locator('[data-slot="section-list-status"]').count()) === 0,
+      '/docs on a desktop: scroll-loading sentinel should not be mounted',
+    );
+    check(
+      (await desktop.locator('[data-slot="section-list"] [data-slot="page-select-trigger"]').isVisible()) &&
+        (await desktop.locator('[data-slot="section-list"] [data-slot="pagination"]').isVisible()),
+      '/docs on a desktop: pagination controls should be visible',
+    );
+    const sameLine = await desktop.evaluate(() => {
+      const heading = document.querySelector('[data-slot="mdx-h1"]')?.getBoundingClientRect();
+      const select = document
+        .querySelector('[data-slot="section-list"] [data-slot="page-select-trigger"]')
+        ?.getBoundingClientRect();
+
+      return (
+        heading !== undefined &&
+        select !== undefined &&
+        Math.abs(heading.top + heading.height / 2 - (select.top + select.height / 2)) < 2
+      );
+    });
+
+    check(sameLine, '/docs on a desktop: page select should sit on the same line as the heading');
+    await desktop.locator('[data-slot="section-list"] [data-slot="pagination-next"]').click();
+    await desktop.waitForURL('**/docs?page=2');
+    await desktop
+      .waitForFunction(
+        (first) =>
+          document.querySelector('[data-slot="folder-list"] [data-slot="entry-card-title"]')?.textContent !== first,
+        page1[0] ?? '',
+      )
+      .catch(() => undefined);
+    const page2 = await titles();
+
+    check(
+      page2.length > 0 && JSON.stringify(page2) !== JSON.stringify(page1),
+      `/docs on a desktop: page 2 did not replace page 1 cards (${JSON.stringify(page2)})`,
+    );
+    await desktop.goBack();
+    await desktop.waitForURL((next) => next.pathname === '/docs' && !next.searchParams.has('page'));
+    await desktop.waitForTimeout(300);
+    check(
+      JSON.stringify(await titles()) === JSON.stringify(page1),
+      '/docs on a desktop: Back did not restore page 1 cards',
+    );
+    await desktop.close();
   }
 
   // An unknown URL: a real 404, yet a page of the site in its locale, with the navigation and a link home.
@@ -1120,6 +1185,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    "✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, those of a category too, a listing reached from its category at once, the switcher following, Back restoring; Tab straight to the copy buttons, a region a stop only while it overflows; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit, always for a category, its full pagination on its last line on a desktop, every see more as far below its cards, every full pagination at the end of its line; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; the navbar on one line at any width, compact once its links do not fit; a zoom preloaded on hover; the chosen theme shown before hydration; the code at AA contrast in every theme, light and dark; the search placeholder shown where the text begins, never heard; the shortcut of the search, the keys of the reader, on a desktop only; llms.txt and each page as Markdown at their public URLs, the ARD manifest and its skill; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; the documentation's list revealed in batches on scroll on a phone and shown in full on a desktop; an unknown URL is a 404 of the site in its locale.",
+    "✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, those of a category too, a listing reached from its category at once, the switcher following, Back restoring; Tab straight to the copy buttons, a region a stop only while it overflows; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit, always for a category, its full pagination on its last line on a desktop, every see more as far below its cards, every full pagination at the end of its line; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; the navbar on one line at any width, compact once its links do not fit; a zoom preloaded on hover; the chosen theme shown before hydration; the code at AA contrast in every theme, light and dark; the search placeholder shown where the text begins, never heard; the shortcut of the search, the keys of the reader, on a desktop only; llms.txt and each page as Markdown at their public URLs, the ARD manifest and its skill; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; the documentation's list revealed in batches on scroll on a phone and paginated on a desktop; an unknown URL is a 404 of the site in its locale.",
   );
 }
