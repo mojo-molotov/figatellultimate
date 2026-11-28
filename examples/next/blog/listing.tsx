@@ -5,7 +5,7 @@
  * kept out of the first load of the blog's and the authors' pages (their routes, `splitRoutes`), which do not all show a
  * listing. Still prerendered: React renders a lazy component on the server too.
  *
- * Key design decision, as chosen with the user: the chunk is also loaded once any page is idle (`ListingPreload`, in
+ * Key design decision: the chunk is also loaded once any page is idle (`ListingPreload`, in
  * the layout), so that a listing reached by a client navigation shows at once; awaited on arrival, its `<main>` stayed
  * empty a moment (~300 ms on the deployed site). Rejected: a plain import, the first load of every page of the blog's
  * route ~9 kB gzip heavier, a post included. Checked by `scripts/browse.ts`: no empty `<main>` from a category to a

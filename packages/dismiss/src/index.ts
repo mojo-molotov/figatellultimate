@@ -8,7 +8,7 @@
  *     pointerdown outside the list ──> on the trigger (by position)? ──> remembered, with its time
  *     click on the trigger         ──> within a tap of it?            ──> cancelled (the closing tap's)
  *
- * Key design decisions, as chosen with the user:
+ * Key design decisions:
  *     - Its own small runtime package: the page select (`@figatellultimate/facets-react`) and the search's sort
  *       (`@figatellultimate/search-react`) both need it, two adapters that may not import each other.
  *     - Pure, on plain values (a point, a box, a time): no DOM or framework type, as every runtime package; each

@@ -6,7 +6,7 @@
  *     pages 1 ─ 10 ─┐  11 ─ 20 ─┐  21 ─ …        a batch per run of `size` pages, named by its first page
  *     <index>/pages/1   <index>/pages/11         beside the listing's index (`batchPath`)
  *
- * Key design decisions, as chosen with the user:
+ * Key design decisions:
  *     - Batches rather than the whole index on idle: a reader pays for the pages around them, whatever the list's
  *       length (the index is ~42 bytes gzip a post, a megabyte at 27,000 posts); the index stays for the filters.
  *     - A batch holds its pages' keys in the default order, and whatever the app needs to show them (its cards).

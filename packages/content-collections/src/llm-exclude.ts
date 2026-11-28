@@ -8,7 +8,7 @@
  *     </llm-exclude>
  *
  * Key design decisions:
- *     - One tag, written in the content, as the Ocarina Holy Book does, chosen with the user; a block (its own lines,
+ *     - One tag, written in the content, as the Ocarina Holy Book does; a block (its own lines,
  *       blank lines around its Markdown) or within a line.
  *     - Unwrapped, not rendered: a custom element would reach the HTML, unknown to the page and to its styles.
  *     - Structural hast types, as `rehypeCodeGroups`: no dependency for the user's config to load.

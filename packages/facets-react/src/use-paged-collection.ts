@@ -24,7 +24,7 @@
  *       links would leave the selection.
  *     - An action chosen before the index waits for it, then applies: a click is never lost.
  *     - A failed load is a value (`error`): the page's slice stays, and the next `prefetch` loads again.
- *     - Batches, as chosen with the user, rather than the whole index on idle: the pages around the reader, ten a small
+ *     - Batches, rather than the whole index on idle: the pages around the reader, ten a small
  *       file, whatever the list's length (the index is ~42 bytes gzip a post: a megabyte at 27,000 posts). A page its
  *       batch holds is shown here at once; any other through the server, as without batches; a failed batch leaves its
  *       pages to the server and is loaded again on the next approach.

@@ -9,7 +9,7 @@
  *                                                    └─> sentinel below the list: intersecting reveals the next batch
  *     the theme's stylesheet: on a phone (`max-width: 36rem`), hides the marked items; on a desktop, shows every card
  *
- * Key design decisions, as chosen with the user:
+ * Key design decisions:
  *     - Progressive scroll reveal rather than pagination: on a phone, starts with four cards (shorter page, off-page
  *       lazy images never fetched on arrival) and reveals four more as the reader approaches the end, until every
  *       card is shown. On a desktop, every card is visible from the first paint, the same prerendered HTML.

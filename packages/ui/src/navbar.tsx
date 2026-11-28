@@ -9,7 +9,7 @@
  *     - Menus open on a click, never on hover: Radix's hover handlers are cancelled.
  *     - A collection may ask for its sections as plain links (`menu: false`).
  *     - Compact (a toggle, the links behind it) once its links and extras no longer fit on one line, whatever the
- *       screen, as chosen with the user: measured, never a fixed width, so that many links never wrap to a second
+ *       screen: measured, never a fixed width, so that many links never wrap to a second
  *       line. The bar shows itself whole a moment (`data-measuring`, no paint between) and compares its content's
  *       width with its own; again as its room changes, its fonts load or its links change. `navbarScript` measures
  *       the same way before the first paint: no layout switch once hydrated. Rejected: a breakpoint, blind to how

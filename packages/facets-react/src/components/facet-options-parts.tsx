@@ -5,7 +5,7 @@
  * (and chunk), loaded when the popover opens: a listing page ships the trigger alone until the reader filters.
  *
  * Key design decisions:
- *     - No term active on opening, as chosen with the user. cmdk makes the first one active as its list mounts,
+ *     - No term active on opening. cmdk makes the first one active as its list mounts,
  *       highlighted without the field telling it (no `aria-activedescendant`): a screen reader said nothing of it,
  *       and Enter toggled a term never heard. Its value is held here, from one no term has (`NONE`): ↓, typing (the
  *       first match) or the pointer make a term active, told to assistive technologies.

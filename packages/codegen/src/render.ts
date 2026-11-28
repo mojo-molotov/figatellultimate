@@ -3,7 +3,7 @@
  * JavaScript, declarations, or both; every file starts with the generated header (the writer only ever removes such
  * files).
  *
- * Key design decision, as chosen with the user: a module's declarations are recorded as ts-morph structures, then
+ * Key design decision: a module's declarations are recorded as ts-morph structures, then
  * printed and parsed once (`ModuleBuilder`), never added one by one to a source file. Each addition re-parses the
  * whole file: a collection's index of 10,000 entries, built by about twenty additions, took seconds, its data parsed
  * twenty times. Rejected: writing the big data as text outside ts-morph, faster still but without the parse that

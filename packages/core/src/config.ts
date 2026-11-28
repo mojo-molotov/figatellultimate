@@ -10,7 +10,7 @@
  *       validate and freeze each part, so that an invalid declaration fails at once, where it is written.
  *     - Core throws only for an invalid configuration or a broken caller contract; every content problem is a
  *       diagnostic.
- *     - The routes are a choice the config states, as chosen with the user: `splitRoutes` is required, never
+ *     - The routes are a choice the config states: `splitRoutes` is required, never
  *       defaulted, since each choice has a cost the other avoids (one route ships every page kind's client code to
  *       every page; split routes forbid a page under another route's prefix). Split, every page is checked to be served
  *       (`content/routes.ts`).

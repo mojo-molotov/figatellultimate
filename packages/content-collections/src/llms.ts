@@ -8,7 +8,7 @@
  *                                                ──> Markdown (remark-stringify)
  *
  * Key design decisions:
- *     - Parsed as MDX, not read as text, as chosen with the user: a code block or a code span is a node of its own,
+ *     - Parsed as MDX, not read as text: a code block or a code span is a node of its own,
  *       so that a tag, an import or a component shown in code is kept as written, never applied.
  *     - Components handled as the app renders them: it maps a component to Markdown (`components`, as its MDX
  *       `components` map them to React), its props given (literal values only: anything else has no value before

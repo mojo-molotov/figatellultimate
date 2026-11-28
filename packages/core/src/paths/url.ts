@@ -2,7 +2,7 @@
  * The URL strategy: a route and a locale to a URL, built once from data and used everywhere (getters, metadata,
  * sitemap, navigation, the generated `urlOf`), so that no two call sites can compute URLs differently.
  *
- * Key design decision: the segment of a further page (`/page/2`) is the project's (`page`), as chosen with the user:
+ * Key design decision: the segment of a further page (`/page/2`) is the project's (`page`):
  * one name for the whole site, a name of the content's kind (lowercase letters, digits, dashes), never translated,
  * as a folder's name is not.
  *

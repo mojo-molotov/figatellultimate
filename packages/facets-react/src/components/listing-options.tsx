@@ -10,7 +10,7 @@
  *       └─ [data-slot='listing-options-count']  how many terms are selected, in the locale's digits; absent at 0
  *     [data-slot='listing-options-content']   the panel, a Radix Popover holding the app's widgets (`children`)
  *
- * Key design decisions, as chosen with the user:
+ * Key design decisions:
  *     - On every screen: one toolbar, never wrapping, rather than a row on a desktop and a gear on a phone (two
  *       instances of every widget).
  *     - The panel holds the widgets as they are (`FacetOptions`, `FacetsReset`): each opens its own list over the
@@ -21,7 +21,7 @@
  *     - The count of selected terms on the gear, its name saying it too (`labels.trigger`): the filters hidden, the
  *       reader still sees some are on.
  *     - No icon and no text of its own: the app gives the gear (`icon`) and every text.
- *     - A gear from two facets on: a single one is shown in place of the gear, as chosen with the user (a panel holding
+ *     - A gear from two facets on: a single one is shown in place of the gear (a panel holding
  *       one list is a click for nothing); its own list's "clear" stands for the reset, left out. The facets are its
  *       `FacetOptions` children: one wrapped in an app's component is not counted, the gear kept.
  *

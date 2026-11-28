@@ -6,7 +6,7 @@
  *     collections and term pages ──> routesOf ──> '' (root) · 'authors' · 'blog' · 'lp'
  *     every mounted page         ──> routeShadowings ──> `route-shadowed` for a page another route's prefix takes
  *
- * Key design decisions, as chosen with the user:
+ * Key design decisions:
  *     - A route per base, not per collection: collections sharing a base share a route, so that splitting never
  *       forbids a layout the content already has.
  *     - The check reads the content only, never the app's files: a framework's router answers a path from its most

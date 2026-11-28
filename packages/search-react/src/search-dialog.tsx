@@ -9,7 +9,7 @@
  * than behind `React.lazy`, which would erase the box's collection type.
  *
  * Key design decisions:
- *     - The shortcut shown after the trigger's label (`labels.shortcut`), as asked by the user: the reader's keys, ⌘ K
+ *     - The shortcut shown after the trigger's label (`labels.shortcut`): the reader's keys, ⌘ K
  *       on an Apple device, Ctrl K elsewhere, both rendered and one shown by the stylesheet from the shortcut's
  *       `data-platform`. Marked before the first paint by the page's `searchShortcutScript`, and by a layout effect
  *       once hydrated: never a switch, and never a mismatch to correct. Seen, not heard: the button keeps its label

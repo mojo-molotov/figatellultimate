@@ -7,7 +7,7 @@
  * its slice only, rather than every item in one page. Its items are its entries when no named segment lies below it,
  * else its subfolders. A page is one more folder page: mounted, in the sitemap, translated, checked for collisions.
  *
- * Key design decision, as chosen with the user: every folder its level paginates gets batches under the index's prefix
+ * Key design decision: every folder its level paginates gets batches under the index's prefix
  * (`folderPages.index`), no option of its own: a listing's at its index, a folder of folders' at its own place there.
  * The one URL they can share, a listing's index with a batch two levels up (a category named `pages`, a subcategory
  * named by a page's number), is an error on the listing's entries (`listing-index-collision`).

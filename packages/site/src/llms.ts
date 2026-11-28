@@ -8,7 +8,7 @@
  *                     ──> llmsFullOf({ title, summary, pages })                         /llms-full.txt
  *
  * Key design decisions:
- *     - The proposal followed to the letter, as asked by the user: an H1 (the only part it requires), a blockquote
+ *     - The proposal followed to the letter: an H1 (the only part it requires), a blockquote
  *       summary, free text without headings, then H2 file lists of `- [name](url): notes`, `## Optional` last for
  *       what an agent may skip. Every text is made one line and every link text escaped, so that no title, note or
  *       summary breaks the grammar (a property of `llms.test.ts`).

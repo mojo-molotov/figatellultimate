@@ -16,7 +16,7 @@
  *       depends on the page the reader searches from.
  *     - Only the mounted entries of searchable collections, only their `data-pagefind-body` element: a clean index,
  *       the app's markup explicit about what is content.
- *     - Code blocks (`<pre>`) are left out of the index (`data-pagefind-ignore`), as chosen with the user: an excerpt
+ *     - Code blocks (`<pre>`) are left out of the index (`data-pagefind-ignore`): an excerpt
  *       is the page's text, never a command, and a block in tabs (one command per package manager, the hidden ones
  *       included) never counts its words several times. Every `<pre>`, whatever the app's components: preformatted text
  *       is code. The cost: a word found in a code block only finds nothing; inline code in a sentence stays.

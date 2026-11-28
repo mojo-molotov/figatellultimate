@@ -166,6 +166,9 @@ function headerOf(file: string): { readonly comment: string; readonly ignored: b
 /** Whether a module header contains an indented ASCII flow diagram. */
 const hasDiagram = (comment: string): boolean => /^ \* {4,}.*(?:──>|└─|├─|┌─)/m.test(comment);
 
+/** Process-trace phrases that belong to conversation history, not code comments. */
+const PROCESS_TRACE = /\b(?:as\s+)?(?:chosen|asked|requested|decided|agreed)\s+(?:with|by)\s+the\s+user\b/i;
+
 /** Maximum column width for module header lines (matches `printWidth` in `prettier.config.js`). */
 const HEADER_MAX_COLUMNS = 120;
 
@@ -200,6 +203,16 @@ describe('documentation', () => {
     });
 
     expect(unprotected, `missing // prettier-ignore:\n${unprotected.join('\n')}`).toEqual([]);
+  });
+
+  it('no module comment contains process traces ("chosen with the user", "asked by the user")', () => {
+    const traces = files.flatMap((file) =>
+      sourceOf(file)
+        .text.split(/\r?\n/)
+        .flatMap((line, index) => (PROCESS_TRACE.test(line) ? [`${file}:${String(index + 1)}`] : [])),
+    );
+
+    expect(traces, `process traces:\n${traces.join('\n')}`).toEqual([]);
   });
 
   it('every export carries a JSDoc', () => {

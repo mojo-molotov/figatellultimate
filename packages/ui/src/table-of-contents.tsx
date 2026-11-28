@@ -18,7 +18,7 @@
  *       nudged back up a little (`NUDGE`) and lands there anew, still current: at the very bottom, no scroll down is
  *       left to give the next headings their turns, and the reader's attempts (an overscroll's bounce) fire no scroll
  *       event.
- *     - The disclosure button sits inside the landmark it controls, first in reading order, as chosen with the user:
+ *     - The disclosure button sits inside the landmark it controls, first in reading order:
  *       focused from outside, a screen reader names the landmark (its title, « On this page ») before the button's
  *       own label (« Contents »), once on entering it, as it does for any landmark. Rejected: the button before the
  *       `<nav>`, and one name for both, which says the same word twice.

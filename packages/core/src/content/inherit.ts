@@ -10,7 +10,7 @@
  *
  * Key design decisions:
  *     - Translations are linked by their key, as everywhere: no path to write, `inherit:` names a locale only.
- *     - Both ways, as chosen with the user: a collection declares its shared fields once (a cover, a date, authors,
+ *     - Both ways: a collection declares its shared fields once (a cover, a date, authors,
  *       tags), and a file can take every field it leaves out from another locale with `inherit:`.
  *     - The translation wins: a field it writes is its own (a localized cover stays possible).
  *     - Pure, on the frontmatter as written: the completed frontmatter is then validated by the collection's schema

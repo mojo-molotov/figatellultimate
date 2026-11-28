@@ -2,7 +2,7 @@
  * How many previews each kind of page loads at once, in its order, on a phone and on a desktop: the cards in view on
  * arrival, whose images make its largest contentful paint; every card after them loads lazily.
  *
- * Key design decision, as chosen with the user: the page is prerendered, the same HTML for every screen, so the server
+ * Key design decision: the page is prerendered, the same HTML for every screen, so the server
  * cannot choose by device. A card in the phone's count loads at once everywhere (`loading="eager"`, a high priority);
  * one beyond it but in the desktop's count stays lazy, and is preloaded by a `<link rel="preload" media>` the browser
  * follows on a desktop only. The preload carries the image's own `srcset` and `sizes` (`getImageProps` of

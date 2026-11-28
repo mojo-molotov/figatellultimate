@@ -7,7 +7,7 @@
  * (`labels.sort`), never filled by Radix a render later: its width never changes as it mounts, and a toolbar that
  * wraps on a narrow screen never moves the page below it (the pagination keeps its place across a page change).
  *
- * Key design decision, as chosen with the user: a sort may have a spoken name (`labels.spoken`) apart from its display
+ * Key design decision: a sort may have a spoken name (`labels.spoken`) apart from its display
  * name. The closed trigger shows it short (`A → Z`) and reads it whole ("alphabetical order"): a toolbar keeps its
  * width. Its list, which has the room, shows the spoken name: an option's name holds its visible text (WCAG 2.5.3,
  * a voice control saying what it sees). Rejected: the short text in the list too, named otherwise (axe's

@@ -8,10 +8,10 @@
  *     - The chosen option is shown from the first paint, before hydration: each button carries its theme (`value`),
  *       and each theme's stylesheet marks its own option, read from `<html data-site-theme>`, which `siteThemeScript`
  *       sets before the page shows. `aria-pressed`, known once mounted, then changes nothing on screen.
- *     - The change goes through the app's `transition`, as chosen with the user: a look is decorative, out of the
+ *     - The change goes through the app's `transition`: a look is decorative, out of the
  *       design system (`siteThemeTransition` of `@figatellultimate/effects` blurs the page); none applies at once.
  *     - Storage wrapped: without it, the choice lasts the visit.
- *     - Spoken names (`spoken`), as chosen with the user, said as the light and dark toggle says its own: the shown
+ *     - Spoken names (`spoken`), said as the light and dark toggle says its own: the shown
  *       theme says what it is, another what a press does; nothing announced as pressed then. The current option is
  *       marked `data-current` for the stylesheet either way.
  *

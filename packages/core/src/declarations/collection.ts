@@ -13,9 +13,9 @@
  *       them.
  *     - Folder pages are declared per level, with an optional image per folder path.
  *     - `shared` names the fields a translation takes from the default locale's version (`content/inherit.ts`).
- *     - What a collection exposes to LLMs (`llms`, the app's `llms.txt` and each page's Markdown) is declared with it,
- *       as chosen with the user: its keys by the patterns `reserved` takes, and a boolean frontmatter field leaving
- *       an entry out (as `draft` does). Nothing by default; never from a collection without pages, nothing to link.
+ *     - What a collection exposes to LLMs (`llms`, the app's `llms.txt` and each page's Markdown) is declared with it:
+ *       its keys by the patterns `reserved` takes, and a boolean frontmatter field leaving an entry out (as `draft`
+ *       does). Nothing by default; never from a collection without pages, nothing to link.
  *
  * Invariants (`collection.test.ts`, `collection.test-d.ts`): every invalid declaration throws; segment names
  * inferred.

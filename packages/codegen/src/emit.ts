@@ -2,7 +2,7 @@
  * The list of generated files: one model per collection, then every module derived from the models, the folder and
  * term pages, and the analyzed messages.
  *
- * Key design decision, as chosen with the user: each entry's module is yielded as soon as it is built, the other
+ * Key design decision: each entry's module is yielded as soon as it is built, the other
  * modules then, sorted by path. Entry modules are most of the output (an entry's compiled MDX, ~15 kB each): held
  * until the end to be sorted, 10,000 entries needed a heap of more than 384 MB; yielded at once to the writer, 384 MB
  * is enough. The order still writes every entry before the index importing it, so that a bundler watching the output

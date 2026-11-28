@@ -8,7 +8,7 @@
  *                                                             ──> /.well-known/ai-catalog.json (the same document)
  *
  * Key design decisions:
- *     - One document both formats read, as chosen with the user: ARD's (`entries`, each with an `identifier`
+ *     - One document both formats read: ARD's (`entries`, each with an `identifier`
  *       `urn:air:<the site's domain>:<name>`, a `displayName`, a `type` and a `url`) and its predecessor's, AI Catalog
  *       (its `specVersion` and its `host`), which ARD ignores. The app serves it at both well-known paths: ARD's,
  *       which agents must fetch, and the older one, which a tool not yet on ARD (Lighthouse 13.5) still reads.

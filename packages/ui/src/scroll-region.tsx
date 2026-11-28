@@ -5,7 +5,7 @@
  * keyboard reaches it then, to scroll it with the arrows (WCAG 2.1.1), and passes it by otherwise, Tab reserved for
  * what a reader acts on.
  *
- * Key design decisions, as chosen with the user:
+ * Key design decisions:
  *     - Measured in the browser, again as it resizes: a code block or a table that fits takes no Tab stop, one wider
  *       than its column takes one. Rejected: always focusable (a stop before every copy button, every table), and
  *       never (a wide one could no longer be scrolled with the keyboard).

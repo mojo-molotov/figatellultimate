@@ -20,7 +20,7 @@
  *     - On a desktop only (a mouse or a trackpad): on a touch screen, or with `prefers-reduced-motion`, no orbit, no
  *       sunset and never disabled; the theme simply changes.
  *
- *     - An action, named by the theme on and the one a press gives, as chosen with the user: a screen reader says
+ *     - An action, named by the theme on and the one a press gives: a screen reader says
  *       both, rather than a pressed "Dark theme". Rejected: `aria-pressed`, which says the state but not the action.
  *
  * Invariants (`theme-toggle.test.tsx`, `theme-toggle-layout.test.tsx` in real browsers): its name for each theme, its

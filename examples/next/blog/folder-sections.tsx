@@ -8,7 +8,7 @@
  * only the address moving. `usePagedCollection` of `@figatellultimate/facets-react` does the orchestration, with no
  * index: a folder of folders has nothing to filter.
  *
- * Key design decisions, as chosen with the user:
+ * Key design decisions:
  *     - The sections are data rendered alike on both sides (`SectionData`), rather than rendered on the server only,
  *       so that a batch can show a page the server never sent.
  *     - The pagination as a listing's: a select on the heading's line, at its end on a phone too, and previous and next
