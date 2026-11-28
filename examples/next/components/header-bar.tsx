@@ -7,7 +7,7 @@
 import { createSearch, SEARCH_SORTS, type SearchSort } from '@figatellultimate/search';
 import { SearchDialog } from '@figatellultimate/search-react';
 import { usePagedLocaleLinks } from '@figatellultimate/next16/facets';
-import type { ListingLocales, LocaleLink } from '@figatellultimate/site';
+import { parseTrail, type ListingLocales, type LocaleLink } from '@figatellultimate/site';
 import { LocaleSwitcher, Navbar, ThemeToggle, type NavigationNode, type ThemeToggleLabels } from '@figatellultimate/ui';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
@@ -118,7 +118,7 @@ export function HeaderBar(props: {
         dir={dir}
         // Each result's breadcrumb, put on its page as Pagefind metadata; its collection when it has none.
         // Its steps, the chevrons the meta joined them with (`trail.ts`) left to the box, seen and not heard.
-        trail={(result) => result.meta['breadcrumb']?.split(/ [›‹] /)}
+        trail={(result) => parseTrail(result.meta['breadcrumb'])}
         // The page being read: its own result is dimmed.
         current={url}
         // Each dated result shows its date, in the page's language.

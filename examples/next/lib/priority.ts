@@ -1,20 +1,13 @@
 /**
  * How many previews each kind of page loads at once, in its order, on a phone and on a desktop: the cards in view on
- * arrival, whose images make its largest contentful paint; every card after them loads lazily.
- *
- * Key design decision: the page is prerendered, the same HTML for every screen, so the server
- * cannot choose by device. A card in the phone's count loads at once everywhere (`loading="eager"`, a high priority);
- * one beyond it but in the desktop's count stays lazy, and is preloaded by a `<link rel="preload" media>` the browser
- * follows on a desktop only. The preload carries the image's own `srcset` and `sizes` (`getImageProps` of
- * `next/image`, `ENTRY_CARD_IMAGE_SIZES`), so that the image is fetched once: checked by `scripts/verify.ts`.
- * Rejected: reading the device from the request, which would render every page on demand.
+ * arrival, whose images make its largest contentful paint; every card after them loads lazily. Delegates the
+ * desktop-only `<link rel="preload" media>` mechanics to `cardImagePriority` of `@figatellultimate/next16/images`.
  */
+import { cardImagePriority, DEFAULT_DESKTOP_MEDIA } from '@figatellultimate/next16/images';
 import { ENTRY_CARD_IMAGE_SIZES } from '@figatellultimate/ui';
-import { getImageProps } from 'next/image';
-import { preload } from 'react-dom';
 
 /** Where a desktop starts: the cards beyond a phone's count are preloaded from this width on. */
-export const DESKTOP_MEDIA = '(min-width: 64rem)';
+export const DESKTOP_MEDIA = DEFAULT_DESKTOP_MEDIA;
 
 /** Compact category preview image sizes (matches `base.css`: `5.5rem` on a phone, `8rem` on a desktop). */
 export const CATEGORY_CARD_IMAGE_SIZES = '(max-width: 36rem) 5.5rem, 8rem';
@@ -47,22 +40,7 @@ export type CardsPage = keyof typeof PRIORITY_CARDS;
  */
 export function cardPriority(page: CardsPage, rank: number, image: string | undefined): boolean {
   const { mobile, desktop } = PRIORITY_CARDS[page];
+  const sizes = page === 'category' ? CATEGORY_CARD_IMAGE_SIZES : ENTRY_CARD_IMAGE_SIZES;
 
-  if (rank < mobile) return true;
-
-  if (rank < desktop && image !== undefined) {
-    // The image's own sources, as `next/image` serves it in the card: the preload is the image's request.
-    const sizes = page === 'category' ? CATEGORY_CARD_IMAGE_SIZES : ENTRY_CARD_IMAGE_SIZES;
-    const { props } = getImageProps({ src: image, alt: '', fill: true, sizes });
-
-    preload(props.src, {
-      as: 'image',
-      fetchPriority: 'high',
-      media: DESKTOP_MEDIA,
-      ...(props.srcSet === undefined ? {} : { imageSrcSet: props.srcSet }),
-      ...(props.sizes === undefined ? {} : { imageSizes: props.sizes }),
-    });
-  }
-
-  return false;
+  return cardImagePriority({ rank, mobile, desktop, src: image, sizes, media: DESKTOP_MEDIA });
 }

@@ -1,10 +1,10 @@
 /**
  * Static JSON batches for a section's list of pages (`/section-batches/docs/1`, `/en/section-batches/docs/1`):
- * each batch holds the next four cards (`lib/section-batches.ts`), fetched on scroll by `components/section-list.tsx`.
+ * each batch holds the next four cards (`lib/section-batches.ts`), served via `listingIndexRoute` of
+ * `@figatellultimate/next16/listing-index`.
  */
-import type { NextRequest } from 'next/server';
+import { listingIndexRoute } from '@figatellultimate/next16/listing-index';
 
-import { locales, type Locale } from '#figatellultimate/locales';
 import { urlOf } from '#figatellultimate/urls';
 
 import {
@@ -17,31 +17,18 @@ import {
 export const dynamic = 'force-static';
 export const dynamicParams = false;
 
-export function generateStaticParams(): { readonly locale: Locale; readonly slug: string[] }[] {
-  return allSectionBatchParams();
-}
+export const { GET, generateStaticParams } = listingIndexRoute({
+  listings: allSectionBatchParams,
+  params: ({ locale, slug }) => ({ locale, slug }),
+  build: async ({ locale, slug }) => {
+    const batchIndex = Number(slug.at(-1));
+    const url = urlOf(locale, slug.slice(0, -1));
+    const items = await sectionItemsOf(locale, url);
+    const batches = splitSectionBatches(
+      items.map((item) => ({ item, card: item.kind === 'card' })),
+      SECTION_BATCH_SIZE,
+    );
 
-export async function GET(
-  _request: NextRequest,
-  context: { readonly params: Promise<{ readonly locale: string; readonly slug: string[] }> },
-): Promise<Response> {
-  const { locale: rawLocale, slug } = await context.params;
-  const locale = locales.find((candidate) => candidate === rawLocale);
-  const batchIndex = Number(slug.at(-1));
-  const sectionSegments = slug.slice(0, -1);
-
-  if (locale === undefined || !Number.isInteger(batchIndex) || batchIndex < 1 || sectionSegments.length === 0)
-    return new Response(null, { status: 404 });
-
-  const url = urlOf(locale, sectionSegments);
-  const items = await sectionItemsOf(locale, url);
-  const batches = splitSectionBatches(
-    items.map((item) => ({ item, card: item.kind === 'card' })),
-    SECTION_BATCH_SIZE,
-  );
-  const batch = batches[batchIndex];
-
-  if (batch === undefined) return new Response(null, { status: 404 });
-
-  return Response.json(batch.map((entry) => entry.item));
-}
+    return (batches[batchIndex] ?? []).map((entry) => entry.item);
+  },
+});

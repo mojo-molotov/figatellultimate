@@ -1,9 +1,9 @@
 /**
  * Static JSON batches for a section's list of pages (`/docs`): the page prerenders its first four cards, and every
  * subsequent batch is a static JSON file (`app/[locale]/section-batches/[...slug]/route.ts`) fetched by
- * `components/section-list.tsx` as the reader scrolls.
+ * `components/section-list.tsx`. Pure batching helpers live in `@figatellultimate/site`.
  */
-import { sectionOf } from '@figatellultimate/site';
+import { pagedSectionsOf, sectionOf, splitSectionBatches } from '@figatellultimate/site';
 import { getTranslations } from 'next-intl/server';
 
 import { locales, type Locale } from '#figatellultimate/locales';
@@ -11,7 +11,7 @@ import { navigationOf } from '#figatellultimate/navigation';
 import { findPageByUrl } from '#figatellultimate/pages';
 import { urlOf } from '#figatellultimate/urls';
 
-type NavNode = ReturnType<typeof navigationOf>[number];
+export { splitSectionBatches };
 
 /** How many cards a section's page prerenders and how many each JSON batch appends. */
 export const SECTION_BATCH_SIZE = 4;
@@ -38,32 +38,6 @@ function sectionSegmentsOf(locale: Locale, url: string): string[] {
 /** The public URL of a section's JSON batch (`batchIndex` from 1). */
 export function sectionBatchUrl(locale: Locale, url: string, batchIndex: number): string {
   return urlOf(locale, ['section-batches', ...sectionSegmentsOf(locale, url), String(batchIndex)]);
-}
-
-/** Splits a section's items into batches of `batchSize` cards (each heading stays with the card after it). */
-export function splitSectionBatches<T extends { readonly card: boolean }>(
-  items: readonly T[],
-  batchSize: number = SECTION_BATCH_SIZE,
-): T[][] {
-  const batches: T[][] = [];
-  let current: T[] = [];
-  let cards = 0;
-
-  for (const item of items) {
-    if (item.card && cards >= batchSize) {
-      batches.push(current);
-      current = [];
-      cards = 0;
-    }
-
-    current.push(item);
-
-    if (item.card) cards += 1;
-  }
-
-  if (current.length > 0) batches.push(current);
-
-  return batches;
 }
 
 /** Every item of a section in its reading order, with each page's frontmatter description and image. */
@@ -94,30 +68,10 @@ export async function sectionItemsOf(locale: Locale, url: string): Promise<Secti
   });
 }
 
-/** Collects every section node with more than `SECTION_BATCH_SIZE` cards from a navigation tree. */
-function pagedSectionsOf(nodes: readonly NavNode[]): { readonly url: string; readonly batches: number }[] {
-  const found: { readonly url: string; readonly batches: number }[] = [];
-
-  for (const node of nodes) {
-    if (node.kind !== 'section') continue;
-
-    if (node.url !== undefined) {
-      const cards = node.children.filter((child) => child.url !== undefined).length;
-      const batches = Math.ceil(cards / SECTION_BATCH_SIZE);
-
-      if (batches > 1) found.push({ url: node.url, batches });
-    }
-
-    found.push(...pagedSectionsOf(node.children));
-  }
-
-  return found;
-}
-
 /** Every `{ locale, slug }` parameter for `app/[locale]/section-batches/[...slug]/route.ts`. */
 export function allSectionBatchParams(): { readonly locale: Locale; readonly slug: string[] }[] {
   return locales.flatMap((locale) =>
-    pagedSectionsOf(navigationOf(locale)).flatMap(({ url, batches }) => {
+    pagedSectionsOf(navigationOf(locale), SECTION_BATCH_SIZE).flatMap(({ url, batches }) => {
       const segments = sectionSegmentsOf(locale, url);
 
       return Array.from({ length: batches - 1 }, (_, index) => ({
