@@ -681,40 +681,61 @@ try {
       `/docs: the search placeholder not shown where typed text begins, or heard (${JSON.stringify({ placed, described })})`,
     );
 
-    // Arrowing down past the viewport and back up past the first result scrolls the field back into view, still focused,
-    // and every result spans the dialog's whole width with equal padding on both sides (not constrained by the close button).
+    // On a desktop, the field and every result span the dialog's whole width with equal padding on both sides, while the
+    // floating close button stays anchored on the outer top-right corner even while scrolling.
     await field.fill('figatellu');
     await dialog.locator('[data-slot="search-box-result"]').first().waitFor();
-    const symmetry = await dialog.evaluate(() => {
+    const layout = await dialog.evaluate(() => {
       const content = document.querySelector('[data-slot="search-dialog-content"]');
+      const body = document.querySelector('[data-slot="search-dialog-body"]');
       const row = document.querySelector('[data-slot="search-box-field"]');
       const close = document.querySelector('[data-slot="search-dialog-close"]');
       const results = [...document.querySelectorAll('[data-slot="search-box-result"]')];
 
-      if (content === null || row === null || close === null || results.length === 0) return undefined;
+      if (content === null || body === null || row === null || close === null || results.length === 0) return undefined;
 
-      const box = content.getBoundingClientRect();
-      const innerLeft = box.left + content.clientLeft;
-      const innerRight = innerLeft + content.clientWidth;
+      const contentBox = content.getBoundingClientRect();
+      const bodyBox = body.getBoundingClientRect();
+      const innerLeft = bodyBox.left + body.clientLeft;
+      const innerRight = innerLeft + body.clientWidth;
       const closeBox = close.getBoundingClientRect();
       const fieldBox = row.getBoundingClientRect();
 
+      const closeBorderRadius = Number.parseFloat(getComputedStyle(close).borderRadius);
+      const fieldBorderRadius = Number.parseFloat(getComputedStyle(row).borderRadius);
+      // The field's focus outline sits 4px outside its border (2px offset + 2px width); check clearance between the
+      // rounded corners of the close button and the focus outline.
+      const outlineCornerRadius = fieldBorderRadius + 4;
+      const clearOfOutline =
+        Math.hypot(
+          closeBox.left + closeBorderRadius - (fieldBox.right - fieldBorderRadius),
+          closeBox.bottom - closeBorderRadius - (fieldBox.top + fieldBorderRadius),
+        ) >
+        closeBorderRadius + outlineCornerRadius;
+
       return {
-        fieldBeforeClose: fieldBox.right <= closeBox.left,
+        closeBeforeScroll: { top: Math.round(closeBox.top), right: Math.round(closeBox.right) },
+        floatingCorner:
+          closeBox.top < contentBox.top &&
+          closeBox.right > contentBox.right &&
+          clearOfOutline &&
+          Math.abs(closeBorderRadius - fieldBorderRadius) <= 1,
+        fieldFullWidth: Math.abs(fieldBox.left - innerLeft - (innerRight - fieldBox.right)) <= 1,
         symmetric: results.every((result) => {
           const rect = result.getBoundingClientRect();
 
           return (
             Math.abs(rect.left - innerLeft - (innerRight - rect.right)) <= 1 &&
-            Math.abs(rect.right - closeBox.right) <= 1
+            Math.abs(rect.left - fieldBox.left) <= 1 &&
+            Math.abs(rect.right - fieldBox.right) <= 1
           );
         }),
       };
     });
 
     check(
-      symmetry !== undefined && symmetry.fieldBeforeClose && symmetry.symmetric,
-      `/docs: desktop search results do not span the dialog's whole width with equal padding (${JSON.stringify(symmetry)})`,
+      layout !== undefined && layout.floatingCorner && layout.fieldFullWidth && layout.symmetric,
+      `/docs: desktop search dialog field/results not full width or close button not floating on corner (${JSON.stringify(layout)})`,
     );
     // ↓ past the last result focuses "see more" alone (no result highlighted); Enter activates it instead of navigating.
     await dialog.keyboard.press('End');
@@ -738,45 +759,52 @@ try {
 
     await dialog.keyboard.press('End');
     const scrolledAway = await dialog.evaluate(() => {
-      const content = document.querySelector('[data-slot="search-dialog-content"]');
+      const body = document.querySelector('[data-slot="search-dialog-body"]');
       const row = document.querySelector('[data-slot="search-box-field"]');
+      const close = document.querySelector('[data-slot="search-dialog-close"]');
 
-      return (
-        content !== null &&
-        row !== null &&
-        content.scrollTop > 0 &&
-        row.getBoundingClientRect().top < content.getBoundingClientRect().top
-      );
+      if (body === null || row === null || close === null) return undefined;
+
+      const closeBox = close.getBoundingClientRect();
+
+      return {
+        fieldOffTop: body.scrollTop > 0 && row.getBoundingClientRect().top < body.getBoundingClientRect().top,
+        closeAfterScroll: { top: Math.round(closeBox.top), right: Math.round(closeBox.right) },
+      };
     });
 
     for (let step = 0; step < total; step += 1) await dialog.keyboard.press('ArrowUp');
 
     const returned = await dialog.evaluate(() => {
-      const content = document.querySelector('[data-slot="search-dialog-content"]');
+      const body = document.querySelector('[data-slot="search-dialog-body"]');
       const row = document.querySelector('[data-slot="search-box-field"]');
       const input = document.querySelector('[data-slot="search-box-input"]');
 
-      if (content === null || row === null || input === null) return undefined;
+      if (body === null || row === null || input === null) return undefined;
 
-      const box = content.getBoundingClientRect();
+      const box = body.getBoundingClientRect();
       const fieldBox = row.getBoundingClientRect();
 
       return {
         focused: document.activeElement === input,
         selected: document.querySelector('[data-slot="search-box-result"][aria-selected="true"]') !== null,
-        scrollTop: Math.round(content.scrollTop),
+        scrollTop: Math.round(body.scrollTop),
         visible: fieldBox.top >= box.top && fieldBox.bottom <= box.bottom,
       };
     });
 
     check(
-      scrolledAway &&
+      layout !== undefined &&
+        scrolledAway !== undefined &&
+        scrolledAway.fieldOffTop &&
+        Math.abs(scrolledAway.closeAfterScroll.top - layout.closeBeforeScroll.top) <= 1 &&
+        Math.abs(scrolledAway.closeAfterScroll.right - layout.closeBeforeScroll.right) <= 1 &&
         returned !== undefined &&
         returned.focused &&
         !returned.selected &&
         returned.scrollTop === 0 &&
         returned.visible,
-      `/docs: arrowing back up past the first search result did not reveal the focused field (${JSON.stringify({ scrolledAway, returned })})`,
+      `/docs: arrowing back up past the first search result did not reveal the focused field, or close button moved on scroll (${JSON.stringify({ layout, scrolledAway, returned })})`,
     );
     await dialog.close();
   }

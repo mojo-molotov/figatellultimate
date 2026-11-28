@@ -162,18 +162,20 @@ export function SearchDialog<C extends string>({
           <VisuallyHidden.Root asChild>
             <Dialog.Title>{labels.title}</Dialog.Title>
           </VisuallyHidden.Root>
-          {box === undefined ? null : (
-            <box.SearchBox
-              {...props}
-              // The field first (Radix keeps a focus already inside), not the first focusable element.
-              autoFocus
-              labels={boxLabels}
-              onNavigate={(url) => {
-                setOpen(false);
-                navigate(url);
-              }}
-            />
-          )}
+          <div data-slot="search-dialog-body">
+            {box === undefined ? null : (
+              <box.SearchBox
+                {...props}
+                // The field first (Radix keeps a focus already inside), not the first focusable element.
+                autoFocus
+                labels={boxLabels}
+                onNavigate={(url) => {
+                  setOpen(false);
+                  navigate(url);
+                }}
+              />
+            )}
+          </div>
           <Dialog.Close data-slot="search-dialog-close" aria-label={labels.close}>
             <span data-slot="search-dialog-close-icon" aria-hidden />
           </Dialog.Close>

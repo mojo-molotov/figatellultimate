@@ -270,11 +270,25 @@ describe('styles.css', () => {
     expect(propertiesOf("[data-slot='search-box-field']")['min-width']).toBe('0');
   });
 
-  it("gives the search results the dialog's whole width on any screen, the close button at the field's end", () => {
-    expect(propertiesOf("[data-slot='search-dialog-close']")['position']).toBe('absolute');
-    expect(
-      propertiesOf("[data-slot='search-dialog-content'] [data-slot='search-box-field']")['margin-inline-end'],
-    ).toBe('calc(2.5rem + var(--fig-space))');
+  it("gives the search field and results the dialog's whole width on a desktop, with a floating close button that stays put while scrolling; keeps the inline close button on a narrow screen", () => {
+    expect(propertiesOf("[data-slot='search-dialog-content']")['overflow-y']).toBeUndefined();
+    expect(propertiesOf("[data-slot='search-dialog-body']")['overflow-y']).toBe('auto');
+    expect(propertiesOf("[data-slot='search-dialog-close']")).toMatchObject({
+      position: 'absolute',
+      'inset-block-start': '-1.125rem',
+      'inset-inline-end': '-1.125rem',
+      'border-radius': 'var(--fig-radius)',
+      background: 'var(--fig-bg)',
+      color: 'var(--fig-muted)',
+    });
+    const narrow = CSS.slice(
+      CSS.indexOf('@media (max-width: 36rem)', CSS.indexOf("[data-slot='search-dialog-content'] {")),
+    );
+    const block = narrow.slice(0, narrow.indexOf('\n}\n'));
+
+    expect(block).toMatch(/\[data-slot='search-dialog-content'\] \{[^}]*overflow-y: auto;/);
+    expect(block).toMatch(/\[data-slot='search-dialog-close'\] \{[^}]*background: transparent;/);
+    expect(block).toMatch(/\[data-slot='search-box-field'\] \{\s*margin-inline-end:/);
   });
 
   it("takes a compact navbar's closed menu out of the layout: no empty line under the toggle", () => {

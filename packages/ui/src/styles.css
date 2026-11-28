@@ -91,8 +91,7 @@
   [data-slot='search-box-collection'],
   [data-slot='search-box-more'],
   [data-slot='theme-toggle'],
-  [data-slot='search-dialog-trigger'],
-  [data-slot='search-dialog-close']
+  [data-slot='search-dialog-trigger']
 ) {
   display: inline-flex;
   align-items: center;
@@ -134,8 +133,7 @@
     [data-slot='search-box-collection'],
     [data-slot='search-box-more'],
     [data-slot='theme-toggle'],
-    [data-slot='search-dialog-trigger'],
-    [data-slot='search-dialog-close']
+    [data-slot='search-dialog-trigger']
   ):hover {
     background: var(--fig-surface);
   }
@@ -1602,21 +1600,14 @@ a[data-slot='entry-card-author'] {
   left: 50%;
   transform: translateX(-50%);
   display: grid;
-  /* One shrinking column across the dialog's whole width: a result's long word breaks inside it, and every result gets
-     the same padding on both sides instead of leaving a column to the close button. */
+  /* One shrinking column across the dialog's whole width: a result's long word breaks inside it, and the field and
+     every result share the same padding on both sides. */
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
-  gap: var(--fig-space);
-  width: min(40rem, calc(100vw - 2rem));
+  width: min(40rem, calc(100vw - 2.5rem));
   box-sizing: border-box;
-  /* Room for the absolutely positioned close button even before the lazy box renders. */
+  /* Room for the field even before the lazy box renders. */
   min-height: calc(2.5rem + 4px + var(--fig-space) * 4);
-  max-height: 80vh;
-  max-height: 80dvh;
-  overflow-y: auto;
-  padding: calc(var(--fig-space) * 2);
-  /* Match the padding when scrolling the field or a result back into view, so the top outline and edges stay clear. */
-  scroll-padding-block: calc(var(--fig-space) * 2);
   border: 1px solid var(--fig-border);
   border-radius: var(--fig-radius);
   background: var(--fig-bg);
@@ -1626,34 +1617,137 @@ a[data-slot='entry-card-author'] {
   z-index: 61;
 }
 
-/* The close button out of the grid, at the field's end, the field leaving it its room: every result spans the dialog's
-   whole width on any screen, with equal padding on both sides. */
+/* On a desktop, the inner body scrolls so the floating close button stays anchored on the outer corner, unclipped. */
+[data-slot='search-dialog-body'] {
+  box-sizing: border-box;
+  min-width: 0;
+  max-height: 80vh;
+  max-height: 80dvh;
+  overflow-y: auto;
+  padding: calc(var(--fig-space) * 2);
+  border-radius: inherit;
+  /* Match the padding when scrolling the field or a result back into view, so the top outline and edges stay clear. */
+  scroll-padding-block: calc(var(--fig-space) * 2);
+}
+
+/* Floating close button on the outer top-end corner, styled with the theme's tokens and staying put while scrolling. */
 [data-slot='search-dialog-close'] {
   position: absolute;
-  inset-block-start: calc(var(--fig-space) * 2);
-  inset-inline-end: calc(var(--fig-space) * 2);
-  justify-content: center;
-  inline-size: 2.5rem;
-  min-height: calc(2.5rem + 2px);
+  inset-block-start: -1.125rem;
+  inset-inline-end: -1.125rem;
+  z-index: 1;
+  box-sizing: border-box;
+  width: 2rem;
+  height: 2rem;
   padding: 0;
+  border: 1px solid var(--fig-border);
+  border-radius: var(--fig-radius);
+  background: var(--fig-bg);
+  color: var(--fig-muted);
+  box-shadow: var(--fig-shadow);
+  cursor: pointer;
 }
 
-[data-slot='search-dialog-content'] [data-slot='search-box-field'] {
-  margin-inline-end: calc(2.5rem + var(--fig-space));
-}
-
-[data-slot='search-dialog-close-icon'],
-[data-slot='search-dialog-close-icon']::after {
-  display: block;
-  width: 0.9rem;
-  height: 1.5px;
+[data-slot='search-dialog-close-icon'] {
+  position: absolute;
+  inset: 0.45rem;
   background: currentColor;
-  transform: rotate(45deg);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.25' stroke-linecap='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E")
+    center / contain no-repeat;
 }
 
-[data-slot='search-dialog-close-icon']::after {
-  content: '';
-  transform: rotate(90deg);
+[data-slot='search-dialog-close']:focus-visible {
+  background: var(--fig-surface);
+  color: var(--fig-fg);
+  transform: scale(1.1) rotate(3deg);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-slot='search-dialog-close']:hover {
+    background: var(--fig-surface);
+    color: var(--fig-fg);
+    transform: scale(1.1) rotate(3deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Above the generic `[data-slot]` color transitions below, which would otherwise replace it. */
+  [data-slot='search-dialog-content'] > [data-slot='search-dialog-close'] {
+    transition:
+      background-color 120ms ease,
+      color 120ms ease,
+      border-color 120ms ease,
+      transform 200ms ease;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot='search-dialog-close']:hover,
+  [data-slot='search-dialog-close']:focus-visible {
+    transform: none;
+  }
+}
+
+/* On a narrow screen, keep the close button inside the dialog at the field's end so nothing overhangs the viewport. */
+@media (max-width: 36rem) {
+  [data-slot='search-dialog-content'] {
+    max-height: 80vh;
+    max-height: 80dvh;
+    overflow-y: auto;
+    padding: calc(var(--fig-space) * 2);
+    scroll-padding-block: calc(var(--fig-space) * 2);
+  }
+
+  [data-slot='search-dialog-body'] {
+    max-height: none;
+    overflow: visible;
+    padding: 0;
+    scroll-padding-block: 0;
+  }
+
+  [data-slot='search-dialog-close'] {
+    inset-block-start: calc(var(--fig-space) * 2);
+    inset-inline-end: calc(var(--fig-space) * 2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: auto;
+    min-height: calc(2.5rem + 2px);
+    border: 1px solid transparent;
+    border-radius: var(--fig-radius);
+    background: transparent;
+    color: inherit;
+    box-shadow: none;
+    box-sizing: border-box;
+  }
+
+  [data-slot='search-dialog-close']:focus-visible {
+    background: transparent;
+    color: inherit;
+    transform: none;
+  }
+
+  [data-slot='search-dialog-close-icon'],
+  [data-slot='search-dialog-close-icon']::after {
+    position: static;
+    inset: auto;
+    display: block;
+    width: 0.9rem;
+    height: 1.5px;
+    background: currentColor;
+    mask: none;
+    transform: rotate(45deg);
+  }
+
+  [data-slot='search-dialog-close-icon']::after {
+    content: '';
+    transform: rotate(90deg);
+  }
+
+  [data-slot='search-dialog-content'] [data-slot='search-box-field'] {
+    margin-inline-end: calc(2.5rem + var(--fig-space));
+  }
 }
 
 @media (prefers-reduced-motion: no-preference) {

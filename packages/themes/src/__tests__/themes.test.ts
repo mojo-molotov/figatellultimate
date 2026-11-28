@@ -426,6 +426,14 @@ describe('calanque.css', () => {
   it("prints ink on white, whatever the screen's theme", () => {
     expect(palettes.print['--fig-bg']).toBe('#ffffff');
   });
+
+  it("rounds the desktop search dialog's floating close button to match its pill controls, leaving narrow screens alone", () => {
+    const wide = mediaOf(sourceOf('calanque')).find(({ condition }) => condition === '(min-width: 36.01rem)');
+
+    expect(wide?.body.replace(/\s+/g, ' ').trim()).toBe(
+      `${gate} [data-slot='search-dialog-close'] { border-radius: 999px; }`,
+    );
+  });
 });
 
 describe('base.css and the design system', () => {

@@ -194,6 +194,13 @@
   border-radius: 999px;
 }
 
+/* Round floating close button for the search dialog on a desktop, matching Calanque's pill controls. */
+@media (min-width: 36.01rem) {
+  :root:where(:not([data-site-theme]), [data-site-theme='calanque']) [data-slot='search-dialog-close'] {
+    border-radius: 999px;
+  }
+}
+
 /* Code blocks: crisp white card in light mode (AA contrast for comments), elevated navy surface in dark mode. */
 :root:where(:not([data-site-theme]), [data-site-theme='calanque']) [data-slot='code-block-pre'].shiki {
   background-color: #ffffff;
