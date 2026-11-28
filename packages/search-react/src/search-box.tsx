@@ -87,6 +87,8 @@ interface SearchBoxContext {
   readonly current: string | undefined;
   /** A result's trail (e.g. its breadcrumb), by URL; `undefined` shows its collection instead. */
   readonly trailOf: (url: string) => string | readonly string[] | undefined;
+  /** Optional decorative media (e.g. a cover image) rendered inside a result, by URL; `undefined` renders none. */
+  readonly mediaOf: (url: string) => ReactNode;
   readonly filter: SearchBoxFilter<string> | undefined;
   readonly sortBy: SearchBoxSort | undefined;
   /** A result's date for the box's locale, `undefined` without a locale or a valid date. */
@@ -172,6 +174,11 @@ export interface SearchBoxProps<C extends string> extends Omit<
    * text shown as is. `undefined` for a result keeps its collection; absent, every result shows it.
    */
   readonly trail?: ((result: SearchResult<C>) => string | readonly string[] | undefined) | undefined;
+  /**
+   * Optional decorative media (e.g. a cover thumbnail) rendered inside each result before its title (`data-slot="search-box-result-media"`,
+   * `aria-hidden`); `undefined` or `null` omits the media slot.
+   */
+  readonly media?: ((result: SearchResult<C>) => ReactNode) | undefined;
   /** The URL of the page being read: its result is marked (`aria-current="page"`, `data-current`), dimmed by the stylesheet. */
   readonly current?: string | undefined;
   /** Opens a result (Enter or a click); default: `location.assign`. E.g. Next's `router.push`. */
@@ -236,6 +243,7 @@ export function SearchBox<C extends string>({
   dir,
   autoFocus = false,
   trail,
+  media,
   current,
   children,
   onKeyDown,
@@ -280,19 +288,56 @@ export function SearchBox<C extends string>({
     else element.setAttribute('aria-activedescendant', id);
   }, [highlighted, binding.results]);
 
-  // ↓ on the last result to "see more", ↑ from it back to the last; ↑ on the first to the field alone.
-  const pastTheEnds = (event: KeyboardEvent<HTMLDivElement>): void => {
+  /** Number of cards sharing the first row (`1` in a vertical list, `2+` in a multi-column grid). */
+  const gridColumns = (): number => {
+    const results = binding.results;
+    const first = results[0] === undefined ? undefined : items.current.get(results[0].url);
+
+    if (first === undefined) return 1;
+
+    const firstRect = first.getBoundingClientRect();
+
+    // Unlaid-out environments (e.g. happy-dom without mocked geometry) report zero widths: stay 1D.
+    if (firstRect.width === 0) return 1;
+
+    let cols = 1;
+
+    for (let i = 1; i < results.length; i += 1) {
+      const candidate = results[i];
+      const element = candidate === undefined ? undefined : items.current.get(candidate.url);
+
+      if (element === undefined) break;
+
+      const rect = element.getBoundingClientRect();
+
+      if (Math.abs(rect.top - firstRect.top) >= 5) break;
+
+      cols += 1;
+    }
+
+    return cols;
+  };
+
+  // Arrow keys: 1D vertical list (`↓` past the last to "see more", `↑` past the first to the field), and full 4-way
+  // navigation (`←`/`→`/`↑`/`↓`) when the stylesheet arranges results in a multi-column grid.
+  const navigateArrows = (event: KeyboardEvent<HTMLDivElement>): void => {
     const results = binding.results;
     const vertical = event.key === 'ArrowDown' || event.key === 'ArrowUp';
+    const horizontal = event.key === 'ArrowLeft' || event.key === 'ArrowRight';
 
-    if (!vertical || hasModifier(event) || event.altKey || results.length === 0) return;
+    if ((!vertical && !horizontal) || hasModifier(event) || event.altKey || results.length === 0) return;
 
     if (more.current !== null && event.target === more.current) {
+      if (!vertical) return;
+
       // Its end: ↓ stays on it, moving no result behind it.
       event.preventDefault();
 
       if (event.key === 'ArrowUp') {
-        setActive({ kind: 'index', index: results.length - 1 });
+        const last = results.length - 1;
+
+        setActive({ kind: 'index', index: last });
+        items.current.get(results[last]?.url ?? '')?.scrollIntoView({ block: 'nearest' });
         // Focus returns to the field without scrolling the dialog back to the top (away from the last result).
         input.current?.focus({ preventScroll: true });
       }
@@ -302,20 +347,101 @@ export function SearchBox<C extends string>({
 
     if (event.target !== input.current) return;
 
-    if (event.key === 'ArrowDown' && more.current !== null && value === results.at(-1)?.url) {
+    const cols = gridColumns();
+
+    if (cols <= 1) {
+      if (!vertical) return;
+
+      if (event.key === 'ArrowDown' && more.current !== null && value === results.at(-1)?.url) {
+        event.preventDefault();
+        setActive({ kind: 'value', value: '' });
+        more.current.focus();
+      }
+
+      if (event.key === 'ArrowUp' && (value === results[0]?.url || value === '')) {
+        event.preventDefault();
+
+        if (value !== '') setActive({ kind: 'value', value: '' });
+
+        // Stepping down the results may have scrolled the field off the top: bring it back on screen.
+        (field.current ?? input.current).scrollIntoView({ block: 'nearest' });
+      }
+
+      return;
+    }
+
+    const currentIndex = results.findIndex((result) => result.url === value);
+    const selectAt = (index: number): void => {
+      setActive({ kind: 'index', index });
+      items.current.get(results[index]?.url ?? '')?.scrollIntoView({ block: 'nearest' });
+    };
+
+    if (event.key === 'ArrowDown') {
       event.preventDefault();
+
+      if (currentIndex === -1) {
+        selectAt(0);
+
+        return;
+      }
+
+      if (currentIndex + cols < results.length) {
+        selectAt(currentIndex + cols);
+
+        return;
+      }
+
+      const currentRow = Math.floor(currentIndex / cols);
+      const lastRow = Math.floor((results.length - 1) / cols);
+
+      if (currentRow < lastRow) {
+        selectAt(results.length - 1);
+
+        return;
+      }
+
+      if (more.current !== null) {
+        setActive({ kind: 'value', value: '' });
+        more.current.focus();
+      }
+
+      return;
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+
+      if (currentIndex === -1 || currentIndex < cols) {
+        if (value !== '') setActive({ kind: 'value', value: '' });
+
+        (field.current ?? input.current).scrollIntoView({ block: 'nearest' });
+
+        return;
+      }
+
+      selectAt(currentIndex - cols);
+
+      return;
+    }
+
+    // Horizontal arrows in a multi-column grid: navigate between cards while a card is active and the caret sits at
+    // the end of the query; leave text editing alone otherwise, and release the caret when backing past card 0.
+    const element = input.current;
+    const caretAtEnd = element.selectionStart === element.value.length && element.selectionEnd === element.value.length;
+
+    if (currentIndex === -1 || !caretAtEnd) return;
+
+    const rtl = dir === 'rtl' || getComputedStyle(element).direction === 'rtl';
+    const step = (event.key === 'ArrowRight') !== rtl ? 1 : -1;
+
+    if (step === -1 && currentIndex === 0) {
       setActive({ kind: 'value', value: '' });
-      more.current.focus();
+
+      return;
     }
 
-    if (event.key === 'ArrowUp' && (value === results[0]?.url || value === '')) {
-      event.preventDefault();
-
-      if (value !== '') setActive({ kind: 'value', value: '' });
-
-      // Stepping down the results may have scrolled the field off the top: bring it back on screen.
-      (field.current ?? input.current).scrollIntoView({ block: 'nearest' });
-    }
+    event.preventDefault();
+    selectAt(Math.min(results.length - 1, Math.max(0, currentIndex + step)));
   };
 
   const { collection, ...rest } = labels;
@@ -328,6 +454,13 @@ export function SearchBox<C extends string>({
       const result = binding.results.find((candidate) => candidate.url === url);
 
       return result === undefined ? undefined : trail?.(result);
+    },
+    mediaOf: (url) => {
+      if (media === undefined) return undefined;
+
+      const result = binding.results.find((candidate) => candidate.url === url);
+
+      return result === undefined ? undefined : media(result);
     },
     // Labelled here, where names are still `C`: the filter's toggles and the results' collections.
     collectionLabel: (name) => {
@@ -395,11 +528,11 @@ export function SearchBox<C extends string>({
         onValueChange={(next) => {
           setActive({ kind: 'value', value: next });
         }}
-        // Before cmdk's own keys (it skips prevented events): the arrows past the results' ends.
+        // Before cmdk's own keys (it skips prevented events): 2D grid arrows and stepping past the results' ends.
         onKeyDown={(event) => {
           onKeyDown?.(event);
 
-          if (!event.defaultPrevented) pastTheEnds(event);
+          if (!event.defaultPrevented) navigateArrows(event);
         }}
         data-slot="search-box"
         data-status={binding.status}
@@ -721,10 +854,11 @@ function assignRef<T>(target: Ref<T> | undefined, value: T | null): void {
  *   read is marked `aria-current="page"`.
  */
 export function SearchBoxResult({ result, children, ref, ...props }: SearchBoxResultProps): ReactNode {
-  const { navigate, openInNewTab, collectionLabel, trailOf, current, dateOf, dir, registerItem } =
+  const { navigate, openInNewTab, collectionLabel, trailOf, mediaOf, current, dateOf, dir, registerItem } =
     use('SearchBoxResult');
   const excerptId = useId();
   const trail = trailOf(result.url);
+  const cover = mediaOf(result.url);
   const date = result.date === undefined ? undefined : dateOf(result.date);
   const here = result.url === current;
   const href = hrefOf(result);
@@ -764,6 +898,11 @@ export function SearchBoxResult({ result, children, ref, ...props }: SearchBoxRe
     >
       {children ?? (
         <>
+          {cover === undefined || cover === null || cover === false ? null : (
+            <span data-slot="search-box-result-media" aria-hidden>
+              {cover}
+            </span>
+          )}
           <span data-slot="search-box-result-title">{result.title}</span>
           {/* Where it sits, then its date, on one line; heard after a comma, the chevrons only seen. */}
           <span data-slot="search-box-result-line">

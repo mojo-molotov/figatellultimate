@@ -744,4 +744,131 @@ describe('SearchBox', () => {
     await user.keyboard('{ArrowUp}');
     expect(scroll).toHaveBeenCalledWith({ block: 'nearest' });
   });
+
+  it('renders optional decorative media per result without altering its accessible name', async () => {
+    const search = createSearch<Collection>({
+      collections: ['pages', 'blog'],
+      locale: 'fr',
+      debounce: 0,
+      load: () =>
+        Promise.resolve({
+          search: () =>
+            Promise.resolve({
+              results: [
+                {
+                  data: () =>
+                    Promise.resolve({
+                      url: '/blog/post',
+                      excerpt: 'Extrait',
+                      meta: { title: 'Avec couverture', cover: '/covers/post.jpg' },
+                      filters: { collection: ['blog'] },
+                    }),
+                },
+                {
+                  data: () =>
+                    Promise.resolve({
+                      url: '/docs/plain',
+                      excerpt: 'Extrait',
+                      meta: { title: 'Sans couverture' },
+                      filters: { collection: ['pages'] },
+                    }),
+                },
+              ],
+            }),
+        }),
+    });
+    const user = userEvent.setup();
+
+    render(
+      <SearchBox
+        search={search}
+        labels={LABELS}
+        media={(result) => (result.meta['cover'] === undefined ? undefined : <img src={result.meta['cover']} alt="" />)}
+      />,
+    );
+    await user.type(screen.getByRole('combobox'), 'couverture');
+    await waitFor(() => {
+      expect(options()).toHaveLength(2);
+    });
+    const [withCover, plain] = options();
+
+    expect(withCover?.querySelector('[data-slot="search-box-result-media"]')?.getAttribute('aria-hidden')).toBe('true');
+    expect(withCover?.querySelector('[data-slot="search-box-result-media"] img')?.getAttribute('src')).toBe(
+      '/covers/post.jpg',
+    );
+    expect(plain?.querySelector('[data-slot="search-box-result-media"]')).toBeNull();
+  });
+
+  it('navigates in all four arrow directions when results are arranged in a multi-column grid', async () => {
+    const entries = Array.from({ length: 8 }, (_, index) => ({
+      url: `/blog/post-${String(index)}`,
+      title: `Post ${String(index)}`,
+    }));
+    const search = createSearch<Collection>({
+      collections: ['pages', 'blog'],
+      locale: 'fr',
+      batch: 6,
+      debounce: 0,
+      load: () =>
+        Promise.resolve({
+          search: () =>
+            Promise.resolve({
+              results: entries.map((entry) => ({
+                data: () =>
+                  Promise.resolve({
+                    url: entry.url,
+                    excerpt: 'Extrait',
+                    meta: { title: entry.title },
+                    filters: { collection: ['blog'] },
+                  }),
+              })),
+            }),
+        }),
+    });
+    const user = userEvent.setup();
+
+    render(<SearchBox search={search} labels={LABELS} />);
+    const input = screen.getByRole('combobox');
+
+    await user.type(input, 'chevaux');
+    await waitFor(() => {
+      expect(options()).toHaveLength(6);
+    });
+    // Lay out the 6 options as a 3×2 grid so `gridColumns()` detects 3 columns.
+    options().forEach((option, index) => {
+      const col = index % 3;
+      const row = Math.floor(index / 3);
+
+      vi.spyOn(option, 'getBoundingClientRect').mockReturnValue(new DOMRect(col * 300, row * 240, 280, 220));
+    });
+
+    const active = (): string | null =>
+      options()
+        .find((option) => option.getAttribute('aria-selected') === 'true')
+        ?.getAttribute('data-value') ?? null;
+
+    expect(active()).toBe('/blog/post-0');
+    await user.keyboard('{ArrowRight}');
+    expect(active()).toBe('/blog/post-1');
+    await user.keyboard('{ArrowDown}');
+    expect(active()).toBe('/blog/post-4');
+    await user.keyboard('{ArrowRight}');
+    expect(active()).toBe('/blog/post-5');
+    // ↓ on the bottom row moves focus to "see more"; ↑ returns to the last card.
+    await user.keyboard('{ArrowDown}');
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: LABELS.more }));
+    await user.keyboard('{ArrowUp}');
+    expect(document.activeElement).toBe(input);
+    expect(active()).toBe('/blog/post-5');
+    await user.keyboard('{ArrowUp}');
+    expect(active()).toBe('/blog/post-2');
+    await user.keyboard('{ArrowLeft}{ArrowLeft}');
+    expect(active()).toBe('/blog/post-0');
+    // ← past card 0 releases the grid back to text editing in the field.
+    await user.keyboard('{ArrowLeft}');
+    expect(active()).toBeNull();
+    // ↓ re-enters the grid at card 0.
+    await user.keyboard('{ArrowDown}');
+    expect(active()).toBe('/blog/post-0');
+  });
 });
