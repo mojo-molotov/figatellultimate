@@ -33,6 +33,7 @@ export { LinkProvider, type LinkComponent, type LinkProps } from './link.js';
 export * from './locale-switcher.js';
 export * from './navbar.js';
 export * from './pager.js';
+export * from './print-margins.js';
 export * from './table-of-contents.js';
 export * from './site-theme-picker.js';
 export * from './theme-toggle.js';

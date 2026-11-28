@@ -21,6 +21,9 @@ afterEach(() => {
   cleanup();
   delete root.dataset['siteTheme'];
   localStorage.clear();
+
+  for (const link of document.head.querySelectorAll('link[data-site-theme-sheet]')) link.remove();
+
   vi.restoreAllMocks();
 });
 
@@ -121,6 +124,47 @@ describe('SiteThemePicker', () => {
     await userEvent.click(other);
     expect(await screen.findByRole('button', { name: '«thème Calanque, actuel»' })).toBe(other);
     expect(screen.getByRole('button', { name: '«passer au thème Maquis»' })).toBe(shown);
+  });
+
+  it('preloads a non-default theme stylesheet on hover and awaits its load before the transition', async () => {
+    const transition = vi.fn((apply: () => void) => {
+      apply();
+    });
+
+    render(
+      <SiteThemePicker
+        themes={THEMES}
+        names={NAMES}
+        label="«Thème»"
+        transition={transition}
+        stylesheetBase="/themes/"
+      />,
+    );
+    const button = screen.getByRole('button', { name: '«Calanque»' });
+
+    await userEvent.hover(button);
+    const link = document.head.querySelector('link[data-site-theme-sheet="calanque"]');
+
+    expect(link?.getAttribute('href')).toBe('/themes/calanque.css');
+    await userEvent.click(button);
+    // Still loading: the transition waits for the stylesheet's `load` event.
+    expect(transition).not.toHaveBeenCalled();
+    link?.dispatchEvent(new Event('load'));
+    await waitFor(() => {
+      expect(transition).toHaveBeenCalledTimes(1);
+    });
+    expect(root.dataset['siteTheme']).toBe('calanque');
+  });
+
+  it('never injects a lazy stylesheet for the default theme', async () => {
+    root.dataset['siteTheme'] = 'calanque';
+    render(<SiteThemePicker themes={THEMES} names={NAMES} label="«Thème»" stylesheetBase="/themes/" />);
+    const defaultButton = screen.getByRole('button', { name: '«Maquis»' });
+
+    await userEvent.hover(defaultButton);
+    await userEvent.click(defaultButton);
+    expect(document.head.querySelector('link[data-site-theme-sheet="maquis"]')).toBeNull();
+    expect(root.dataset['siteTheme']).toBe('maquis');
   });
 
   it.skipIf(inBrowser)(

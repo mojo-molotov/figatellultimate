@@ -10,19 +10,74 @@
  *       sets before the page shows. `aria-pressed`, known once mounted, then changes nothing on screen.
  *     - The change goes through the app's `transition`: a look is decorative, out of the
  *       design system (`siteThemeTransition` of `@figatellultimate/effects` blurs the page); none applies at once.
+ *     - Lazy non-default stylesheets (`stylesheetBase`, matching `siteThemeScript`): preloaded on hover/focus and
+ *       awaited before the transition runs on click, reusing any `<link data-site-theme-sheet>` the inline script
+ *       already appended.
  *     - Storage wrapped: without it, the choice lasts the visit.
  *     - Spoken names (`spoken`), said as the light and dark toggle says its own: the shown
  *       theme says what it is, another what a press does; nothing announced as pressed then. The current option is
  *       marked `data-current` for the stylesheet either way.
  *
  * Invariants (`site-theme-picker.test.tsx`): its group named, the page's theme pressed once mounted; a theme applied
- * through the transition and remembered; the theme shown ignored; a page without storage still works; the script
- * applying only a theme the site offers, never throwing; with spoken names, each option named by what it is or does,
- * by its theme alone before the theme is known.
+ * through the transition and remembered; lazy stylesheets preloaded on hover/focus and awaited before the transition;
+ * the theme shown ignored; a page without storage still works; the script applying only a theme the site offers, never
+ * throwing; with spoken names, each option named by what it is or does, by its theme alone before the theme is known.
  */
 import { useSyncExternalStore, type ReactNode } from 'react';
 
 import { SITE_THEME_STORAGE_KEY } from './scripts.js';
+
+const pendingStylesheets = new Map<string, { readonly link: HTMLLinkElement; readonly promise: Promise<void> }>();
+
+/** Ensures a non-default theme's stylesheet (`<base><theme>.css`) is loaded into `<head>`, cached per URL. */
+function ensureThemeStylesheet(theme: string, base: string): Promise<void> {
+  const href = `${base}${theme}.css`;
+  const existing = pendingStylesheets.get(href);
+
+  if (existing !== undefined && existing.link.isConnected) return existing.promise;
+
+  const current = [...document.head.children].find(
+    (node): node is HTMLLinkElement => node instanceof HTMLLinkElement && node.dataset['siteThemeSheet'] === theme,
+  );
+
+  if (current !== undefined) {
+    if (current.sheet !== null) return Promise.resolve();
+
+    const wait = new Promise<void>((resolve) => {
+      current.addEventListener('load', () => {
+        resolve();
+      });
+      current.addEventListener('error', () => {
+        pendingStylesheets.delete(href);
+        resolve();
+      });
+    });
+
+    pendingStylesheets.set(href, { link: current, promise: wait });
+
+    return wait;
+  }
+
+  const link = document.createElement('link');
+
+  link.rel = 'stylesheet';
+  link.href = href;
+  link.dataset['siteThemeSheet'] = theme;
+  const load = new Promise<void>((resolve) => {
+    link.addEventListener('load', () => {
+      resolve();
+    });
+    link.addEventListener('error', () => {
+      pendingStylesheets.delete(href);
+      resolve();
+    });
+  });
+
+  pendingStylesheets.set(href, { link, promise: load });
+  document.head.append(link);
+
+  return load;
+}
 
 /** The theme `<html data-site-theme>` shows; the empty string for none, which no theme is. */
 const siteTheme = (): string => document.documentElement.dataset['siteTheme'] ?? '';
@@ -50,6 +105,11 @@ export interface SiteThemePickerProps<T extends string> {
   readonly storageKey?: string | undefined;
   /** How the change is applied, e.g. `siteThemeTransition` of `@figatellultimate/effects`; default at once. */
   readonly transition?: ((apply: () => void) => void) | undefined;
+  /**
+   * Optional URL prefix (e.g. `'/themes/'`, matching `siteThemeScript`) serving lazy non-default theme stylesheets as
+   * `<base><theme>.css`: preloaded on pointer hover/focus and awaited before the transition runs.
+   */
+  readonly stylesheetBase?: string | undefined;
   /** Called on pointer hover or keyboard focus of an inactive theme option, e.g. to preload its lazy stylesheet. */
   readonly onPrefetch?: ((theme: T) => void) | undefined;
   /** Awaited before applying a theme switch (e.g. ensuring a lazy stylesheet has loaded before the transition). */
@@ -86,6 +146,7 @@ export function SiteThemePicker<T extends string>({
   transition = (apply) => {
     apply();
   },
+  stylesheetBase,
   onPrefetch,
   prepare,
   spoken,
@@ -109,13 +170,19 @@ export function SiteThemePicker<T extends string>({
   const choose = (theme: T): void => {
     if (theme === current) return;
 
-    if (prepare === undefined) {
+    const tasks: Promise<void>[] = [];
+
+    if (stylesheetBase !== undefined && theme !== themes[0]) tasks.push(ensureThemeStylesheet(theme, stylesheetBase));
+
+    if (prepare !== undefined) tasks.push(prepare(theme));
+
+    if (tasks.length === 0) {
       applyTheme(theme);
 
       return;
     }
 
-    void prepare(theme).then(
+    void Promise.all(tasks).then(
       () => {
         applyTheme(theme);
       },
@@ -126,7 +193,11 @@ export function SiteThemePicker<T extends string>({
   };
 
   const prefetch = (theme: T): void => {
-    if (theme !== current) onPrefetch?.(theme);
+    if (theme === current) return;
+
+    if (stylesheetBase !== undefined && theme !== themes[0]) void ensureThemeStylesheet(theme, stylesheetBase);
+
+    onPrefetch?.(theme);
   };
 
   return (
