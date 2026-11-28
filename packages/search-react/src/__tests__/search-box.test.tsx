@@ -3,7 +3,7 @@ import { createSearch, type Search } from '@figatellultimate/search';
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import axe from 'axe-core';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { SearchBox, SearchBoxInput, SearchBoxResults, type SearchBoxLabels } from '../index.js';
 
@@ -336,9 +336,13 @@ describe('SearchBox', () => {
     await user.keyboard('{ArrowDown}');
     expect(document.activeElement).toBe(more);
     expect(active()).toBe('/doc/4');
+    const focus = vi.spyOn(field(), 'focus');
+
     await user.keyboard('{ArrowUp}');
     expect(document.activeElement).toBe(field());
     expect(active()).toBe('/doc/4');
+    // Returning to the field must not scroll a tall dialog back to the top, away from the last result.
+    expect(focus).toHaveBeenCalledWith({ preventScroll: true });
   });
 
   it('keyboard: ↓ on the last result stays on it when there is no "see more"', async () => {

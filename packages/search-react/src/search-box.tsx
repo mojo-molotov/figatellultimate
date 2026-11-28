@@ -7,16 +7,16 @@
  * Key design decisions:
  *     - Focus stays in the field; arrows move through results (the ARIA combobox pattern, by cmdk): a result is a
  *       listbox option, not a link, so a modifier opens it in a new tab instead.
- *     - The arrows go on past the results' ends, as chosen with the user: ↓ on the last one reaches "see more" (the
+ *     - The arrows go on past the results' ends: ↓ on the last one reaches "see more" (the
  *       only time focus leaves the field), ↑ from it comes back to the last one; ↑ on the first one leaves the results
  *       for the field alone, none active, and ↓ comes back to the first. Without "see more", ↓ stays on the last.
  *     - Results are already filtered by the index: cmdk only handles the keyboard and the active result.
  *     - A new sort searches at once, its first result active; a typed term waits the client's quiet time.
  *     - No style, no text of its own: every label required, dates formatted for the given locale.
- *     - A placeholder that reads badly aloud has a spoken text (`labels.spoken.placeholder`), as the sorts' names do,
- *       chosen with the user: the placeholder then drawn over the field, `aria-hidden`, never the input's
- *       `placeholder` (which a screen reader reads after the name, VoiceOver its ellipsis too), and the field
- *       described by the spoken text. Rejected: an `aria-placeholder`, which a native input's placeholder overrides.
+ *     - A placeholder that reads badly aloud has a spoken text (`labels.spoken.placeholder`), as the sorts' names do:
+ *       the placeholder is then drawn over the field, `aria-hidden`, never the input's `placeholder` (which a screen
+ *       reader reads after the name, VoiceOver its ellipsis too), and the field described by the spoken text.
+ *       Rejected: an `aria-placeholder`, which a native input's placeholder overrides.
  *
  * Invariants (`search-box.test.tsx`, in happy-dom and in real browsers): axe empty and with results, the keyboard flow
  * (past the results' ends included), new tabs, the sort, its spoken names, dates, the highlight announced once per
@@ -266,7 +266,8 @@ export function SearchBox<C extends string>({
 
       if (event.key === 'ArrowUp') {
         setActive({ kind: 'index', index: results.length - 1 });
-        input.current?.focus();
+        // Focus returns to the field without scrolling the dialog back to the top (away from the last result).
+        input.current?.focus({ preventScroll: true });
       }
 
       return;
@@ -661,7 +662,7 @@ function Pause(): ReactNode {
 
 /**
  * One result: its title, where it sits (its trail, or its collection) and its date, then Pagefind's excerpt. Named
- * by the first three, as chosen with the user, short as the arrows move through them; the excerpt its description,
+ * by the first three, short as the arrows move through them; the excerpt its description,
  * heard after a pause.
  *
  * @param props - The result, and cmdk's item props; `children` replace the default content.
@@ -780,7 +781,8 @@ export function SearchBoxMore({ children, onClick, ...props }: ComponentProps<'b
 
         activateFrom(binding.results.length);
         more();
-        input.current?.focus();
+        // Focus returns to the field without scrolling the dialog back to the top before the next batch lands.
+        input.current?.focus({ preventScroll: true });
       }}
       {...props}
     >
