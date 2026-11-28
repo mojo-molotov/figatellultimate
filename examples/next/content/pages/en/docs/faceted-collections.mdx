@@ -135,3 +135,7 @@ usePagedCollection({ …, batches: { load: (from) => loadBatch(`${index}/${batch
 Folder pages have their batches too: the blog and a category, their subfolders’ sections ten pages at a time. Each paginated folder carries its batches’ URL under the indexes’ prefix (`folder.batches`: `/listing`, `/listing/news`), the generated code lists those folders (`blogFolderBatches()`), and the route serves them through `pages.listings`; hence the optional catch-all, for `/listing/pages/1`. A folder has nothing to filter: `usePagedCollection` does without an index there (no `load`).
 
 Outside Next, `pagedHref` and `pagedSearch` of `@figatellultimate/facets` map a view to this location and back. With a page segment other than `page` (`urls.page`) or a page parameter of the engine’s own (`params.page`), `useNextUrl`, `NextUrlBoundary` and `usePagedLocaleLinks` take them as `segment` and `param`: the generated `pageSegment` of `#figatellultimate/urls` gives the first.
+
+### Responsive section batches
+
+A section index such as `/docs` can split its cards into static JSON batches with `splitSectionBatches` and `pagedSectionsOf` from `@figatellultimate/site` (served through `listingIndexRoute`), and consume them on the client with `useResponsiveBatches` from `@figatellultimate/facets-react`: progressive scroll loading (`IntersectionObserver`) on phones and classic pagination (`PageSelect` + `Pagination`) on desktops, sharing one batch cache and the same prerendered HTML.

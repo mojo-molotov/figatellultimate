@@ -32,13 +32,15 @@ bun add @figatellultimate/ui @figatellultimate/effects @figatellultimate/themes 
 | `Navbar`                | La navigation générée depuis le contenu (`navigationOf(locale)`), avec ses menus ; compacte, derrière un bouton, dès que ses liens ne tiennent plus sur une ligne (`navbarScript` avant le premier affichage). |
 | `LocaleSwitcher`        | La page dans les autres langues, jamais un lien vers une traduction manquante.                                                                                                                                 |
 | `ThemeToggle`           | Clair et sombre, avec `themeScript` appliqué avant le premier affichage ; son nom dit le thème actuel et celui que donne l’appui.                                                                              |
-| `SiteThemePicker`       | Le choix entre plusieurs thèmes du site, avec `siteThemeScript` appliqué avant le premier affichage.                                                                                                           |
-| `Breadcrumb`            | Où se situe la page, d’après la navigation.                                                                                                                                                                    |
+| `SiteThemePicker`       | Le choix entre plusieurs thèmes du site, avec `siteThemeScript` avant le premier affichage et `stylesheetBase` pour charger les thèmes secondaires à la demande.                                               |
+| `Breadcrumb`            | Où se situe la page, d’après la navigation (`formatTrail` et `parseTrail` de `@figatellultimate/site` la résument pour la recherche).                                                                          |
 | `TableOfContents`       | Les titres de la page, celui qu’on lit en surbrillance, ancrée dans la marge à partir de `TOC_WIDE_MEDIA` ; son bouton peut avoir son propre nom (`toggle`).                                                   |
 | `EntryCard`             | L’aperçu d’un billet : image, titre, date, tags, auteurs ; son titre au niveau que la page lui donne (`headingLevel`, h2 par défaut).                                                                          |
 | `CodeBlock`, `CodeTabs` | Un bloc de code avec son bouton de copie ; les variantes d’un même bloc en onglets, le choix du lecteur retenu sous `storageKey`.                                                                              |
 | `ImageZoom`             | Une image agrandie dans une fenêtre sur ordinateur (`media`, `IMAGE_ZOOM_MEDIA` par défaut).                                                                                                                   |
 | `ScrollRegion`          | Une zone qui défile seule (un tableau large), dans l’ordre de tabulation tant qu’elle déborde seulement.                                                                                                       |
+| `PrintMargins`          | Pose `--fig-print-title` et `--fig-print-url` sur `:root` pour les boîtes de marge `@page` à l’impression.                                                                                                     |
+| `UiProvider`            | Fournit en une fois les composants de lien et d’image du framework (`LinkProvider` et `ImageProvider`).                                                                                                        |
 
 Une seule feuille de styles les met tous en forme, par des attributs `data-slot` et des tokens :
 
@@ -81,4 +83,4 @@ import '@figatellultimate/themes/base.css';
 import '@figatellultimate/themes/calanque.css';
 ```
 
-Plusieurs thèmes peuvent être chargés ensemble : `<html data-site-theme="calanque">` en choisit un. Sans cet attribut, un thème chargé seul s’applique. Ce site charge les deux, et son pied de page laisse le lecteur choisir avec `SiteThemePicker`, le changement flouté le temps d’une transition par `siteThemeTransition` de `@figatellultimate/effects`.
+Plusieurs thèmes peuvent coexister : `<html data-site-theme="calanque">` en choisit un. Sans cet attribut, un thème chargé seul s’applique. Ce site charge **maquis** par défaut et sert **calanque** à la demande (`/themes/calanque.css`, via `themeStylesheetRoute`) ; son pied de page laisse le lecteur basculer avec `SiteThemePicker` (`stylesheetBase="/themes/"`), le changement flouté le temps d’une transition par `siteThemeTransition` de `@figatellultimate/effects`.

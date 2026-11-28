@@ -137,3 +137,7 @@ usePagedCollection({ …, batches: { load: (from) => loadBatch(`${index}/${batch
 Les pages de dossiers ont leurs lots elles aussi : le blog et une catégorie, leurs sections de sous-dossiers dix pages par dix. Chaque dossier paginé porte l’URL de ses lots sous le même préfixe que les index (`folder.batches` : `/listing`, `/listing/news`), le code généré liste ces dossiers (`blogFolderBatches()`), et la route les sert par `pages.listings` ; d’où le catch-all facultatif, pour `/listing/pages/1`. Un dossier n’a rien à filtrer : `usePagedCollection` s’y passe d’index (`load` absent).
 
 Hors de Next, `pagedHref` et `pagedSearch` de `@figatellultimate/facets` font passer une vue à cet emplacement et inversement. Avec un segment de page autre que `page` (`urls.page`) ou un paramètre de page propre au moteur (`params.page`), `useNextUrl`, `NextUrlBoundary` et `usePagedLocaleLinks` les prennent en `segment` et `param` : le `pageSegment` généré de `#figatellultimate/urls` donne le premier.
+
+### Lots de sections adaptatifs
+
+Une page de section comme `/docs` peut découper ses cartes en lots JSON statiques avec `splitSectionBatches` et `pagedSectionsOf` de `@figatellultimate/site` (servies par `listingIndexRoute`), puis les consommer côté client avec `useResponsiveBatches` de `@figatellultimate/facets-react` : défilement progressif (`IntersectionObserver`) sur téléphone et pagination classique (`PageSelect` + `Pagination`) sur ordinateur, en partageant le même cache de lots et le même HTML prérendu.

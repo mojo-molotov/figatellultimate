@@ -1,6 +1,6 @@
 # @figatellultimate/ui
 
-A minimal design system on top of figatellultimate: navbar, locale switcher, theme toggle, entry cards, breadcrumb, table of contents, code blocks, image zoom, and one stylesheet of tokens.
+A minimal design system on top of figatellultimate: navbar, locale switcher, theme toggle, site theme picker (with optional lazy theme stylesheets), entry cards, breadcrumb, table of contents, code blocks, image zoom, print margins, framework `UiProvider`, and one stylesheet of tokens.
 
 ```sh
 pnpm add @figatellultimate/ui react radix-ui

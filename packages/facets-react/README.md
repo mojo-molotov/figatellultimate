@@ -1,6 +1,6 @@
 # @figatellultimate/facets-react
 
-The React layer of faceted collections: a binding, a History API URL adapter, and unstyled, accessible components (facet options, sort select, pagination, reset).
+The React layer of faceted collections: bindings (`useFacetedCollection`, `usePagedCollection`, `useResponsiveBatches`), a History API URL adapter, and unstyled, accessible components (facet options, sort select, pagination, page select, reset).
 
 ```sh
 pnpm add @figatellultimate/facets-react @figatellultimate/facets react radix-ui cmdk

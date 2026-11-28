@@ -125,6 +125,7 @@ What a collection exposes to LLMs ([the configuration](/en/docs/configuration#ex
 | `llmsMarkdownOf` | A page’s Markdown, from its MDX (`@figatellultimate/content-collections/llms`): without what `<llm-exclude>` holds, nor MDX’s imports, exports and expressions, each component written as Markdown by the app, or reduced to its content. |
 | `llmsFullOf`     | The `llms-full.txt` file.                                                                                                                                                                                                                 |
 | `markdownUrlOf`  | The URL of a page’s Markdown version: its own followed by `.md`.                                                                                                                                                                          |
+| `exposedPagesOf` | Collects and sorts a locale’s exposed pages by `order` then title (`isLlmsExposed` checks a URL in `mountedUrls`).                                                                                                                        |
 
 A route cannot share the shared route’s segment: the proxy rewrites `/docs/cli.md` to a dedicated route, in the page’s language (`app/[locale]/llms/[[...url]]`). Each exposed page links its Markdown version and its language’s `llms.txt`, with `<link rel="alternate" type="text/markdown">` and `<link rel="describedby">`.
 
@@ -145,15 +146,17 @@ export default {
 };
 ```
 
-## Links
+## Links and images
 
-`@figatellultimate/ui`’s components link pages through the application’s link component: wrap the layout in `LinkProvider` with `next/link`, and navigations stay client-side.
-
-## Images
-
-Their images go through the application's image component the same way: wrap the layout in `ImageProvider` with `next/image`, and the cards' covers, the authors' avatars and the content's images are resized and served in modern formats. `@figatellultimate/effects`' `Backdrop` takes `next/image` through its `image` prop.
+`@figatellultimate/ui`’s components link pages and render images through the application’s components: wrap the layout in `UiProvider` (`link={NextLink}`, `image={NextImage}`), or separately in `LinkProvider` and `ImageProvider`. Navigations stay client-side, and cards’ covers, authors’ avatars and content images are resized and served in modern formats. `@figatellultimate/effects`’ `Backdrop` takes `next/image` through its `image` prop.
 
 A content image must know its size: `rehypeImageSizes`, from `@figatellultimate/content-collections/images`, reads at build time the width and height of every local image in the `public/` folder. A remote or unmeasured image stays a plain `<img>`.
+
+To optimize desktop LCP without weighing down mobile first paint or opting into dynamic rendering, `cardImagePriority` from `@figatellultimate/next16/images` keeps cards past the mobile count lazy in the DOM while emitting a desktop-only `<link rel="preload" media>` carrying `next/image`’s exact `srcSet` and `sizes`.
+
+## Lazy themes
+
+To keep non-default theme stylesheets out of the initial CSS bundle, `themeStylesheetRoute` from `@figatellultimate/next16/themes` serves each theme stylesheet as an immutable static route (`/themes/<name>.css`), paired with `stylesheetBase` on `siteThemeScript` and `SiteThemePicker`.
 
 ## Messages
 

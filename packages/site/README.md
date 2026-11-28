@@ -1,6 +1,6 @@
 # @figatellultimate/site
 
-Pure, framework-free site helpers: metadata, sitemap, static params, locale links, breadcrumbs, structured data and RSS feeds.
+Pure, framework-free site helpers: metadata, sitemap, static params, locale links, section batching, breadcrumbs, search trails, structured data, RSS feeds, llms.txt and ARD agent catalogs.
 
 ```sh
 pnpm add @figatellultimate/site

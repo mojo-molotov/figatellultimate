@@ -30,13 +30,15 @@ bun add @figatellultimate/ui @figatellultimate/effects @figatellultimate/themes 
 | `Navbar`                | The navigation generated from the content (`navigationOf(locale)`), with menus; compact, behind a button, as soon as its links no longer fit on one line (`navbarScript` before the first paint). |
 | `LocaleSwitcher`        | The page in the other languages, never a link to a missing translation.                                                                                                                           |
 | `ThemeToggle`           | Light and dark, with `themeScript` applied before the first paint; its name says the theme on and the one a press gives.                                                                          |
-| `SiteThemePicker`       | The choice between several site themes, with `siteThemeScript` applied before the first paint.                                                                                                    |
-| `Breadcrumb`            | Where the page sits, from the navigation.                                                                                                                                                         |
+| `SiteThemePicker`       | The choice between several site themes, with `siteThemeScript` before the first paint and `stylesheetBase` to load non-default themes on demand.                                                  |
+| `Breadcrumb`            | Where the page sits, from the navigation (`formatTrail` and `parseTrail` of `@figatellultimate/site` summarize it for search metadata).                                                           |
 | `TableOfContents`       | The page’s headings, the one being read highlighted, docked in the margin from `TOC_WIDE_MEDIA` on; its button may have its own name (`toggle`).                                                  |
 | `EntryCard`             | A post’s preview: image, title, date, tags, authors; its title at the heading level the page gives it (`headingLevel`, h2 by default).                                                            |
 | `CodeBlock`, `CodeTabs` | A code block with a copy button; variants of one block in tabs, the reader’s choice remembered under `storageKey`.                                                                                |
 | `ImageZoom`             | An image enlarged in a modal on desktops (`media`, `IMAGE_ZOOM_MEDIA` by default).                                                                                                                |
 | `ScrollRegion`          | A region scrolling on its own (a wide table), in the Tab order only while it overflows.                                                                                                           |
+| `PrintMargins`          | Sets `--fig-print-title` and `--fig-print-url` on `:root` for `@page` print margin boxes.                                                                                                         |
+| `UiProvider`            | Wires the framework’s link and image components at once (`LinkProvider` and `ImageProvider`).                                                                                                     |
 
 One stylesheet styles them all, through `data-slot` attributes and tokens:
 
@@ -79,4 +81,4 @@ import '@figatellultimate/themes/base.css';
 import '@figatellultimate/themes/calanque.css';
 ```
 
-Several themes can be loaded together: `<html data-site-theme="calanque">` picks one. Without that attribute, a theme loaded alone applies. This site loads both, and its footer lets the reader choose with `SiteThemePicker`, the change blurred for a transition by `siteThemeTransition` of `@figatellultimate/effects`.
+Several themes can coexist: `<html data-site-theme="calanque">` picks one. Without that attribute, a theme loaded alone applies. This site ships **maquis** by default and serves **calanque** lazily (`/themes/calanque.css`, via `themeStylesheetRoute`); its footer lets the reader switch with `SiteThemePicker` (`stylesheetBase="/themes/"`), the change blurred for a transition by `siteThemeTransition` of `@figatellultimate/effects`.

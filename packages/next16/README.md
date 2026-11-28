@@ -1,6 +1,6 @@
 # @figatellultimate/next16
 
-The Next.js 16 adapter of figatellultimate: metadata, sitemap, robots and redirects mapped onto the App Router, and the URL adapter of faceted collections.
+The Next.js 16 adapter of figatellultimate: metadata, sitemap, robots and redirects mapped onto the App Router, faceted-collection URL adapter, static listing indexes, desktop-only LCP image preloading (`@figatellultimate/next16/images`) and lazy theme stylesheet routes (`@figatellultimate/next16/themes`).
 
 ```sh
 pnpm add @figatellultimate/next16
