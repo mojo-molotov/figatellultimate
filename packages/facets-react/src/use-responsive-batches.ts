@@ -127,9 +127,16 @@ export function useResponsiveBatches<T>(options: ResponsiveBatchesOptions<T>): R
 
   const prefetchPage = useCallback(
     (nextPage: number): void => {
-      if (nextPage >= 2) void fetchBatch(nextPage - 2);
+      if (nextPage < 2) return;
+
+      // Never prefetch desktop pages on a phone viewport, where batches are revealed on scroll only.
+      if (typeof window.matchMedia === 'function' && window.matchMedia(phoneMedia).matches) return;
+
+      const url = batchUrls[nextPage - 2];
+
+      if (url !== undefined) void load(url).catch(() => undefined);
     },
-    [fetchBatch],
+    [batchUrls, load, phoneMedia],
   );
 
   const nextScrollBatch = batchUrls.findIndex((_, index) => batches[index] === undefined);

@@ -128,6 +128,13 @@ describe('useResponsiveBatches', () => {
     });
     expect(screen.getByTestId('more').textContent).toBe('true');
 
+    // Desktop pagination prefetch must stay a no-op on phones and never populate scroll batches.
+    act(() => {
+      screen.getByRole('button', { name: 'prefetch3' }).click();
+    });
+    expect(load).not.toHaveBeenCalled();
+    expect(screen.getByTestId('scroll-items').textContent).toBe('');
+
     const trigger = (): void => {
       act(() => {
         callback?.(
