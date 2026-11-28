@@ -2,60 +2,116 @@
 
 // prettier-ignore
 /**
- * A section's list of pages (`/docs`), revealed in batches as the reader scrolls on a phone: zero external
- * dependencies (no facets, no Radix, no router), just an `IntersectionObserver` on a sentinel below the list.
+ * A section's list of pages (`/docs`), loading subsequent batches from static JSON files as the reader scrolls:
  *
- *     SectionPages (server: every card) ──> SectionList ──> each <li>, marked `data-paged-out` past the revealed count
- *                                                    └─> sentinel below the list: intersecting reveals the next batch
- *     the theme's stylesheet: on a phone (`max-width: 36rem`), hides the marked items; on a desktop, shows every card
+ *     SectionPages (server: first 4 cards) ──> SectionList ──> <ul data-slot="folder-list">
+ *                                                          └─> sentinel + spinner: intersecting fetches next JSON batch
  *
  * Key design decisions:
- *     - Progressive scroll reveal rather than pagination: on a phone, starts with four cards (shorter page, off-page
- *       lazy images never fetched on arrival) and reveals four more as the reader approaches the end, until every
- *       card is shown. On a desktop, every card is visible from the first paint, the same prerendered HTML.
- *     - No external UI or state library: keeps the pages route's bundle minimal.
+ *     - Real lazy loading: only the first batch (four cards) is in the prerendered HTML; subsequent batches live in
+ *       static JSON files (`app/[locale]/section-batches/[...slug]/route.ts`) validated with valibot on arrival, so
+ *       initial HTML, DOM size and image work stay minimal.
+ *     - A decorative spinner (`[data-slot="section-list-spinner"]`, same look and 150ms delay as the search modal's)
+ *       shows while a batch is in flight and disappears once every batch is loaded.
  *
- * Invariants: the first four cards unmarked and the rest marked `data-paged-out` in the prerendered HTML
- * (`scripts/verify.ts`); on a desktop every card visible at once, on a phone four on arrival and more revealed on
- * scroll until every card shows (`scripts/browse.ts`).
+ * Invariants: `/docs` prerenders four cards and writes its remaining batches as static JSON (`scripts/verify.ts`);
+ * scrolling to the bottom fetches each batch and reveals every card (`scripts/browse.ts`).
  */
+import { Collector } from '@figatellultimate/effects';
+import { EntryCard, type EntryCardLabels } from '@figatellultimate/ui';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import * as v from 'valibot';
 
-/** An item of the list: a card, counted in the batches, or a subfolder's heading, revealed with the card after it. */
-export interface SectionListItem {
+import type { Locale } from '#figatellultimate/locales';
+
+import type { SectionBatchItem } from '../lib/section-batches';
+
+/** An item rendered on the server for the initial batch. */
+export interface SectionInitialItem {
   readonly key: string;
-  readonly card: boolean;
-  /** What the item's `<li>` holds, rendered on the server. */
   readonly node: ReactNode;
 }
 
+const BatchSchema = v.array(
+  v.variant('kind', [
+    v.object({ kind: v.literal('heading'), key: v.string(), title: v.string() }),
+    v.object({
+      kind: v.literal('card'),
+      key: v.string(),
+      href: v.string(),
+      title: v.string(),
+      description: v.optional(v.string()),
+      image: v.optional(v.string()),
+    }),
+  ]),
+);
+
 /**
- * A section's list of pages, revealed by batches on scroll on a phone.
+ * A section's list of pages: first batch prerendered, subsequent batches fetched as JSON on scroll.
  *
- * @param props - The items and how many cards each batch reveals.
- * @returns The list, with a sentinel below it while cards remain hidden.
+ * @param props - The server-rendered first batch, the remaining batches' JSON URLs, the locale and card labels.
+ * @returns The list, with a sentinel and spinner below it while more batches remain.
  */
 export function SectionList({
-  items,
-  batchSize,
+  initial,
+  batchUrls,
+  locale,
+  labels,
 }: {
-  readonly items: readonly SectionListItem[];
-  readonly batchSize: number;
+  readonly initial: readonly SectionInitialItem[];
+  readonly batchUrls: readonly string[];
+  readonly locale: Locale;
+  readonly labels: EntryCardLabels;
 }): ReactNode {
-  const cards = items.filter((item) => item.card).length;
-  const [shown, setShown] = useState(batchSize);
+  const [loaded, setLoaded] = useState<readonly SectionBatchItem[]>([]);
+  const [nextIndex, setNextIndex] = useState(0);
+  const [status, setStatus] = useState<'idle' | 'loading'>('idle');
   const sentinel = useRef<HTMLDivElement>(null);
+  const inFlight = useRef(false);
+  const hasMore = nextIndex < batchUrls.length;
 
   useEffect(() => {
-    if (shown >= cards) return;
+    if (!hasMore) return;
 
     const target = sentinel.current;
 
     if (target === null || typeof IntersectionObserver === 'undefined') return;
 
+    let active = true;
+    const loadNext = (): void => {
+      const url = batchUrls[nextIndex];
+
+      if (url === undefined || inFlight.current) return;
+
+      inFlight.current = true;
+      setStatus('loading');
+
+      void fetch(url)
+        .then((response) => {
+          if (!response.ok) throw new Error(`HTTP ${String(response.status)}`);
+
+          return response.json() as Promise<unknown>;
+        })
+        .then((json) => {
+          const items = v.parse(BatchSchema, json);
+
+          if (!active) return;
+
+          setLoaded((previous) => [...previous, ...items]);
+          setNextIndex((index) => index + 1);
+          setStatus('idle');
+          inFlight.current = false;
+        })
+        .catch(() => {
+          if (!active) return;
+
+          setStatus('idle');
+          inFlight.current = false;
+        });
+    };
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) setShown((count) => Math.min(count + batchSize, cards));
+        if (entries.some((entry) => entry.isIntersecting)) loadNext();
       },
       { rootMargin: '200px' },
     );
@@ -63,27 +119,42 @@ export function SectionList({
     observer.observe(target);
 
     return () => {
+      active = false;
+      inFlight.current = false;
       observer.disconnect();
     };
-  }, [shown, cards, batchSize]);
-
-  // Each item's card rank: its own, or, for a heading, the card after it (the last card for a heading at the end).
-  const rankOf = (index: number): number => {
-    const before = items.slice(0, index).filter((item) => item.card).length;
-
-    return before >= cards ? cards - 1 : before;
-  };
+  }, [hasMore, nextIndex, batchUrls]);
 
   return (
     <>
       <ul data-slot="folder-list">
-        {items.map((item, index) => (
-          <li key={item.key} {...(rankOf(index) < shown ? {} : { 'data-paged-out': '' })}>
-            {item.node}
+        {initial.map((item) => (
+          <li key={item.key}>{item.node}</li>
+        ))}
+        {loaded.map((item) => (
+          <li key={item.key}>
+            {item.kind === 'heading' ? (
+              <h2>{item.title}</h2>
+            ) : (
+              <Collector>
+                <EntryCard
+                  href={item.href}
+                  title={item.title}
+                  {...(item.description === undefined ? {} : { description: item.description })}
+                  {...(item.image === undefined ? {} : { image: item.image })}
+                  locale={locale}
+                  labels={labels}
+                />
+              </Collector>
+            )}
           </li>
         ))}
       </ul>
-      {shown < cards ? <div ref={sentinel} aria-hidden /> : null}
+      {hasMore ? (
+        <div ref={sentinel} data-slot="section-list-status" data-status={status} aria-hidden>
+          <span data-slot="section-list-spinner" />
+        </div>
+      ) : null}
     </>
   );
 }

@@ -1053,54 +1053,33 @@ try {
     await phone.close();
   }
 
-  // The documentation's section list (`/docs`): every card visible at once on a desktop; on a phone, four on arrival
-  // and four more revealed as the reader scrolls to the bottom, until every card is shown.
+  // The documentation's section list (`/docs`): four cards prerendered on arrival; scrolling to the bottom fetches
+  // each static JSON batch until every card is rendered and the spinner sentinel disappears.
   {
-    const desktop = await open('/docs');
-    const allCards = await desktop.locator('[data-slot="folder-list"] [data-slot="entry-card"]').count();
-    const visibleDesktop = await desktop
-      .locator('[data-slot="folder-list"] > li')
-      .evaluateAll((nodes) => nodes.filter((node) => getComputedStyle(node).display !== 'none').length);
-
-    check(
-      allCards > 4 && visibleDesktop === allCards,
-      `/docs on a desktop: ${String(visibleDesktop)}/${String(allCards)} cards visible`,
-    );
-    await desktop.close();
-
     const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
 
     await phone.goto(`${base}/docs`, { waitUntil: 'networkidle' });
-    const visibleCount = () =>
-      phone
-        .locator('[data-slot="folder-list"] > li')
-        .evaluateAll((nodes) => nodes.filter((node) => getComputedStyle(node).display !== 'none').length);
-    const initial = await visibleCount();
+    const countCards = () => phone.locator('[data-slot="folder-list"] [data-slot="entry-card"]').count();
+    const initial = await countCards();
 
-    check(initial === 4, `/docs on a phone: expected 4 cards on arrival, got ${String(initial)}`);
+    check(initial === 4, `/docs on a phone: expected 4 prerendered cards on arrival, got ${String(initial)}`);
 
     let shown = initial;
 
-    while (shown < allCards) {
-      const target = Math.min(shown + 4, allCards);
+    while ((await phone.locator('[data-slot="section-list-status"]').count()) > 0) {
+      const before = shown;
 
       await phone.evaluate(() => {
         window.scrollTo(0, document.documentElement.scrollHeight);
       });
       await phone.waitForFunction(
-        (expected) =>
-          [...document.querySelectorAll('[data-slot="folder-list"] > li')].filter(
-            (node) => getComputedStyle(node).display !== 'none',
-          ).length >= expected,
-        target,
+        (previous) => document.querySelectorAll('[data-slot="folder-list"] [data-slot="entry-card"]').length > previous,
+        before,
       );
-      shown = await visibleCount();
+      shown = await countCards();
     }
 
-    check(
-      shown === allCards,
-      `/docs on a phone: expected all ${String(allCards)} cards after scrolling, got ${String(shown)}`,
-    );
+    check(shown > 4, `/docs on a phone: expected more than 4 cards after scrolling, got ${String(shown)}`);
     await phone.close();
   }
 

@@ -1,19 +1,14 @@
-/** The list of a section's pages, below its own page; revealed in batches on scroll on a phone (`section-list.tsx`). */
+/** The list of a section's pages, below its own page; loads further batches from static JSON on scroll (`section-list.tsx`). */
 import { Collector } from '@figatellultimate/effects';
-import { sectionOf } from '@figatellultimate/site';
 import { EntryCard } from '@figatellultimate/ui';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 
 import type { Locale } from '#figatellultimate/locales';
-import { navigationOf } from '#figatellultimate/navigation';
-import { findPageByUrl } from '#figatellultimate/pages';
 
 import { cardPriority } from '../lib/priority';
-import { SectionList, type SectionListItem } from './section-list';
-
-/** How many cards a section reveals at a time on a phone (`section-list.tsx`). */
-const SECTION_BATCH_SIZE = 4;
+import { SECTION_BATCH_SIZE, sectionBatchUrl, sectionItemsOf, splitSectionBatches } from '../lib/section-batches';
+import { SectionList, type SectionInitialItem } from './section-list';
 
 /**
  * The pages of the section a page opens, e.g. `/docs` lists its pages and subfolders: the same navigation as
@@ -28,57 +23,54 @@ export async function SectionPages({
   readonly locale: Locale;
   readonly url: string;
 }): Promise<ReactNode> {
-  const section = sectionOf(navigationOf(locale), url);
+  const items = await sectionItemsOf(locale, url);
 
-  if (section === undefined || section.children.length === 0) return null;
+  if (items.length === 0) return null;
 
   const t = await getTranslations({ locale });
-  // Each page's description and image, from its own frontmatter (loaded lazily).
-  const pages = await Promise.all(
-    section.children.map(async (node) => (node.kind === 'entry' ? findPageByUrl(node.url) : undefined)),
-  );
   const labels = { tags: t('ui.card.tags'), authors: t('ui.card.authors'), more: t('ui.card.more') };
-  const items: SectionListItem[] = section.children.map((node, index) => {
-    // A subfolder is named by its content message: every locale translates it.
-    const label = node.kind === 'entry' ? node.title : t(node.label);
-    const page = pages[index];
+  const batches = splitSectionBatches(
+    items.map((item) => ({ item, card: item.kind === 'card' })),
+    SECTION_BATCH_SIZE,
+  );
+  const first = batches[0] ?? [];
+  let cardRank = 0;
+  const initial: SectionInitialItem[] = first.map(({ item }) => {
+    if (item.kind === 'heading') return { key: item.key, node: <h2>{item.title}</h2> };
 
-    // A page as a post's preview: its image, its title, its description; a subfolder by its title.
+    const rank = cardRank;
+
+    cardRank += 1;
+
     return {
-      key: node.kind === 'entry' ? node.url : node.label,
-      card: node.url !== undefined,
-      node:
-        node.url === undefined ? (
-          <h2>{label}</h2>
-        ) : (
-          <Collector>
-            <EntryCard
-              // The page's first cards (subfolder headings aside): its largest paint, loaded at once.
-              priority={cardPriority(
-                'section',
-                section.children.slice(0, index).filter((above) => above.url !== undefined).length,
-                page?.data.featuredPictureUrl,
-              )}
-              href={node.url}
-              title={label}
-              {...(page === undefined ? {} : { description: page.data.metadescription })}
-              {...(page?.data.featuredPictureUrl === undefined ? {} : { image: page.data.featuredPictureUrl })}
-              locale={locale}
-              labels={labels}
-            />
-          </Collector>
-        ),
+      key: item.key,
+      node: (
+        <Collector>
+          <EntryCard
+            // The page's first cards (subfolder headings aside): its largest paint, loaded at once.
+            priority={cardPriority('section', rank, item.image)}
+            href={item.href}
+            title={item.title}
+            {...(item.description === undefined ? {} : { description: item.description })}
+            {...(item.image === undefined ? {} : { image: item.image })}
+            locale={locale}
+            labels={labels}
+          />
+        </Collector>
+      ),
     };
   });
 
-  if (items.filter((item) => item.card).length <= SECTION_BATCH_SIZE)
+  if (batches.length <= 1)
     return (
       <ul data-slot="folder-list">
-        {items.map((item) => (
+        {initial.map((item) => (
           <li key={item.key}>{item.node}</li>
         ))}
       </ul>
     );
 
-  return <SectionList items={items} batchSize={SECTION_BATCH_SIZE} />;
+  const batchUrls = batches.slice(1).map((_, index) => sectionBatchUrl(locale, url, index + 1));
+
+  return <SectionList initial={initial} batchUrls={batchUrls} locale={locale} labels={labels} />;
 }

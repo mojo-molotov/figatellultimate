@@ -590,8 +590,9 @@ for (const item of mountedUrls.filter((entry) => entry.kind === 'folder' || entr
 // A section's page lists its pages, and the blog its categories, as post previews: an image and a description each;
 // every folder page carries its image in its Open Graph metadata.
 for (const [url, count] of [
-  ['/docs', 11],
-  ['/en/docs', 11],
+  // First batch prerendered; the remaining cards live in static JSON batches (`section-batches`).
+  ['/docs', 4],
+  ['/en/docs', 4],
   // A page of categories, as `perPage.root` sets it.
   ['/blog', Math.min(sizeOf('/blog'), findBlogFolderByUrl('/blog')?.subfolders.length ?? 0)],
   ['/en/blog', Math.min(sizeOf('/en/blog'), findBlogFolderByUrl('/en/blog')?.subfolders.length ?? 0)],
@@ -1166,6 +1167,10 @@ for (const item of mountedUrls) {
     /data-slot="site-footer-links"[\s\S]*href="[^"]*\/blog"/.test(html),
     `${item.url}: no section links in the footer`,
   );
+  check(
+    html.includes('href="https://github.com/mojo-molotov/figatellultimate"'),
+    `${item.url}: missing GitHub repository link`,
+  );
 }
 
 // Images through `next/image` (`components/images.tsx`): the cards' covers and the authors' avatars resized, every
@@ -1232,19 +1237,21 @@ for (const item of mountedUrls) {
   );
 }
 
-// The documentation's section list (`components/section-list.tsx`): prerendered with every card so a desktop shows
-// all of them, the first four unmarked on a phone and the rest marked `data-paged-out` until scrolled into view.
+// The documentation's section list (`components/section-list.tsx`): only the first four cards are in the prerendered
+// HTML; the rest live in static JSON batches (`app/[locale]/section-batches/[...slug]/route.ts`) fetched on scroll.
 {
   const docs = htmlOf('/docs') ?? '';
-  const cards = [...docs.matchAll(/<li[^>]*>(?=<div[^>]*data-slot="collector"[\s\S]*?data-slot="entry-card")/g)].map(
-    (match) => match[0],
-  );
-  const pagedOut = cards.filter((tag) => tag.includes('data-paged-out'));
+  const initialCards = [...docs.matchAll(/data-slot="entry-card"/g)].length;
+  const batch1Path = join(app, 'fr', 'section-batches', 'docs', '1.body');
+  const batch2Path = join(app, 'fr', 'section-batches', 'docs', '2.body');
+  const batch1: unknown = existsSync(batch1Path) ? JSON.parse(readFileSync(batch1Path, 'utf8')) : [];
+  const batch2: unknown = existsSync(batch2Path) ? JSON.parse(readFileSync(batch2Path, 'utf8')) : [];
 
-  check(cards.length > 4, `/docs: expected more than 4 cards, found ${String(cards.length)}`);
+  check(initialCards === 4, `/docs: expected 4 prerendered cards, found ${String(initialCards)}`);
+  check(docs.includes('data-slot="section-list-spinner"'), '/docs: missing scroll-load spinner');
   check(
-    cards.slice(0, 4).every((tag) => !tag.includes('data-paged-out')) && pagedOut.length === cards.length - 4,
-    `/docs: expected 4 shown cards on arrival and ${String(cards.length - 4)} hidden, got ${String(pagedOut.length)}`,
+    Array.isArray(batch1) && batch1.length === 4 && Array.isArray(batch2) && batch2.length > 0,
+    '/docs: missing or empty static JSON section batches',
   );
 }
 
