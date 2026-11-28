@@ -74,8 +74,13 @@
 }
 
 :root:where(:not([data-site-theme]), [data-site-theme='paper'])
-  [data-slot='navbar']
-  :is([data-slot='navbar-link'][aria-current='page'], [data-slot='navbar-trigger'][data-current]) {
+  [data-slot='navbar-list']
+  > [data-slot='navbar-item']
+  > [data-slot='navbar-link'][aria-current='page'],
+:root:where(:not([data-site-theme]), [data-site-theme='paper'])
+  [data-slot='navbar-list']
+  > [data-slot='navbar-item'][data-active]
+  > :is([data-slot='navbar-trigger'], [data-slot='navbar-link']) {
   color: #64c0f4;
 }
 
