@@ -547,7 +547,7 @@ describe('scandola.css', () => {
     expect(rules.find((rule) => rule.selector === `${gate} [data-slot='search-dialog-overlay']`)?.body).toContain(
       'backdrop-filter: blur(6px);',
     );
-    expect(rules.find((rule) => rule.selector === `${gate} [data-slot='search-dialog-content']`)?.body).toContain(
+    expect(rules.find((rule) => rule.selector === `${gate} [data-slot='search-dialog-content']`)?.body).not.toContain(
       'inset 0 3px 0 var(--fig-accent)',
     );
     expect(rules.find((rule) => rule.selector === `${gate} [data-slot='search-box-result-title']`)?.body).toContain(
