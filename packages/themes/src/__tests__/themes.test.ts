@@ -452,6 +452,15 @@ describe('calanque.css', () => {
       'scrollbar-color: var(--fig-accent) var(--fig-bg);',
     );
   });
+
+  it('replaces the default sunset/sunrise with a rising and ebbing oceanic tide transition', () => {
+    const calanque = sourceOf('calanque');
+
+    expect(calanque).toContain('animation-name: fig-tide-rise;');
+    expect(calanque).toContain('animation-name: fig-tide-ebb, fig-tide-surface;');
+    expect(calanque).toContain('at 50% 125%');
+    expect(calanque).not.toMatch(/\banimation: /);
+  });
 });
 
 describe('scandola.css', () => {

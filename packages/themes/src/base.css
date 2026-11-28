@@ -187,6 +187,66 @@ body > [data-layout] {
   }
 }
 
+/* Colorless tide keyframes for themes that swap the default sunset/sunrise for a rising/receding sea tide. */
+@keyframes fig-tide-rise {
+  from {
+    --fig-horizon: 0%;
+    --fig-horizon-x: 110%;
+    --fig-horizon-y: 120%;
+    --fig-horizon-band: 10%;
+  }
+
+  to {
+    --fig-horizon: 155%;
+    --fig-horizon-x: 220%;
+    --fig-horizon-y: 105%;
+    --fig-horizon-band: 24%;
+  }
+}
+
+@keyframes fig-tide-ebb {
+  from {
+    --fig-horizon: 155%;
+    --fig-horizon-x: 220%;
+    --fig-horizon-y: 105%;
+    --fig-horizon-band: 24%;
+  }
+
+  to {
+    --fig-horizon: 0%;
+    --fig-horizon-x: 110%;
+    --fig-horizon-y: 120%;
+    --fig-horizon-band: 10%;
+  }
+}
+
+@keyframes fig-tide-fade {
+  0% {
+    opacity: 0;
+  }
+
+  12%,
+  68% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes fig-tide-submerge {
+  to {
+    filter: brightness(0.82) saturate(1.22) contrast(1.04);
+  }
+}
+
+@keyframes fig-tide-surface {
+  to {
+    filter: brightness(1.14) saturate(1.15);
+  }
+}
+
 [data-slot='site-footer-signature'] {
   margin: 0;
   text-align: center;

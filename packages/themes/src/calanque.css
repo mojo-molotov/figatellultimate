@@ -176,6 +176,96 @@
   background: #002538;
 }
 
+/*
+ * Mediterranean tide view transition (replaces the default sunset/sunrise on Calanque): towards dark, the deep ocean
+ * tide rises from the bottom behind a cerulean-and-seafoam crest; towards light, the dark cove recedes back down to
+ * the bottom, uncovering sunlit day behind the retreating seafoam line. Longhands only so minifiers keep the names.
+ */
+@media screen and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  :root:where(:not([data-site-theme]), [data-site-theme='calanque'])[data-theme-switch]::view-transition-old(root),
+  :root:where(:not([data-site-theme]), [data-site-theme='calanque'])[data-theme-switch]::view-transition-new(root),
+  :root:where(:not([data-site-theme]), [data-site-theme='calanque'])[data-theme-switch] [data-slot='theme-horizon'] {
+    animation-duration: 1300ms;
+    animation-timing-function: cubic-bezier(0.28, 0.08, 0.22, 1);
+  }
+
+  /* Rising tide (light -> dark): deep ocean navy swells upward from the bottom over the cooling sunlit page. */
+  :root:where(:not([data-site-theme]), [data-site-theme='calanque'])[data-theme-switch='to-dark']::view-transition-new(
+      root
+    ) {
+    -webkit-mask-image: radial-gradient(
+      ellipse var(--fig-horizon-x) var(--fig-horizon-y) at 50% 125%,
+      #000 calc(var(--fig-horizon) - 10%),
+      transparent var(--fig-horizon)
+    );
+    mask-image: radial-gradient(
+      ellipse var(--fig-horizon-x) var(--fig-horizon-y) at 50% 125%,
+      #000 calc(var(--fig-horizon) - 10%),
+      transparent var(--fig-horizon)
+    );
+    animation-name: fig-tide-rise;
+  }
+
+  :root:where(:not([data-site-theme]), [data-site-theme='calanque'])[data-theme-switch='to-dark']::view-transition-old(
+      root
+    ) {
+    animation-name: fig-tide-submerge;
+  }
+
+  :root:where(:not([data-site-theme]), [data-site-theme='calanque'])[data-theme-switch='to-dark']
+    [data-slot='theme-horizon'] {
+    animation-name: fig-tide-rise, fig-tide-fade;
+    background: radial-gradient(
+      ellipse var(--fig-horizon-x) var(--fig-horizon-y) at 50% 125%,
+      transparent calc(var(--fig-horizon) - var(--fig-horizon-band)),
+      rgb(0 72 114 / 0.36) calc(var(--fig-horizon) - var(--fig-horizon-band) * 0.58),
+      rgb(82 178 232 / 0.42) calc(var(--fig-horizon) - var(--fig-horizon-band) * 0.22),
+      rgb(218 245 255 / 0.48) var(--fig-horizon),
+      transparent calc(var(--fig-horizon) + var(--fig-horizon-band) * 0.3)
+    );
+  }
+
+  /* Ebbing tide (dark -> light): the dark ocean sits on top and recedes back down to the bottom, revealing daylight. */
+  :root:where(:not([data-site-theme]), [data-site-theme='calanque'])[data-theme-switch='to-light']::view-transition-new(
+      root
+    ) {
+    z-index: 1;
+    -webkit-mask-image: none;
+    mask-image: none;
+    animation-name: none;
+  }
+
+  :root:where(:not([data-site-theme]), [data-site-theme='calanque'])[data-theme-switch='to-light']::view-transition-old(
+      root
+    ) {
+    z-index: 2;
+    -webkit-mask-image: radial-gradient(
+      ellipse var(--fig-horizon-x) var(--fig-horizon-y) at 50% 125%,
+      #000 calc(var(--fig-horizon) - 10%),
+      transparent var(--fig-horizon)
+    );
+    mask-image: radial-gradient(
+      ellipse var(--fig-horizon-x) var(--fig-horizon-y) at 50% 125%,
+      #000 calc(var(--fig-horizon) - 10%),
+      transparent var(--fig-horizon)
+    );
+    animation-name: fig-tide-ebb, fig-tide-surface;
+  }
+
+  :root:where(:not([data-site-theme]), [data-site-theme='calanque'])[data-theme-switch='to-light']
+    [data-slot='theme-horizon'] {
+    animation-name: fig-tide-ebb, fig-tide-fade;
+    background: radial-gradient(
+      ellipse var(--fig-horizon-x) var(--fig-horizon-y) at 50% 125%,
+      transparent calc(var(--fig-horizon) - var(--fig-horizon-band)),
+      rgb(0 72 114 / 0.32) calc(var(--fig-horizon) - var(--fig-horizon-band) * 0.58),
+      rgb(82 178 232 / 0.42) calc(var(--fig-horizon) - var(--fig-horizon-band) * 0.22),
+      rgb(228 248 255 / 0.52) var(--fig-horizon),
+      transparent calc(var(--fig-horizon) + var(--fig-horizon-band) * 0.3)
+    );
+  }
+}
+
 /* Elevated white rounded cards with crisp borders on the light grey canvas; elevated navy cards in dark mode. */
 :root:where(:not([data-site-theme]), [data-site-theme='calanque']) [data-slot='entry-card'] {
   background: #ffffff;
