@@ -66,6 +66,32 @@
   --fig-shadow: 0 4px 16px rgb(0 0 0 / 0.35);
 }
 
+/* Subtle monochrome paper grain on the light canvas only (off in dark mode and print). */
+:root:where(:not([data-site-theme]), [data-site-theme='paper']) body {
+  background-image:
+    radial-gradient(
+      ellipse 75% 80% at 50% 45%,
+      rgb(238 241 244 / 0.72) 0%,
+      rgb(238 241 244 / 0.25) 62%,
+      transparent 100%
+    ),
+    url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABAAgMAAADXB5lNAAAADFBMVEUAAAAPFyAPFyD////QiYmCAAAABHRSTlMACRASBTk+DAAABBhJREFUeNoN0FtMU2cAB/D/dy7QQsFz6CnUAVquax3JWrCICdu+Q0+hxYKntBBvbDKJw6TLAHHi5kMLhW0qWjY6gTCHcTF7bEzcRsaSU1dw0ZKBINMl7hazy8syHEtMXLL5/nv6gc4Q3hzTpvs+oqBOy13MsqnlphwS/rFCOL1XmmLx04Y1kJEjCMZITg+ZMQA1rY9p9V51Pd+uLhQIDdvB/nXR0ysqg4yXvc/OZxvxpOyL8+Xh+pa0NiI6Yw0UeCCYMiPN1CwqszsrT97FJXkCssweYK6phJNF4AxZDJFGc6LIbavjrnRfQ5t1QVfmquzgglEcfh0c1h7Qe4JvMrCQoJLpVN8g9Pwadm9WLNCu3a5iOtmHndJmvKrlUW2mEpTeG105jX1N+bOh7ZGblvwcB7MsWeBeyi8o73hNHsocnDY8+cWEg2xvwuEIhX25BYh78gyoRgOmxm8fcid5Z2OPTGAYipMvlYbKuVYuhwvbCNw6XgbDX9kSZEIjEG8h3D3tHIBYFg+NsxLBVnAfCys3poNYLk2EP+V0XlyQfy+2nnMQ+696QR9jWiAIvs4C3XRGxat0l6cqdwlvjsqi4du8viG+368XarxIhk/dZ/LU9THjB3byoiRh8SjfFegm4rwIIxfP0XDiyKxyxHde4v11FSXfN12FO6rlPSaurKCR5HJ/chwG/Krn+GrRwfTGf0bnQ86Gs+PILqHFBjoerBJNnIj4MzY2/ZxvI5iPDvbdBA+Lw6oKLzXdY7o+p4OR/ouoWTJ28bVJllbsaXtW/awEYrtYHSLhoqMRUilsvlCDbqZ6942qYZ8/tg+gAotNQghdzPp6i0ln6pQvuzFWfKRNuaO162kN59dNaOgVlGaDsd07Dol0yrgOr078xDpyy36+XIWY3fovFuN8Kr1DpSV+vSXlcxFIciGGrSlvht7OH3UPr+CVpcKw3i/lNTaG20Zqh+oQUVSzz3WJIbdTUbGjDpjvUVbXtKg2ychF6A5LSI5ml7QZ6sQIUhx74OcBsGPze6rPbL0ZWCH2wW3zGnJXB+Xn60/31xQAX4lrFmgzwTSZzYDK8EbCyOt4Z+C7iQvDtfU4Rd+QCQ0g+xspHcma4xKX76hGV2wbVOtaGc3nR9i+G3/s16RRrCeyhFLm5C6GrEw0VEoaGIl6yv/eoov5WhTJr0QBkUs+NBtoaSntN9iiScQy0tg/4OdmmlPJDIsqQ+k1BYcWSHTRNdXXeujwAB5vmk8qxWt8s40Lv182Z8XxVOH1D5OcyLHtFo4yb8PYWd9qubmzkP8tqqdyRwCWiDrzlpO/zet2/PO0xA/KlC43RjXlxD2r/5jwgwwsOHqU7tV2QrLUiMg+FY96PKqeeMU52XqMO7cVPLGYx8lVgfcZ4HxZjvwPAJ9G63Fmz+0AAAAASUVORK5CYII=');
+  background-size:
+    100% 100%,
+    64px 64px;
+  background-attachment: fixed, scroll;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-site-theme]), [data-site-theme='paper']):not([data-theme='light']) body {
+    background-image: none;
+  }
+}
+
+:root:where(:not([data-site-theme]), [data-site-theme='paper'])[data-theme='dark'] body {
+  background-image: none;
+}
+
 /* Deep ocean-navy navbar in both light and dark modes, with crisp light text and sky-blue active highlights. */
 :root:where(:not([data-site-theme]), [data-site-theme='paper']) [data-slot='navbar'] {
   background: #002538;
@@ -108,17 +134,17 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  /* Opaque blend (10% white over #002538): keeps the hovered toggle opaque during its view-transition. */
+  /* Opaque blend (10% white over #002538) on top-level navy bar controls only: keeps dropdown links light. */
   :root:where(:not([data-site-theme]), [data-site-theme='paper'])
     [data-slot='navbar']
-    :is(
-      [data-slot='navbar-toggle'],
-      [data-slot='navbar-trigger'],
-      [data-slot='navbar-link'],
-      [data-slot='locale-switcher'],
-      [data-slot='theme-toggle'],
-      [data-slot='search-dialog-trigger']
-    ):hover {
+    > [data-slot='navbar-toggle']:hover,
+  :root:where(:not([data-site-theme]), [data-site-theme='paper'])
+    [data-slot='navbar-list']
+    > [data-slot='navbar-item']
+    > :is([data-slot='navbar-trigger'], [data-slot='navbar-link']):hover,
+  :root:where(:not([data-site-theme]), [data-site-theme='paper'])
+    [data-slot='navbar-extras']
+    > :is([data-slot='locale-switcher'], [data-slot='theme-toggle'], [data-slot='search-dialog-trigger']):hover {
     background: #1a3b4c;
   }
 }
@@ -195,6 +221,10 @@
     --fig-accent: #0068a3;
     --fig-accent-fg: #ffffff;
     --fig-shadow: none;
+  }
+
+  :root:where(:not([data-site-theme]), [data-site-theme='paper']):is([data-theme], :not([data-theme])) body {
+    background-image: none;
   }
 
   :root:where(:not([data-site-theme]), [data-site-theme='paper']):is([data-theme], :not([data-theme]))
