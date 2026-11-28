@@ -1260,7 +1260,7 @@ for (const item of mountedUrls) {
   const batch2: unknown = existsSync(batch2Path) ? JSON.parse(readFileSync(batch2Path, 'utf8')) : [];
 
   check(initialCards === 4, `/docs: expected 4 prerendered cards, found ${String(initialCards)}`);
-  check(docs.includes('data-slot="section-list-spinner"'), '/docs: missing scroll-load spinner');
+  check(docs.includes('data-slot="section-list"'), '/docs: missing section list wrapper');
   check(
     Array.isArray(batch1) && batch1.length === 4 && Array.isArray(batch2) && batch2.length > 0,
     '/docs: missing or empty static JSON section batches',

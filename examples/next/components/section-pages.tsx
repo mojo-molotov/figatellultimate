@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 
 import type { Locale } from '#figatellultimate/locales';
 
+import { paginationLabels } from '../blog/listing-labels';
 import { cardPriority } from '../lib/priority';
 import { SECTION_BATCH_SIZE, sectionBatchUrl, sectionItemsOf, splitSectionBatches } from '../lib/section-batches';
 import { SectionList, type SectionInitialItem } from './section-list';
@@ -71,6 +72,17 @@ export async function SectionPages({
     );
 
   const batchUrls = batches.slice(1).map((_, index) => sectionBatchUrl(locale, url, index + 1));
+  const totalCards = items.filter((item) => item.kind === 'card').length;
 
-  return <SectionList initial={initial} batchUrls={batchUrls} locale={locale} labels={labels} />;
+  return (
+    <SectionList
+      initial={initial}
+      batchUrls={batchUrls}
+      totalCards={totalCards}
+      batchSize={SECTION_BATCH_SIZE}
+      locale={locale}
+      labels={labels}
+      paginationLabels={await paginationLabels(locale)}
+    />
+  );
 }

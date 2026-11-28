@@ -54,6 +54,28 @@ export interface ListingLabels {
 }
 
 /**
+ * A pagination's texts in a locale: shared by listings, folder pages and the documentation's desktop pagination.
+ *
+ * @param locale - The page's locale.
+ * @returns The texts, formatted or precompiled.
+ */
+export async function paginationLabels(locale: Locale): Promise<ListingLabels['pagination']> {
+  const t = await getTranslations({ locale });
+
+  return {
+    nav: t('ui.pagination.nav'),
+    previous: t('ui.pagination.previous'),
+    next: t('ui.pagination.next'),
+    page: await compiled(locale, 'ui.pagination.page'),
+    current: await compiled(locale, 'ui.pagination.current'),
+    more: await compiled(locale, 'ui.pagination.more'),
+    jump: t('ui.pagination.jump'),
+    short: await compiled(locale, 'ui.pagination.short'),
+    spoken: await compiled(locale, 'ui.pagination.spoken'),
+  };
+}
+
+/**
  * A listing's texts in a locale.
  *
  * @param locale - The page's locale.
@@ -91,16 +113,6 @@ export async function listingLabels(locale: Locale): Promise<ListingLabels> {
     reset: t('ui.reset'),
     options: { trigger: await compiled(locale, 'ui.options.trigger'), content: t('ui.options.content') },
     total: await compiled(locale, 'ui.listing.total'),
-    pagination: {
-      nav: t('ui.pagination.nav'),
-      previous: t('ui.pagination.previous'),
-      next: t('ui.pagination.next'),
-      page: await compiled(locale, 'ui.pagination.page'),
-      current: await compiled(locale, 'ui.pagination.current'),
-      more: await compiled(locale, 'ui.pagination.more'),
-      jump: t('ui.pagination.jump'),
-      short: await compiled(locale, 'ui.pagination.short'),
-      spoken: await compiled(locale, 'ui.pagination.spoken'),
-    },
+    pagination: await paginationLabels(locale),
   };
 }
