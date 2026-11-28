@@ -31,6 +31,16 @@
       "types": "./dist/build.d.ts",
       "default": "./dist/build.js"
     },
+    "./images": {
+      "@figatellultimate/source": "./src/images.ts",
+      "types": "./dist/images.d.ts",
+      "default": "./dist/images.js"
+    },
+    "./themes": {
+      "@figatellultimate/source": "./src/themes.ts",
+      "types": "./dist/themes.d.ts",
+      "default": "./dist/themes.js"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -54,6 +64,14 @@
       "./build": {
         "types": "./dist/build.d.ts",
         "default": "./dist/build.js"
+      },
+      "./images": {
+        "types": "./dist/images.d.ts",
+        "default": "./dist/images.js"
+      },
+      "./themes": {
+        "types": "./dist/themes.d.ts",
+        "default": "./dist/themes.js"
       },
       "./package.json": "./package.json"
     }
@@ -79,6 +97,7 @@
     "@testing-library/dom": "10.4.2",
     "@testing-library/react": "16.3.3",
     "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
     "happy-dom": "21.0.4",
     "next": "16.4.6",
     "react": "19.3.1",
@@ -86,6 +105,7 @@
   },
   "peerDependencies": {
     "next": "^16.4.3",
-    "react": "^19.0.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   }
 }
