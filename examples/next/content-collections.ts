@@ -7,6 +7,7 @@ import remarkGfm from 'remark-gfm';
 import {
   compileWithHeadings,
   rehypeCodeGroups,
+  rehypeExternalLinks,
   rehypeLlmExclude,
   withFigatellultimate,
 } from '@figatellultimate/content-collections/config';
@@ -46,6 +47,8 @@ const transform = async <D extends { content: string; _meta: Meta }>(
         rehypeCodeGroups,
         // `<llm-exclude>`: its content shown in the page, the tag gone; left out of the page's Markdown for LLMs.
         rehypeLlmExclude,
+        // External links default to `rel="nofollow"`, leaving links to this site's own origin untouched.
+        [rehypeExternalLinks, { origin: 'https://figatellultimate.vercel.app' }],
         headings,
         // Each local image's width and height, from its file in `public/`: `next/image` reserves its room. The
         // build runs from the example's folder (`figatellultimate build`), as Next serves `public/` from it.

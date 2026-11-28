@@ -1362,6 +1362,29 @@ for (const item of mountedUrls) {
   );
 }
 
+// External links in MDX (`rehypeExternalLinks`): every external link carries `rel="nofollow"`, internal links do not.
+{
+  const mdxLinksOf = (html: string): string[] =>
+    [...html.matchAll(/<a\b[^>]*data-slot="mdx-a"[^>]*>/g)].map((match) => match[0]);
+  const external = mountedUrls
+    .flatMap((item) => mdxLinksOf(htmlOf(item.url) ?? ''))
+    .filter((tag) => /href="https?:\/\//i.test(tag) && !tag.includes(`href="${site.origin}`));
+  const internal = mountedUrls
+    .flatMap((item) => mdxLinksOf(htmlOf(item.url) ?? ''))
+    .filter((tag) => /href="(?:\/(?!\/)|#)/.test(tag));
+
+  check(external.length > 0, 'no external MDX link to check for rel="nofollow"');
+  check(
+    external.every((tag) => /\brel="[^"]*\bnofollow\b[^"]*"/.test(tag)),
+    `an external MDX link is missing rel="nofollow": ${external.find((tag) => !/\brel="[^"]*\bnofollow\b[^"]*"/.test(tag)) ?? ''}`,
+  );
+  check(internal.length > 0, 'no internal MDX link to check');
+  check(
+    internal.every((tag) => !/\brel="[^"]*\bnofollow\b[^"]*"/.test(tag)),
+    `an internal MDX link unexpectedly has rel="nofollow": ${internal.find((tag) => /\brel="[^"]*\bnofollow\b[^"]*"/.test(tag)) ?? ''}`,
+  );
+}
+
 if (problems.length > 0) {
   console.error(`✖ ${String(problems.length)} problem(s):\n${problems.map((p) => `  - ${p}`).join('\n')}`);
   process.exitCode = 1;
