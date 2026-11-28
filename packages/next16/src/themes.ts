@@ -11,7 +11,9 @@
  * Key design decisions:
  *     - Framework-neutral reader (`read`): the app resolves its own CSS source (e.g. `@figatellultimate/themes`),
  *       keeping `@figatellultimate/next16` decoupled from `@figatellultimate/themes` (two adapters stay independent).
- *     - Immutable caching by default: each theme stylesheet is prerendered at build time with a year-long cache header.
+ *     - Edge-cached, browser-revalidated by default: the stylesheet URL (`/themes/<name>.css`) carries no content hash,
+ *       so browsers revalidate on deploy (`max-age=0, must-revalidate`) while the CDN caches until the next deploy
+ *       (`s-maxage=31536000`).
  *     - Strict allow-list: any name outside `<theme>.css` returns 404 without calling `read`.
  *
  * Invariants (`themes.test.ts`): one `{ name: '<theme>.css' }` per theme; known theme returns 200 with `text/css`
@@ -24,7 +26,7 @@ export interface ThemeStylesheetRouteOptions<T extends string> {
   readonly themes: readonly T[];
   /** Reads a theme's CSS text (e.g. from `@figatellultimate/themes/<theme>.css`). */
   readonly read: (theme: T) => string | Promise<string>;
-  /** `Cache-Control` header value; default `'public, max-age=31536000, immutable'`. */
+  /** `Cache-Control` header value; default `'public, max-age=0, s-maxage=31536000, must-revalidate'`. */
   readonly cacheControl?: string | undefined;
 }
 
@@ -37,7 +39,7 @@ export interface ThemeStylesheetRoute {
   ) => Promise<Response>;
 }
 
-const DEFAULT_CACHE_CONTROL = 'public, max-age=31536000, immutable';
+const DEFAULT_CACHE_CONTROL = 'public, max-age=0, s-maxage=31536000, must-revalidate';
 
 /**
  * Static CSS route for lazy non-default site themes (`/themes/<theme>.css`).

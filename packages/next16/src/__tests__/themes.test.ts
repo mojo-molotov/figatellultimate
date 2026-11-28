@@ -12,12 +12,12 @@ describe('themeStylesheetRoute', () => {
     expect(route.generateStaticParams()).toEqual([{ name: 'calanque.css' }, { name: 'granite.css' }]);
   });
 
-  it('serves a known theme as immutable CSS', async () => {
+  it('serves a known theme as edge-cached, browser-revalidated CSS', async () => {
     const response = await get('calanque.css');
 
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toBe('text/css; charset=utf-8');
-    expect(response.headers.get('cache-control')).toBe('public, max-age=31536000, immutable');
+    expect(response.headers.get('cache-control')).toBe('public, max-age=0, s-maxage=31536000, must-revalidate');
     expect(await response.text()).toBe('/* calanque */');
     expect(read).toHaveBeenLastCalledWith('calanque');
   });

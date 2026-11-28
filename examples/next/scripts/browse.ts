@@ -806,6 +806,22 @@ try {
         returned.visible,
       `/docs: arrowing back up past the first search result did not reveal the focused field, or close button moved on scroll (${JSON.stringify({ layout, scrolledAway, returned })})`,
     );
+    // Switching to Calanque loads `/themes/calanque.css` and rounds the desktop floating close button into a circle.
+    await dialog.locator('[data-slot="search-dialog-close"]').click();
+    await dialog.locator('[data-slot="site-theme-option"][value="calanque"]').click();
+    await dialog.waitForFunction(() => document.documentElement.dataset['siteTheme'] === 'calanque');
+    await dialog.getByRole('button', { name: 'Rechercher' }).click();
+    await dialog.locator('[data-slot="search-dialog-close"]').waitFor();
+    const calanqueRadius = await dialog.evaluate(() => {
+      const close = document.querySelector('[data-slot="search-dialog-close"]');
+
+      return close === null ? '' : getComputedStyle(close).borderRadius;
+    });
+
+    check(
+      calanqueRadius === '999px',
+      `/docs on calanque: desktop search close button is not round (${calanqueRadius})`,
+    );
     await dialog.close();
   }
 
