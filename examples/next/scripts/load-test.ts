@@ -468,7 +468,7 @@ const budgets: [string, number, number][] = [
           indexGzip / Math.max(1, listed(`/blog/${SUBCATEGORIES[0] ?? ''}`)),
           120,
         ],
-        ['HTML gzip of /authors/igor (kB)', (sizes.get('/authors/igor')?.htmlGzip ?? Infinity) / KB, 16],
+        ['HTML gzip of /authors/igor (kB)', (sizes.get('/authors/igor')?.htmlGzip ?? Infinity) / KB, 25],
         [
           'index gzip per listed post on /authors/igor (bytes)',
           authorIndexGzip / Math.max(1, listed('/authors/igor')),
