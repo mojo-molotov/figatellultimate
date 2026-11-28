@@ -269,7 +269,8 @@ a {
 /* A list's pages replace each other in place (a page of posts, of sections): the screen stays still under the
    pagination. The browser's scroll anchoring would otherwise pick an element of the new page and scroll to keep it
    where the old one was, shifting the page under the mouse (checked by the example's `scripts/browse.ts`). */
-main:is([data-listing], [data-folder]) {
+main:is([data-listing], [data-folder]),
+main:has([data-slot='section-list']) {
   overflow-anchor: none;
 }
 
@@ -486,8 +487,26 @@ main[data-folder='category'] [data-slot='listing-cards'] {
 }
 
 /* A section's list of pages, after its page's text: apart from it. */
-[data-pagefind-body] + [data-slot='folder-list'] {
+[data-pagefind-body] + :is([data-slot='folder-list'], [data-slot='section-list']) {
   margin-block-start: calc(var(--fig-space) * 4);
+}
+
+/* A section's list (`/docs`): paginated on a desktop (select above at the end, pagination below at the end),
+   scroll-loaded on a phone (pagination controls hidden on a phone). */
+[data-slot='section-list'] {
+  display: flex;
+  flex-direction: column;
+}
+
+[data-slot='section-list'] > [data-slot='page-select-trigger'] {
+  margin-inline-start: auto;
+  margin-block-end: calc(var(--fig-space) * 2);
+}
+
+@media (max-width: 36rem) {
+  [data-slot='section-list'] > :is([data-slot='page-select-trigger'], [data-slot='pagination']) {
+    display: none;
+  }
 }
 
 /* A section's list loading further batches on scroll (`/docs`): a small spinner below the list, matching the search
