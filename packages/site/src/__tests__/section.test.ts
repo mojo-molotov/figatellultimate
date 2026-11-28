@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { sectionOf, type NavigationNode } from '../index.js';
+import { pagedSectionsOf, sectionOf, splitSectionBatches, type NavigationNode } from '../index.js';
 
 const ITEMS: readonly NavigationNode[] = [
   { kind: 'entry', url: '/', title: 'Accueil', key: '' },
@@ -34,5 +34,55 @@ describe('sectionOf', () => {
     expect(sectionOf([...ITEMS, { kind: 'entry', url: '/guides', title: 'Guides', key: 'guides' }], '/guides')).toBe(
       undefined,
     );
+  });
+});
+
+describe('splitSectionBatches', () => {
+  it('groups cards by batchSize while keeping non-card headings with the following card', () => {
+    const items = [
+      { id: 'c1', card: true },
+      { id: 'c2', card: true },
+      { id: 'h1', card: false },
+      { id: 'c3', card: true },
+      { id: 'c4', card: true },
+      { id: 'c5', card: true },
+    ];
+    const batches = splitSectionBatches(items, 2);
+
+    expect(batches.map((batch) => batch.map((item) => item.id))).toEqual([['c1', 'c2', 'h1'], ['c3', 'c4'], ['c5']]);
+    expect(Object.isFrozen(batches)).toBe(true);
+    expect(batches.every((batch) => Object.isFrozen(batch))).toBe(true);
+  });
+
+  it('rejects non-positive or non-integer batch sizes', () => {
+    expect(() => splitSectionBatches([], 0)).toThrow(/positive integer/);
+    expect(() => splitSectionBatches([], 1.5)).toThrow(/positive integer/);
+  });
+});
+
+describe('pagedSectionsOf', () => {
+  it('finds every section whose direct linked children exceed one batch', () => {
+    const tree: readonly NavigationNode[] = [
+      {
+        kind: 'section',
+        label: 'docs',
+        url: '/docs',
+        children: [
+          { kind: 'entry', url: '/docs/a', title: 'A', key: 'docs/a' },
+          { kind: 'entry', url: '/docs/b', title: 'B', key: 'docs/b' },
+          { kind: 'section', label: 'heading-only', children: [] },
+          { kind: 'entry', url: '/docs/c', title: 'C', key: 'docs/c' },
+        ],
+      },
+      {
+        kind: 'section',
+        label: 'small',
+        url: '/small',
+        children: [{ kind: 'entry', url: '/small/a', title: 'A', key: 'small/a' }],
+      },
+    ];
+
+    expect(pagedSectionsOf(tree, 2)).toEqual([{ url: '/docs', batches: 2 }]);
+    expect(pagedSectionsOf(tree, 4)).toEqual([]);
   });
 });

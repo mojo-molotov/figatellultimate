@@ -8,10 +8,10 @@
  *                                                                                    └─> toNextMetadata, toNextSitemap…
  *
  *     index.ts            metadataOf, pageMetadataOf, sitemapOf, catchAllParamsOf, localeLinksOf, sectionOf,
- *                         breadcrumbOf
+ *                         splitSectionBatches, pagedSectionsOf, breadcrumbOf, formatTrail, parseTrail
  *     structured-data.ts  structuredDataOf, breadcrumbListOf, personOf, jsonLd
  *     feed.ts             rssOf
- *     llms.ts             llmsTxtOf, llmsFullOf, markdownUrlOf
+ *     llms.ts             llmsTxtOf, llmsFullOf, markdownUrlOf, isLlmsExposed, exposedPagesOf
  *     agents.ts           agentCatalogOf (ARD, AI Catalog)
  *     shared.ts           absolute URLs, dates, robots, cssString
  *
@@ -62,9 +62,14 @@ export { breadcrumbListOf, jsonLd, personOf, structuredDataOf, type Person } fro
 export { rssOf, type FeedChannel, type FeedInput } from './feed.js';
 export { agentCatalogOf, type AgentCatalog, type AgentCatalogEntry, type AgentResource } from './agents.js';
 export {
+  exposedPagesOf,
+  isLlmsExposed,
   llmsFullOf,
   llmsTxtOf,
   markdownUrlOf,
+  type ExposedEntryLookup,
+  type ExposedPage,
+  type ExposedPagesOptions,
   type LlmsFullInput,
   type LlmsInput,
   type LlmsLink,
@@ -467,6 +472,91 @@ export function sectionOf<K extends string>(
   return undefined;
 }
 
+/** A section in a navigation tree that splits across more than one batch (`pagedSectionsOf`). */
+export interface PagedSection {
+  readonly url: string;
+  readonly batches: number;
+}
+
+/**
+ * Splits a section's items into batches of `batchSize` cards, keeping each non-card item (such as a subfolder heading)
+ * attached to the card that follows it.
+ *
+ * @param items - Section items in reading order, each flagging whether it counts as a card.
+ * @param batchSize - Maximum cards per batch (positive integer).
+ * @returns Frozen batches of items.
+ * @throws {Error} When `batchSize` is not a positive integer.
+ *
+ * @example
+ * splitSectionBatches([{ card: true }, { card: false }, { card: true }], 1);
+ */
+export function splitSectionBatches<T extends { readonly card: boolean }>(
+  items: readonly T[],
+  batchSize: number,
+): readonly (readonly T[])[] {
+  if (!Number.isInteger(batchSize) || batchSize < 1)
+    throw new Error(`splitSectionBatches requires a positive integer batchSize, got ${String(batchSize)}.`);
+
+  const batches: (readonly T[])[] = [];
+  let current: T[] = [];
+  let cards = 0;
+
+  for (const item of items) {
+    if (item.card && cards >= batchSize) {
+      batches.push(Object.freeze(current));
+      current = [];
+      cards = 0;
+    }
+
+    current.push(item);
+
+    if (item.card) cards += 1;
+  }
+
+  if (current.length > 0) batches.push(Object.freeze(current));
+
+  return Object.freeze(batches);
+}
+
+/**
+ * Collects every section with a URL in a navigation tree whose direct linked children span more than one batch.
+ *
+ * @param nodes - The navigation tree of a locale.
+ * @param batchSize - Maximum cards per batch (positive integer).
+ * @returns Frozen list of sections with their URL and total batch count (`batches > 1`).
+ * @throws {Error} When `batchSize` is not a positive integer.
+ *
+ * @example
+ * pagedSectionsOf(navigationOf('fr'), 4); // [{ url: '/docs', batches: 3 }]
+ */
+export function pagedSectionsOf<K extends string>(
+  nodes: readonly NavigationNode<K>[],
+  batchSize: number,
+): readonly PagedSection[] {
+  if (!Number.isInteger(batchSize) || batchSize < 1)
+    throw new Error(`pagedSectionsOf requires a positive integer batchSize, got ${String(batchSize)}.`);
+
+  const found: PagedSection[] = [];
+  const visit = (items: readonly NavigationNode<K>[]): void => {
+    for (const node of items) {
+      if (node.kind !== 'section') continue;
+
+      if (node.url !== undefined) {
+        const cards = node.children.filter((child) => child.url !== undefined).length;
+        const batches = Math.ceil(cards / batchSize);
+
+        if (batches > 1) found.push(Object.freeze({ url: node.url, batches }));
+      }
+
+      visit(node.children);
+    }
+  };
+
+  visit(nodes);
+
+  return Object.freeze(found);
+}
+
 /** A page next to another in its section: its URL and title. */
 export interface Neighbour {
   readonly url: string;
@@ -593,4 +683,47 @@ export function breadcrumbOf<K extends string>(
   const last: readonly Crumb<K>[] = title === undefined ? [] : [{ label: title, message: false, url, current: true }];
 
   return [...crumbs, ...trail, ...last];
+}
+
+const TRAIL_SEPARATOR_PATTERN = / [›‹] /;
+
+/**
+ * Formats a page's breadcrumb for compact metadata (e.g. a search result's location): drops the home step and the
+ * current page itself, translates section keys, and joins the remaining steps with a directional chevron (`›` for LTR,
+ * `‹` for RTL).
+ *
+ * @param crumbs - Breadcrumb steps from `breadcrumbOf`.
+ * @param translate - Translates message-key crumbs (`crumb.message === true`).
+ * @param dir - Reading direction (`'ltr'` or `'rtl'`); default `'ltr'`.
+ * @returns Joined trail string, or `undefined` when no intermediate step remains.
+ *
+ * @example
+ * formatTrail(breadcrumbOf(navigationOf('fr'), '/docs/cli'), t, 'ltr'); // 'Documentation'
+ */
+export function formatTrail<K extends string>(
+  crumbs: readonly Crumb<K>[],
+  translate: (key: K) => string,
+  dir: 'ltr' | 'rtl' = 'ltr',
+): string | undefined {
+  const steps = crumbs
+    .slice(1)
+    .filter((crumb) => !crumb.current)
+    .map((crumb) => (crumb.message ? translate(crumb.label) : crumb.label));
+
+  return steps.length === 0 ? undefined : steps.join(dir === 'rtl' ? ' ‹ ' : ' › ');
+}
+
+/**
+ * Splits a formatted trail back into its individual steps (`formatTrail`'s inverse).
+ *
+ * @param value - A trail string (e.g. from Pagefind metadata), if any.
+ * @returns Frozen array of steps, or `undefined` when empty or absent.
+ *
+ * @example
+ * parseTrail('Blog › Maquis'); // ['Blog', 'Maquis']
+ */
+export function parseTrail(value: string | undefined): readonly string[] | undefined {
+  if (value === undefined || value === '') return undefined;
+
+  return Object.freeze(value.split(TRAIL_SEPARATOR_PATTERN));
 }

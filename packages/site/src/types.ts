@@ -40,6 +40,8 @@ export interface MountedUrl extends SiteEntry {
   readonly key: string;
   /** Its locale's home, the route `/` (generated): never guessed from an empty key, which a folder's page has too. */
   readonly home?: true | undefined;
+  /** Whether the entry is exposed to LLMs (`llms` on its collection, indexed, not excluded). */
+  readonly llms?: boolean | undefined;
 }
 
 /** Where the locale switcher leads for one locale. */

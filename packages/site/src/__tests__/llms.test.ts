@@ -1,7 +1,7 @@
 import * as fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
-import { llmsFullOf, llmsTxtOf, markdownUrlOf } from '../index.js';
+import { exposedPagesOf, isLlmsExposed, llmsFullOf, llmsTxtOf, markdownUrlOf } from '../index.js';
 
 const site = { origin: 'https://example.dev', defaultLocale: 'fr' };
 
@@ -160,5 +160,47 @@ describe('llmsFullOf', () => {
         '',
       ].join('\n'),
     );
+  });
+});
+
+describe('isLlmsExposed and exposedPagesOf', () => {
+  const urls = [
+    { url: '/docs/cli', locale: 'fr', collection: 'pages', key: 'docs/cli', alternates: {}, llms: true },
+    { url: '/docs/intro', locale: 'fr', collection: 'pages', key: 'docs/intro', alternates: {}, llms: true },
+    { url: '/docs/beta', locale: 'fr', collection: 'pages', key: 'docs/beta', alternates: {}, llms: true },
+    { url: '/docs', locale: 'fr', collection: 'pages', key: 'docs', alternates: {}, llms: false },
+    { url: '/en/docs/cli', locale: 'en', collection: 'pages', key: 'docs/cli', alternates: {}, llms: true },
+  ];
+  const entries = new Map([
+    ['/docs/cli', { url: '/docs/cli', data: { title: 'CLI', desc: 'Commands', order: 2 }, body: '# CLI' }],
+    ['/docs/intro', { url: '/docs/intro', data: { title: 'Intro', order: 1 }, body: '# Intro' }],
+    ['/docs/beta', { url: '/docs/beta', data: { title: 'Beta' }, body: '# Beta' }],
+  ]);
+
+  it('checks whether a URL is exposed to LLMs', () => {
+    expect(isLlmsExposed(urls, '/docs/cli')).toBe(true);
+    expect(isLlmsExposed(urls, '/docs')).toBe(false);
+    expect(isLlmsExposed(urls, '/unknown')).toBe(false);
+  });
+
+  it('collects a locale’s exposed pages sorted by order then title, converting Markdown', async () => {
+    const pages = await exposedPagesOf({
+      urls,
+      locale: 'fr',
+      find: (url) => {
+        const entry = entries.get(url);
+
+        return Promise.resolve(entry === undefined ? undefined : { kind: 'entry', collection: 'pages', entry });
+      },
+      fields: { pages: { title: 'title', description: 'desc', order: 'order' } },
+      toMarkdown: (body) => `${body}\n`,
+    });
+
+    expect(pages).toEqual([
+      { url: '/docs/intro', title: 'Intro', markdown: '# Intro\n' },
+      { url: '/docs/cli', title: 'CLI', description: 'Commands', markdown: '# CLI\n' },
+      { url: '/docs/beta', title: 'Beta', markdown: '# Beta\n' },
+    ]);
+    expect(Object.isFrozen(pages)).toBe(true);
   });
 });

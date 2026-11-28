@@ -24,7 +24,40 @@
  * H1 alone when nothing else is given; plain spaces; the Markdown URLs.
  */
 import { absoluteOn, oneLine } from './shared.js';
-import type { Site } from './types.js';
+import type { MetadataFields, MountedUrl, Site } from './types.js';
+
+/** An exposed page: its URL, title, optional description and Markdown for LLMs. */
+export interface ExposedPage {
+  readonly url: string;
+  readonly title: string;
+  readonly description?: string | undefined;
+  readonly markdown: string;
+}
+
+/** A mounted entry returned by `find` for `exposedPagesOf`. */
+export interface ExposedEntryLookup {
+  readonly kind: 'entry';
+  readonly collection: string;
+  readonly entry: {
+    readonly url: string;
+    readonly data: object;
+    readonly body: string;
+  };
+}
+
+/** Options of `exposedPagesOf`. */
+export interface ExposedPagesOptions {
+  /** Every mounted URL (generated `mountedUrls`). */
+  readonly urls: readonly MountedUrl[];
+  /** Locale to collect exposed pages for. */
+  readonly locale: string;
+  /** Looks up a mounted entry by URL (generated `findByUrl`). */
+  readonly find: (url: string) => Promise<ExposedEntryLookup | { readonly kind: string } | undefined>;
+  /** Metadata field names per collection (generated `metadataFields`). */
+  readonly fields: Readonly<Record<string, MetadataFields | undefined>>;
+  /** Turns an entry's raw MDX body into LLM Markdown (`llmsMarkdownOf` of `@figatellultimate/content-collections/llms`). */
+  readonly toMarkdown: (body: string) => string;
+}
 
 /** A link of a file list: its name, its URL (a path on the site, or absolute), and what it holds. */
 export interface LlmsLink {
@@ -72,6 +105,71 @@ const linkText = (value: string): string => value.replaceAll(/[\\[\]]/g, (charac
 /** A URL as a Markdown link destination: no space nor parenthesis to end it early. */
 const destination = (url: string): string =>
   url.replaceAll(/[\s()<>]/g, (character) => `%${character.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0')}`);
+
+/**
+ * Whether a URL is exposed to LLMs in `mountedUrls`.
+ *
+ * @param urls - Every mounted URL (generated `mountedUrls`).
+ * @param url - A page's URL.
+ * @returns `true` when the URL is mounted with `llms: true`.
+ *
+ * @example
+ * isLlmsExposed(mountedUrls, '/docs/installation'); // true
+ */
+export function isLlmsExposed(urls: readonly MountedUrl[], url: string): boolean {
+  return urls.some((item) => item.url === url && item.llms === true);
+}
+
+/** A frontmatter field, read by the name its collection declares (`metadataFields`). */
+const fieldOf = (data: object, name: string | undefined): unknown =>
+  name === undefined ? undefined : Reflect.get(data, name);
+
+/**
+ * Collects a locale's LLM-exposed pages in their reading order (the collection's `order` field, then by title).
+ *
+ * @param options - Mounted URLs, target locale, entry loader, collection metadata fields and Markdown converter.
+ * @returns Frozen exposed pages with their title, optional description and Markdown.
+ *
+ * @example
+ * const pages = await exposedPagesOf({ urls: mountedUrls, locale: 'fr', find: findByUrl, fields: metadataFields, toMarkdown: llmsMarkdownOf });
+ */
+export async function exposedPagesOf(options: ExposedPagesOptions): Promise<readonly ExposedPage[]> {
+  const { urls, locale, find, fields, toMarkdown } = options;
+  const found = await Promise.all(
+    urls.filter((item) => item.llms === true && item.locale === locale).map((item) => find(item.url)),
+  );
+  const pages = found.flatMap((page) => {
+    if (page === undefined || page.kind !== 'entry' || !('collection' in page) || !('entry' in page)) return [];
+
+    const collectionFields = fields[page.collection];
+    const title = fieldOf(page.entry.data, collectionFields?.title);
+    const description = fieldOf(page.entry.data, collectionFields?.description);
+    const order = fieldOf(page.entry.data, collectionFields?.order);
+
+    return [
+      {
+        url: page.entry.url,
+        title: typeof title === 'string' ? title : page.entry.url,
+        ...(typeof description === 'string' ? { description } : {}),
+        order: typeof order === 'number' ? order : Number.POSITIVE_INFINITY,
+        markdown: toMarkdown(page.entry.body),
+      },
+    ];
+  });
+
+  return Object.freeze(
+    pages
+      .sort((a, b) => a.order - b.order || a.title.localeCompare(b.title, locale))
+      .map((page) =>
+        Object.freeze({
+          url: page.url,
+          title: page.title,
+          ...(page.description === undefined ? {} : { description: page.description }),
+          markdown: page.markdown,
+        }),
+      ),
+  );
+}
 
 /**
  * A page's Markdown version, as llms.txt asks: `.md` appended, `index.md` after a slash.
