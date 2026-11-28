@@ -57,6 +57,8 @@ export interface EntryCardProps extends Omit<ComponentProps<'article'>, 'title'>
    * largest contentful paint. Default: `false`, loaded lazily as it nears the viewport.
    */
   readonly priority?: boolean | undefined;
+  /** The image's `sizes` attribute when a layout sizes the card's media differently (e.g. a compact category card). */
+  readonly imageSizes?: string | undefined;
 }
 
 /**
@@ -106,6 +108,7 @@ export function EntryCard({
   labels,
   headingLevel = 2,
   priority = false,
+  imageSizes = ENTRY_CARD_IMAGE_SIZES,
   ...props
 }: EntryCardProps): ReactNode {
   const Heading = HEADINGS[headingLevel];
@@ -127,7 +130,7 @@ export function EntryCard({
             alt=""
             {...(priority ? { loading: 'eager', fetchPriority: 'high' } : { loading: 'lazy' })}
             fill
-            sizes={ENTRY_CARD_IMAGE_SIZES}
+            sizes={imageSizes}
           />
         </Link>
       )}

@@ -73,6 +73,23 @@ describe('EntryCard', () => {
     },
   );
 
+  it('forwards custom imageSizes when a layout sizes the card media differently', () => {
+    render(
+      <EntryCard
+        href="/blog/a"
+        title="«A»"
+        image="/covers/a.svg"
+        imageSizes="(max-width: 36rem) 5.5rem, 8rem"
+        locale="fr"
+        labels={{ tags: '«Tags»', authors: '«Auteurs»', more: '«Autres tags»' }}
+      />,
+    );
+
+    expect(document.querySelector('[data-slot="entry-card-image"]')?.getAttribute('sizes')).toBe(
+      '(max-width: 36rem) 5.5rem, 8rem',
+    );
+  });
+
   it('shows the date for the locale, without shifting it by a day', () => {
     renderCard('fr');
     expect(screen.getByText('12 novembre 2026').getAttribute('datetime')).toBe('2026-11-12');
