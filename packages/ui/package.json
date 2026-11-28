@@ -50,6 +50,7 @@
     "lint:package": "publint --strict && attw --pack . --profile esm-only --exclude-entrypoints ./styles.css"
   },
   "dependencies": {
+    "@figatellultimate/site": "workspace:*",
     "@figatellultimate/toc": "workspace:*",
     "@heroicons/react": "2.2.0",
     "radix-ui": "1.8.1"

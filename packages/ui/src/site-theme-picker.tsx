@@ -23,7 +23,7 @@
  * the theme shown ignored; a page without storage still works; the script applying only a theme the site offers, never
  * throwing; with spoken names, each option named by what it is or does, by its theme alone before the theme is known.
  */
-import { useSyncExternalStore, type ReactNode } from 'react';
+import { useEffect, useSyncExternalStore, type ReactNode } from 'react';
 
 import { SITE_THEME_STORAGE_KEY } from './scripts.js';
 
@@ -154,6 +154,22 @@ export function SiteThemePicker<T extends string>({
   // The theme the page shows, read once mounted (the server cannot know the visitor's choice), followed as it changes.
   const shown = useSyncExternalStore(subscribe, siteTheme, () => undefined);
   const current = shown === undefined ? undefined : (themes.find((theme) => theme === shown) ?? themes[0]);
+
+  // Restore a remembered theme if a parameterized root layout (e.g. locale switch) re-rendered `<html data-site-theme>`.
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(storageKey);
+
+      if (stored === null || !themes.some((theme) => theme === stored)) return;
+
+      if (stylesheetBase !== undefined && stored !== themes[0]) void ensureThemeStylesheet(stored, stylesheetBase);
+
+      if (document.documentElement.dataset['siteTheme'] !== stored)
+        document.documentElement.dataset['siteTheme'] = stored;
+    } catch {
+      // Without storage, the choice lasts the visit.
+    }
+  }, [themes, storageKey, stylesheetBase]);
 
   const applyTheme = (theme: T): void => {
     transition(() => {

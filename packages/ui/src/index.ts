@@ -30,6 +30,7 @@ export * from './entry-card-author.js';
 export * from './image-zoom.js';
 export { ImageProvider, type ImageComponent, type ImageProps } from './image.js';
 export { LinkProvider, type LinkComponent, type LinkProps } from './link.js';
+export * from './provider.js';
 export * from './locale-switcher.js';
 export * from './navbar.js';
 export * from './pager.js';

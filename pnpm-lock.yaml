@@ -667,6 +667,9 @@ importers:
 
   packages/ui:
     dependencies:
+      '@figatellultimate/site':
+        specifier: workspace:*
+        version: link:../site
       '@figatellultimate/toc':
         specifier: workspace:*
         version: link:../toc

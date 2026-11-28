@@ -2,20 +2,13 @@
  * Print margin tokens (`--fig-print-title`, `--fig-print-url`): sets a page's title and absolute URL as CSS custom
  * properties on `:root`, consumed by `@figatellultimate/themes/base.css` `@page` margin boxes when printing.
  *
- * Key design decision: server-safe (no `'use client'`) and self-escaping (`"`, `\`, line breaks, and `<` escaped as
- * `\3C ` so no title or URL can break out of `<style>`).
+ * Key design decision: server-safe (no `'use client'`) and delegates CSS string escaping to `cssString` of
+ * `@figatellultimate/site` so there is a single escaping implementation across packages.
  *
  * Invariant (`print-margins.test.tsx`): renders a `<style>` setting both custom properties with escaped CSS strings.
  */
+import { cssString } from '@figatellultimate/site';
 import type { ReactNode } from 'react';
-
-/** Escapes a text value as a CSS string safe inside `<style>`. */
-function cssString(value: string): string {
-  return `"${value
-    .replaceAll(/["\\]/g, (character) => `\\${character}`)
-    .replaceAll(/[\n\r]+/g, ' ')
-    .replaceAll('<', '\\3C ')}"`;
-}
 
 /** Props of `PrintMargins`. */
 export interface PrintMarginsProps {

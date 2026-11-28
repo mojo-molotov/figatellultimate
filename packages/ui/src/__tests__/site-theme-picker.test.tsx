@@ -167,6 +167,17 @@ describe('SiteThemePicker', () => {
     expect(root.dataset['siteTheme']).toBe('maquis');
   });
 
+  it('restores the remembered theme on remount if `<html data-site-theme>` was reset to default', async () => {
+    localStorage.setItem(SITE_THEME_STORAGE_KEY, 'calanque');
+    root.dataset['siteTheme'] = 'maquis';
+    render(<SiteThemePicker themes={THEMES} names={NAMES} label="«Thème»" stylesheetBase="/themes/" />);
+
+    await waitFor(() => {
+      expect(root.dataset['siteTheme']).toBe('calanque');
+    });
+    expect(document.head.querySelector('link[data-site-theme-sheet="calanque"]')).not.toBeNull();
+  });
+
   it.skipIf(inBrowser)(
     'names each option by its theme alone before the theme is known, the prerendered page',
     async () => {
