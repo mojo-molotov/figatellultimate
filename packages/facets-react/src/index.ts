@@ -7,12 +7,14 @@
  * `@figatellultimate/ui/styles.css`, through each part's `data-slot`.
  */
 
+export * from './components/batch-pagination.js';
 export * from './components/facet-options.js';
 export * from './components/facet-options-parts.js';
 export * from './components/facets-reset.js';
 export * from './components/listing-options.js';
 export * from './components/page-select.js';
 export * from './components/pagination.js';
+export * from './components/responsive-batch-list.js';
 export * from './components/sort-select.js';
 export * from './use-faceted-collection.js';
 export * from './use-paged-collection.js';
