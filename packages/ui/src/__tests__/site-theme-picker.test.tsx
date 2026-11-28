@@ -43,6 +43,15 @@ describe('siteThemeScript', () => {
     expect(root.dataset['siteTheme']).toBe('calanque');
   });
 
+  it('marks a remembered non-default lazy theme stylesheet as render-blocking to prevent a reload flash', () => {
+    localStorage.setItem(SITE_THEME_STORAGE_KEY, 'calanque');
+    run(siteThemeScript(THEMES, undefined, '/themes/'));
+    const link = document.head.querySelector('link[data-site-theme-sheet="calanque"]');
+
+    expect(link?.getAttribute('href')).toBe('/themes/calanque.css');
+    expect(link?.getAttribute('blocking')).toBe('render');
+  });
+
   it('never throws without storage', () => {
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new Error('denied');
@@ -146,6 +155,9 @@ describe('SiteThemePicker', () => {
     const link = document.head.querySelector('link[data-site-theme-sheet="calanque"]');
 
     expect(link?.getAttribute('href')).toBe('/themes/calanque.css');
+    // Pinning the default theme on `<html data-site-theme>` prevents the prefetched stylesheet's `:not([data-site-theme])`
+    // standalone gate from hijacking the page on hover before any click.
+    expect(root.dataset['siteTheme']).toBe('maquis');
     await userEvent.click(button);
     // Still loading: the transition waits for the stylesheet's `load` event.
     expect(transition).not.toHaveBeenCalled();

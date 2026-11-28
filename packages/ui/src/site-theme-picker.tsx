@@ -29,8 +29,15 @@ import { SITE_THEME_STORAGE_KEY } from './scripts.js';
 
 const pendingStylesheets = new Map<string, { readonly link: HTMLLinkElement; readonly promise: Promise<void> }>();
 
-/** Ensures a non-default theme's stylesheet (`<base><theme>.css`) is loaded into `<head>`, cached per URL. */
-function ensureThemeStylesheet(theme: string, base: string): Promise<void> {
+/**
+ * Ensures a non-default theme's stylesheet (`<base><theme>.css`) is loaded into `<head>`, cached per URL.
+ * Before injecting a lazy stylesheet, pins `<html data-site-theme>` to `defaultTheme` if unset so the newly appended
+ * theme's `:not([data-site-theme])` standalone gate cannot hijack the page on hover/prefetch.
+ */
+function ensureThemeStylesheet(theme: string, base: string, defaultTheme: string | undefined): Promise<void> {
+  if (defaultTheme !== undefined && document.documentElement.dataset['siteTheme'] === undefined)
+    document.documentElement.dataset['siteTheme'] = defaultTheme;
+
   const href = `${base}${theme}.css`;
   const existing = pendingStylesheets.get(href);
 
@@ -162,7 +169,8 @@ export function SiteThemePicker<T extends string>({
 
       if (stored === null || !themes.some((theme) => theme === stored)) return;
 
-      if (stylesheetBase !== undefined && stored !== themes[0]) void ensureThemeStylesheet(stored, stylesheetBase);
+      if (stylesheetBase !== undefined && stored !== themes[0])
+        void ensureThemeStylesheet(stored, stylesheetBase, themes[0]);
 
       if (document.documentElement.dataset['siteTheme'] !== stored)
         document.documentElement.dataset['siteTheme'] = stored;
@@ -188,7 +196,8 @@ export function SiteThemePicker<T extends string>({
 
     const tasks: Promise<void>[] = [];
 
-    if (stylesheetBase !== undefined && theme !== themes[0]) tasks.push(ensureThemeStylesheet(theme, stylesheetBase));
+    if (stylesheetBase !== undefined && theme !== themes[0])
+      tasks.push(ensureThemeStylesheet(theme, stylesheetBase, themes[0]));
 
     if (prepare !== undefined) tasks.push(prepare(theme));
 
@@ -211,7 +220,8 @@ export function SiteThemePicker<T extends string>({
   const prefetch = (theme: T): void => {
     if (theme === current) return;
 
-    if (stylesheetBase !== undefined && theme !== themes[0]) void ensureThemeStylesheet(theme, stylesheetBase);
+    if (stylesheetBase !== undefined && theme !== themes[0])
+      void ensureThemeStylesheet(theme, stylesheetBase, themes[0]);
 
     onPrefetch?.(theme);
   };

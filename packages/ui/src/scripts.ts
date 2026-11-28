@@ -84,7 +84,7 @@ export function siteThemeScript(
   const load =
     stylesheetBase === undefined
       ? ''
-      : `if(t!==${literal(themes[0])}){var l=document.createElement('link');l.rel='stylesheet';l.href=${literal(stylesheetBase)}+t+'.css';l.dataset.siteThemeSheet=t;document.head.appendChild(l)}`;
+      : `if(t!==${literal(themes[0])}){var l=document.createElement('link');l.rel='stylesheet';l.href=${literal(stylesheetBase)}+t+'.css';l.dataset.siteThemeSheet=t;l.setAttribute('blocking','render');document.head.appendChild(l)}`;
 
   return `try{var t=localStorage.getItem(${literal(storageKey)});if(${literal(themes)}.indexOf(t)>-1){document.documentElement.dataset.siteTheme=t;${load}}}catch(e){}`;
 }
