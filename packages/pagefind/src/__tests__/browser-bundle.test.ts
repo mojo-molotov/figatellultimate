@@ -57,13 +57,13 @@ beforeAll(async () => {
         'Une jument broute au pré.',
         '<pre class="shiki"><code><span>jument</span> <span>jument</span> <span>jument</span> galopin</code></pre>',
       ),
-      // A page with a headed section: a match under the heading carries its anchor id, one above it carries none.
+      // A page with an h1 intro and a headed section: a passing mention under h1 must not beat the dedicated section.
       built(
         '/docs/sections',
         'fr',
         'pages',
-        'Introduction sur la garrigue.',
-        '<h2 id="elevage">Élevage</h2><p>Les chèvres pâturent dans la montagne.</p>',
+        'Introduction sur la garrigue et les chèvres.',
+        '<h1 id="garrigue">Garrigue</h1><p>Introduction sur la garrigue.</p><h2 id="elevage">Élevage des chèvres</h2><p>Les chèvres pâturent dans la montagne; les chèvres donnent du lait.</p>',
       ),
     ],
   });

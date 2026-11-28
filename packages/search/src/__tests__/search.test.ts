@@ -352,7 +352,7 @@ describe('createSearch', () => {
     expect(done(await search.query('anything')).results.map((item) => item.url)).toEqual(['/blog']);
   });
 
-  it('reads the best matching heading anchor from sub_results when present', async () => {
+  it('picks the highest-weighted heading anchor from sub_results, omitting h1 and absent anchors', async () => {
     const fragment = (url: string, sub_results?: unknown) => ({
       data: () =>
         Promise.resolve({
@@ -367,7 +367,16 @@ describe('createSearch', () => {
       search: () =>
         Promise.resolve({
           results: [
-            fragment('/docs/config', [{ anchor: { id: 'collections' } }, { anchor: { id: 'other' } }]),
+            // Pagefind returns sub_results in document order: the later, higher-weighted section must win.
+            fragment('/docs/config', [
+              { anchor: { element: 'h1', id: 'top' }, weighted_locations: [{ weight: 1 }] },
+              { anchor: { element: 'h2', id: 'collections' }, weighted_locations: [{ weight: 5 }, { weight: 1 }] },
+            ]),
+            // When `<h1>` itself is the best match, no fragment is needed (top of page).
+            fragment('/docs/title-match', [
+              { anchor: { element: 'h1', id: 'title' }, weighted_locations: [{ weight: 7 }] },
+              { anchor: { element: 'h2', id: 'details' }, weighted_locations: [{ weight: 1 }] },
+            ]),
             fragment('/docs/intro', [{ anchor: { id: '' } }]),
             fragment('/docs/plain', [{}]),
             fragment('/docs/none'),
@@ -383,6 +392,7 @@ describe('createSearch', () => {
 
     expect(done(await search.query('anything')).results.map((item) => [item.url, item.anchor])).toEqual([
       ['/docs/config', 'collections'],
+      ['/docs/title-match', undefined],
       ['/docs/intro', undefined],
       ['/docs/plain', undefined],
       ['/docs/none', undefined],

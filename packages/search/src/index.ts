@@ -272,19 +272,55 @@ function withoutTitle(excerpt: string, title: string): string {
   return mark.open ? `<mark>${rest}` : rest;
 }
 
-/** The best matching heading's id from Pagefind's `sub_results`, `undefined` when absent or above any heading. */
+/** The total relevance weight of a Pagefind `sub_result`'s `weighted_locations` (1 when absent). */
+function subResultWeight(entry: Readonly<Record<string, unknown>>): number {
+  const locations = entry['weighted_locations'];
+
+  if (!Array.isArray(locations) || locations.length === 0) return 1;
+
+  let total = 0;
+
+  for (const location of locations) {
+    if (isObject(location) && typeof location['weight'] === 'number' && Number.isFinite(location['weight']))
+      total += location['weight'];
+  }
+
+  return total;
+}
+
+/**
+ * The highest-weighted matching section's heading id from Pagefind's `sub_results` (which Pagefind returns in
+ * document order, not by relevance). Returns `undefined` when the best match sits above headings or under `<h1>`.
+ */
 function anchorOf(data: Readonly<Record<string, unknown>>): string | undefined {
   const sub = data['sub_results'];
 
   if (!Array.isArray(sub) || sub.length === 0) return undefined;
 
-  const first: unknown = sub[0];
+  let best: Readonly<Record<string, unknown>> | undefined;
+  let bestWeight = -1;
 
-  if (!isObject(first)) return undefined;
+  for (const candidate of sub) {
+    if (!isObject(candidate)) continue;
 
-  const anchor = first['anchor'];
+    const weight = subResultWeight(candidate);
 
-  return isObject(anchor) && typeof anchor['id'] === 'string' && anchor['id'] !== '' ? anchor['id'] : undefined;
+    if (weight > bestWeight) {
+      best = candidate;
+      bestWeight = weight;
+    }
+  }
+
+  if (best === undefined) return undefined;
+
+  const anchor = best['anchor'];
+
+  if (!isObject(anchor) || typeof anchor['id'] !== 'string' || anchor['id'] === '') return undefined;
+
+  // `<h1>` is the page's own title at the top: landing on the page URL itself needs no fragment.
+  if (typeof anchor['element'] === 'string' && anchor['element'].toLowerCase() === 'h1') return undefined;
+
+  return anchor['id'];
 }
 
 /**
