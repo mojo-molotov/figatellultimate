@@ -12,7 +12,7 @@ import type { Locale } from '#figatellultimate/locales';
 import { pageSegment } from '#figatellultimate/urls';
 
 import { SiteHeader } from '../components/site-header';
-import { PRIORITY_CARDS } from '../components/priority';
+import { cardPriority, type CardsPage } from '../components/priority';
 import { PostCard } from './cards';
 import { FolderSections } from './folder-sections';
 import { Listing } from './listing';
@@ -24,14 +24,14 @@ import { cardDataOf, folderLocalesOf, indexOf, itemsOf, postsOf, sectionDataOf, 
  *
  * @param posts - The page's posts, in its order.
  * @param locale - The page's locale.
- * @param first - How many of the first cards load their images at once (`PRIORITY_CARDS`).
+ * @param page - The kind of page, whose first cards load their images at once (`PRIORITY_CARDS`).
  * @param currentAuthor - On an author's page, the author, left out of each card's authors.
  * @returns Each post's card, by URL.
  */
 export async function cardsOf(
   posts: readonly BlogPost[],
   locale: Locale,
-  first: number,
+  page: CardsPage,
   currentAuthor?: string,
 ): Promise<Record<string, ReactNode>> {
   const data = await cardDataOf(posts, locale, currentAuthor);
@@ -40,7 +40,7 @@ export async function cardsOf(
   return Object.fromEntries(
     Object.entries(data).map(([url, card], index) => [
       url,
-      <PostCard key={url} card={card} priority={index < first} />,
+      <PostCard key={url} card={card} priority={cardPriority(page, index, card.image)} />,
     ]),
   );
 }
@@ -80,8 +80,8 @@ export async function BlogFolderPage({ folder }: { readonly folder: BlogFolder }
             labels={labels}
             items={itemsOf(posts)}
             locale={locale}
-            cards={await cardsOf(posts, locale, PRIORITY_CARDS.subcategory)}
-            priorityCards={PRIORITY_CARDS.subcategory}
+            cards={await cardsOf(posts, locale, 'subcategory')}
+            priorityCards="subcategory"
             paged={{
               page: folder.page,
               pages: folder.pages,

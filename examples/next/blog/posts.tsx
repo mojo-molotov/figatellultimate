@@ -28,6 +28,7 @@ import { useCallback, useMemo, type ReactNode } from 'react';
 
 import { localeInfo, type Locale } from '#figatellultimate/locales';
 
+import { cardPriority, type CardsPage } from '../components/priority';
 import { PostCard } from './cards';
 import { postsEngine, type PostItem } from './facets';
 import { loadListingIndex, loadListingBatch } from './listing-index';
@@ -54,8 +55,8 @@ interface PostsProps {
   readonly locale: Locale;
   /** The cards rendered on the server: every post's, or the page's only when `paged`. */
   readonly cards: Readonly<Record<string, ReactNode>>;
-  /** How many of a view's first cards load their images at once, when built here (`PRIORITY_CARDS`). */
-  readonly priorityCards: number;
+  /** The kind of page, whose first cards in a view load their images at once, when built here (`PRIORITY_CARDS`). */
+  readonly priorityCards: CardsPage;
   /** Every text, formatted on the server; those that take a count or a page, precompiled (`listing-labels.ts`). */
   readonly labels: ListingLabels;
   /** The facets offered; default both (an author's page leaves out the authors). */
@@ -119,7 +120,10 @@ function PostsView({
     const prerendered = cards[key];
     const data = index?.cards[key] ?? batches.find((batch) => key in batch.cards)?.cards[key];
 
-    return prerendered ?? (data === undefined ? null : <PostCard card={data} priority={rank < priorityCards} />);
+    return (
+      prerendered ??
+      (data === undefined ? null : <PostCard card={data} priority={cardPriority(priorityCards, rank, data.image)} />)
+    );
   };
   // The locale's writing direction: arrow keys follow it in the components.
   const dir = localeInfo[locale].dir;

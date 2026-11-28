@@ -26,7 +26,7 @@ import { useMemo, type ReactNode } from 'react';
 
 import { localeInfo, type Locale } from '#figatellultimate/locales';
 
-import { PRIORITY_CARDS } from '../components/priority';
+import { cardPriority } from '../components/priority';
 import { PostCard, type SectionData } from './cards';
 import { loadFolderBatch } from './listing-index';
 import type { ListingLabels } from './listing-labels';
@@ -165,7 +165,7 @@ function SectionsView({
               <Collector>
                 <EntryCard
                   // The first categories' images: the page's largest paint, loaded at once.
-                  priority={index < PRIORITY_CARDS.blog}
+                  priority={cardPriority('blog', index, section.image)}
                   href={section.href ?? paged.first}
                   title={section.title}
                   {...(section.description === undefined ? {} : { description: section.description })}
@@ -201,7 +201,7 @@ function SectionsView({
               {section.posts.map((card, at) => (
                 <li key={card.href}>
                   {/* Under the section's own heading; the page's first cards, its largest paint, loaded at once. */}
-                  <PostCard card={card} headingLevel={3} priority={before + at < PRIORITY_CARDS.category} />
+                  <PostCard card={card} headingLevel={3} priority={cardPriority('category', before + at, card.image)} />
                 </li>
               ))}
             </ol>

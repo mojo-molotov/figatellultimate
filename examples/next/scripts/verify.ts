@@ -1192,6 +1192,44 @@ for (const item of mountedUrls) {
     contentImages.every((tag) => / width="\d+"/.test(tag) && / height="\d+"/.test(tag)),
     'a local content image without its measured width and height',
   );
+
+  // The cards a desktop shows on arrival but a phone does not (`components/priority.ts`): each lazy image is preloaded
+  // for a desktop only, with its own `srcset` and `sizes`, so that the browser fetches it once.
+  const attributeOf = (tag: string, name: string): string | undefined =>
+    new RegExp(`\\s${name}="([^"]*)"`, 'i').exec(tag)?.[1];
+  const preloadsOf = (html: string): string[] =>
+    [...html.matchAll(/<link[^>]*rel="preload"[^>]*>/g)]
+      .map((match) => match[0])
+      .filter((tag) => attributeOf(tag, 'as') === 'image' && attributeOf(tag, 'media') !== undefined);
+  let preloaded = 0;
+
+  for (const item of mountedUrls) {
+    const html = htmlOf(item.url) ?? '';
+    const cards = imagesOf(html, 'entry-card-image');
+
+    for (const preload of preloadsOf(html)) {
+      const image = cards.find((tag) => attributeOf(tag, 'srcset') === attributeOf(preload, 'imagesrcset'));
+
+      preloaded += 1;
+      check(
+        attributeOf(preload, 'media') === '(min-width: 64rem)' && attributeOf(preload, 'fetchpriority') === 'high',
+        `${item.url}: a card's preload not for a desktop only, with a high priority`,
+      );
+      check(
+        image !== undefined && attributeOf(image, 'sizes') === attributeOf(preload, 'imagesizes'),
+        `${item.url}: a card's preload not the image's own srcset and sizes (fetched twice)`,
+      );
+      check(
+        image === undefined || attributeOf(image, 'loading') === 'lazy',
+        `${item.url}: a card preloaded for a desktop, already loaded at once`,
+      );
+    }
+  }
+
+  check(
+    preloaded > 0 && preloadsOf(htmlOf('/blog') ?? '').length > 0,
+    "/blog: no card's image preloaded for a desktop",
+  );
 }
 
 // The SEO of pages without frontmatter (`folderPages.metadata`, `pages.metadata`): every category, subcategory and
@@ -1236,6 +1274,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    `✓ ${String(mountedUrls.length)} mounted URLs prerendered with canonical, alternates, x-default and Open Graph; subcategory pages with their default view and pagination links; sitemap (dated, noindex left out), structured data, feeds, robots.txt, drafts, the footer, the listings' and the folder pages' batches, one search bundle per locale (French and English queries, stemming, collection filter), an llms.txt per locale listing the documentation's Markdown, each page's Markdown without what <llm-exclude> holds, the ARD manifest listing the agent skill, images through next/image with their sizes, a meta description on every folder and author page, with plain spaces, and the navbar from the content in each page's language as expected.`,
+    `✓ ${String(mountedUrls.length)} mounted URLs prerendered with canonical, alternates, x-default and Open Graph; subcategory pages with their default view and pagination links; sitemap (dated, noindex left out), structured data, feeds, robots.txt, drafts, the footer, the listings' and the folder pages' batches, one search bundle per locale (French and English queries, stemming, collection filter), an llms.txt per locale listing the documentation's Markdown, each page's Markdown without what <llm-exclude> holds, the ARD manifest listing the agent skill, images through next/image with their sizes, the cards only a desktop shows on arrival preloaded for it with their own sources, a meta description on every folder and author page, with plain spaces, and the navbar from the content in each page's language as expected.`,
   );
 }

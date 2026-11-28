@@ -10,7 +10,7 @@ import type { Locale } from '#figatellultimate/locales';
 import { navigationOf } from '#figatellultimate/navigation';
 import { findPageByUrl } from '#figatellultimate/pages';
 
-import { PRIORITY_CARDS } from './priority';
+import { cardPriority } from './priority';
 
 /**
  * The pages of the section a page opens, e.g. `/docs` lists its pages and subfolders: the same navigation as
@@ -52,10 +52,11 @@ export async function SectionPages({
               <Collector>
                 <EntryCard
                   // The page's first cards (subfolder headings aside): its largest paint, loaded at once.
-                  priority={
-                    section.children.slice(0, index).filter((above) => above.url !== undefined).length <
-                    PRIORITY_CARDS.section
-                  }
+                  priority={cardPriority(
+                    'section',
+                    section.children.slice(0, index).filter((above) => above.url !== undefined).length,
+                    page?.data.featuredPictureUrl,
+                  )}
                   href={node.url}
                   title={label}
                   {...(page === undefined ? {} : { description: page.data.metadescription })}
