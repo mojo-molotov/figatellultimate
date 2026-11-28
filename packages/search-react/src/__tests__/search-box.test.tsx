@@ -641,6 +641,58 @@ describe('SearchBox', () => {
     expect(document.querySelector('[data-slot="search-box-collections"]')).toBeNull();
   });
 
+  it('navigates and opens in a new tab with the matching section anchor while keeping the page URL for current', async () => {
+    const anchored = {
+      search: () =>
+        Promise.resolve({
+          results: [
+            {
+              data: () =>
+                Promise.resolve({
+                  url: '/docs/config',
+                  excerpt: '…<mark>collections</mark>…',
+                  meta: { title: 'Configuration' },
+                  filters: { collection: ['pages'] },
+                  sub_results: [{ anchor: { id: 'collections' } }],
+                }),
+            },
+          ],
+        }),
+    };
+    const search = createSearch<Collection>({
+      collections: ['pages', 'blog'],
+      locale: 'fr',
+      debounce: 0,
+      load: () => Promise.resolve(anchored),
+    });
+    const navigated: string[] = [];
+    const opened: string[] = [];
+    const user = userEvent.setup();
+
+    render(
+      <SearchBox
+        search={search}
+        current="/docs/config"
+        labels={LABELS}
+        onNavigate={(url) => {
+          navigated.push(url);
+        }}
+        onOpenInNewTab={(url) => {
+          opened.push(url);
+        }}
+      />,
+    );
+    await user.type(screen.getByRole('combobox'), 'collections');
+    await waitFor(() => {
+      expect(options()).toHaveLength(1);
+    });
+    expect(options()[0]?.getAttribute('aria-current')).toBe('page');
+    await user.keyboard('{Control>}{Enter}{/Control}');
+    expect(opened).toEqual(['/docs/config#collections']);
+    await user.keyboard('{Enter}');
+    expect(navigated).toEqual(['/docs/config#collections']);
+  });
+
   it('composes from its parts, forwarding className', async () => {
     const search = createSearch<Collection>({
       collections: ['pages', 'blog'],

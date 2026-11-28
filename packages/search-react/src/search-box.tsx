@@ -97,8 +97,8 @@ interface SearchBoxContext {
   readonly minLength: number;
   readonly navigate: (url: string) => void;
   readonly openInNewTab: (url: string) => void;
-  /** The active result's URL (`''` when none). */
-  readonly active: string;
+  /** The active result's navigation URL, with its section anchor when matched (`''` when none). */
+  readonly activeHref: string;
   readonly input: RefObject<HTMLInputElement | null>;
   /** "See more", while rendered: ↓ on the last result reaches it. */
   readonly more: RefObject<HTMLButtonElement | null>;
@@ -107,6 +107,10 @@ interface SearchBoxContext {
   readonly activateFrom: (index: number) => void;
   readonly dir: 'ltr' | 'rtl' | undefined;
 }
+
+/** A result's navigation URL: with its best matching section's anchor when Pagefind found one. */
+const hrefOf = (result: SearchResult<string>): string =>
+  result.anchor === undefined ? result.url : `${result.url}#${result.anchor}`;
 
 const Context = createContext<SearchBoxContext | null>(null);
 
@@ -332,7 +336,11 @@ export function SearchBox<C extends string>({
       ((url) => {
         globalThis.open(url, '_blank', 'noopener');
       }),
-    active: value,
+    activeHref: (() => {
+      const match = binding.results.find((result) => result.url === value);
+
+      return match === undefined ? '' : hrefOf(match);
+    })(),
     input,
     more,
     autoFocus,
@@ -523,7 +531,7 @@ export function SearchBoxSort(props: ComponentProps<typeof Select.Trigger>): Rea
  *   drawn over it and never heard, the field described by the spoken one.
  */
 export function SearchBoxInput({ onKeyDown, ...props }: ComponentProps<typeof Command.Input>): ReactNode {
-  const { labels, term, setTerm, input, autoFocus, active, openInNewTab } = use('SearchBoxInput');
+  const { labels, term, setTerm, input, autoFocus, activeHref, openInNewTab } = use('SearchBoxInput');
   const description = useId();
   const spoken = labels.spoken?.placeholder;
 
@@ -548,9 +556,9 @@ export function SearchBoxInput({ onKeyDown, ...props }: ComponentProps<typeof Co
           }
 
           // With a modifier, Enter opens the active result in a new tab instead (cmdk skips prevented events).
-          if (event.key === 'Enter' && hasModifier(event) && active !== '') {
+          if (event.key === 'Enter' && hasModifier(event) && activeHref !== '') {
             event.preventDefault();
-            openInNewTab(active);
+            openInNewTab(activeHref);
           }
         }}
         {...props}
@@ -675,12 +683,13 @@ export function SearchBoxResult({ result, children, ...props }: SearchBoxResultP
   const trail = trailOf(result.url);
   const date = result.date === undefined ? undefined : dateOf(result.date);
   const here = result.url === current;
+  const href = hrefOf(result);
 
   return (
     <Command.Item
       value={result.url}
       onSelect={() => {
-        navigate(result.url);
+        navigate(href);
       }}
       onClickCapture={(event) => {
         if (!hasModifier(event)) return;
@@ -688,13 +697,13 @@ export function SearchBoxResult({ result, children, ...props }: SearchBoxResultP
         // Before cmdk's own click: a modified click opens a new tab, not the result in place.
         event.preventDefault();
         event.stopPropagation();
-        openInNewTab(result.url);
+        openInNewTab(href);
       }}
       onAuxClick={(event) => {
         if (event.button !== 1) return;
 
         event.preventDefault();
-        openInNewTab(result.url);
+        openInNewTab(href);
       }}
       data-slot="search-box-result"
       data-collection={result.collection}
