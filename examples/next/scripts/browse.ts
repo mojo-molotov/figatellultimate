@@ -680,6 +680,104 @@ try {
         described === 'Tapez au moins 3 caractères.',
       `/docs: the search placeholder not shown where typed text begins, or heard (${JSON.stringify({ placed, described })})`,
     );
+
+    // Arrowing down past the viewport and back up past the first result scrolls the field back into view, still focused,
+    // and every result spans the dialog's whole width with equal padding on both sides (not constrained by the close button).
+    await field.fill('figatellu');
+    await dialog.locator('[data-slot="search-box-result"]').first().waitFor();
+    const symmetry = await dialog.evaluate(() => {
+      const content = document.querySelector('[data-slot="search-dialog-content"]');
+      const row = document.querySelector('[data-slot="search-box-field"]');
+      const close = document.querySelector('[data-slot="search-dialog-close"]');
+      const results = [...document.querySelectorAll('[data-slot="search-box-result"]')];
+
+      if (content === null || row === null || close === null || results.length === 0) return undefined;
+
+      const box = content.getBoundingClientRect();
+      const innerLeft = box.left + content.clientLeft;
+      const innerRight = innerLeft + content.clientWidth;
+      const closeBox = close.getBoundingClientRect();
+      const fieldBox = row.getBoundingClientRect();
+
+      return {
+        fieldBeforeClose: fieldBox.right <= closeBox.left,
+        symmetric: results.every((result) => {
+          const rect = result.getBoundingClientRect();
+
+          return (
+            Math.abs(rect.left - innerLeft - (innerRight - rect.right)) <= 1 &&
+            Math.abs(rect.right - closeBox.right) <= 1
+          );
+        }),
+      };
+    });
+
+    check(
+      symmetry !== undefined && symmetry.fieldBeforeClose && symmetry.symmetric,
+      `/docs: desktop search results do not span the dialog's whole width with equal padding (${JSON.stringify(symmetry)})`,
+    );
+    // ↓ past the last result focuses "see more" alone (no result highlighted); Enter activates it instead of navigating.
+    await dialog.keyboard.press('End');
+    await dialog.keyboard.press('ArrowDown');
+    const onMore = await dialog.evaluate(() => ({
+      focused: document.activeElement === document.querySelector('[data-slot="search-box-more"]'),
+      selected: document.querySelector('[data-slot="search-box-result"][aria-selected="true"]') !== null,
+    }));
+
+    check(
+      onMore.focused && !onMore.selected,
+      `/docs: arrowing down to "see more" left a result highlighted (${JSON.stringify(onMore)})`,
+    );
+    await dialog.keyboard.press('Enter');
+    await dialog.waitForFunction(() => document.querySelectorAll('[data-slot="search-box-result"]').length > 5);
+    check(
+      new URL(dialog.url()).pathname === '/docs',
+      `/docs: pressing Enter on "see more" navigated away (${dialog.url()})`,
+    );
+    const total = await dialog.locator('[data-slot="search-box-result"]').count();
+
+    await dialog.keyboard.press('End');
+    const scrolledAway = await dialog.evaluate(() => {
+      const content = document.querySelector('[data-slot="search-dialog-content"]');
+      const row = document.querySelector('[data-slot="search-box-field"]');
+
+      return (
+        content !== null &&
+        row !== null &&
+        content.scrollTop > 0 &&
+        row.getBoundingClientRect().top < content.getBoundingClientRect().top
+      );
+    });
+
+    for (let step = 0; step < total; step += 1) await dialog.keyboard.press('ArrowUp');
+
+    const returned = await dialog.evaluate(() => {
+      const content = document.querySelector('[data-slot="search-dialog-content"]');
+      const row = document.querySelector('[data-slot="search-box-field"]');
+      const input = document.querySelector('[data-slot="search-box-input"]');
+
+      if (content === null || row === null || input === null) return undefined;
+
+      const box = content.getBoundingClientRect();
+      const fieldBox = row.getBoundingClientRect();
+
+      return {
+        focused: document.activeElement === input,
+        selected: document.querySelector('[data-slot="search-box-result"][aria-selected="true"]') !== null,
+        scrollTop: Math.round(content.scrollTop),
+        visible: fieldBox.top >= box.top && fieldBox.bottom <= box.bottom,
+      };
+    });
+
+    check(
+      scrolledAway &&
+        returned !== undefined &&
+        returned.focused &&
+        !returned.selected &&
+        returned.scrollTop === 0 &&
+        returned.visible,
+      `/docs: arrowing back up past the first search result did not reveal the focused field (${JSON.stringify({ scrolledAway, returned })})`,
+    );
     await dialog.close();
   }
 
