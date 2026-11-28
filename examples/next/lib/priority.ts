@@ -16,18 +16,21 @@ import { preload } from 'react-dom';
 /** Where a desktop starts: the cards beyond a phone's count are preloaded from this width on. */
 export const DESKTOP_MEDIA = '(min-width: 64rem)';
 
+/** Compact category preview image sizes (matches `base.css`: `5.5rem` on a phone, `8rem` on a desktop). */
+export const CATEGORY_CARD_IMAGE_SIZES = '(max-width: 36rem) 5.5rem, 8rem';
+
 /** Each kind of page's count, on a phone and on a desktop (at least as many). */
 export const PRIORITY_CARDS = {
   /** The blog's own page: its categories. */
-  blog: { mobile: 2, desktop: 4 },
+  blog: { mobile: 1, desktop: 4 },
   /** A category: its subcategories' sections, counted across them. */
-  category: { mobile: 2, desktop: 4 },
+  category: { mobile: 1, desktop: 4 },
   /** A subcategory: its posts. */
-  subcategory: { mobile: 2, desktop: 2 },
+  subcategory: { mobile: 1, desktop: 2 },
   /** An author's page: their posts, under their bio. */
-  author: { mobile: 2, desktop: 2 },
+  author: { mobile: 1, desktop: 2 },
   /** A section's page (`/docs`): its pages, subfolder headings aside. */
-  section: { mobile: 2, desktop: 2 },
+  section: { mobile: 1, desktop: 2 },
 } as const satisfies Readonly<Record<string, { readonly mobile: number; readonly desktop: number }>>;
 
 /** A kind of page showing cards. */
@@ -49,7 +52,8 @@ export function cardPriority(page: CardsPage, rank: number, image: string | unde
 
   if (rank < desktop && image !== undefined) {
     // The image's own sources, as `next/image` serves it in the card: the preload is the image's request.
-    const { props } = getImageProps({ src: image, alt: '', fill: true, sizes: ENTRY_CARD_IMAGE_SIZES });
+    const sizes = page === 'category' ? CATEGORY_CARD_IMAGE_SIZES : ENTRY_CARD_IMAGE_SIZES;
+    const { props } = getImageProps({ src: image, alt: '', fill: true, sizes });
 
     preload(props.src, {
       as: 'image',

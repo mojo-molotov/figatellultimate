@@ -7,6 +7,9 @@ import createNextIntlPlugin from 'next-intl/plugin';
 // in its locale's layout (`app/[locale]/not-found.tsx`). Cache Components (`cacheComponents: true`) are optional in Next 16.4 and become the
 // default in Next 17; see the README to enable them. next-intl routes by locale.
 const nextConfig: NextConfig = {
+  images: {
+    formats: ['image/avif', 'image/webp'],
+  },
   experimental: {
     agentUpgrade: 'security',
   },

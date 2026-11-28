@@ -50,14 +50,22 @@ export function PostCard({
   card,
   headingLevel = 2,
   priority = false,
+  imageSizes,
 }: {
   readonly card: CardData;
   readonly headingLevel?: EntryCardHeadingLevel;
   readonly priority?: boolean;
+  readonly imageSizes?: string | undefined;
 }): ReactNode {
   return (
     <Collector>
-      <EntryCard data-key={card.href} headingLevel={headingLevel} priority={priority} {...card} />
+      <EntryCard
+        data-key={card.href}
+        headingLevel={headingLevel}
+        priority={priority}
+        imageSizes={imageSizes}
+        {...card}
+      />
     </Collector>
   );
 }
