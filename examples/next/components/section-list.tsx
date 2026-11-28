@@ -51,7 +51,10 @@ const loadSectionBatch = createIndexLoader<readonly SectionBatchItem[]>((json) =
  * @returns `ResponsiveBatchList` with lazy desktop `SectionPagination`.
  */
 export function SectionList({
+  first,
+  page,
   initial,
+  firstBatchUrl,
   batchUrls,
   totalCards,
   batchSize,
@@ -59,7 +62,10 @@ export function SectionList({
   labels,
   paginationLabels,
 }: {
+  readonly first: string;
+  readonly page: number;
   readonly initial: readonly SectionInitialItem[];
+  readonly firstBatchUrl: string;
   readonly batchUrls: readonly string[];
   readonly totalCards: number;
   readonly batchSize: number;
@@ -70,6 +76,8 @@ export function SectionList({
   return (
     <ResponsiveBatchList
       initial={initial}
+      initialPage={page}
+      firstBatchUrl={firstBatchUrl}
       batchUrls={batchUrls}
       load={loadSectionBatch}
       renderItem={(item) => ({
@@ -93,6 +101,8 @@ export function SectionList({
       renderPagination={({ onPageChange, onPrefetchPage }) => (
         <Suspense fallback={null}>
           <SectionPagination
+            first={first}
+            page={page}
             totalCards={totalCards}
             batchSize={batchSize}
             locale={locale}

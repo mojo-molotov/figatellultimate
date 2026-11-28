@@ -4,7 +4,7 @@
  * post's footer), so that a route imports only the client code of its own kind of page.
  */
 import { toNextMetadata } from '@figatellultimate/next16';
-import { markdownUrlOf, metadataOf, sectionOf, structuredDataOf } from '@figatellultimate/site';
+import { markdownUrlOf, metadataOf, sectionOf, structuredDataOf, type ListingLocales } from '@figatellultimate/site';
 import { keptHeadings } from '@figatellultimate/toc';
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
@@ -50,15 +50,29 @@ export async function EntryPage(props: {
   readonly authors?: readonly { readonly name: string; readonly url: string | undefined }[];
   readonly section?: ReactNode;
   readonly footer?: ReactNode;
+  /** Paged section descriptors per locale, so the locale switcher follows `/docs/page/N` ↔ `/en/docs/page/N`. */
+  readonly listing?: ListingLocales | undefined;
+  /** The rendered page's URL when it differs from the entry's first page (e.g. `/docs/page/2`). */
+  readonly pageUrl?: string | undefined;
+  /** Whether Pagefind indexes this page's body; `false` on `/page/2+` slices so the search never duplicates `/docs`. */
+  readonly indexed?: boolean | undefined;
 }): Promise<ReactNode> {
-  const { found } = props;
+  const { found, indexed = true } = props;
   const { entry } = found;
+  const currentUrl = props.pageUrl ?? entry.url;
   // The entry's body is what the search indexes; the header and the section's list stay out of it. Its
   // breadcrumb rides along as Pagefind metadata: the search shows where each result sits.
   const trail = await trailOf(entry.locale, entry.url);
   const body = (
     <>
-      <div data-pagefind-body {...(trail === undefined ? {} : { 'data-pagefind-meta': `breadcrumb:${trail}` })}>
+      <div
+        {...(indexed
+          ? {
+              'data-pagefind-body': '',
+              ...(trail === undefined ? {} : { 'data-pagefind-meta': `breadcrumb:${trail}` }),
+            }
+          : { 'data-pagefind-ignore': 'all' })}
+      >
         <Body code={entry.data.mdx} />
       </div>
       {/* Out of the indexed body: a section's page lists its pages, which are indexed on their own. */}
@@ -74,7 +88,7 @@ export async function EntryPage(props: {
           <link rel="describedby" href={urlOf(entry.locale, ['llms.txt'])} />
         </>
       ) : null}
-      <PrintMargins title={entry.data.title} url={entry.url} />
+      <PrintMargins title={entry.data.title} url={currentUrl} />
       <StructuredDataScript
         data={[
           structuredDataOf(entry, metadataFields[found.collection], site, { authors: props.authors ?? [] }),
@@ -93,7 +107,14 @@ export async function EntryPage(props: {
     return (
       <>
         {data}
-        <SiteHeader locale={entry.locale} url={entry.url} title={entry.data.title} />
+        <SiteHeader
+          locale={entry.locale}
+          url={currentUrl}
+          crumbs={entry.url}
+          translates={entry.url}
+          title={entry.data.title}
+          listing={props.listing}
+        />
         <main data-collection={found.collection}>{body}</main>
       </>
     );

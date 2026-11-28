@@ -1334,7 +1334,7 @@ try {
 
     check(sameLine, '/docs on a desktop: page select should sit on the same line as the heading');
     await desktop.locator('[data-slot="section-list"] [data-slot="pagination-next"]').click();
-    await desktop.waitForURL('**/docs?page=2');
+    await desktop.waitForURL('**/docs/page/2');
     await desktop
       .waitForFunction(
         (first) =>
@@ -1354,6 +1354,25 @@ try {
     check(
       JSON.stringify(await titles()) === JSON.stringify(page1),
       '/docs on a desktop: Back did not restore page 1 cards',
+    );
+    // Direct visit to prerendered `/docs/page/2` renders page 2 cards and navigates back to `/docs` via Previous.
+    await desktop.goto(`${base}/docs/page/2`, { waitUntil: 'networkidle' });
+    check(
+      JSON.stringify(await titles()) === JSON.stringify(page2),
+      '/docs/page/2 on a desktop: direct visit did not prerender page 2 cards',
+    );
+    await desktop.locator('[data-slot="section-list"] [data-slot="pagination-previous"]').click();
+    await desktop.waitForURL((next) => next.pathname === '/docs');
+    await desktop
+      .waitForFunction(
+        (first) =>
+          document.querySelector('[data-slot="folder-list"] [data-slot="entry-card-title"]')?.textContent === first,
+        page1[0] ?? '',
+      )
+      .catch(() => undefined);
+    check(
+      JSON.stringify(await titles()) === JSON.stringify(page1),
+      '/docs/page/2 on a desktop: Previous did not load page 1 cards from batch 0',
     );
     await desktop.close();
   }

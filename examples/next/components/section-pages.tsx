@@ -20,9 +20,11 @@ import { SectionList, type SectionInitialItem } from './section-list';
 export async function SectionPages({
   locale,
   url,
+  page = 1,
 }: {
   readonly locale: Locale;
   readonly url: string;
+  readonly page?: number | undefined;
 }): Promise<ReactNode> {
   const items = await sectionItemsOf(locale, url);
 
@@ -34,9 +36,9 @@ export async function SectionPages({
     items.map((item) => ({ item, card: item.kind === 'card' })),
     SECTION_BATCH_SIZE,
   );
-  const first = batches[0] ?? [];
+  const current = batches[page - 1] ?? [];
   let cardRank = 0;
-  const initial: SectionInitialItem[] = first.map(({ item }) => {
+  const initial: SectionInitialItem[] = current.map(({ item }) => {
     if (item.kind === 'heading') return { key: item.key, node: <h2>{item.title}</h2> };
 
     const rank = cardRank;
@@ -71,12 +73,16 @@ export async function SectionPages({
       </ul>
     );
 
+  const firstBatchUrl = sectionBatchUrl(locale, url, 0);
   const batchUrls = batches.slice(1).map((_, index) => sectionBatchUrl(locale, url, index + 1));
   const totalCards = items.filter((item) => item.kind === 'card').length;
 
   return (
     <SectionList
+      first={url}
+      page={page}
       initial={initial}
+      firstBatchUrl={firstBatchUrl}
       batchUrls={batchUrls}
       totalCards={totalCards}
       batchSize={SECTION_BATCH_SIZE}

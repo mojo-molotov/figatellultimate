@@ -1266,8 +1266,10 @@ for (const item of mountedUrls) {
   const docsMain = /<main\b[^>]*>[\s\S]*?<\/main>/.exec(docs)?.[0] ?? '';
   const initialCards = [...docs.matchAll(/data-slot="entry-card"/g)].length;
   const mainCards = [...docsMain.matchAll(/data-slot="entry-card"/g)].length;
+  const batch0Path = join(app, 'fr', 'section-batches', 'docs', '0.body');
   const batch1Path = join(app, 'fr', 'section-batches', 'docs', '1.body');
   const batch2Path = join(app, 'fr', 'section-batches', 'docs', '2.body');
+  const batch0: unknown = existsSync(batch0Path) ? JSON.parse(readFileSync(batch0Path, 'utf8')) : [];
   const batch1: unknown = existsSync(batch1Path) ? JSON.parse(readFileSync(batch1Path, 'utf8')) : [];
   const batch2: unknown = existsSync(batch2Path) ? JSON.parse(readFileSync(batch2Path, 'utf8')) : [];
 
@@ -1276,6 +1278,28 @@ for (const item of mountedUrls) {
     mainCards === 4,
     `/docs: expected 4 cards directly inside <main> on first paint (not deferred behind Suspense), found ${String(mainCards)}`,
   );
+
+  // Every further `/docs/page/N` route is prerendered with its own slice of cards, canonical/alternates, and excluded
+  // from Pagefind so the search index never duplicates `/docs`.
+  for (const [url, expectedCards, otherLocale] of [
+    ['/docs/page/2', 4, '/en/docs/page/2'],
+    ['/docs/page/3', 4, '/en/docs/page/3'],
+    ['/en/docs/page/2', 4, '/docs/page/2'],
+    ['/en/docs/page/3', 4, '/docs/page/3'],
+  ] as const) {
+    const html = htmlOf(url) ?? '';
+    const cards = [...html.matchAll(/data-slot="entry-card"/g)].length;
+
+    check(
+      html !== '' && cards > 0 && cards <= expectedCards,
+      `${url}: missing or empty prerendered section page (${String(cards)} cards)`,
+    );
+    check(
+      html.includes(`rel="canonical" href="${ORIGIN}${url}"`) && html.includes(`href="${ORIGIN}${otherLocale}"`),
+      `${url}: missing canonical or locale alternate (${otherLocale})`,
+    );
+    check(html.includes('data-pagefind-ignore="all"'), `${url}: pagination slice must stay out of Pagefind`);
+  }
 
   // Every subcategory and author listing renders its cards directly inside `<main>` on first paint (never an empty
   // `<template id="B:">` shell that would place the footer at the top of the viewport and cause mobile CLS).
@@ -1291,7 +1315,12 @@ for (const item of mountedUrls) {
 
   check(docs.includes('data-slot="section-list"'), '/docs: missing section list wrapper');
   check(
-    Array.isArray(batch1) && batch1.length === 4 && Array.isArray(batch2) && batch2.length > 0,
+    Array.isArray(batch0) &&
+      batch0.length === 4 &&
+      Array.isArray(batch1) &&
+      batch1.length === 4 &&
+      Array.isArray(batch2) &&
+      batch2.length > 0,
     '/docs: missing or empty static JSON section batches',
   );
 }

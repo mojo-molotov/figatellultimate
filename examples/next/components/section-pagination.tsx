@@ -1,9 +1,9 @@
 'use client';
 
 /**
- * Desktop pagination controls for a section's list (`/docs`): `BatchPagination` of `@figatellultimate/facets-react`
- * wired to `NextUrlBoundary` (`?page=N`, History API). Loaded as a lazy chunk by `section-list.tsx` so pages without a
- * section never ship Radix Select/DropdownMenu in their initial bundle.
+ * Desktop pagination controls for a section's list (`/docs`, `/docs/page/2`, …): `BatchPagination` of
+ * `@figatellultimate/facets-react` wired to `NextUrlBoundary` with path-based `/page/N` URLs. Loaded as a lazy chunk by
+ * `section-list.tsx` so pages without a section never ship Radix Select/DropdownMenu in their initial bundle.
  */
 import { BatchPagination } from '@figatellultimate/facets-react';
 import { NextUrlBoundary } from '@figatellultimate/next16/facets';
@@ -11,11 +11,14 @@ import { formatPrecompiled } from '@figatellultimate/use-intl/format';
 import type { ReactNode } from 'react';
 
 import { localeInfo, type Locale } from '#figatellultimate/locales';
+import { pageSegment } from '#figatellultimate/urls';
 
 import type { ListingLabels } from '../blog/listing-labels';
 import { PAGINATION_ICONS } from '../blog/pagination-icons';
 
 export interface SectionPaginationProps {
+  readonly first: string;
+  readonly page: number;
   readonly totalCards: number;
   readonly batchSize: number;
   readonly locale: Locale;
@@ -25,12 +28,15 @@ export interface SectionPaginationProps {
 }
 
 /**
- * Desktop-only `PageSelect` (aligned with the page's heading via CSS Grid) and `Pagination` (below the list).
+ * `PageSelect` (aligned with the page's heading via CSS Grid) and `Pagination` (below the list), linking to real
+ * prerendered `/page/N` routes and switching locally from static JSON batches.
  *
- * @param props - Card count, batch size, locale, pagination labels and callbacks.
- * @returns `BatchPagination` inside `NextUrlBoundary` (hidden on phones by `base.css`).
+ * @param props - First page URL, landed page number, card count, batch size, locale, pagination labels and callbacks.
+ * @returns `BatchPagination` inside `NextUrlBoundary` (hidden on phones on page 1 by `base.css`).
  */
 export function SectionPagination({
+  first,
+  page,
   totalCards,
   batchSize,
   locale,
@@ -41,7 +47,7 @@ export function SectionPagination({
   const dir = localeInfo[locale].dir;
 
   return (
-    <NextUrlBoundary>
+    <NextUrlBoundary first={first} page={page} segment={pageSegment}>
       {(url) => (
         <BatchPagination
           totalItems={totalCards}
