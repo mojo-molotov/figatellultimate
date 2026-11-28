@@ -16,7 +16,6 @@ import { SectionPaginationPreload } from '../../components/section-pagination-pr
 import { SITE_THEMES } from '../../lib/site-themes';
 import { routing } from '../../i18n/routing';
 import { SiteFooter } from '../../components/site-footer';
-import { ListingPreload } from '../../blog/listing';
 
 // The minimal design system, the effects' mechanics, the themes' shared layout, then the default theme only; non-default
 // themes (`/themes/<name>.css`) load lazily on hover/click or before first paint when remembered (`lib/site-themes.ts`).
@@ -72,8 +71,7 @@ export default async function LocaleLayout(props: LayoutProps<'/[locale]'>): Pro
           <SiteFooter locale={locale} />
           {/* The cursor glow and the margins' sparkles, loaded on desktops only. */}
           <Effects />
-          {/* The listing's and section pagination's code, loaded on idle so client navigations paint on frame 1. */}
-          <ListingPreload />
+          {/* Section pagination preloaded on desktop idle so client navigations to `/docs` paint controls on frame 1. */}
           <SectionPaginationPreload />
         </ThemeProvider>
         {/* The real visitors' Core Web Vitals, sent to Vercel's Speed Insights; their visits, to Vercel's Web

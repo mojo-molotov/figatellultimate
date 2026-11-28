@@ -137,9 +137,15 @@ for (const [listing, expectedFirst] of [
   }
 
   const cards = [...html.matchAll(/data-key="([^"]*)"/g)].map((match) => match[1]);
+  const main = /<main\b[^>]*>[\s\S]*?<\/main>/.exec(html)?.[0] ?? '';
+  const mainCards = [...main.matchAll(/data-key="([^"]*)"/g)].length;
 
   check(cards[0] === expectedFirst, `${listing}: the newest post is not first (default sort)`);
   check(cards.length === perPost, `${listing}: wrong first page size`);
+  check(
+    mainCards === perPost,
+    `${listing}: expected ${String(perPost)} cards directly inside <main> on first paint (no deferred Suspense template), found ${String(mainCards)}`,
+  );
   check(new Set(cards).size === cards.length, `${listing}: a card is rendered twice`);
 }
 
@@ -1270,6 +1276,19 @@ for (const item of mountedUrls) {
     mainCards === 4,
     `/docs: expected 4 cards directly inside <main> on first paint (not deferred behind Suspense), found ${String(mainCards)}`,
   );
+
+  // Every subcategory and author listing renders its cards directly inside `<main>` on first paint (never an empty
+  // `<template id="B:">` shell that would place the footer at the top of the viewport and cause mobile CLS).
+  for (const url of ['/blog/academy/linting', '/en/blog/academy/linting', '/authors/igor', '/en/authors/napoleon']) {
+    const html = htmlOf(url) ?? '';
+    const main = /<main\b[^>]*>[\s\S]*?<\/main>/.exec(html)?.[0] ?? '';
+
+    check(
+      main.includes('data-slot="entry-card"') && !main.includes('<template id="B:'),
+      `${url}: cards must be rendered directly inside <main> without a deferred Suspense template`,
+    );
+  }
+
   check(docs.includes('data-slot="section-list"'), '/docs: missing section list wrapper');
   check(
     Array.isArray(batch1) && batch1.length === 4 && Array.isArray(batch2) && batch2.length > 0,
