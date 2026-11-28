@@ -17,3 +17,5 @@ playground.*
 *.tgz
 # Turborepo's local cache
 .turbo/
+# Next's output wherever it is run from (`next build`, `next analyze`): traces, Turbopack's cache, diagnostics
+.next/
