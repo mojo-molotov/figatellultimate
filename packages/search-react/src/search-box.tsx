@@ -7,9 +7,10 @@
  * Key design decisions:
  *     - Focus stays in the field; arrows move through results (the ARIA combobox pattern, by cmdk): a result is a
  *       listbox option, not a link, so a modifier opens it in a new tab instead.
- *     - The arrows go on past the results' ends: ↓ on the last one reaches "see more" (the
- *       only time focus leaves the field), ↑ from it comes back to the last one; ↑ on the first one leaves the results
- *       for the field alone, none active, and ↓ comes back to the first. Without "see more", ↓ stays on the last.
+ *     - The arrows go on past the results' ends: ↓ on the last one reaches "see more" (the only time focus leaves the
+ *       field, clearing the active result so Enter activates the button instead of opening a result), ↑ from it comes
+ *       back to the last one; ↑ on the first one leaves the results for the field alone, none active, and scrolls it
+ *       back into view; ↓ comes back to the first. Without "see more", ↓ stays on the last.
  *     - Results are already filtered by the index: cmdk only handles the keyboard and the active result.
  *     - A new sort searches at once, its first result active; a typed term waits the client's quiet time.
  *     - No style, no text of its own: every label required, dates formatted for the given locale.
@@ -33,11 +34,13 @@ import {
   useEffect,
   useEffectEvent,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
   type ComponentProps,
   type KeyboardEvent,
   type ReactNode,
+  type Ref,
   type RefObject,
 } from 'react';
 
@@ -99,12 +102,17 @@ interface SearchBoxContext {
   readonly openInNewTab: (url: string) => void;
   /** The active result's navigation URL, with its section anchor when matched (`''` when none). */
   readonly activeHref: string;
+  readonly field: RefObject<HTMLDivElement | null>;
   readonly input: RefObject<HTMLInputElement | null>;
   /** "See more", while rendered: ↓ on the last result reaches it. */
   readonly more: RefObject<HTMLButtonElement | null>;
   readonly autoFocus: boolean;
   /** Makes the first result of the next batch active ("see more"). */
   readonly activateFrom: (index: number) => void;
+  /** Leaves no result active (e.g. when focus moves to "see more"). */
+  readonly clearActive: () => void;
+  /** Registers a result option's element so `aria-activedescendant` stays in sync with controlled `value`. */
+  readonly registerItem: (url: string, element: HTMLDivElement | null) => void;
   readonly dir: 'ltr' | 'rtl' | undefined;
 }
 
@@ -243,8 +251,10 @@ export function SearchBox<C extends string>({
   const [only, setOnly] = useState<readonly C[]>([]);
   const [sort, setSortState] = useState<SearchSort>(sortBy?.sorts[0] ?? 'relevance');
   const binding = useSearch(search, term, { collections: only, sort });
+  const field = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const more = useRef<HTMLButtonElement>(null);
+  const items = useRef(new Map<string, HTMLDivElement>());
   const [active, setActive] = useState<Active>({ kind: 'value', value: '' });
   const value = active.kind === 'value' ? active.value : (binding.results[active.index]?.url ?? '');
   // The active result, once each time it changes: the latest callback, never a reason to call again.
@@ -256,6 +266,19 @@ export function SearchBox<C extends string>({
   useEffect(() => {
     if (highlighted !== '') announce(highlighted);
   }, [highlighted]);
+
+  // cmdk only updates `selectedItemId` from its own `setState`, leaving `aria-activedescendant` stale when controlled
+  // `value` changes externally (cleared on ↓ to "see more" or ↑ past the first result, or restored on ↑ from "see more").
+  useLayoutEffect(() => {
+    const element = input.current;
+
+    if (element === null) return;
+
+    const id = highlighted === '' ? '' : (items.current.get(highlighted)?.id ?? '');
+
+    if (id === '') element.removeAttribute('aria-activedescendant');
+    else element.setAttribute('aria-activedescendant', id);
+  }, [highlighted, binding.results]);
 
   // ↓ on the last result to "see more", ↑ from it back to the last; ↑ on the first to the field alone.
   const pastTheEnds = (event: KeyboardEvent<HTMLDivElement>): void => {
@@ -281,12 +304,17 @@ export function SearchBox<C extends string>({
 
     if (event.key === 'ArrowDown' && more.current !== null && value === results.at(-1)?.url) {
       event.preventDefault();
+      setActive({ kind: 'value', value: '' });
       more.current.focus();
     }
 
-    if (event.key === 'ArrowUp' && value === results[0]?.url) {
+    if (event.key === 'ArrowUp' && (value === results[0]?.url || value === '')) {
       event.preventDefault();
-      setActive({ kind: 'value', value: '' });
+
+      if (value !== '') setActive({ kind: 'value', value: '' });
+
+      // Stepping down the results may have scrolled the field off the top: bring it back on screen.
+      (field.current ?? input.current).scrollIntoView({ block: 'nearest' });
     }
   };
 
@@ -341,11 +369,19 @@ export function SearchBox<C extends string>({
 
       return match === undefined ? '' : hrefOf(match);
     })(),
+    field,
     input,
     more,
     autoFocus,
     activateFrom: (index) => {
       setActive({ kind: 'index', index });
+    },
+    clearActive: () => {
+      setActive({ kind: 'value', value: '' });
+    },
+    registerItem: (url, element) => {
+      if (element === null) items.current.delete(url);
+      else items.current.set(url, element);
     },
     dir,
   };
@@ -414,8 +450,10 @@ const hasModifier = (event: {
  * @returns The row, styled as one field.
  */
 export function SearchBoxField({ children, ...props }: ComponentProps<'div'>): ReactNode {
+  const { field } = use('SearchBoxField');
+
   return (
-    <div data-slot="search-box-field" {...props}>
+    <div ref={field} data-slot="search-box-field" {...props}>
       {children ?? (
         <>
           <SearchBoxInput />
@@ -668,6 +706,11 @@ function Pause(): ReactNode {
   return labels.pause === undefined ? null : <VisuallyHidden.Root>{labels.pause}</VisuallyHidden.Root>;
 }
 
+function assignRef<T>(target: Ref<T> | undefined, value: T | null): void {
+  if (typeof target === 'function') target(value);
+  else if (target !== undefined && target !== null) target.current = value;
+}
+
 /**
  * One result: its title, where it sits (its trail, or its collection) and its date, then Pagefind's excerpt. Named
  * by the first three, short as the arrows move through them; the excerpt its description,
@@ -677,8 +720,9 @@ function Pause(): ReactNode {
  * @returns An option: Enter or a click opens it, a modified or middle click opens it in a new tab; the page being
  *   read is marked `aria-current="page"`.
  */
-export function SearchBoxResult({ result, children, ...props }: SearchBoxResultProps): ReactNode {
-  const { navigate, openInNewTab, collectionLabel, trailOf, current, dateOf, dir } = use('SearchBoxResult');
+export function SearchBoxResult({ result, children, ref, ...props }: SearchBoxResultProps): ReactNode {
+  const { navigate, openInNewTab, collectionLabel, trailOf, current, dateOf, dir, registerItem } =
+    use('SearchBoxResult');
   const excerptId = useId();
   const trail = trailOf(result.url);
   const date = result.date === undefined ? undefined : dateOf(result.date);
@@ -687,6 +731,10 @@ export function SearchBoxResult({ result, children, ...props }: SearchBoxResultP
 
   return (
     <Command.Item
+      ref={(element) => {
+        registerItem(result.url, element);
+        assignRef(ref, element);
+      }}
       value={result.url}
       onSelect={() => {
         navigate(href);
@@ -771,8 +819,14 @@ export function SearchBoxResult({ result, children, ...props }: SearchBoxResultP
  * @returns A button rendered while more results exist; the first new result becomes active, focus back in the field.
  *   ↓ on the last result reaches it, ↑ from it comes back to the last result, in the field.
  */
-export function SearchBoxMore({ children, onClick, ...props }: ComponentProps<'button'>): ReactNode {
-  const { binding, labels, input, more: button, activateFrom } = use('SearchBoxMore');
+export function SearchBoxMore({
+  children,
+  onClick,
+  onFocus,
+  onKeyDown,
+  ...props
+}: ComponentProps<'button'>): ReactNode {
+  const { binding, labels, input, more: button, activateFrom, clearActive } = use('SearchBoxMore');
 
   if (binding.more === undefined) return null;
 
@@ -783,6 +837,16 @@ export function SearchBoxMore({ children, onClick, ...props }: ComponentProps<'b
       ref={button}
       type="button"
       data-slot="search-box-more"
+      onFocus={(event) => {
+        onFocus?.(event);
+        clearActive();
+      }}
+      onKeyDown={(event) => {
+        onKeyDown?.(event);
+
+        // Keep Enter as native button activation: cmdk's root would otherwise call preventDefault().
+        if (event.key === 'Enter') event.stopPropagation();
+      }}
       onClick={(event) => {
         onClick?.(event);
 

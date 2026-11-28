@@ -319,8 +319,8 @@ describe('SearchBox', () => {
     expect(opened).toEqual([]);
   });
 
-  it('keyboard: ↓ on the last result reaches "see more", ↑ from it the last result again, in the field', async () => {
-    const { user, field } = renderBox();
+  it('keyboard: ↓ on the last result reaches "see more" alone (no active result), Enter loads more, ↑ comes back to the last', async () => {
+    const { user, field, opened } = renderBox();
 
     await user.type(field(), 'chevaux');
     await waitFor(() => {
@@ -332,10 +332,12 @@ describe('SearchBox', () => {
 
     await user.keyboard('{ArrowDown}');
     expect(document.activeElement).toBe(more);
-    // Its end: ↓ stays on it, moving no result behind it.
+    expect(active()).toBeNull();
+    expect(field().hasAttribute('aria-activedescendant')).toBe(false);
+    // Its end: ↓ stays on it, with no result active behind it.
     await user.keyboard('{ArrowDown}');
     expect(document.activeElement).toBe(more);
-    expect(active()).toBe('/doc/4');
+    expect(active()).toBeNull();
     const focus = vi.spyOn(field(), 'focus');
 
     await user.keyboard('{ArrowUp}');
@@ -343,6 +345,14 @@ describe('SearchBox', () => {
     expect(active()).toBe('/doc/4');
     // Returning to the field must not scroll a tall dialog back to the top, away from the last result.
     expect(focus).toHaveBeenCalledWith({ preventScroll: true });
+    // Enter on "see more" activates the button (loads the next batch) instead of opening the last result.
+    await user.keyboard('{ArrowDown}{Enter}');
+    await waitFor(() => {
+      expect(options()).toHaveLength(7);
+    });
+    expect(opened).toEqual([]);
+    expect(active()).toBe('/doc/5');
+    expect(document.activeElement).toBe(field());
   });
 
   it('keyboard: ↓ on the last result stays on it when there is no "see more"', async () => {
@@ -361,7 +371,7 @@ describe('SearchBox', () => {
     expect(document.activeElement).toBe(field());
   });
 
-  it('keyboard: ↑ on the first result leaves the results for the field alone, ↓ comes back to the first', async () => {
+  it('keyboard: ↑ on the first result leaves the results for the field alone, scrolls it into view, ↓ comes back to the first', async () => {
     const { user, field } = renderBox();
 
     await user.type(field(), 'chevaux');
@@ -369,10 +379,22 @@ describe('SearchBox', () => {
       expect(options()).toHaveLength(5);
     });
     expect(active()).toBe('/doc/0');
+    const row = field().closest('[data-slot="search-box-field"]');
+
+    if (row === null) throw new Error('no search-box-field');
+
+    const scroll = vi.spyOn(row, 'scrollIntoView');
+
     await user.keyboard('{ArrowUp}');
     expect(active()).toBeNull();
     expect(document.activeElement).toBe(field());
     expect(field().hasAttribute('aria-activedescendant')).toBe(false);
+    expect(scroll).toHaveBeenCalledWith({ block: 'nearest' });
+    // Still brings the field back into view if ↑ is pressed again with no active result.
+    scroll.mockClear();
+    await user.keyboard('{ArrowUp}');
+    expect(active()).toBeNull();
+    expect(scroll).toHaveBeenCalledWith({ block: 'nearest' });
     await user.keyboard('{ArrowDown}');
     expect(active()).toBe('/doc/0');
   });
@@ -715,5 +737,11 @@ describe('SearchBox', () => {
     expect(document.querySelector('[data-slot="search-box-input"]')?.classList.contains('field')).toBe(true);
     expect(document.querySelector('[data-slot="search-box-results"]')?.classList.contains('list')).toBe(true);
     expect(screen.queryByRole('status')).toBeNull();
+    // Without SearchBoxField, ↑ on the first result falls back to scrolling the input itself into view.
+    const input = screen.getByRole('combobox');
+    const scroll = vi.spyOn(input, 'scrollIntoView');
+
+    await user.keyboard('{ArrowUp}');
+    expect(scroll).toHaveBeenCalledWith({ block: 'nearest' });
   });
 });
