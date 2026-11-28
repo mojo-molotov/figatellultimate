@@ -1,4 +1,3 @@
-// prettier-ignore
 /**
  * `@figatellultimate/messages`: the analysis of the message modules, as diagnostics and a model for the code generator.
  *

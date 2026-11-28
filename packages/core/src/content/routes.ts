@@ -1,4 +1,3 @@
-// prettier-ignore
 /**
  * The app's routes, when it splits them (`splitRoutes: true`): one route per base, each serving the collections and
  * the term pages mounted under it, the empty base being the root route that serves the rest.

@@ -1,6 +1,5 @@
 'use client';
 
-// prettier-ignore
 /**
  * A section's list of pages (`/docs`), loading subsequent batches from static JSON files as the reader scrolls:
  *

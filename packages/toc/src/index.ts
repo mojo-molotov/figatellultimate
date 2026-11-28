@@ -1,4 +1,3 @@
-// prettier-ignore
 /**
  * The table of contents model: the tree of an entry's headings, the heading being read, where a click scrolls, and
  * the sections on screen. Pure and DOM-free: `TableOfContents` (`@figatellultimate/ui`) measures the page and renders.

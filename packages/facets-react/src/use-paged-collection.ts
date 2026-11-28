@@ -1,6 +1,5 @@
 'use client';
 
-// prettier-ignore
 /**
  * A faceted collection paginated in its path, its index loaded on demand: a page holds its own slice only (each
  * default page prerendered at its own URL), and the browser loads every item (the index) for the first selection or

@@ -1,6 +1,5 @@
 'use client';
 
-// prettier-ignore
 /**
  * `@figatellultimate/effects`: decorative effects for figatellultimate apps, their mechanics in `styles.css`
  * (`@figatellultimate/effects/styles.css`), every look a token for a theme to set.

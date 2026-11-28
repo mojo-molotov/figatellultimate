@@ -1,4 +1,3 @@
-// prettier-ignore
 /**
  * What a site exposes to LLMs, after the llms.txt proposal (https://llmstxt.org): the `llms.txt` file, each page's
  * Markdown, and `llms-full.txt`, every page in one file.

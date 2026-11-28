@@ -1,10 +1,9 @@
-// prettier-ignore
 /**
  * Documentation invariants: the code and the tests are the documentation, so its shape is checked like any other
  * invariant.
  *
  *     package sources ──> TypeScript program (parsed, bound, never type-checked)
- *         ├──> every module: a header comment (lines at most 120 columns; `// prettier-ignore` above ASCII diagrams)
+ *         ├──> every module: a header comment (lines at most 120 columns, intact ASCII diagrams, no process traces)
  *         ├──> every export: a JSDoc
  *         ├──> every exported function: one `@param` per parameter, `@returns` unless it returns nothing
  *         └──> every public function (reachable from a package entry): shown in an `@example` of its module
@@ -150,21 +149,19 @@ const tagsOf = (doc: ts.JSDoc, name: string): readonly ts.JSDocTag[] =>
 const returnsNothing = (signature: ts.SignatureDeclaration): boolean =>
   signature.type !== undefined && /^(void|never|Promise<void>)$/.test(signature.type.getText());
 
-/** A module's opening header comment and whether `// prettier-ignore` immediately precedes it. */
-function headerOf(file: string): { readonly comment: string; readonly ignored: boolean } | undefined {
+/** A module's opening header comment. */
+function headerOf(file: string): string | undefined {
   const afterDirectives = sourceOf(file)
     .text.replace(/^#!.*\n/, '')
     .replace(/^\s*['"]use client['"];?\s*/, '')
     .trimStart();
-  const ignored = /^\/\/\s*prettier-ignore\r?\n/.test(afterDirectives);
-  const body = ignored ? afterDirectives.replace(/^\/\/\s*prettier-ignore\r?\n/, '').trimStart() : afterDirectives;
-  const match = /^\/\*[\s\S]*?\*\//.exec(body);
+  const match = /^\/\*[\s\S]*?\*\//.exec(afterDirectives);
 
-  return match === null ? undefined : { comment: match[0], ignored };
+  return match === null ? undefined : match[0];
 }
 
-/** Whether a module header contains an indented ASCII flow diagram. */
-const hasDiagram = (comment: string): boolean => /^ \* {4,}.*(?:──>|└─|├─|┌─)/m.test(comment);
+/** Whether a line is part of an indented ASCII diagram. */
+const isDiagramLine = (line: string): boolean => /^ \* {4,}.*(?:──>|└─|├─|┌─)/.test(line);
 
 /** Process-trace phrases that belong to conversation history, not code comments. */
 const PROCESS_TRACE = /\b(?:as\s+)?(?:chosen|asked|requested|decided|agreed)\s+(?:with|by)\s+the\s+user\b/i;
@@ -185,7 +182,7 @@ describe('documentation', () => {
 
       if (header === undefined) return [];
 
-      return header.comment
+      return header
         .split(/\r?\n/)
         .flatMap((line, index) =>
           line.length > HEADER_MAX_COLUMNS ? [`${file}:${String(index + 1)} (${String(line.length)} cols)`] : [],
@@ -195,14 +192,22 @@ describe('documentation', () => {
     expect(overflow, `over ${String(HEADER_MAX_COLUMNS)} columns:\n${overflow.join('\n')}`).toEqual([]);
   });
 
-  it('every module header with an ASCII diagram is preceded by // prettier-ignore', () => {
-    const unprotected = files.filter((file) => {
+  it('no ASCII diagram line wraps back to the left margin', () => {
+    const broken = files.flatMap((file) => {
       const header = headerOf(file);
 
-      return header !== undefined && hasDiagram(header.comment) && !header.ignored;
+      if (header === undefined) return [];
+
+      const lines = header.split(/\r?\n/);
+
+      return lines.flatMap((line, index) => {
+        const next = lines[index + 1] ?? '';
+
+        return isDiagramLine(line) && /^ \* [a-z]/.test(next) ? [`${file}:${String(index + 2)}`] : [];
+      });
     });
 
-    expect(unprotected, `missing // prettier-ignore:\n${unprotected.join('\n')}`).toEqual([]);
+    expect(broken, `broken diagrams:\n${broken.join('\n')}`).toEqual([]);
   });
 
   it('no module comment contains process traces ("chosen with the user", "asked by the user")', () => {

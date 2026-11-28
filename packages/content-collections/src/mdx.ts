@@ -1,4 +1,3 @@
-// prettier-ignore
 /**
  * An MDX compilation that gives its headings too: the code and the table of contents from the same pass, cached
  * together by Content Collections.

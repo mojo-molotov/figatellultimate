@@ -1,4 +1,3 @@
-// prettier-ignore
 /**
  * The `figatellultimate` command line: `build`, `check`, `watch`, `search` and `migrate`, dispatched from parsed
  * arguments.

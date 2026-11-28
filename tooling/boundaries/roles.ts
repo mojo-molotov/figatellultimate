@@ -1,4 +1,3 @@
-// prettier-ignore
 /**
  * Package roles: the single source of the boundary rules, enforced twice (ESLint for editor feedback,
  * dependency-cruiser as a whole-graph guard in CI), on shipped code only (tests may wire several adapters together).

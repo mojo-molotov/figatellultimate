@@ -1,4 +1,3 @@
-// prettier-ignore
 /**
  * Frontmatter inheritance between translations: a translation writes only what differs, and takes the rest from
  * another version of the same entry (same collection and key), instead of copying it by hand.

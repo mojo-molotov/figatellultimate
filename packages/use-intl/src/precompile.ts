@@ -1,4 +1,3 @@
-// prettier-ignore
 /**
  * `@figatellultimate/use-intl/precompile` (server): messages precompiled, every ICU message parsed once at build time.
  *

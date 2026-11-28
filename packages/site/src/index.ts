@@ -1,4 +1,3 @@
-// prettier-ignore
 /**
  * The site's helpers, pure and framework-free: metadata, sitemap, static params, locale links, navigation sections,
  * breadcrumbs, structured data, feeds, what the site exposes to LLMs (llms.txt) and what it offers agents (ARD). A

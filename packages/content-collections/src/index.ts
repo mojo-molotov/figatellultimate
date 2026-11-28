@@ -1,4 +1,3 @@
-// prettier-ignore
 /**
  * The Content Collections adapter: core's `ContentSource` port, backed by Content Collections.
  *

@@ -1,4 +1,3 @@
-// prettier-ignore
 /**
  * `@figatellultimate/content-collections/llms`: a page's Markdown for LLMs, from its MDX source, what llms.txt links
  * (`llmsTxtOf` of `@figatellultimate/site` writes the file).

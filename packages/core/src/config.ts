@@ -1,4 +1,3 @@
-// prettier-ignore
 /**
  * The project's configuration: one declaration of everything, as data, readable without running the app.
  *

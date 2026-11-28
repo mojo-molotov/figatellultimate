@@ -1,4 +1,3 @@
-// prettier-ignore
 /**
  * `@figatellultimate/next16/config`: the Next configuration for precompiled messages (Node, in `next.config.ts`).
  *

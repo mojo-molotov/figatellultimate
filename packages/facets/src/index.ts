@@ -1,4 +1,3 @@
-// prettier-ignore
 /**
  * Faceted collections: a pure engine that filters keyed items by N facets, sorts them with an injected registry,
  * paginates them and reconciles the page after each change, with its whole state in the URL.

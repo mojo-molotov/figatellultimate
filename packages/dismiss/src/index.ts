@@ -1,4 +1,3 @@
-// prettier-ignore
 /**
  * `@figatellultimate/dismiss`: a popup closed by a tap on its own trigger stays closed. A select whose list opens
  * below its trigger closes, on a touch screen, at the tap's `pointerdown` (outside its list: the page under an open

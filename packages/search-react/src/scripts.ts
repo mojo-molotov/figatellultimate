@@ -1,4 +1,3 @@
-// prettier-ignore
 /**
  * `@figatellultimate/search-react/scripts`: the inline script a page puts right after its search dialog's trigger, run
  * before the first paint, so that the trigger's shortcut shows the reader's keys (⌘ on an Apple device, Ctrl

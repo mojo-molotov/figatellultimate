@@ -1,4 +1,3 @@
-// prettier-ignore
 /**
  * The use-intl adapter: figatellultimate's generated messages type the keys and ICU arguments, use-intl formats.
  *

@@ -1,4 +1,3 @@
-// prettier-ignore
 /**
  * A backdrop: an image faded in behind a section's content, faint and vignetted, its edges dissolving into the page
  * (a 404, a landing's hero).

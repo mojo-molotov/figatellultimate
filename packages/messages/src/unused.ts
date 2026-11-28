@@ -1,4 +1,3 @@
-// prettier-ignore
 /**
  * The app's messages nothing uses: the keys of the reference that no code reaches, as warnings, so that dead texts
  * stop being translated in every locale.

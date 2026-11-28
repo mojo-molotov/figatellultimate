@@ -1,4 +1,3 @@
-// prettier-ignore
 /**
  * Loading the content through the ports: list, analyze, join, then the checks that need every entry (term page
  * collisions, and the routes when the app splits them).

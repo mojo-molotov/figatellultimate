@@ -1,4 +1,3 @@
-// prettier-ignore
 /**
  * The Pagefind adapter: indexes the built HTML of the mounted entries, one bundle per locale, for `figatellultimate
  * search`.

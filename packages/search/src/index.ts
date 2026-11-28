@@ -1,4 +1,3 @@
-// prettier-ignore
 /**
  * A headless local search client over the Pagefind bundles `figatellultimate search` writes, one per locale.
  *

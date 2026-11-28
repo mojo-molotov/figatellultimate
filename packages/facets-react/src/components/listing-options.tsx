@@ -1,6 +1,5 @@
 'use client';
 
-// prettier-ignore
 /**
  * A listing's filters behind one button: the facets in a panel, opened by a gear, so that a listing's controls keep
  * one line whatever the screen.
