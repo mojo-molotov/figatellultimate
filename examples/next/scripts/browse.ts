@@ -1384,6 +1384,61 @@ try {
       JSON.stringify(await titles()) === JSON.stringify(page2),
       '/docs/page/2 on a desktop: direct visit did not prerender page 2 cards',
     );
+    // Every hub/listing page aligns its top `<h1>` at the same vertical position (`margin-block-start: 0`),
+    // including category pages (`/blog/academy`) and prerendered section pages (`/docs/page/2`).
+    const headingTops: Record<string, number> = {};
+
+    for (const url of ['/blog', '/blog/academy', '/blog/academy/linting', '/docs', '/docs/page/2']) {
+      await desktop.goto(`${base}${url}`, { waitUntil: 'networkidle' });
+      headingTops[url] = await desktop.evaluate(() =>
+        Math.round(document.querySelector('main h1')?.getBoundingClientRect().top ?? -1),
+      );
+    }
+
+    const expectedTop = headingTops['/blog'] ?? -1;
+
+    check(
+      expectedTop > 0 && Object.values(headingTops).every((top) => Math.abs(top - expectedTop) <= 1),
+      `hub/listing pages do not align their top <h1> at the same height (${JSON.stringify(headingTops)})`,
+    );
+    // A tall table of contents on a long article stops its scrolling panel cleanly above the revealed footer so its
+    // last links and scrollbar are never covered by the footer on a desktop.
+    await desktop.goto(`${base}/blog/maquis/kitchen/serving-myrtle-liqueur-in-production`, {
+      waitUntil: 'networkidle',
+    });
+    await desktop.evaluate(() => {
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' });
+      window.dispatchEvent(new Event('scroll'));
+    });
+    await desktop.waitForTimeout(300);
+    const tocAboveFooter = await desktop.evaluate(() => {
+      const panel = document.querySelector<HTMLElement>('[data-slot="toc-panel"]');
+      const reveal = document.querySelector<HTMLElement>('[data-slot="reveal"]');
+      const links = [...document.querySelectorAll<HTMLElement>('[data-slot="toc-link"]')];
+      const last = links.at(-1);
+
+      if (panel === null || reveal === null || last === undefined) return { ok: false, reason: 'missing elements' };
+
+      panel.scrollTop = panel.scrollHeight;
+      const panelRect = panel.getBoundingClientRect();
+      const revealRect = reveal.getBoundingClientRect();
+      const lastRect = last.getBoundingClientRect();
+      const hit = document.elementFromPoint(lastRect.left + 8, lastRect.top + lastRect.height / 2);
+
+      return {
+        ok: panelRect.bottom <= revealRect.top + 1 && lastRect.bottom <= revealRect.top + 1 && hit === last,
+        panelBottom: Math.round(panelRect.bottom),
+        revealTop: Math.round(revealRect.top),
+        lastBottom: Math.round(lastRect.bottom),
+        hitSlot: hit?.closest('[data-slot]')?.getAttribute('data-slot') ?? hit?.tagName ?? null,
+      };
+    });
+
+    check(
+      tocAboveFooter.ok,
+      `/blog/maquis/kitchen/serving-myrtle-liqueur-in-production: footer overlaps table of contents (${JSON.stringify(tocAboveFooter)})`,
+    );
+    await desktop.goto(`${base}/docs/page/2`, { waitUntil: 'networkidle' });
     await desktop.locator('[data-slot="section-list"] [data-slot="pagination-previous"]').click();
     await desktop.waitForURL((next) => next.pathname === '/docs');
     await desktop

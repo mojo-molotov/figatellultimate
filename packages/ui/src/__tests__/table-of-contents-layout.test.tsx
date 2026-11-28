@@ -379,32 +379,50 @@ describe('TableOfContents while reading', () => {
   );
 
   it.skipIf(!inBrowser)(
-    'stays docked at the top when the page ends before the screen (a footer revealed)',
+    'stays docked at the top when the page ends before the screen (a footer revealed), keeping the scrolling panel and last link above the footer',
     async () => {
+      const many: readonly Heading[] = Array.from({ length: 40 }, (_, i) => ({
+        id: `chapter-${String(i + 1)}`,
+        text: `Chapter ${String(i + 1)}`,
+        depth: 2,
+      }));
+
       render(
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: '16rem 1fr', alignItems: 'start', width: '1100px' }}>
-            <TableOfContents headings={HEADINGS.slice(0, 2)} labels={{ title: 'Sur cette page' }} />
+          <div style={{ display: 'grid', gridTemplateColumns: '16rem 1fr', alignItems: 'start', width: '1300px' }}>
+            <TableOfContents headings={many} labels={{ title: 'Sur cette page' }} />
             <article>
-              {HEADINGS.slice(0, 2).map((heading) => (
+              {many.map((heading) => (
                 <section key={heading.id}>
                   <h2 id={heading.id}>{heading.text}</h2>
-                  <div style={{ height: '1500px' }} />
+                  <div style={{ height: '160px' }} />
                 </section>
               ))}
             </article>
           </div>
-          <footer style={{ height: '400px' }} />
+          <footer style={{ position: 'relative', zIndex: 45, height: '400px' }} />
         </>,
       );
       const toc = screen.getByRole('navigation', { name: 'Sur cette page' }).closest('[data-slot="toc"]');
+      const panel = toc?.querySelector<HTMLElement>('[data-slot="toc-panel"]');
+      const footer = document.querySelector('footer');
 
-      if (!(toc instanceof HTMLElement)) throw new Error('no table of contents');
+      if (!(toc instanceof HTMLElement) || panel === null || panel === undefined || footer === null)
+        throw new Error('no table of contents');
 
       await scrollToY(document.documentElement.scrollHeight - window.innerHeight);
       // Precondition: the article ends above the screen's bottom, the footer below it.
+      const footerTop = footer.getBoundingClientRect().top;
+
       expect(toc.parentElement?.getBoundingClientRect().bottom).toBeLessThan(window.innerHeight);
       expect(toc.getBoundingClientRect().top).toBeCloseTo(0, 0);
+      expect(panel.getBoundingClientRect().bottom).toBeLessThanOrEqual(footerTop + 1);
+      panel.scrollTop = panel.scrollHeight;
+      const last = within(toc).getByRole('link', { name: 'Chapter 40' });
+      const box = last.getBoundingClientRect();
+
+      expect(box.bottom).toBeLessThanOrEqual(footerTop + 1);
+      expect(document.elementFromPoint(box.left + 8, box.top + box.height / 2)).toBe(last);
     },
   );
 

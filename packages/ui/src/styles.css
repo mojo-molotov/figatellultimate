@@ -2028,6 +2028,7 @@ a[data-slot='entry-card-author'] {
   }
 
   [data-slot='toc-panel'] {
+    height: var(--toc-panel-height, 100%);
     box-shadow: none;
   }
 

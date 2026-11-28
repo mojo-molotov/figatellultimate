@@ -50,6 +50,7 @@ import {
   type CSSProperties,
   type MouseEvent,
   type ReactNode,
+  type Ref,
 } from 'react';
 
 import { TOC_STORAGE_KEY as STORAGE_KEY } from './scripts.js';
@@ -244,6 +245,57 @@ function followHeading(ids: readonly string[], index: number, follower: Follower
   return true;
 }
 
+/** Assigns an element to a callback or object ref, returning its cleanup when one is provided. */
+function assignRef<T>(ref: Ref<T> | undefined, value: T | null): (() => void) | undefined {
+  if (typeof ref === 'function') {
+    const cleanup = ref(value);
+
+    return typeof cleanup === 'function' ? cleanup : undefined;
+  }
+
+  if (ref !== undefined && ref !== null) ref.current = value;
+
+  return undefined;
+}
+
+/**
+ * On wide screens, keeps the scrolling panel within the visible span between the docked frame's top (e.g. under a
+ * header before scrolling) and its container's bottom (e.g. above a revealed footer), so the last links and the
+ * scrollbar stay reachable instead of slipping behind the footer. When the panel shrinks while the current link is
+ * already visible, nudges its scroll so that link stays above the rising bottom edge.
+ */
+function fitPanel(nav: HTMLElement | null, box: HTMLElement | null, activeLink: HTMLAnchorElement | undefined): void {
+  if (nav === null || box === null) return;
+
+  if (!window.matchMedia(TOC_WIDE_MEDIA).matches) {
+    nav.style.removeProperty('--toc-panel-height');
+
+    return;
+  }
+
+  const frame = nav.getBoundingClientRect();
+
+  if (frame.height === 0) return;
+
+  const parent = nav.parentElement?.getBoundingClientRect();
+  const bottom = parent === undefined ? window.innerHeight : Math.min(window.innerHeight, parent.bottom);
+  const visible = Math.max(0, bottom - frame.top);
+  const before = box.getBoundingClientRect();
+  const inner = activeLink?.getBoundingClientRect();
+  const padBottom = Number.parseFloat(getComputedStyle(box).paddingBottom) || 0;
+  const wasVisible = inner !== undefined && inner.top >= before.top && inner.bottom <= before.bottom + 1;
+
+  if (visible >= frame.height - 0.5) nav.style.removeProperty('--toc-panel-height');
+  else nav.style.setProperty('--toc-panel-height', `${String(visible)}px`);
+
+  // Shrunk while the current link was visible: nudge the panel's scroll so it stays above the rising bottom edge.
+  if (wasVisible && visible < before.height - 0.5) {
+    const overflow = inner.bottom + padBottom - (before.top + visible);
+
+    if (overflow > 0) box.scrollTop += overflow;
+  }
+}
+
 /**
  * The table of contents of an article.
  *
@@ -265,6 +317,7 @@ export function TableOfContents({
   maxDepth,
   storageKey = STORAGE_KEY,
   side = 'start',
+  ref,
   ...props
 }: TableOfContentsProps): ReactNode {
   const tree = useMemo(() => tocTree(headings, { minDepth, maxDepth }), [headings, minDepth, maxDepth]);
@@ -312,6 +365,7 @@ export function TableOfContents({
   const follower = useMemo<Follower>(() => ({ target, mute, landing, ended, quiet, mark }), [mark]);
   // Past 200px: the collapsed drawer's handle fades.
   const [scrolled, setScrolled] = useState(false);
+  const nav = useRef<HTMLElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const list = useRef<HTMLDivElement>(null);
   // Each link by its heading's index, set by its own ref: measured for the line and kept visible, never queried.
@@ -391,8 +445,12 @@ export function TableOfContents({
       timer = setTimeout(ended.current, QUIET_MS);
     };
     const native = 'onscrollend' in window;
+    const syncPanel = (): void => {
+      fitPanel(nav.current, panel.current, links.current.get(current.current));
+    };
     const onScroll = (): void => {
       track();
+      syncPanel();
 
       // Without `scrollend`, or while a click mutes the measures, a quiet time ends the scroll too.
       if (!native || mute.current) quiet.current();
@@ -404,13 +462,16 @@ export function TableOfContents({
       if (mute.current) ended.current();
     };
     const onEnd = (): void => {
+      syncPanel();
       ended.current();
     };
     const onSettle = (): void => {
+      syncPanel();
       update('settle');
     };
     const onHash = (): void => {
       fromHash();
+      syncPanel();
       update('settle');
     };
     // A heading's own link in the article (each heading links to itself): followed the same way.
@@ -434,9 +495,16 @@ export function TableOfContents({
     const onKey = (event: KeyboardEvent): void => {
       if (event.key === 'Escape' && !window.matchMedia(TOC_WIDE_MEDIA).matches) setChosen({ wide: false, open: false });
     };
+    const media = window.matchMedia(TOC_WIDE_MEDIA);
+    const parent = nav.current?.parentElement;
+    const observed = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(syncPanel);
+
+    if (parent !== null && parent !== undefined) observed?.observe(parent);
 
     fromHash();
+    syncPanel();
     update('settle');
+    media.addEventListener('change', syncPanel);
     document.addEventListener('click', onClick);
     document.addEventListener('keydown', onKey);
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -450,6 +518,8 @@ export function TableOfContents({
 
     return () => {
       cancelAnimationFrame(frame);
+      observed?.disconnect();
+      media.removeEventListener('change', syncPanel);
       document.removeEventListener('click', onClick);
       document.removeEventListener('keydown', onKey);
       window.removeEventListener('scroll', onScroll);
@@ -538,6 +608,11 @@ export function TableOfContents({
 
   return (
     <nav
+      ref={(element) => {
+        nav.current = element;
+
+        return assignRef(ref, element);
+      }}
       aria-labelledby={titleId}
       data-slot="toc"
       data-side={side}
