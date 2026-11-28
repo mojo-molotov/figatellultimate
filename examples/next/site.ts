@@ -8,3 +8,6 @@ export const site: Site = {
   name: 'Figatellultimate',
   defaultLocale,
 };
+
+/** The project's GitHub repository, linked from the navbar and the footer. */
+export const REPOSITORY_URL = 'https://github.com/mojo-molotov/figatellultimate';

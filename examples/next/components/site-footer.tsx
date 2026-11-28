@@ -10,7 +10,7 @@ import type { ReactNode } from 'react';
 import type { Locale } from '#figatellultimate/locales';
 import { navigationOf } from '#figatellultimate/navigation';
 
-import { site } from '../site';
+import { REPOSITORY_URL, site } from '../site';
 import { SiteThemePicker } from './site-theme-picker';
 
 /**
@@ -44,6 +44,11 @@ export async function SiteFooter({ locale }: { readonly locale: Locale }): Promi
                 <NextLink href={link.url}>{link.label}</NextLink>
               </li>
             ))}
+            <li>
+              <a href={REPOSITORY_URL} target="_blank" rel="noopener noreferrer">
+                GitHub
+              </a>
+            </li>
           </ul>
         </nav>
         <SiteThemePicker
