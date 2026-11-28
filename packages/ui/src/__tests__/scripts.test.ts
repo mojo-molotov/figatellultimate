@@ -33,12 +33,12 @@ describe('inline scripts', () => {
     ],
     [
       'siteThemeScript',
-      () => siteThemeScript(['paper', HOSTILE], HOSTILE),
+      () => siteThemeScript(['calanque', HOSTILE], HOSTILE),
       () => {
-        localStorage.setItem(HOSTILE, 'paper');
+        localStorage.setItem(HOSTILE, 'calanque');
       },
       () => root.dataset['siteTheme'],
-      'paper',
+      'calanque',
     ],
   ])('%s never closes its element, and still reads the key it was given', (_, script, remember, applied, expected) => {
     expect(script()).toContain('script');

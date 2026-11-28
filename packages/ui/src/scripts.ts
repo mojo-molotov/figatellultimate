@@ -62,15 +62,29 @@ export const SITE_THEME_STORAGE_KEY = 'figatellultimate-site-theme';
 
 /**
  * The inline script that applies the remembered site theme (a stylesheet of `@figatellultimate/themes`, picked by
- * `<html data-site-theme>`) before the first paint, so that the page never flashes the default one.
+ * `<html data-site-theme>`) before the first paint, so that the page never flashes the default one. When non-default
+ * themes are lazy-loaded (`stylesheetBase`, e.g. `'/themes/'`), it also injects `<link rel="stylesheet">` for a
+ * remembered non-default theme before the first paint.
  *
- * @param themes - The themes the site offers: a remembered value outside them is ignored.
+ * @param themes - The themes the site offers, the first one loaded by default: a remembered value outside them is
+ *   ignored.
  * @param storageKey - Where the picker stores the choice; the same as its `storageKey`.
+ * @param stylesheetBase - Optional URL prefix (e.g. `'/themes/'`) serving lazy non-default theme stylesheets as
+ *   `<base><theme>.css`.
  * @returns The script's text, for a `<script>` in the `<head>`.
  *
  * @example
- * <script dangerouslySetInnerHTML={{ __html: siteThemeScript(['maquis', 'paper']) }} />
+ * <script dangerouslySetInnerHTML={{ __html: siteThemeScript(['maquis', 'calanque'], undefined, '/themes/') }} />
  */
-export function siteThemeScript(themes: readonly string[], storageKey: string = SITE_THEME_STORAGE_KEY): string {
-  return `try{var t=localStorage.getItem(${literal(storageKey)});if(${literal(themes)}.indexOf(t)>-1)document.documentElement.dataset.siteTheme=t}catch(e){}`;
+export function siteThemeScript(
+  themes: readonly string[],
+  storageKey: string = SITE_THEME_STORAGE_KEY,
+  stylesheetBase?: string,
+): string {
+  const load =
+    stylesheetBase === undefined
+      ? ''
+      : `if(t!==${literal(themes[0])}){var l=document.createElement('link');l.rel='stylesheet';l.href=${literal(stylesheetBase)}+t+'.css';l.dataset.siteThemeSheet=t;document.head.appendChild(l)}`;
+
+  return `try{var t=localStorage.getItem(${literal(storageKey)});if(${literal(themes)}.indexOf(t)>-1){document.documentElement.dataset.siteTheme=t;${load}}}catch(e){}`;
 }

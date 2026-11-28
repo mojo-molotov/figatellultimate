@@ -6,12 +6,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SiteThemePicker } from '../index.js';
 import { SITE_THEME_STORAGE_KEY, siteThemeScript } from '../scripts.js';
 
-const THEMES = ['maquis', 'paper'] as const;
-const NAMES = { maquis: '«Maquis»', paper: '«Papier»' };
+const THEMES = ['maquis', 'calanque'] as const;
+const NAMES = { maquis: '«Maquis»', calanque: '«Calanque»' };
 /** Each option's spoken names: the theme shown, the one a press gives, and before the theme is known. */
 const SPOKEN = {
   maquis: { on: '«thème Maquis, actuel»', choose: '«passer au thème Maquis»', unknown: '«thème Maquis»' },
-  paper: { on: '«thème Papier, actuel»', choose: '«passer au thème Papier»', unknown: '«thème Papier»' },
+  calanque: { on: '«thème Calanque, actuel»', choose: '«passer au thème Calanque»', unknown: '«thème Calanque»' },
 };
 /** happy-dom runs `react-dom/server`; the browser family's pages do not. */
 const inBrowser = !navigator.userAgent.includes('HappyDOM');
@@ -35,9 +35,9 @@ describe('siteThemeScript', () => {
     localStorage.setItem(SITE_THEME_STORAGE_KEY, 'unknown');
     run(siteThemeScript(THEMES));
     expect(root.dataset['siteTheme']).toBeUndefined();
-    localStorage.setItem(SITE_THEME_STORAGE_KEY, 'paper');
+    localStorage.setItem(SITE_THEME_STORAGE_KEY, 'calanque');
     run(siteThemeScript(THEMES));
-    expect(root.dataset['siteTheme']).toBe('paper');
+    expect(root.dataset['siteTheme']).toBe('calanque');
   });
 
   it('never throws without storage', () => {
@@ -63,12 +63,12 @@ describe('SiteThemePicker', () => {
     );
 
   it('names its group and shows the page’s theme pressed once mounted', async () => {
-    root.dataset['siteTheme'] = 'paper';
+    root.dataset['siteTheme'] = 'calanque';
     picker();
 
     expect(screen.getByRole('group', { name: '«Thème»' })).toBeDefined();
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: '«Papier»' }).getAttribute('aria-pressed')).toBe('true');
+      expect(screen.getByRole('button', { name: '«Calanque»' }).getAttribute('aria-pressed')).toBe('true');
     });
     expect(screen.getByRole('button', { name: '«Maquis»' }).getAttribute('aria-pressed')).toBe('false');
   });
@@ -81,13 +81,13 @@ describe('SiteThemePicker', () => {
     });
 
     picker(transition);
-    await userEvent.click(screen.getByRole('button', { name: '«Papier»' }));
+    await userEvent.click(screen.getByRole('button', { name: '«Calanque»' }));
 
     expect(transition).toHaveBeenCalledTimes(1);
-    expect(root.dataset['siteTheme']).toBe('paper');
-    expect(localStorage.getItem(SITE_THEME_STORAGE_KEY)).toBe('paper');
+    expect(root.dataset['siteTheme']).toBe('calanque');
+    expect(localStorage.getItem(SITE_THEME_STORAGE_KEY)).toBe('calanque');
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: '«Papier»' }).getAttribute('aria-pressed')).toBe('true');
+      expect(screen.getByRole('button', { name: '«Calanque»' }).getAttribute('aria-pressed')).toBe('true');
     });
   });
 
@@ -102,8 +102,8 @@ describe('SiteThemePicker', () => {
     picker(transition);
     await userEvent.click(screen.getByRole('button', { name: '«Maquis»' }));
     expect(transition).not.toHaveBeenCalled();
-    await userEvent.click(screen.getByRole('button', { name: '«Papier»' }));
-    expect(root.dataset['siteTheme']).toBe('paper');
+    await userEvent.click(screen.getByRole('button', { name: '«Calanque»' }));
+    expect(root.dataset['siteTheme']).toBe('calanque');
   });
 
   it('names each option by what it is or does when given spoken names, nothing pressed to announce', async () => {
@@ -111,15 +111,15 @@ describe('SiteThemePicker', () => {
     render(<SiteThemePicker themes={THEMES} names={NAMES} label="«Thème»" spoken={SPOKEN} />);
 
     const shown = await screen.findByRole('button', { name: '«thème Maquis, actuel»' });
-    const other = screen.getByRole('button', { name: '«passer au thème Papier»' });
+    const other = screen.getByRole('button', { name: '«passer au thème Calanque»' });
 
     // Seen: the short names; the current one marked for the stylesheet, not announced as pressed.
-    expect([shown.textContent, other.textContent]).toEqual(['«Maquis»', '«Papier»']);
+    expect([shown.textContent, other.textContent]).toEqual(['«Maquis»', '«Calanque»']);
     expect(shown.hasAttribute('data-current')).toBe(true);
     expect(other.hasAttribute('data-current')).toBe(false);
     expect([shown.hasAttribute('aria-pressed'), other.hasAttribute('aria-pressed')]).toEqual([false, false]);
     await userEvent.click(other);
-    expect(await screen.findByRole('button', { name: '«thème Papier, actuel»' })).toBe(other);
+    expect(await screen.findByRole('button', { name: '«thème Calanque, actuel»' })).toBe(other);
     expect(screen.getByRole('button', { name: '«passer au thème Maquis»' })).toBe(shown);
   });
 
@@ -130,7 +130,7 @@ describe('SiteThemePicker', () => {
       const html = renderToString(<SiteThemePicker themes={THEMES} names={NAMES} label="«Thème»" spoken={SPOKEN} />);
 
       expect(html).toContain('aria-label="«thème Maquis»"');
-      expect(html).toContain('aria-label="«thème Papier»"');
+      expect(html).toContain('aria-label="«thème Calanque»"');
       expect(html).not.toContain('data-current');
     },
   );

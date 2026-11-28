@@ -50,9 +50,13 @@ export interface SiteThemePickerProps<T extends string> {
   readonly storageKey?: string | undefined;
   /** How the change is applied, e.g. `siteThemeTransition` of `@figatellultimate/effects`; default at once. */
   readonly transition?: ((apply: () => void) => void) | undefined;
+  /** Called on pointer hover or keyboard focus of an inactive theme option, e.g. to preload its lazy stylesheet. */
+  readonly onPrefetch?: ((theme: T) => void) | undefined;
+  /** Awaited before applying a theme switch (e.g. ensuring a lazy stylesheet has loaded before the transition). */
+  readonly prepare?: ((theme: T) => Promise<void>) | undefined;
   /**
    * Each option's spoken names, as a light and dark toggle says them: `on` while its theme is shown ("Maquis theme,
-   * current"), `choose` while another is ("Switch to the Paper theme"), `unknown` before the theme is known (the
+   * current"), `choose` while another is ("Switch to the Calanque theme"), `unknown` before the theme is known (the
    * prerendered page). Given, nothing is announced as pressed: the names say it. Default: `names`, pressed.
    */
   readonly spoken?: Readonly<Record<T, SiteThemeSpoken>> | undefined;
@@ -72,7 +76,7 @@ export interface SiteThemeSpoken {
  * @returns A group of buttons, `data-slot="site-theme"`, each option `data-slot="site-theme-option"`.
  *
  * @example
- * <SiteThemePicker themes={['maquis', 'paper']} names={names} label="Theme" transition={siteThemeTransition} />
+ * <SiteThemePicker themes={['maquis', 'calanque']} names={names} label="Theme" transition={siteThemeTransition} />
  */
 export function SiteThemePicker<T extends string>({
   themes,
@@ -82,15 +86,15 @@ export function SiteThemePicker<T extends string>({
   transition = (apply) => {
     apply();
   },
+  onPrefetch,
+  prepare,
   spoken,
 }: SiteThemePickerProps<T>): ReactNode {
   // The theme the page shows, read once mounted (the server cannot know the visitor's choice), followed as it changes.
   const shown = useSyncExternalStore(subscribe, siteTheme, () => undefined);
   const current = shown === undefined ? undefined : (themes.find((theme) => theme === shown) ?? themes[0]);
 
-  const choose = (theme: T): void => {
-    if (theme === current) return;
-
+  const applyTheme = (theme: T): void => {
     transition(() => {
       document.documentElement.dataset['siteTheme'] = theme;
     });
@@ -100,6 +104,29 @@ export function SiteThemePicker<T extends string>({
     } catch {
       // A convenience only: without storage, the choice lasts the visit.
     }
+  };
+
+  const choose = (theme: T): void => {
+    if (theme === current) return;
+
+    if (prepare === undefined) {
+      applyTheme(theme);
+
+      return;
+    }
+
+    void prepare(theme).then(
+      () => {
+        applyTheme(theme);
+      },
+      () => {
+        applyTheme(theme);
+      },
+    );
+  };
+
+  const prefetch = (theme: T): void => {
+    if (theme !== current) onPrefetch?.(theme);
   };
 
   return (
@@ -124,6 +151,12 @@ export function SiteThemePicker<T extends string>({
                       : spoken[theme].choose,
               })}
           {...(current === theme ? { 'data-current': '' } : {})}
+          onPointerEnter={() => {
+            prefetch(theme);
+          }}
+          onFocus={() => {
+            prefetch(theme);
+          }}
           onClick={() => {
             choose(theme);
           }}
