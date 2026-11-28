@@ -1020,6 +1020,11 @@ a[data-slot='entry-card-author'] {
   gap: var(--fig-space);
 }
 
+/* Items reserved for the compact (hamburger) menu: hidden on a wide bar and while measuring. */
+[data-slot='navbar']:is(:not([data-compact]), [data-measuring]) [data-slot='navbar-menu-end'] {
+  display: none;
+}
+
 /* Whole, a label never wraps within itself: the bar overflows instead, and turns compact. */
 [data-slot='navbar']:is(:not([data-compact]), [data-measuring])
   [data-slot='navbar-list']

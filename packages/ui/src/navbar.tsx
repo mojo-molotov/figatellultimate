@@ -113,6 +113,8 @@ export interface NavbarProps<K extends string = string> extends Omit<
   readonly menuDepth?: number | undefined;
   /** Extras after the list (the locale switcher, a search box); the parts are not replaceable here. */
   readonly children?: ReactNode;
+  /** Content shown at the bottom of the compact (hamburger) menu only, hidden on wide screens. */
+  readonly menuEnd?: ReactNode;
 }
 
 /**
@@ -137,6 +139,7 @@ export function Navbar<K extends string>({
   dir,
   menuDepth = Number.POSITIVE_INFINITY,
   children,
+  menuEnd,
   className,
   ...props
 }: NavbarProps<K>): ReactNode {
@@ -205,6 +208,9 @@ export function Navbar<K extends string>({
             {items.map((node) => (
               <NavbarItem key={node.kind === 'entry' ? node.url : node.label} node={node} />
             ))}
+            {menuEnd === undefined ? null : (
+              <NavigationMenu.Item data-slot="navbar-menu-end">{menuEnd}</NavigationMenu.Item>
+            )}
           </NavigationMenu.List>
         </NavigationMenu.Root>
         {children === undefined ? null : <div data-slot="navbar-extras">{children}</div>}
