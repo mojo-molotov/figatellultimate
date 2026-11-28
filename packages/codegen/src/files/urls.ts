@@ -222,16 +222,16 @@ export function urlsFile(
       declarations: [
         {
           name: 'homes',
-          type: 'ReadonlySet<string>',
+          type: 'ReadonlyMap<CollectionName, ReadonlyMap<Locale, ReadonlySet<string>>>',
           // The entries at the route `/` of their locale, by collection, locale and key: each locale's home, whatever
           // the collections' order (a folder's own page or a collection's root index has an empty key too).
-          initializer: `new Set(${literal(
+          initializer: entryLookupLiteral(
             mounted.flatMap(({ name, entries }) =>
               entries
                 .filter((entry) => entry.descriptor.route === '/' && !entry.descriptor.reserved)
-                .map((entry) => `${name}\u0000${entry.descriptor.locale}\u0000${entry.descriptor.key}`),
+                .map((entry) => [name, entry.descriptor.locale, entry.descriptor.key] as const),
             ),
-          )})`,
+          ),
         },
       ],
     });
@@ -240,10 +240,10 @@ export function urlsFile(
       declarations: [
         {
           name: 'llms',
-          type: 'ReadonlySet<string>',
+          type: 'ReadonlyMap<CollectionName, ReadonlyMap<Locale, ReadonlySet<string>>>',
           // The entries exposed to LLMs, by collection, locale and key: matched by their collection's patterns, their
           // exclusion field not set.
-          initializer: `new Set(${literal(
+          initializer: entryLookupLiteral(
             mounted.flatMap(({ name, entries }) => {
               const collection = config.collections[name];
 
@@ -251,9 +251,9 @@ export function urlsFile(
                 ? []
                 : entries
                     .filter((entry) => exposedToLlms(collection, entry.descriptor.key, entry.data))
-                    .map((entry) => `${name}\u0000${entry.descriptor.locale}\u0000${entry.descriptor.key}`);
+                    .map((entry) => [name, entry.descriptor.locale, entry.descriptor.key] as const);
             }),
-          )})`,
+          ),
         },
       ],
     });
@@ -268,7 +268,7 @@ export function urlsFile(
           initializer: `[${mounted
             .map(
               ({ name }) =>
-                `...${name}Index.filter((item) => !item.reserved).map((item): UrlItem => { const seo = entrySeo.get(item.url) ?? { indexed: true }; return { kind: 'entry', collection: ${literal(name)}, url: item.url, locale: item.locale, alternates: item.alternates, searchable: ${String(config.collections[name]?.searchable ?? true)} && seo.indexed, llms: llms.has(\`${name}\\u0000\${item.locale}\\u0000\${item.key}\`) && seo.indexed, key: item.key, routeBase: ${literal(baseOf(name))}, ...seo, ...(homes.has(\`${name}\\u0000\${item.locale}\\u0000\${item.key}\`) ? { home: true as const } : {}) }; })`,
+                `...${name}Index.filter((item) => !item.reserved).map((item): UrlItem => { const seo = entrySeo.get(item.url) ?? { indexed: true }; return { kind: 'entry', collection: ${literal(name)}, url: item.url, locale: item.locale, alternates: item.alternates, searchable: ${String(config.collections[name]?.searchable ?? true)} && seo.indexed, llms: llms.get(${literal(name)})?.get(item.locale)?.has(item.key) === true && seo.indexed, key: item.key, routeBase: ${literal(baseOf(name))}, ...seo, ...(homes.get(${literal(name)})?.get(item.locale)?.has(item.key) === true ? { home: true as const } : {}) }; })`,
             )
             .concat(
               folders.length === 0 ? [] : [`...(${literal(folderItems(folders, seo, baseOf))} as readonly UrlItem[])`],
@@ -404,6 +404,42 @@ export function urlsFile(
       },
     });
   });
+}
+
+/**
+ * Serializes `(collection, locale, key)` triples as a nested `Map<CollectionName, Map<Locale, Set<string>>>`
+ * expression so there is no separator character or implicit key format between generator and generated code.
+ */
+function entryLookupLiteral(entries: readonly (readonly [string, string, string])[]): string {
+  const byCollection = new Map<string, Map<string, Set<string>>>();
+
+  for (const [collection, locale, key] of entries) {
+    let byLocale = byCollection.get(collection);
+
+    if (byLocale === undefined) {
+      byLocale = new Map();
+      byCollection.set(collection, byLocale);
+    }
+
+    let keys = byLocale.get(locale);
+
+    if (keys === undefined) {
+      keys = new Set();
+      byLocale.set(locale, keys);
+    }
+
+    keys.add(key);
+  }
+
+  if (byCollection.size === 0) return 'new Map()';
+
+  const collections = [...byCollection].map(([collection, byLocale]) => {
+    const locales = [...byLocale].map(([locale, keys]) => `[${literal(locale)}, new Set(${literal([...keys])})]`);
+
+    return `[${literal(collection)}, new Map<Locale, ReadonlySet<string>>([${locales.join(', ')}])]`;
+  });
+
+  return `new Map<CollectionName, ReadonlyMap<Locale, ReadonlySet<string>>>([${collections.join(', ')}])`;
 }
 
 /** Folder pages as mounted URLs: their translations, and their key (the folder's values) for the switcher. */

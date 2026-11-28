@@ -180,6 +180,26 @@ export function termsFile(
       });
 
     // Each term's content, by locale and term: the content collection's entries are keyed by term.
+    if (contents.length > 0)
+      file.addFunction({
+        name: 'indexByLocaleAndKey',
+        typeParameters: [{ name: 'T', constraint: '{ readonly locale: Locale; readonly key: string }' }],
+        parameters: [{ name: 'items', type: 'readonly T[]' }],
+        returnType: 'ReadonlyMap<Locale, ReadonlyMap<string, T>>',
+        statements: [
+          'const byLocale = new Map<Locale, Map<string, T>>();',
+          'for (const item of items) {',
+          '  let byKey = byLocale.get(item.locale);',
+          '  if (byKey === undefined) {',
+          '    byKey = new Map();',
+          '    byLocale.set(item.locale, byKey);',
+          '  }',
+          '  byKey.set(item.key, item);',
+          '}',
+          'return byLocale;',
+        ],
+      });
+
     for (const { name, type } of contents) {
       file.addImportDeclaration({
         moduleSpecifier: `../${name}/index.js`,
@@ -190,8 +210,8 @@ export function termsFile(
         declarations: [
           {
             name: `${name}ByTerm`,
-            type: `ReadonlyMap<string, ${type}IndexItem>`,
-            initializer: `new Map(${name}Index.map((item) => [\`\${item.locale}\\u0000\${item.key}\`, item]))`,
+            type: `ReadonlyMap<Locale, ReadonlyMap<string, ${type}IndexItem>>`,
+            initializer: `indexByLocaleAndKey(${name}Index)`,
           },
         ],
       });
@@ -308,8 +328,8 @@ export function termsFile(
         declarations: [
           {
             name: `${name}TermUrls`,
-            type: 'ReadonlyMap<string, string>',
-            initializer: `new Map(${literal(mineData.map((page) => [`${page.locale}\u0000${page.term}`, page.url]))})`,
+            type: `ReadonlyMap<Locale, ReadonlyMap<${prefix}Term, string>>`,
+            initializer: termUrlLookupLiteral(mineData, `${prefix}Term`),
           },
         ],
       });
@@ -324,7 +344,7 @@ export function termsFile(
           { name: 'locale', type: 'Locale' },
         ],
         returnType: 'string | undefined',
-        statements: [`return ${name}TermUrls.get(\`\${locale}\\u0000\${term}\`);`],
+        statements: [`return ${name}TermUrls.get(locale)?.get(term);`],
       });
       file.addFunction({
         name: `find${prefix}TermByUrl`,
@@ -361,7 +381,7 @@ export function termsFile(
           if (content === undefined) writer.writeLine('return { ...data, ...page, entries };');
           else
             writer.writeLine(
-              `return { ...data, ...page, entries, content: ${content.name}ByTerm.get(\`\${data.locale}\\u0000\${data.term}\`) };`,
+              `return { ...data, ...page, entries, content: ${content.name}ByTerm.get(data.locale)?.get(data.term) };`,
             );
         },
       });
@@ -380,4 +400,33 @@ export function termsFile(
         });
     }
   });
+}
+
+/**
+ * Serializes `(locale, term, url)` triples as a nested `Map<Locale, Map<Term, string>>` expression so there is no
+ * separator character or implicit key format between generator and generated code.
+ */
+function termUrlLookupLiteral(pages: readonly TermData[], termType: string): string {
+  const byLocale = new Map<string, Map<string, string>>();
+
+  for (const page of pages) {
+    let byTerm = byLocale.get(page.locale);
+
+    if (byTerm === undefined) {
+      byTerm = new Map();
+      byLocale.set(page.locale, byTerm);
+    }
+
+    byTerm.set(page.term, page.url);
+  }
+
+  if (byLocale.size === 0) return 'new Map()';
+
+  const locales = [...byLocale].map(([locale, byTerm]) => {
+    const terms = [...byTerm].map(([term, url]) => `[${literal(term)}, ${literal(url)}]`);
+
+    return `[${literal(locale)}, new Map<${termType}, string>([${terms.join(', ')}])]`;
+  });
+
+  return `new Map<Locale, ReadonlyMap<${termType}, string>>([${locales.join(', ')}])`;
 }
