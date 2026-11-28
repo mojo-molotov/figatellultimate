@@ -31,6 +31,7 @@
  *     - Only the latest query searches; a superseded one resolves to `null`.
  *     - Each sort maps to Pagefind's own on the indexed keys; relevance passes none.
  *     - `result.date` is the indexed date, only when it is text.
+ *     - `result.anchor` is the best matching heading's id from Pagefind's `sub_results`, when present.
  */
 /**
  * One search result, read from its Pagefind fragment.
@@ -50,6 +51,8 @@ export interface SearchResult<C extends string> {
   readonly meta: Readonly<Record<string, string>>;
   /** Its publication date as `figatellultimate search` indexed it, `undefined` for an undated page. */
   readonly date?: string | undefined;
+  /** The best matching heading's id (from Pagefind's `sub_results`), `undefined` when the match sits above headings. */
+  readonly anchor?: string | undefined;
 }
 
 /** Whether a query searched: `done`, or why not. */
@@ -269,6 +272,21 @@ function withoutTitle(excerpt: string, title: string): string {
   return mark.open ? `<mark>${rest}` : rest;
 }
 
+/** The best matching heading's id from Pagefind's `sub_results`, `undefined` when absent or above any heading. */
+function anchorOf(data: Readonly<Record<string, unknown>>): string | undefined {
+  const sub = data['sub_results'];
+
+  if (!Array.isArray(sub) || sub.length === 0) return undefined;
+
+  const first: unknown = sub[0];
+
+  if (!isObject(first)) return undefined;
+
+  const anchor = first['anchor'];
+
+  return isObject(anchor) && typeof anchor['id'] === 'string' && anchor['id'] !== '' ? anchor['id'] : undefined;
+}
+
 /**
  * A result from its fragment, `undefined` when the fragment is malformed. The collection is the `collection` filter
  * `figatellultimate search` put on every page, from the same build as the app's collection names.
@@ -290,6 +308,7 @@ function resultOf<C extends string>(data: unknown, collections: readonly C[]): S
         Object.entries(meta).flatMap(([key, value]) => (typeof value === 'string' ? [[key, value]] : [])),
       )
     : {};
+  const anchor = anchorOf(data);
 
   return {
     url: data['url'],
@@ -298,6 +317,7 @@ function resultOf<C extends string>(data: unknown, collections: readonly C[]): S
     collection,
     meta: Object.freeze(texts),
     ...(texts['date'] === undefined ? {} : { date: texts['date'] }),
+    ...(anchor === undefined ? {} : { anchor }),
   };
 }
 

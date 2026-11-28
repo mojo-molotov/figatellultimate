@@ -352,6 +352,43 @@ describe('createSearch', () => {
     expect(done(await search.query('anything')).results.map((item) => item.url)).toEqual(['/blog']);
   });
 
+  it('reads the best matching heading anchor from sub_results when present', async () => {
+    const fragment = (url: string, sub_results?: unknown) => ({
+      data: () =>
+        Promise.resolve({
+          url,
+          excerpt: '',
+          meta: { title: url },
+          filters: { collection: ['pages'] },
+          ...(sub_results === undefined ? {} : { sub_results }),
+        }),
+    });
+    const module = {
+      search: () =>
+        Promise.resolve({
+          results: [
+            fragment('/docs/config', [{ anchor: { id: 'collections' } }, { anchor: { id: 'other' } }]),
+            fragment('/docs/intro', [{ anchor: { id: '' } }]),
+            fragment('/docs/plain', [{}]),
+            fragment('/docs/none'),
+          ],
+        }),
+    };
+    const search = createSearch({
+      collections: COLLECTIONS,
+      locale: 'fr',
+      debounce: 0,
+      load: () => Promise.resolve(module),
+    });
+
+    expect(done(await search.query('anything')).results.map((item) => [item.url, item.anchor])).toEqual([
+      ['/docs/config', 'collections'],
+      ['/docs/intro', undefined],
+      ['/docs/plain', undefined],
+      ['/docs/none', undefined],
+    ]);
+  });
+
   it('exposes its minimum length', () => {
     expect(setup().search.minLength).toBe(3);
     expect(createSearch({ collections: COLLECTIONS, locale: 'fr', minLength: 2 }).minLength).toBe(2);

@@ -57,6 +57,14 @@ beforeAll(async () => {
         'Une jument broute au pré.',
         '<pre class="shiki"><code><span>jument</span> <span>jument</span> <span>jument</span> galopin</code></pre>',
       ),
+      // A page with a headed section: a match under the heading carries its anchor id, one above it carries none.
+      built(
+        '/docs/sections',
+        'fr',
+        'pages',
+        'Introduction sur la garrigue.',
+        '<h2 id="elevage">Élevage</h2><p>Les chèvres pâturent dans la montagne.</p>',
+      ),
     ],
   });
 
@@ -82,6 +90,14 @@ describe('the written bundles, searched like a browser would', () => {
     const page = await searchIn('fr').query('cheval', { collections: ['pages'] });
 
     expect(page?.results).toEqual([expect.objectContaining({ url: '/docs/cheval', collection: 'pages' })]);
+  });
+
+  it('gives the matching heading anchor id when the match sits under a headed section, and none above it', async () => {
+    const section = (await searchIn('fr').query('chèvres'))?.results.find((r) => r.url === '/docs/sections');
+    const intro = (await searchIn('fr').query('garrigue'))?.results.find((r) => r.url === '/docs/sections');
+
+    expect(section?.anchor).toBe('elevage');
+    expect(intro?.anchor).toBeUndefined();
   });
 });
 
