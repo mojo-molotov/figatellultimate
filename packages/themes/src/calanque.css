@@ -1,12 +1,12 @@
 /*
- * @figatellultimate/themes/paper.css: the paper theme, on `base.css` (loaded before it) and the design system's tokens.
+ * @figatellultimate/themes/calanque.css: the calanque theme, on `base.css` (loaded before it) and the design system's tokens.
  *
  * Crisp editorial clarity: a deep ocean-navy navbar (`#002538`) anchoring a cool grey canvas (`#f2f2f2`), elevated
  * pure-white rounded cards, cerulean accents (`#0068a3`), pill-shaped controls and geometric sans-serif headings; a
  * deep ocean-navy night (`#002538`) in the dark theme, with no decorative effects.
  *
- * Key design decision: every rule is gated (`:root:where(:not([data-site-theme]), [data-site-theme='paper'])`): the
- * theme applies alone, or when `<html data-site-theme="paper">` picks it among several loaded; `:where` keeps the
+ * Key design decision: every rule is gated (`:root:where(:not([data-site-theme]), [data-site-theme='calanque'])`): the
+ * theme applies alone, or when `<html data-site-theme="calanque">` picks it among several loaded; `:where` keeps the
  * specificity of the rules it gates, so its tokens win over the design system's, loaded before.
  *
  * Invariants (`themes.test.ts`, replayed on every theme): every rule gated; the same dark looks from the system's
@@ -17,12 +17,12 @@
  * The site's theme picker: this theme's option shown as chosen from the first paint, read from `<html data-site-theme>`
  * (set before it by the app's script), never once the page is hydrated: the choice never fades in on load.
  */
-:root:where(:not([data-site-theme]), [data-site-theme='paper']) [data-slot='site-theme-option'][value='paper'] {
+:root:where(:not([data-site-theme]), [data-site-theme='calanque']) [data-slot='site-theme-option'][value='calanque'] {
   border-color: var(--fig-accent);
   color: var(--fig-accent);
 }
 
-:root:where(:not([data-site-theme]), [data-site-theme='paper']) {
+:root:where(:not([data-site-theme]), [data-site-theme='calanque']) {
   --fig-heading-font: 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
   --fig-fg: #0f1720;
   --fig-bg: #eef1f4;
@@ -39,7 +39,7 @@
 
 /* The deep ocean-navy night: the system's preference unless the page forces light, or forced dark. */
 @media (prefers-color-scheme: dark) {
-  :root:where(:not([data-site-theme]), [data-site-theme='paper']):not([data-theme='light']) {
+  :root:where(:not([data-site-theme]), [data-site-theme='calanque']):not([data-theme='light']) {
     --fig-fg: #eef3f7;
     --fig-bg: #002538;
     --fig-surface: #0a354d;
@@ -53,7 +53,7 @@
   }
 }
 
-:root:where(:not([data-site-theme]), [data-site-theme='paper'])[data-theme='dark'] {
+:root:where(:not([data-site-theme]), [data-site-theme='calanque'])[data-theme='dark'] {
   --fig-fg: #eef3f7;
   --fig-bg: #002538;
   --fig-surface: #0a354d;
@@ -67,7 +67,7 @@
 }
 
 /* Subtle monochrome paper grain on the light canvas only (off in dark mode and print). */
-:root:where(:not([data-site-theme]), [data-site-theme='paper']) body {
+:root:where(:not([data-site-theme]), [data-site-theme='calanque']) body {
   background-image:
     radial-gradient(
       ellipse 75% 80% at 50% 45%,
@@ -83,34 +83,34 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:where(:not([data-site-theme]), [data-site-theme='paper']):not([data-theme='light']) body {
+  :root:where(:not([data-site-theme]), [data-site-theme='calanque']):not([data-theme='light']) body {
     background-image: none;
   }
 }
 
-:root:where(:not([data-site-theme]), [data-site-theme='paper'])[data-theme='dark'] body {
+:root:where(:not([data-site-theme]), [data-site-theme='calanque'])[data-theme='dark'] body {
   background-image: none;
 }
 
 /* Deep ocean-navy navbar in both light and dark modes, with crisp light text and sky-blue active highlights. */
-:root:where(:not([data-site-theme]), [data-site-theme='paper']) [data-slot='navbar'] {
+:root:where(:not([data-site-theme]), [data-site-theme='calanque']) [data-slot='navbar'] {
   background: #002538;
   color: #eef3f7;
   border-bottom-color: #001a28;
 }
 
-:root:where(:not([data-site-theme]), [data-site-theme='paper'])
+:root:where(:not([data-site-theme]), [data-site-theme='calanque'])
   [data-slot='navbar-list']
   > [data-slot='navbar-item']
   > [data-slot='navbar-link'][aria-current='page'],
-:root:where(:not([data-site-theme]), [data-site-theme='paper'])
+:root:where(:not([data-site-theme]), [data-site-theme='calanque'])
   [data-slot='navbar-list']
   > [data-slot='navbar-item'][data-active]
   > :is([data-slot='navbar-trigger'], [data-slot='navbar-link']) {
   color: #64c0f4;
 }
 
-:root:where(:not([data-site-theme]), [data-site-theme='paper'])
+:root:where(:not([data-site-theme]), [data-site-theme='calanque'])
   [data-slot='navbar']
   :is(
     [data-slot='search-dialog-trigger'],
@@ -121,13 +121,13 @@
   border-color: rgb(255 255 255 / 0.22);
 }
 
-:root:where(:not([data-site-theme]), [data-site-theme='paper'])
+:root:where(:not([data-site-theme]), [data-site-theme='calanque'])
   [data-slot='navbar']
   [data-slot='search-dialog-trigger'] {
   color: #c2d6e3;
 }
 
-:root:where(:not([data-site-theme]), [data-site-theme='paper'])
+:root:where(:not([data-site-theme]), [data-site-theme='calanque'])
   [data-slot='navbar']
   [data-slot='search-dialog-shortcut'] {
   border-color: rgb(255 255 255 / 0.24);
@@ -135,14 +135,14 @@
 
 @media (hover: hover) and (pointer: fine) {
   /* Opaque blend (10% white over #002538) on top-level navy bar controls only: keeps dropdown links light. */
-  :root:where(:not([data-site-theme]), [data-site-theme='paper'])
+  :root:where(:not([data-site-theme]), [data-site-theme='calanque'])
     [data-slot='navbar']
     > [data-slot='navbar-toggle']:hover,
-  :root:where(:not([data-site-theme]), [data-site-theme='paper'])
+  :root:where(:not([data-site-theme]), [data-site-theme='calanque'])
     [data-slot='navbar-list']
     > [data-slot='navbar-item']
     > :is([data-slot='navbar-trigger'], [data-slot='navbar-link']):hover,
-  :root:where(:not([data-site-theme]), [data-site-theme='paper'])
+  :root:where(:not([data-site-theme]), [data-site-theme='calanque'])
     [data-slot='navbar-extras']
     > :is([data-slot='locale-switcher'], [data-slot='theme-toggle'], [data-slot='search-dialog-trigger']):hover {
     background: #1a3b4c;
@@ -150,39 +150,40 @@
 }
 
 /* During the theme switch view-transition, keep the toggle opaque in the navy bar's own color, not `--fig-bg`. */
-:root:where(:not([data-site-theme]), [data-site-theme='paper'])
+:root:where(:not([data-site-theme]), [data-site-theme='calanque'])
   [data-slot='navbar']
   [data-slot='theme-toggle'][data-switching] {
   background: #002538;
 }
 
 /* Elevated white rounded cards with crisp borders on the light grey canvas; elevated navy cards in dark mode. */
-:root:where(:not([data-site-theme]), [data-site-theme='paper']) [data-slot='entry-card'] {
+:root:where(:not([data-site-theme]), [data-site-theme='calanque']) [data-slot='entry-card'] {
   background: #ffffff;
   border-color: var(--fig-border);
   box-shadow: var(--fig-shadow);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:where(:not([data-site-theme]), [data-site-theme='paper']):not([data-theme='light']) [data-slot='entry-card'] {
+  :root:where(:not([data-site-theme]), [data-site-theme='calanque']):not([data-theme='light'])
+    [data-slot='entry-card'] {
     background: var(--fig-surface);
     border-color: var(--fig-border);
   }
 }
 
-:root:where(:not([data-site-theme]), [data-site-theme='paper'])[data-theme='dark'] [data-slot='entry-card'] {
+:root:where(:not([data-site-theme]), [data-site-theme='calanque'])[data-theme='dark'] [data-slot='entry-card'] {
   background: var(--fig-surface);
   border-color: var(--fig-border);
 }
 
-:root:where(:not([data-site-theme]), [data-site-theme='paper']) [data-slot='entry-card-title'] {
+:root:where(:not([data-site-theme]), [data-site-theme='calanque']) [data-slot='entry-card-title'] {
   font-family: var(--fig-heading-font);
   font-weight: 600;
   letter-spacing: -0.015em;
 }
 
 /* Pill-shaped tags and pagination controls. */
-:root:where(:not([data-site-theme]), [data-site-theme='paper'])
+:root:where(:not([data-site-theme]), [data-site-theme='calanque'])
   :is(
     [data-slot='entry-card-tag'],
     [data-slot='pagination-link'],
@@ -194,25 +195,26 @@
 }
 
 /* Code blocks: crisp white card in light mode (AA contrast for comments), elevated navy surface in dark mode. */
-:root:where(:not([data-site-theme]), [data-site-theme='paper']) [data-slot='code-block-pre'].shiki {
+:root:where(:not([data-site-theme]), [data-site-theme='calanque']) [data-slot='code-block-pre'].shiki {
   background-color: #ffffff;
   box-shadow: var(--fig-shadow);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:where(:not([data-site-theme]), [data-site-theme='paper']):not([data-theme='light'])
+  :root:where(:not([data-site-theme]), [data-site-theme='calanque']):not([data-theme='light'])
     [data-slot='code-block-pre'].shiki {
     background-color: var(--fig-surface);
   }
 }
 
-:root:where(:not([data-site-theme]), [data-site-theme='paper'])[data-theme='dark'] [data-slot='code-block-pre'].shiki {
+:root:where(:not([data-site-theme]), [data-site-theme='calanque'])[data-theme='dark']
+  [data-slot='code-block-pre'].shiki {
   background-color: var(--fig-surface);
 }
 
 /* Print: ink on white, whatever the screen's theme. */
 @media print {
-  :root:where(:not([data-site-theme]), [data-site-theme='paper']):is([data-theme], :not([data-theme])) {
+  :root:where(:not([data-site-theme]), [data-site-theme='calanque']):is([data-theme], :not([data-theme])) {
     --fig-fg: #1d2731;
     --fig-bg: #ffffff;
     --fig-surface: #f2f2f2;
@@ -223,18 +225,18 @@
     --fig-shadow: none;
   }
 
-  :root:where(:not([data-site-theme]), [data-site-theme='paper']):is([data-theme], :not([data-theme])) body {
+  :root:where(:not([data-site-theme]), [data-site-theme='calanque']):is([data-theme], :not([data-theme])) body {
     background-image: none;
   }
 
-  :root:where(:not([data-site-theme]), [data-site-theme='paper']):is([data-theme], :not([data-theme]))
+  :root:where(:not([data-site-theme]), [data-site-theme='calanque']):is([data-theme], :not([data-theme]))
     [data-slot='entry-card'] {
     background: none;
     border-color: var(--fig-border);
     box-shadow: none;
   }
 
-  :root:where(:not([data-site-theme]), [data-site-theme='paper']):is([data-theme], :not([data-theme]))
+  :root:where(:not([data-site-theme]), [data-site-theme='calanque']):is([data-theme], :not([data-theme]))
     [data-slot='code-block-pre'].shiki {
     box-shadow: none;
   }

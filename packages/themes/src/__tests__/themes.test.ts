@@ -49,7 +49,7 @@ const gateOf = (theme: string): string => `:root:where(:not([data-site-theme]), 
 /** The theme's looks, written once and replayed on every theme. */
 describe.each([
   { theme: 'maquis', effects: true },
-  { theme: 'paper', effects: false },
+  { theme: 'calanque', effects: false },
 ])('the $theme theme', ({ theme, effects }) => {
   const source = sourceOf(theme);
   // The rules themselves, not a media block's own line (`@media … {` is parsed with the first rule inside it).
@@ -384,9 +384,9 @@ function contrast(a: string, b: string): number {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-describe('paper.css', () => {
-  const rules = rulesOf(sourceOf('paper'));
-  const gate = gateOf('paper');
+describe('calanque.css', () => {
+  const rules = rulesOf(sourceOf('calanque'));
+  const gate = gateOf('calanque');
   const tokensOf = (selector: string): Readonly<Record<string, string>> =>
     Object.fromEntries(
       [

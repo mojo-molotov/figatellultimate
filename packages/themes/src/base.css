@@ -1,6 +1,6 @@
 /*
  * @figatellultimate/themes/base.css: what every theme shares, loaded after `@figatellultimate/ui/styles.css` and
- * `@figatellultimate/effects/styles.css`, before a theme (`maquis.css`, `papier.css`).
+ * `@figatellultimate/effects/styles.css`, before a theme (`maquis.css`, `calanque.css`).
  *
  * The page (body, the content column, the article layout with its table of contents), the listing and blog slots,
  * the MDX typography (`[data-slot='mdx-*']`) and print: layout and rhythm only, every color and font a token, so that a
