@@ -25,10 +25,14 @@ export const DEFAULT_PHONE_MEDIA = '(max-width: 36rem)';
 
 /** Options of `useResponsiveBatches`. */
 export interface ResponsiveBatchesOptions<T> {
-  /** URLs of batches beyond the prerendered first batch (`batchUrls[0]` corresponds to page 2). */
+  /** URLs of batches beyond page 1 (`batchUrls[0]` corresponds to page 2). */
   readonly batchUrls: readonly string[];
   /** Loader for one batch URL (typically `createIndexLoader` with schema validation). */
   readonly load: (url: string) => Promise<T>;
+  /** 1-based page number already prerendered in initial HTML; default `1`. Pages `>= 2` stay paginated on phones. */
+  readonly initialPage?: number | undefined;
+  /** Static JSON URL for page 1, used when `initialPage > 1` and the reader navigates back to page 1. */
+  readonly firstBatchUrl?: string | undefined;
   /** Media query identifying phone viewports (scroll-loading mode); default `DEFAULT_PHONE_MEDIA`. */
   readonly phoneMedia?: string | undefined;
   /** `IntersectionObserver` root margin for phone scroll-loading; default `'200px'`. */
@@ -39,11 +43,13 @@ export interface ResponsiveBatchesOptions<T> {
 export interface ResponsiveBatches<T> {
   /** Whether the current viewport matches `phoneMedia`. */
   readonly phone: boolean;
-  /** Active desktop page number, starting at 1. */
+  /** Whether scroll-loading mode is active (`phone && initialPage === 1 && batchUrls.length > 0`). */
+  readonly scrollMode: boolean;
+  /** Active page number, starting at `initialPage`. */
   readonly page: number;
   /** Loaded batches in order (for phone scroll-loading). */
   readonly loadedScrollBatches: readonly T[];
-  /** Active batch for desktop pages `>= 2` (`undefined` on page 1 or while loading). */
+  /** Active batch when `page !== initialPage` (`undefined` on `initialPage` or while loading). */
   readonly activeDesktopBatch: T | undefined;
   /** Whether phone scroll-loading still has unloaded batches to observe. */
   readonly hasMoreScroll: boolean;
@@ -51,44 +57,58 @@ export interface ResponsiveBatches<T> {
   readonly status: 'idle' | 'loading';
   /** Ref to attach to the scroll sentinel element rendered while `hasMoreScroll || status === 'loading'`. */
   readonly sentinelRef: RefObject<HTMLDivElement | null>;
-  /** Switches desktop pagination to `nextPage` (fetching its batch when `>= 2` and not yet cached). */
+  /** Switches pagination to `nextPage` (fetching its batch when `nextPage !== initialPage` and not yet cached). */
   readonly selectPage: (nextPage: number) => void;
-  /** Prefetches a desktop page's batch (`nextPage >= 2`) without changing `page`. */
+  /** Prefetches a page's batch (`nextPage !== initialPage`) without changing `page`. */
   readonly prefetchPage: (nextPage: number) => void;
 }
 
 /**
  * Coordinates mobile scroll-loading and desktop pagination over one set of static JSON batch URLs.
  *
- * @param options - Batch URLs beyond the initial page, batch loader, and optional phone media query / root margin.
- * @returns Viewport mode, loaded batches, sentinel ref, status and desktop page controls.
+ * @param options - Batch URLs beyond page 1, batch loader, and optional initial page, first batch URL, phone media
+ *   query and root margin.
+ * @returns Viewport mode, loaded batches, sentinel ref, status and page controls.
  *
  * @example
  * const batches = useResponsiveBatches({ batchUrls, load: loadSectionBatch });
  */
 export function useResponsiveBatches<T>(options: ResponsiveBatchesOptions<T>): ResponsiveBatches<T> {
-  const { batchUrls, load, phoneMedia = DEFAULT_PHONE_MEDIA, rootMargin = '200px' } = options;
+  const {
+    batchUrls,
+    load,
+    initialPage = 1,
+    firstBatchUrl,
+    phoneMedia = DEFAULT_PHONE_MEDIA,
+    rootMargin = '200px',
+  } = options;
+  // Keyed by 1-based page number so page 1 (`firstBatchUrl`) and pages 2..N (`batchUrls`) share one cache.
   const [batches, setBatches] = useState<Readonly<Record<number, T>>>({});
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(initialPage);
   const [phone, setPhone] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading'>('idle');
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const fetchBatch = useCallback(
-    (batchIndex: number): Promise<T | undefined> => {
-      const url = batchUrls[batchIndex];
+  const urlForPage = useCallback(
+    (targetPage: number): string | undefined => (targetPage === 1 ? firstBatchUrl : batchUrls[targetPage - 2]),
+    [batchUrls, firstBatchUrl],
+  );
+
+  const fetchPage = useCallback(
+    (targetPage: number): Promise<T | undefined> => {
+      const url = urlForPage(targetPage);
 
       if (url === undefined) return Promise.resolve(undefined);
 
       return load(url)
         .then((items) => {
-          setBatches((previous) => (previous[batchIndex] === items ? previous : { ...previous, [batchIndex]: items }));
+          setBatches((previous) => (previous[targetPage] === items ? previous : { ...previous, [targetPage]: items }));
 
           return items;
         })
         .catch(() => undefined);
     },
-    [batchUrls, load],
+    [urlForPage, load],
   );
 
   useEffect(() => {
@@ -111,36 +131,35 @@ export function useResponsiveBatches<T>(options: ResponsiveBatchesOptions<T>): R
     (nextPage: number): void => {
       setPage(nextPage);
 
-      if (nextPage < 2) return;
+      if (nextPage === initialPage) return;
 
-      const batchIndex = nextPage - 2;
-
-      if (batches[batchIndex] !== undefined) return;
+      if (batches[nextPage] !== undefined) return;
 
       setStatus('loading');
-      void fetchBatch(batchIndex).finally(() => {
+      void fetchPage(nextPage).finally(() => {
         setStatus('idle');
       });
     },
-    [batches, fetchBatch],
+    [batches, fetchPage, initialPage],
   );
 
   const prefetchPage = useCallback(
     (nextPage: number): void => {
-      if (nextPage < 2) return;
+      if (nextPage === initialPage) return;
 
-      // Never prefetch desktop pages on a phone viewport, where batches are revealed on scroll only.
-      if (typeof window.matchMedia === 'function' && window.matchMedia(phoneMedia).matches) return;
+      // Never prefetch desktop pages on a phone viewport in scroll mode, where batches are revealed on scroll only.
+      if (initialPage === 1 && typeof window.matchMedia === 'function' && window.matchMedia(phoneMedia).matches) return;
 
-      const url = batchUrls[nextPage - 2];
+      const url = urlForPage(nextPage);
 
       if (url !== undefined) void load(url).catch(() => undefined);
     },
-    [batchUrls, load, phoneMedia],
+    [initialPage, urlForPage, load, phoneMedia],
   );
 
-  const nextScrollBatch = batchUrls.findIndex((_, index) => batches[index] === undefined);
-  const hasMoreScroll = phone && nextScrollBatch !== -1;
+  const scrollMode = phone && initialPage === 1 && batchUrls.length > 0;
+  const nextScrollIndex = batchUrls.findIndex((_, index) => batches[index + 2] === undefined);
+  const hasMoreScroll = scrollMode && nextScrollIndex !== -1;
 
   useEffect(() => {
     if (!hasMoreScroll) return;
@@ -155,7 +174,7 @@ export function useResponsiveBatches<T>(options: ResponsiveBatchesOptions<T>): R
         if (!entries.some((entry) => entry.isIntersecting)) return;
 
         setStatus('loading');
-        void fetchBatch(nextScrollBatch).finally(() => {
+        void fetchPage(nextScrollIndex + 2).finally(() => {
           if (active) setStatus('idle');
         });
       },
@@ -168,21 +187,22 @@ export function useResponsiveBatches<T>(options: ResponsiveBatchesOptions<T>): R
       active = false;
       observer.disconnect();
     };
-  }, [hasMoreScroll, nextScrollBatch, fetchBatch, rootMargin]);
+  }, [hasMoreScroll, nextScrollIndex, fetchPage, rootMargin]);
 
   const loadedScrollBatches = useMemo(
     () =>
       batchUrls.flatMap((_, index) => {
-        const items = batches[index];
+        const items = batches[index + 2];
 
         return items === undefined ? [] : [items];
       }),
     [batchUrls, batches],
   );
-  const activeDesktopBatch = page >= 2 ? batches[page - 2] : undefined;
+  const activeDesktopBatch = page === initialPage ? undefined : batches[page];
 
   return {
     phone,
+    scrollMode,
     page,
     loadedScrollBatches,
     activeDesktopBatch,

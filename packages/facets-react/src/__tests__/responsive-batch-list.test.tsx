@@ -172,4 +172,69 @@ describe('ResponsiveBatchList and BatchPagination', () => {
       expect(container.querySelector('[data-slot="section-list-status"]')).toBeNull();
     });
   });
+
+  it('keeps pagination mounted on phones when landed on page 2 and navigates locally back to page 1 via firstBatchUrl', async () => {
+    stubMatchMedia(true);
+    const load = vi.fn((url: string) =>
+      Promise.resolve(
+        url === '/batches/0'
+          ? [
+              { id: '1', label: 'Item 1' },
+              { id: '2', label: 'Item 2' },
+            ]
+          : (BATCHES[url] ?? []),
+      ),
+    );
+    const calls: { readonly search: string; readonly local: boolean | undefined }[] = [];
+
+    function Page2Demo() {
+      const [search, setSearch] = useState('?page=2');
+      const url: UrlAdapter = {
+        search,
+        navigate: (next, options) => {
+          calls.push({ search: next, local: options.local });
+          setSearch(next);
+        },
+      };
+
+      return (
+        <ResponsiveBatchList
+          initial={[
+            { key: '3', node: <span>Item 3</span> },
+            { key: '4', node: <span>Item 4</span> },
+          ]}
+          initialPage={2}
+          firstBatchUrl="/batches/0"
+          batchUrls={['/batches/1', '/batches/2']}
+          load={load}
+          renderItem={(item) => ({ key: item.id, node: <span>{item.label}</span> })}
+          renderPagination={({ onPageChange, onPrefetchPage }) => (
+            <BatchPagination
+              totalItems={5}
+              batchSize={2}
+              url={url}
+              locale="en"
+              onPageChange={onPageChange}
+              onPrefetchPage={onPrefetchPage}
+              selectLabels={SELECT_LABELS}
+              paginationLabels={PAGINATION_LABELS}
+            />
+          )}
+        />
+      );
+    }
+
+    const { container } = render(<Page2Demo />);
+
+    expect(screen.getByText('Item 3')).toBeDefined();
+    expect(container.querySelector('[data-slot="section-list-status"]')).toBeNull();
+    expect(screen.getByRole('navigation', { name: 'Pagination' })).toBeDefined();
+
+    await userEvent.click(screen.getByRole('link', { name: 'Previous' }));
+    await waitFor(() => {
+      expect(screen.getByText('Item 1')).toBeDefined();
+    });
+    expect(load).toHaveBeenCalledWith('/batches/0');
+    expect(calls).toEqual([{ search: '', local: true }]);
+  });
 });

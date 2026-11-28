@@ -71,10 +71,14 @@ export function useBatchPagination(options: BatchPaginationOptions): FacetedColl
   const adapter = useMemo<UrlAdapter>(
     () => ({
       ...url,
+      // Page switches are rendered locally from static JSON batches: move the address without a full route fetch.
+      navigate: (next, navOptions) => {
+        url.navigate(next, { ...navOptions, local: true });
+      },
       prefetch: (search) => {
         const page = Number(new URLSearchParams(search).get(param) ?? '1');
 
-        if (Number.isInteger(page) && page >= 2) onPrefetchPage(page);
+        if (Number.isInteger(page) && page >= 1) onPrefetchPage(page);
       },
     }),
     [url, param, onPrefetchPage],

@@ -42,10 +42,14 @@ export interface ResponsiveBatchControls {
 
 /** Props of `ResponsiveBatchList`. */
 export interface ResponsiveBatchListProps<TItem> {
-  /** Server-rendered first batch items, always painted synchronously on first paint. */
+  /** Server-rendered initial page items, always painted synchronously on first paint. */
   readonly initial: readonly ResponsiveBatchItem[];
-  /** Static JSON batch URLs beyond the first batch (`batchUrls[0]` corresponds to page 2). */
+  /** Static JSON batch URLs beyond page 1 (`batchUrls[0]` corresponds to page 2). */
   readonly batchUrls: readonly string[];
+  /** 1-based page number already prerendered in `initial`; default `1`. Pages `>= 2` keep pagination on phones. */
+  readonly initialPage?: number | undefined;
+  /** Static JSON URL for page 1, used when `initialPage > 1` and the reader navigates back to page 1. */
+  readonly firstBatchUrl?: string | undefined;
   /** Validated batch loader (typically `createIndexLoader` with a schema). */
   readonly load: (url: string) => Promise<readonly TItem[]>;
   /** Renders one item from a fetched batch into a keyed `ReactNode`. */
@@ -77,6 +81,8 @@ export interface ResponsiveBatchListProps<TItem> {
 export function ResponsiveBatchList<TItem>({
   initial,
   batchUrls,
+  initialPage = 1,
+  firstBatchUrl,
   load,
   renderItem,
   renderPagination,
@@ -86,7 +92,7 @@ export function ResponsiveBatchList<TItem>({
   listSlot = 'folder-list',
 }: ResponsiveBatchListProps<TItem>): ReactNode {
   const {
-    phone,
+    scrollMode,
     page,
     loadedScrollBatches,
     activeDesktopBatch,
@@ -95,7 +101,7 @@ export function ResponsiveBatchList<TItem>({
     sentinelRef,
     selectPage,
     prefetchPage,
-  } = useResponsiveBatches({ batchUrls, load, phoneMedia, rootMargin });
+  } = useResponsiveBatches({ batchUrls, load, initialPage, firstBatchUrl, phoneMedia, rootMargin });
 
   const renderBatch = (items: readonly TItem[]): ReactNode =>
     items.map((item) => {
@@ -105,18 +111,20 @@ export function ResponsiveBatchList<TItem>({
     });
 
   return (
-    <div data-slot={slot}>
+    <div data-slot={slot} data-scroll-batches={initialPage === 1 && batchUrls.length > 0 ? '' : undefined}>
       <ul data-slot={listSlot}>
-        {phone || page === 1 ? initial.map((item) => <li key={item.key}>{item.node}</li>) : null}
-        {phone ? loadedScrollBatches.flatMap((items) => renderBatch(items)) : null}
-        {!phone && page >= 2 && activeDesktopBatch !== undefined ? renderBatch(activeDesktopBatch) : null}
+        {scrollMode || page === initialPage ? initial.map((item) => <li key={item.key}>{item.node}</li>) : null}
+        {scrollMode ? loadedScrollBatches.flatMap((items) => renderBatch(items)) : null}
+        {!scrollMode && page !== initialPage && activeDesktopBatch !== undefined
+          ? renderBatch(activeDesktopBatch)
+          : null}
       </ul>
       {hasMoreScroll || status === 'loading' ? (
         <div ref={sentinelRef} data-slot="section-list-status" data-status={status} aria-hidden>
           <span data-slot="section-list-spinner" />
         </div>
       ) : null}
-      {phone ? null : renderPagination?.({ onPageChange: selectPage, onPrefetchPage: prefetchPage })}
+      {scrollMode ? null : renderPagination?.({ onPageChange: selectPage, onPrefetchPage: prefetchPage })}
     </div>
   );
 }
