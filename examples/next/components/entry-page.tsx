@@ -17,7 +17,6 @@ import { site } from '../site';
 import { isExposed } from './llms';
 import { Body } from './mdx';
 import { PrintMargins } from './print-margins';
-import { SectionPages } from './section-pages';
 import { PageCrumbs, SiteHeader } from './site-header';
 import { breadcrumbDataOf, StructuredDataScript } from './structured-data';
 import { Toc } from './toc';
@@ -41,13 +40,15 @@ export function entryMetadata(found: FoundEntry): Metadata {
  * when it has sections, or the plain one.
  *
  * @param props - The entry; whether it always takes the article's layout (a post); its authors, for its structured
- *   data; and what follows its body in the article's layout (a pager, a post's footer).
+ *   data; its section's list of pages (`SectionPages`, out of the indexed body); and what follows its body in the
+ *   article's layout (a pager, a post's footer).
  * @returns The page.
  */
 export async function EntryPage(props: {
   readonly found: FoundEntry;
   readonly article?: boolean;
   readonly authors?: readonly { readonly name: string; readonly url: string | undefined }[];
+  readonly section?: ReactNode;
   readonly footer?: ReactNode;
 }): Promise<ReactNode> {
   const { found } = props;
@@ -61,7 +62,7 @@ export async function EntryPage(props: {
         <Body code={entry.data.mdx} />
       </div>
       {/* Out of the indexed body: a section's page lists its pages, which are indexed on their own. */}
-      <SectionPages locale={entry.locale} url={entry.url} />
+      {props.section}
     </>
   );
   const data = (

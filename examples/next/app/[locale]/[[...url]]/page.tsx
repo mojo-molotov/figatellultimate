@@ -11,6 +11,7 @@ import { routeParamsOf } from '#figatellultimate/urls';
 
 import { EntryPage, entryMetadata } from '../../../components/entry-page';
 import { pageAt } from '../../../components/route-page';
+import { SectionPages } from '../../../components/section-pages';
 
 // The app has a route per base (`splitRoutes: true`): this one serves the pages, the blog, the landing pages and the
 // authors have their own (`blog/`, `lp/`, `authors/`), so that a page ships only its own kind's client code.
@@ -48,6 +49,7 @@ export default async function Page(props: PageProps<'/[locale]/[[...url]]'>): Pr
   return (
     <EntryPage
       found={found}
+      section={<SectionPages locale={entry.locale} url={entry.url} />}
       footer={
         <Pager
           previous={previous}

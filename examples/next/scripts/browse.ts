@@ -1053,6 +1053,57 @@ try {
     await phone.close();
   }
 
+  // The documentation's section list (`/docs`): every card visible at once on a desktop; on a phone, four on arrival
+  // and four more revealed as the reader scrolls to the bottom, until every card is shown.
+  {
+    const desktop = await open('/docs');
+    const allCards = await desktop.locator('[data-slot="folder-list"] [data-slot="entry-card"]').count();
+    const visibleDesktop = await desktop
+      .locator('[data-slot="folder-list"] > li')
+      .evaluateAll((nodes) => nodes.filter((node) => getComputedStyle(node).display !== 'none').length);
+
+    check(
+      allCards > 4 && visibleDesktop === allCards,
+      `/docs on a desktop: ${String(visibleDesktop)}/${String(allCards)} cards visible`,
+    );
+    await desktop.close();
+
+    const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+
+    await phone.goto(`${base}/docs`, { waitUntil: 'networkidle' });
+    const visibleCount = () =>
+      phone
+        .locator('[data-slot="folder-list"] > li')
+        .evaluateAll((nodes) => nodes.filter((node) => getComputedStyle(node).display !== 'none').length);
+    const initial = await visibleCount();
+
+    check(initial === 4, `/docs on a phone: expected 4 cards on arrival, got ${String(initial)}`);
+
+    let shown = initial;
+
+    while (shown < allCards) {
+      const target = Math.min(shown + 4, allCards);
+
+      await phone.evaluate(() => {
+        window.scrollTo(0, document.documentElement.scrollHeight);
+      });
+      await phone.waitForFunction(
+        (expected) =>
+          [...document.querySelectorAll('[data-slot="folder-list"] > li')].filter(
+            (node) => getComputedStyle(node).display !== 'none',
+          ).length >= expected,
+        target,
+      );
+      shown = await visibleCount();
+    }
+
+    check(
+      shown === allCards,
+      `/docs on a phone: expected all ${String(allCards)} cards after scrolling, got ${String(shown)}`,
+    );
+    await phone.close();
+  }
+
   // An unknown URL: a real 404, yet a page of the site in its locale, with the navigation and a link home.
   for (const [url, lang, title, home, link] of [
     ['/nope/never', 'fr', 'Page introuvable · Figatellultimate', '/', 'Retour à l’accueil'],
@@ -1090,6 +1141,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    '✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, those of a category too, a listing reached from its category at once, the switcher following, Back restoring; Tab straight to the copy buttons, a region a stop only while it overflows; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit, always for a category, its full pagination on its last line on a desktop, every see more as far below its cards, every full pagination at the end of its line; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; the navbar on one line at any width, compact once its links do not fit; a zoom preloaded on hover; the chosen theme shown before hydration; the code at AA contrast in every theme, light and dark; the search placeholder shown where the text begins, never heard; the shortcut of the search, the keys of the reader, on a desktop only; llms.txt and each page as Markdown at their public URLs, the ARD manifest and its skill; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; an unknown URL is a 404 of the site in its locale.',
+    "✓ previous and next keep the button under the mouse, the page taller or shorter, and under the thumb on a phone; the next pages loaded ahead; the pages of a batch shown without the server, those of a category too, a listing reached from its category at once, the switcher following, Back restoring; Tab straight to the copy buttons, a region a stop only while it overflows; a filter in the URL, or chosen early, is applied; the heading beside the compact pagination when they fit, always for a category, its full pagination on its last line on a desktop, every see more as far below its cards, every full pagination at the end of its line; the listing controls on one line on a phone; the page select reaches its page; a right-to-left layout mirrored; the menu toggle crossed when open; the navbar on one line at any width, compact once its links do not fit; a zoom preloaded on hover; the chosen theme shown before hydration; the code at AA contrast in every theme, light and dark; the search placeholder shown where the text begins, never heard; the shortcut of the search, the keys of the reader, on a desktop only; llms.txt and each page as Markdown at their public URLs, the ARD manifest and its skill; the pagination on one line on a phone; the cards hovered with a mouse only; the search within a phone screen; the footer revealed on a desktop only; the documentation's list revealed in batches on scroll on a phone and shown in full on a desktop; an unknown URL is a 404 of the site in its locale.",
   );
 }

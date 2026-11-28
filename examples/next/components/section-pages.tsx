@@ -1,16 +1,19 @@
-/** The list of a section's pages, below its own page. */
+/** The list of a section's pages, below its own page; revealed in batches on scroll on a phone (`section-list.tsx`). */
+import { Collector } from '@figatellultimate/effects';
 import { sectionOf } from '@figatellultimate/site';
 import { EntryCard } from '@figatellultimate/ui';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
-
-import { Collector } from '@figatellultimate/effects';
 
 import type { Locale } from '#figatellultimate/locales';
 import { navigationOf } from '#figatellultimate/navigation';
 import { findPageByUrl } from '#figatellultimate/pages';
 
 import { cardPriority } from './priority';
+import { SectionList, type SectionListItem } from './section-list';
+
+/** How many cards a section reveals at a time on a phone (`section-list.tsx`). */
+const SECTION_BATCH_SIZE = 4;
 
 /**
  * The pages of the section a page opens, e.g. `/docs` lists its pages and subfolders: the same navigation as
@@ -35,40 +38,47 @@ export async function SectionPages({
     section.children.map(async (node) => (node.kind === 'entry' ? findPageByUrl(node.url) : undefined)),
   );
   const labels = { tags: t('ui.card.tags'), authors: t('ui.card.authors'), more: t('ui.card.more') };
+  const items: SectionListItem[] = section.children.map((node, index) => {
+    // A subfolder is named by its content message: every locale translates it.
+    const label = node.kind === 'entry' ? node.title : t(node.label);
+    const page = pages[index];
 
-  return (
-    <ul data-slot="folder-list">
-      {section.children.map((node, index) => {
-        // A subfolder is named by its content message: every locale translates it.
-        const label = node.kind === 'entry' ? node.title : t(node.label);
-        const page = pages[index];
+    // A page as a post's preview: its image, its title, its description; a subfolder by its title.
+    return {
+      key: node.kind === 'entry' ? node.url : node.label,
+      card: node.url !== undefined,
+      node:
+        node.url === undefined ? (
+          <h2>{label}</h2>
+        ) : (
+          <Collector>
+            <EntryCard
+              // The page's first cards (subfolder headings aside): its largest paint, loaded at once.
+              priority={cardPriority(
+                'section',
+                section.children.slice(0, index).filter((above) => above.url !== undefined).length,
+                page?.data.featuredPictureUrl,
+              )}
+              href={node.url}
+              title={label}
+              {...(page === undefined ? {} : { description: page.data.metadescription })}
+              {...(page?.data.featuredPictureUrl === undefined ? {} : { image: page.data.featuredPictureUrl })}
+              locale={locale}
+              labels={labels}
+            />
+          </Collector>
+        ),
+    };
+  });
 
-        // A page as a post's preview: its image, its title, its description; a subfolder by its title.
-        return (
-          <li key={node.kind === 'entry' ? node.url : node.label}>
-            {node.url === undefined ? (
-              <h2>{label}</h2>
-            ) : (
-              <Collector>
-                <EntryCard
-                  // The page's first cards (subfolder headings aside): its largest paint, loaded at once.
-                  priority={cardPriority(
-                    'section',
-                    section.children.slice(0, index).filter((above) => above.url !== undefined).length,
-                    page?.data.featuredPictureUrl,
-                  )}
-                  href={node.url}
-                  title={label}
-                  {...(page === undefined ? {} : { description: page.data.metadescription })}
-                  {...(page?.data.featuredPictureUrl === undefined ? {} : { image: page.data.featuredPictureUrl })}
-                  locale={locale}
-                  labels={labels}
-                />
-              </Collector>
-            )}
-          </li>
-        );
-      })}
-    </ul>
-  );
+  if (items.filter((item) => item.card).length <= SECTION_BATCH_SIZE)
+    return (
+      <ul data-slot="folder-list">
+        {items.map((item) => (
+          <li key={item.key}>{item.node}</li>
+        ))}
+      </ul>
+    );
+
+  return <SectionList items={items} batchSize={SECTION_BATCH_SIZE} />;
 }

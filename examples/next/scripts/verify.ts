@@ -1232,6 +1232,22 @@ for (const item of mountedUrls) {
   );
 }
 
+// The documentation's section list (`components/section-list.tsx`): prerendered with every card so a desktop shows
+// all of them, the first four unmarked on a phone and the rest marked `data-paged-out` until scrolled into view.
+{
+  const docs = htmlOf('/docs') ?? '';
+  const cards = [...docs.matchAll(/<li[^>]*>(?=<div[^>]*data-slot="collector"[\s\S]*?data-slot="entry-card")/g)].map(
+    (match) => match[0],
+  );
+  const pagedOut = cards.filter((tag) => tag.includes('data-paged-out'));
+
+  check(cards.length > 4, `/docs: expected more than 4 cards, found ${String(cards.length)}`);
+  check(
+    cards.slice(0, 4).every((tag) => !tag.includes('data-paged-out')) && pagedOut.length === cards.length - 4,
+    `/docs: expected 4 shown cards on arrival and ${String(cards.length - 4)} hidden, got ${String(pagedOut.length)}`,
+  );
+}
+
 // The SEO of pages without frontmatter (`folderPages.metadata`, `pages.metadata`): every category, subcategory and
 // author page, the blog's own page too (`messages.$root`), each of its further pages too, in each locale, has a meta description.
 {
@@ -1274,6 +1290,6 @@ if (problems.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    `✓ ${String(mountedUrls.length)} mounted URLs prerendered with canonical, alternates, x-default and Open Graph; subcategory pages with their default view and pagination links; sitemap (dated, noindex left out), structured data, feeds, robots.txt, drafts, the footer, the listings' and the folder pages' batches, one search bundle per locale (French and English queries, stemming, collection filter), an llms.txt per locale listing the documentation's Markdown, each page's Markdown without what <llm-exclude> holds, the ARD manifest listing the agent skill, images through next/image with their sizes, the cards only a desktop shows on arrival preloaded for it with their own sources, a meta description on every folder and author page, with plain spaces, and the navbar from the content in each page's language as expected.`,
+    `✓ ${String(mountedUrls.length)} mounted URLs prerendered with canonical, alternates, x-default and Open Graph; subcategory pages with their default view and pagination links; sitemap (dated, noindex left out), structured data, feeds, robots.txt, drafts, the footer, the listings' and the folder pages' batches, one search bundle per locale (French and English queries, stemming, collection filter), an llms.txt per locale listing the documentation's Markdown, each page's Markdown without what <llm-exclude> holds, the ARD manifest listing the agent skill, images through next/image with their sizes, the cards only a desktop shows on arrival preloaded for it with their own sources, the documentation's section list with its first four cards shown on a phone and the rest marked for scroll reveal, a meta description on every folder and author page, with plain spaces, and the navbar from the content in each page's language as expected.`,
   );
 }
