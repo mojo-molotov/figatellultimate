@@ -487,20 +487,48 @@ main[data-folder='category'] [data-slot='listing-cards'] {
 }
 
 /* A section's list of pages, after its page's text: apart from it. */
-[data-pagefind-body] + :is([data-slot='folder-list'], [data-slot='section-list']) {
+[data-pagefind-body] + [data-slot='folder-list'] {
   margin-block-start: calc(var(--fig-space) * 4);
 }
 
-/* A section's list (`/docs`): paginated on a desktop (select above at the end, pagination below at the end),
-   scroll-loaded on a phone (pagination controls hidden on a phone). */
-[data-slot='section-list'] {
-  display: flex;
-  flex-direction: column;
+/* A section's list (`/docs`): paginated on a desktop (select beside the heading on the first line, pagination below at
+   the end), scroll-loaded on a phone (pagination controls hidden on a phone). `display: contents` keeps the indexed
+   body (`[data-pagefind-body]`) and the section list separated in the DOM while aligning the page select with the
+   page's heading in `<main>`'s grid. */
+main:has(> [data-slot='section-list']) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: start;
+  align-items: center;
+  column-gap: calc(var(--fig-space) * 2);
 }
 
-[data-slot='section-list'] > [data-slot='page-select-trigger'] {
-  margin-inline-start: auto;
-  margin-block-end: calc(var(--fig-space) * 2);
+main:has(> [data-slot='section-list']) > [data-pagefind-body],
+main:has(> [data-slot='section-list']) > [data-pagefind-body] > [data-slot='mdx'],
+main:has(> [data-slot='section-list']) > [data-slot='section-list'] {
+  display: contents;
+}
+
+main:has(> [data-slot='section-list']) [data-slot='mdx'] > :not([data-slot='mdx-h1']),
+main:has(> [data-slot='section-list']) > [data-slot='section-list'] > :not([data-slot='page-select-trigger']) {
+  grid-column: 1 / -1;
+}
+
+main:has(> [data-slot='section-list']) [data-slot='mdx-h1'] {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+}
+
+main:has(> [data-slot='section-list']) > [data-slot='section-list'] > [data-slot='page-select-trigger'] {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  margin: 0;
+}
+
+main:has(> [data-slot='section-list']) > [data-slot='section-list'] > [data-slot='folder-list'] {
+  margin-block-start: calc(var(--fig-space) * 2);
 }
 
 @media (max-width: 36rem) {
