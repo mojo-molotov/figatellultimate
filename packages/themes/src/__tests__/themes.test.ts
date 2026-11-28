@@ -434,6 +434,17 @@ describe('calanque.css', () => {
       `${gate} [data-slot='search-dialog-close'] { border-radius: 999px; }`,
     );
   });
+
+  it('sets tag and author pills inside dark cards on a background distinct from the elevated card surface', () => {
+    const pills = rules.find(
+      (rule) =>
+        rule.selector.startsWith(`${gate}[data-theme='dark'] [data-slot='entry-card'] :is(`) &&
+        rule.selector.includes("[data-slot='entry-card-tag']") &&
+        rule.selector.includes("[data-slot='entry-card-author']"),
+    );
+
+    expect(pills?.body).toBe('background: var(--fig-bg);');
+  });
 });
 
 describe('base.css and the design system', () => {

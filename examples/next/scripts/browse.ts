@@ -822,6 +822,29 @@ try {
       calanqueRadius === '999px',
       `/docs on calanque: desktop search close button is not round (${calanqueRadius})`,
     );
+    // In Calanque dark mode, tags and author pills inside an elevated card stand out from the card's own background.
+    await dialog.goto(`${base}/blog/maquis/corsicamon`, { waitUntil: 'networkidle' });
+    const darkCardPills = await dialog.evaluate(() => {
+      document.documentElement.dataset['siteTheme'] = 'calanque';
+      document.documentElement.dataset['theme'] = 'dark';
+      const card = document.querySelector('[data-slot="entry-card"]');
+      const tag = card?.querySelector('[data-slot="entry-card-tag"]');
+      const author = card?.querySelector('[data-slot="entry-card-author"]');
+
+      if (card === null || tag === null || tag === undefined || author === null || author === undefined)
+        return undefined;
+
+      const cardBg = getComputedStyle(card).backgroundColor;
+      const tagBg = getComputedStyle(tag).backgroundColor;
+      const authorBg = getComputedStyle(author).backgroundColor;
+
+      return { cardBg, tagBg, authorBg, distinct: tagBg !== cardBg && authorBg !== cardBg };
+    });
+
+    check(
+      darkCardPills !== undefined && darkCardPills.distinct,
+      `/blog/maquis/corsicamon on calanque dark: tag/author pills blend into card background (${JSON.stringify(darkCardPills)})`,
+    );
     await dialog.close();
   }
 

@@ -169,11 +169,50 @@
     background: var(--fig-surface);
     border-color: var(--fig-border);
   }
+
+  /* Dark cards already sit on `--fig-surface`: set pills inside them on `--fig-bg` so tags and authors stand out. */
+  :root:where(:not([data-site-theme]), [data-site-theme='calanque']):not([data-theme='light'])
+    [data-slot='entry-card']
+    :is(
+      [data-slot='entry-card-tag'],
+      [data-slot='entry-card-tags-more-trigger'],
+      [data-slot='entry-card-tags-more'] > span,
+      [data-slot='entry-card-author']
+    ) {
+    background: var(--fig-bg);
+  }
 }
 
 :root:where(:not([data-site-theme]), [data-site-theme='calanque'])[data-theme='dark'] [data-slot='entry-card'] {
   background: var(--fig-surface);
   border-color: var(--fig-border);
+}
+
+:root:where(:not([data-site-theme]), [data-site-theme='calanque'])[data-theme='dark']
+  [data-slot='entry-card']
+  :is(
+    [data-slot='entry-card-tag'],
+    [data-slot='entry-card-tags-more-trigger'],
+    [data-slot='entry-card-tags-more'] > span,
+    [data-slot='entry-card-author']
+  ) {
+  background: var(--fig-bg);
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-color-scheme: dark) {
+  :root:where(:not([data-site-theme]), [data-site-theme='calanque']):not([data-theme='light'])
+    [data-slot='entry-card']
+    a[data-slot='entry-card-author']:hover {
+    background: var(--fig-border);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :root:where(:not([data-site-theme]), [data-site-theme='calanque'])[data-theme='dark']
+    [data-slot='entry-card']
+    a[data-slot='entry-card-author']:hover {
+    background: var(--fig-border);
+  }
 }
 
 :root:where(:not([data-site-theme]), [data-site-theme='calanque']) [data-slot='entry-card-title'] {
