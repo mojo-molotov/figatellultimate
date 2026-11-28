@@ -16,3 +16,4 @@ export * from './components/pagination.js';
 export * from './components/sort-select.js';
 export * from './use-faceted-collection.js';
 export * from './use-paged-collection.js';
+export * from './use-responsive-batches.js';
