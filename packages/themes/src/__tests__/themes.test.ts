@@ -257,14 +257,25 @@ describe('base.css', () => {
     ).toBe('margin-inline-start: auto;');
   });
 
-  it("hides a section's unrevealed cards on a phone only, leaving every card visible on a desktop", () => {
-    const phone = mediaOf(source)
-      .filter(({ condition }) => condition === '(max-width: 36rem)')
+  it("shows a section list's spinner while a batch loads, still with reduced motion", () => {
+    const reduced = mediaOf(source)
+      .filter(({ condition }) => condition === '(prefers-reduced-motion: reduce)')
       .map(({ body: block }) => block.replace(/\s+/g, ' '))
       .join(' ');
 
-    expect(rules.filter((rule) => rule.selector.includes('data-paged-out'))).toHaveLength(1);
-    expect(phone).toContain("[data-slot='folder-list'] > [data-paged-out] { display: none; }");
+    expect(rules.find((rule) => rule.selector === "[data-slot='section-list-spinner']")?.body).toContain(
+      'visibility: hidden;',
+    );
+    expect(
+      rules.find(
+        (rule) =>
+          rule.selector ===
+          "[data-slot='section-list-status'][data-status='loading'] > [data-slot='section-list-spinner']",
+      )?.body,
+    ).toContain('fig-section-spin 700ms linear infinite');
+    expect(reduced).toContain(
+      "[data-slot='section-list-status'][data-status='loading'] > [data-slot='section-list-spinner'] { animation: fig-section-appear 1ms linear 150ms forwards; }",
+    );
   });
 
   it("compacts a category's previews, a listing's cards keeping their size; tags and authors side by side in both", () => {
