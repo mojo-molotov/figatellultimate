@@ -13,8 +13,8 @@
  *
  * Invariants (`entry-card.test.tsx` and `entry-card-layout.test.tsx` in real browsers): the title links the entry,
  * at the heading level given, looking the same at every level; the date in the locale, the lists named by the
- * labels, the author preview on hover and focus, axe; the image lazy, or eager with a high priority; a level 1
- * rejected by the types (`entry-card.test-d.tsx`).
+ * labels, the author preview on hover and focus, axe; the image lazy, or eager with a high priority, at the sizes an
+ * app's preload repeats (`ENTRY_CARD_IMAGE_SIZES`); a level 1 rejected by the types (`entry-card.test-d.tsx`).
  */
 import type { ComponentProps, ReactNode } from 'react';
 
@@ -58,6 +58,13 @@ export interface EntryCardProps extends Omit<ComponentProps<'article'>, 'title'>
    */
   readonly priority?: boolean | undefined;
 }
+
+/**
+ * The sizes a card's image is served at: the whole width once the card is stacked, 12rem beside its text. An app
+ * preloading a card's image (a `<link rel="preload">` for a wider screen only) gives the same, so that the browser
+ * fetches the image once.
+ */
+export const ENTRY_CARD_IMAGE_SIZES = '(max-width: 36rem) 100vw, 12rem';
 
 /** Each heading level's element. */
 const HEADINGS = { 2: 'h2', 3: 'h3', 4: 'h4', 5: 'h5', 6: 'h6' } as const satisfies Record<
@@ -120,7 +127,7 @@ export function EntryCard({
             alt=""
             {...(priority ? { loading: 'eager', fetchPriority: 'high' } : { loading: 'lazy' })}
             fill
-            sizes="(max-width: 36rem) 100vw, 12rem"
+            sizes={ENTRY_CARD_IMAGE_SIZES}
           />
         </Link>
       )}

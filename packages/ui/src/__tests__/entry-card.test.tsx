@@ -4,7 +4,7 @@ import { userEvent } from '@testing-library/user-event';
 import axe from 'axe-core';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { EntryCard } from '../index.js';
+import { ENTRY_CARD_IMAGE_SIZES, EntryCard } from '../index.js';
 
 function renderCard(locale = 'fr') {
   const user = userEvent.setup();
@@ -68,6 +68,8 @@ describe('EntryCard', () => {
 
       expect(image?.getAttribute('loading')).toBe(loading);
       expect(image?.getAttribute('fetchpriority')).toBe(fetchPriority);
+      // The sizes an app's preload of the image repeats, so that the browser fetches it once.
+      expect(image?.getAttribute('sizes')).toBe(ENTRY_CARD_IMAGE_SIZES);
     },
   );
 
