@@ -1,3 +1,4 @@
+// prettier-ignore
 /**
  * Which message keys an app's code uses, read from its types, and which ones its schema keeps on purpose: what
  * `findUnusedMessages` (`@figatellultimate/messages`) compares the reference with.

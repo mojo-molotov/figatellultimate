@@ -23,10 +23,10 @@
  *       the lens's source, size and `sizes`, so that the browser caches the very variant the dialog shows. Rejected:
  *       loading it on the click, which left the entrance animating an empty frame.
  *     - Both images through the app's image component (`ImageProvider`), at the size the content gives (an MDX image
- *       measured at build); the enlarged one at its own size, the screen at most, set from that size: the variant
- *       an image component serves (`next/image`: wider than the file) would otherwise shrink it. An image without its width and
- *       height in pixels (remote, unmeasured) stays a plain `<img>`: an image component such as `next/image` fails
- *       without them.
+ *       measured at build); the enlarged one at its own size, the screen at most, set from that size: the variant an
+ *       image component serves (`next/image`: wider than the file) would otherwise shrink it. An image without its
+ *       width and height in pixels (remote, unmeasured) stays a plain `<img>`: an image component such as `next/image`
+ *       fails without them.
  *
  * Invariants (`image-zoom.test.tsx` and `image-zoom-layout.test.tsx` in real browsers).
  */

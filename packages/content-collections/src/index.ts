@@ -1,3 +1,4 @@
+// prettier-ignore
 /**
  * The Content Collections adapter: core's `ContentSource` port, backed by Content Collections.
  *
@@ -14,8 +15,8 @@
  *     transforms and MDX; figatellultimate owns structure from paths, diagnostics and typed access.
  *
  * Key design decisions:
- *     - figatellultimate drives: it lists paths and analyzes the structure of every file itself, then joins the documents
- *       Content Collections validated by their path. A file whose frontmatter fails validation still gets its
+ *     - figatellultimate drives: it lists paths and analyzes the structure of every file itself, then joins the
+ *       documents Content Collections validated by their path. A file whose frontmatter fails validation still gets its
  *       structural diagnostics (with Content Collections driving, it would never reach figatellultimate).
  *     - Documents come through `withFigatellultimate`, never by guessing the names of Content Collections' generated
  *       exports: the adapter stays replaceable, the only package importing Content Collections.
@@ -34,14 +35,14 @@
  *     - Builds are serialized in a process: two sources' documents never mix.
  *
  * Known behaviors of Content Collections 0.15.3:
- *     - A file whose frontmatter cannot be parsed (e.g. unclosed YAML) is dropped silently; figatellultimate still reports
- *       it, as `missing-document`, since it lists paths itself.
+ *     - A file whose frontmatter cannot be parsed (e.g. unclosed YAML) is dropped silently; figatellultimate still
+ *       reports it, as `missing-document`, since it lists paths itself.
  *     - Its validation messages render Standard Schema paths as `[object Object]`, hence the mapping of the issues.
  *
- * Invariants: documents through `withFigatellultimate`, directories relative to the project, structured schema diagnostics
- * with valibot and zod, a translation completed and validated by the user's schema with both, no absolute path in
- * documents or diagnostics (`*.test.ts`); the sync plan
- * (`sync-plan.test.ts`); the watch against a build from scratch, on every OS (the CLI's watch lab).
+ * Invariants: documents through `withFigatellultimate`, directories relative to the project, structured schema
+ * diagnostics with valibot and zod, a translation completed and validated by the user's schema with both, no absolute
+ * path in documents or diagnostics (`*.test.ts`); the sync plan (`sync-plan.test.ts`); the watch against a build from
+ * scratch, on every OS (the CLI's watch lab).
  */
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 

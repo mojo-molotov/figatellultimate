@@ -11,21 +11,21 @@
  *       it), unlike `disabled`. It ends once the icons' animation and the page's transition both have (a press would
  *       otherwise cut the page's short), or after a while if neither runs (no stylesheet).
  *     - The whole page follows as a sunset or a sunrise (a view transition, `document.startViewTransition`): towards
- *       dark, the night falls from the top over the warming day; towards light, the day comes from the top too; the edge
- *       is a wide arc slowing as it nears, a band of sky along it (a layer of the new page, `data-slot="theme-horizon"`,
- *       removed once it ends). The
- *       stylesheet reads the way from `<html data-theme-switch="to-dark|to-light">`, set while it plays; the new
- *       page is captured once `<html data-theme>` shows the new theme (a theme library may set it a moment later).
- *       Without view transitions, the page changes at once.
+ *       dark, the night falls from the top over the warming day; towards light, the day comes from the top too; the
+ *       edge is a wide arc slowing as it nears, a band of sky along it (a layer of the new page,
+ *       `data-slot="theme-horizon"`, removed once it ends). The stylesheet reads the way from `<html
+ *       data-theme-switch="to-dark|to-light">`, set while it plays; the new page is captured once `<html data-theme>`
+ *       shows the new theme (a theme library may set it a moment later). Without view transitions, the page changes at
+ *       once.
  *     - On a desktop only (a mouse or a trackpad): on a touch screen, or with `prefers-reduced-motion`, no orbit, no
  *       sunset and never disabled; the theme simply changes.
  *
  *     - An action, named by the theme on and the one a press gives, as chosen with the user: a screen reader says
  *       both, rather than a pressed "Dark theme". Rejected: `aria-pressed`, which says the state but not the action.
  *
- * Invariants (`theme-toggle.test.tsx`, `theme-toggle-layout.test.tsx` in real browsers): its name for each theme, its storage
- * wrapped (a page without storage still works), controlled mode, the icon before hydration, the orbit played and
- * the presses ignored while it runs, the page's sunset or sunrise, none of them with reduced motion.
+ * Invariants (`theme-toggle.test.tsx`, `theme-toggle-layout.test.tsx` in real browsers): its name for each theme, its
+ * storage wrapped (a page without storage still works), controlled mode, the icon before hydration, the orbit played
+ * and the presses ignored while it runs, the page's sunset or sunrise, none of them with reduced motion.
  */
 import { MoonIcon, SunIcon } from '@heroicons/react/24/outline';
 import { useEffect, useRef, useState, useSyncExternalStore, type ComponentProps, type ReactNode } from 'react';

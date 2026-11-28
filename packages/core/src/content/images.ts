@@ -1,3 +1,4 @@
+// prettier-ignore
 /**
  * The content's local images: every image a page shows from the app's own files (`/covers/map.png`), with where it
  * is referenced, for the CLI to check that each one exists in the public folder (`missing-image`).

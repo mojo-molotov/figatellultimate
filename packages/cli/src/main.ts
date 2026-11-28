@@ -1,14 +1,13 @@
+// prettier-ignore
 /**
  * The `figatellultimate` command line: `build`, `check`, `watch`, `search` and `migrate`, dispatched from parsed
  * arguments.
  *
  * Architecture:
  *     argv ──> parseCli ──> loadConfig ──> runOnce (build, check) ──> report ──> exit code
- *                                      ├─> watch: createSerializedRunner(runOnce) on every change of the content
- * source
- *                                      ├─> runSearch: runOnce in production, then the built HTML indexed per locale
- *                                      └─> runMigrate: plan, then with --write the moves, the config edit,
- * redirects.json
+ *                                      ├─> watch: createSerializedRunner(runOnce) on every content change
+ *                                      ├─> runSearch: runOnce in production, then built HTML indexed per locale
+ *                                      └─> runMigrate: plan, then with --write: moves, config edit, redirects.json
  *
  * Key design decisions:
  *     - figatellultimate drives: it lists paths, analyzes structure, joins the delegated tool's documents, emits and
@@ -25,10 +24,10 @@
  *       message is warned unless the project chose otherwise.
  *
  * Invariants: the surface a user meets (help, usage errors, exit codes, each command's output, `watch` stopped by a
- * signal) against the built binary in real processes (`surface.cli.test.ts`); the generated output, the messages,
- * the search, the migrations and the unused messages in process (`e2e.test.ts`, `messages-e2e.test.ts`,
- * `search-e2e.test.ts`, `migrate-e2e.test.ts`, `unused-e2e.test.ts` with `--no-unused`, disposable projects); the watch against a build from scratch after bursts of changes, on
- * every OS (`watch.lab.test.ts`, run weekly).
+ * signal) against the built binary in real processes (`surface.cli.test.ts`); the generated output, the messages, the
+ * search, the migrations and the unused messages in process (`e2e.test.ts`, `messages-e2e.test.ts`,
+ * `search-e2e.test.ts`, `migrate-e2e.test.ts`, `unused-e2e.test.ts` with `--no-unused`, disposable projects); the watch
+ * against a build from scratch after bursts of changes, on every OS (`watch.lab.test.ts`, run weekly).
  */
 import { watch as watchFile } from 'node:fs';
 import { join } from 'node:path';

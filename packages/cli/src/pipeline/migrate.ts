@@ -1,6 +1,6 @@
 /**
- * `figatellultimate migrate default-locale <locale>` and `figatellultimate migrate notation <implicit|explicit>`: the plan, then
- * with `--write` the moves, the config edit and the redirect table.
+ * `figatellultimate migrate default-locale <locale>` and `figatellultimate migrate notation <implicit|explicit>`: the
+ * plan, then with `--write` the moves, the config edit and the redirect table.
  *
  * Key design decisions:
  *     - A plan first: without `--write`, nothing is written; the author sees the moves, the config change and the

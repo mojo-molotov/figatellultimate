@@ -1,17 +1,19 @@
+// prettier-ignore
 /**
  * `@figatellultimate/next16/config`: the Next configuration for precompiled messages (Node, in `next.config.ts`).
  *
  *     next.config.ts ── withPrecompiledMessages ──> Turbopack alias: `use-intl/format-message` ──> `format-only`
  *
- * With every message precompiled on the server (`precompileMessages` of `@figatellultimate/use-intl/precompile`), next-intl
- * formats with its `format-only` runtime, which reads the compiled form and parses nothing: no page ships the ICU
- * parser.
+ * With every message precompiled on the server (`precompileMessages` of `@figatellultimate/use-intl/precompile`),
+ * next-intl formats with its `format-only` runtime, which reads the compiled form and parses nothing: no page ships the
+ * ICU parser.
  *
  * Key design decisions:
  *     - The alias next-intl's own `precompile` option sets, set by hand: that option compiles JSON or PO catalogs
- *       through a loader, while figatellultimate's messages are generated TypeScript modules, compiled by figatellultimate.
- *     - Resolved from the app's next-intl (its own `use-intl`), relative, `./`-prefixed and with forward slashes on every
- *       system, as Turbopack needs.
+ *       through a loader, while figatellultimate's messages are generated TypeScript modules, compiled by
+ *       figatellultimate.
+ *     - Resolved from the app's next-intl (its own `use-intl`), relative, `./`-prefixed and with forward slashes on
+ *       every system, as Turbopack needs.
  *     - The resolution is an injection seam (`resolve`, `cwd`), for tests only: not an API to configure.
  *
  * Invariants (`config.test.ts`): the alias points at the app's `format-only`; the config's own aliases and options

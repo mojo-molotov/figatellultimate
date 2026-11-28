@@ -1,6 +1,6 @@
 /**
- * The code generator: turns a validated assembly into the typed modules of `.figatellultimate/`, imported by the app through
- * its `package.json` `imports`: `#figatellultimate/<module>` maps to `./.figatellultimate/<module>/index.js`.
+ * The code generator: turns a validated assembly into the typed modules of `.figatellultimate/`, imported by the app
+ * through its `package.json` `imports`: `#figatellultimate/<module>` maps to `./.figatellultimate/<module>/index.js`.
  *
  * Generated layout:
  *     .figatellultimate/

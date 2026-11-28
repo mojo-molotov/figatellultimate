@@ -18,9 +18,10 @@
  *       `placeholder` (which a screen reader reads after the name, VoiceOver its ellipsis too), and the field
  *       described by the spoken text. Rejected: an `aria-placeholder`, which a native input's placeholder overrides.
  *
- * Invariants (`search-box.test.tsx`, in happy-dom and in real browsers): axe empty and with results, the keyboard
- * flow (past the results' ends included), new tabs, the sort, its spoken names, dates, the highlight announced once per change, no text of its own; a
- * result named by its title, place and date, its excerpt its description, a trail's chevrons not heard.
+ * Invariants (`search-box.test.tsx`, in happy-dom and in real browsers): axe empty and with results, the keyboard flow
+ * (past the results' ends included), new tabs, the sort, its spoken names, dates, the highlight announced once per
+ * change, no text of its own; a result named by its title, place and date, its excerpt its description, a trail's
+ * chevrons not heard.
  */
 import type { Search, SearchResult, SearchSort } from '@figatellultimate/search';
 import { Command } from 'cmdk';

@@ -1,5 +1,7 @@
+// prettier-ignore
 /**
- * The Pagefind adapter: indexes the built HTML of the mounted entries, one bundle per locale, for `figatellultimate search`.
+ * The Pagefind adapter: indexes the built HTML of the mounted entries, one bundle per locale, for `figatellultimate
+ * search`.
  *
  * Architecture:
  *     figatellultimate search (CLI) ──> pages { url, locale, collection, html, sort } ──> indexSite
@@ -8,16 +10,16 @@
  *                     getFiles ──> each file written here, awaited ──> pagefind.close() once every locale is done
  *
  * Key design decisions:
- *     - figatellultimate gives each page its locale and collection (one rule for URLs): Pagefind would read `<html lang>`,
- *       which a root layout without routing cannot know.
+ *     - figatellultimate gives each page its locale and collection (one rule for URLs): Pagefind would read `<html
+ *       lang>`, which a root layout without routing cannot know.
  *     - One bundle per locale, each with its language forced: the client chooses the bundle, so the stemming never
  *       depends on the page the reader searches from.
  *     - Only the mounted entries of searchable collections, only their `data-pagefind-body` element: a clean index,
  *       the app's markup explicit about what is content.
- *     - Code blocks (`<pre>`) are left out of the index (`data-pagefind-ignore`), as chosen with the user: an excerpt is
- *       the page's text, never a command, and a block in tabs (one command per package manager, the hidden ones
- *       included) never counts its words several times. Every `<pre>`, whatever the app's components: preformatted
- *       text is code. The cost: a word found in a code block only finds nothing; inline code in a sentence stays.
+ *     - Code blocks (`<pre>`) are left out of the index (`data-pagefind-ignore`), as chosen with the user: an excerpt
+ *       is the page's text, never a command, and a block in tabs (one command per package manager, the hidden ones
+ *       included) never counts its words several times. Every `<pre>`, whatever the app's components: preformatted text
+ *       is code. The cost: a word found in a code block only finds nothing; inline code in a sentence stays.
  *     - Markers are hidden, ignored elements added at the end of the body: the collection as a filter, the sort keys
  *       (a title lowercased without accents, the date twice so that undated pages come last both ways), the date as
  *       metadata for the results.
@@ -30,9 +32,9 @@
  *       emptied first.
  *
  * Invariants: code blocks left out, a word in code only finding nothing and an excerpt never code
- * (`browser-bundle.test.ts`), a page of code only empty (`index-site.test.ts`); problems for empty pages, and every bundle complete once `indexSite` returns, repeated against the
- * timing race (`index-site.test.ts`); the written bundles searched as a browser would, per locale, with filters,
- * sorts and dates (`browser-bundle.test.ts`).
+ * (`browser-bundle.test.ts`), a page of code only empty (`index-site.test.ts`); problems for empty pages, and every
+ * bundle complete once `indexSite` returns, repeated against the timing race (`index-site.test.ts`); the written
+ * bundles searched as a browser would, per locale, with filters, sorts and dates (`browser-bundle.test.ts`).
  */
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';

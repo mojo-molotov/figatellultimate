@@ -1,9 +1,11 @@
+// prettier-ignore
 /**
- * `@figatellultimate/use-intl/format`: a precompiled message formatted in the browser, with values only the browser knows
- * (a count of results, a page number). A few hundred bytes (`icu-minify`'s formatter): no ICU parser, no use-intl
+ * `@figatellultimate/use-intl/format`: a precompiled message formatted in the browser, with values only the browser
+ * knows (a count of results, a page number). A few hundred bytes (`icu-minify`'s formatter): no ICU parser, no use-intl
  * runtime, no catalog of messages on the page.
  *
- *     server: precompiled(messages, 'ui.found') ──> { key, message } ──props──> client: formatPrecompiled(it, locale, { count })
+ *     server: precompiled(messages, 'ui.found') ──> { key, message }
+ *         ──props──> client: formatPrecompiled(it, locale, { count })
  *
  * Key design decisions:
  *     - Every other text reaches a client component as a plain string, formatted on the server; only messages

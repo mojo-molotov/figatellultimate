@@ -1,5 +1,6 @@
 'use client';
 
+// prettier-ignore
 /**
  * A listing's filters behind one button: the facets in a panel, opened by a gear, so that a listing's controls keep
  * one line whatever the screen.
@@ -24,9 +25,10 @@
  *       one list is a click for nothing); its own list's "clear" stands for the reset, left out. The facets are its
  *       `FacetOptions` children: one wrapped in an app's component is not counted, the gear kept.
  *
- * Invariants (`components.test.tsx`): axe closed and open; a single facet in place of the gear, without the reset;
- * the count of selected terms, absent without any, in the name; a widget's list opened inside never closes the panel; ↑ ↓ Home End between its widgets, a widget's own keys
- * left to it; Escape closes it, focus back on the gear; no text of its own.
+ * Invariants (`components.test.tsx`): axe closed and open; a single facet in place of the gear, without the reset; the
+ * count of selected terms, absent without any, in the name; a widget's list opened inside never closes the panel; ↑ ↓
+ * Home End between its widgets, a widget's own keys left to it; Escape closes it, focus back on the gear; no text of
+ * its own.
  */
 import { Direction, Popover } from 'radix-ui';
 import { Children, isValidElement, useRef, type ComponentProps, type KeyboardEvent, type ReactNode } from 'react';

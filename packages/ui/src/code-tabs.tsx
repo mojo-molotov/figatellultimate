@@ -1,5 +1,6 @@
 'use client';
 
+// prettier-ignore
 /**
  * Code tabs: variants of one code block (the same command for npm, pnpm, Yarn and Bun), one tab each.
  *

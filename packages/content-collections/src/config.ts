@@ -1,6 +1,7 @@
 /**
- * The entry of the user's Content Collections config (`@figatellultimate/content-collections/config`): `withFigatellultimate` and
- * `rehypeHeadings`. Import-light on purpose: the user's config loads neither the builder nor figatellultimate's core.
+ * The entry of the user's Content Collections config (`@figatellultimate/content-collections/config`):
+ * `withFigatellultimate` and `rehypeHeadings`. Import-light on purpose: the user's config loads neither the builder nor
+ * figatellultimate's core.
  *
  * Key design decision: Content Collections bundles and imports the user's config as a separate module instance, so
  * `withFigatellultimate` and the adapter only meet on `globalThis`, under a registered symbol only this module writes.

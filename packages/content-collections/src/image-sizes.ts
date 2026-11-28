@@ -1,3 +1,4 @@
+// prettier-ignore
 /**
  * The size of every local image of an entry, measured in its MDX compilation: an app's image component (`next/image`,
  * given to `@figatellultimate/ui`'s `ImageProvider`) needs each image's width and height to reserve its room (no

@@ -7,8 +7,8 @@
  *       second framework reuses it.
  *     - Next's major version is in the package's name: a next major gets its own adapter beside this one, and apps
  *       still on Next 16 keep theirs.
- *     - figatellultimate does no routing: locale routing belongs to the app or its i18n library (e.g. next-intl, configured
- *       to match figatellultimate's URL strategy).
+ *     - figatellultimate does no routing: locale routing belongs to the app or its i18n library (e.g. next-intl,
+ *       configured to match figatellultimate's URL strategy).
  *
  * Invariants (`next.test.ts`, and the example's real build): Next's own types are returned; `x-default` in the
  * languages; redirects matching their own URL only.

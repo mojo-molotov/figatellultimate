@@ -1,3 +1,4 @@
+// prettier-ignore
 /**
  * `@figatellultimate/fs-node`: the Node file system adapters of figatellultimate's ports, used by the CLI.
  *

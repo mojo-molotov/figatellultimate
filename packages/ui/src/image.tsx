@@ -1,5 +1,6 @@
 'use client';
 
+// prettier-ignore
 /**
  * Images: figatellultimate's components render their images through the app's image component, given once, as
  * links go through the app's link component (`link.tsx`).

@@ -1,3 +1,4 @@
+// prettier-ignore
 /**
  * The URL codec of faceted collections: reading a query string into facets, a sort and a page, and writing a state
  * back as its canonical query string.

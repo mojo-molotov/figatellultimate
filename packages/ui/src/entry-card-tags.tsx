@@ -1,5 +1,6 @@
 'use client';
 
+// prettier-ignore
 /**
  * A card's tags, on one row: the ones that fit whole, then a « +N » pill opening a popover of the others.
  *

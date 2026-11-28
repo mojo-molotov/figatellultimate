@@ -1,3 +1,4 @@
+// prettier-ignore
 /**
  * Loading the content through the ports: list, analyze, join, then the checks that need every entry (term page
  * collisions, and the routes when the app splits them).
@@ -5,8 +6,7 @@
  * Architecture:
  *     PathLister.list ──> paths ──> analyze (structure, in memory)
  *     ContentSource.documents({ paths }) ──> documents, one by one ──> joinEntry ──> kept entries (streamed)
- *                                                                               └─> summary: diagnostics,
- * exclusions
+ *                                                                                └─> summary: diagnostics, exclusions
  *
  * Key design decisions:
  *     - figatellultimate drives: it lists paths and analyzes every file's structure itself, so a file whose frontmatter

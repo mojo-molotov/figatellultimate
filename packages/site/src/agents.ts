@@ -1,3 +1,4 @@
+// prettier-ignore
 /**
  * What a site offers AI agents, after Agentic Resource Discovery (ARD v0.91, https://agenticresourcediscovery.org):
  * the manifest an agent fetches at `/.well-known/ard.json`, listing the site's agentic resources (an agent skill, an

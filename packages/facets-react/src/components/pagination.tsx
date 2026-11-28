@@ -9,9 +9,10 @@
  *     - Each ellipsis is a Radix DropdownMenu of the hidden pages; the model is the pure
  *       `paginationItems` of `@figatellultimate/facets`.
  *     - Both layouts at once, the wide one with its siblings and a narrow one without (`responsivePaginationItems`):
- *       each item marked `data-layout="wide"` or `"narrow"` when it belongs to one only, an ellipsis's menu listing,
- *       on a narrow screen (`--fig-pagination-layout: narrow`, read as it opens), the siblings hidden beside it. The stylesheet shows the one the screen has room for, so a
- *       phone's pagination fits one line; no script picks it, and nothing shifts once hydrated.
+ *       each item marked `data-layout="wide"` or `"narrow"` when it belongs to one only, an ellipsis's menu listing, on
+ *       a narrow screen (`--fig-pagination-layout: narrow`, read as it opens), the siblings hidden beside it. The
+ *       stylesheet shows the one the screen has room for, so a phone's pagination fits one line; no script picks it,
+ *       and nothing shifts once hydrated.
  *     - The pages around the current one (three on each side, nearest first) are loaded ahead once it shows, and a
  *       page as the pointer, the focus or a finger reaches its link (`prefetchFor`, the URL adapter's `prefetch`): a
  *       reader moving through the list, even clicking next in a burst, never waits for the network, not even on the
@@ -31,10 +32,10 @@
  *       on a narrow screen while the label stays the link's accessible name.
  *
  * Invariants (`components.test.tsx`): axe with an ellipsis menu open, keyboard, disabled ends, no pagination for a
- * single page, three pages on each side and the hovered or focused page loaded ahead, never past an end, a modified click left
- * to the browser, the locale's digits, the app's icons beside the steps' names; its
- * place on the screen across a page change that changes the page's height, in a real browser
- * (`pagination-layout.test.tsx`), and across Next's remount on the example (`examples/next/scripts/browse.ts`).
+ * single page, three pages on each side and the hovered or focused page loaded ahead, never past an end, a modified
+ * click left to the browser, the locale's digits, the app's icons beside the steps' names; its place on the screen
+ * across a page change that changes the page's height, in a real browser (`pagination-layout.test.tsx`), and across
+ * Next's remount on the example (`examples/next/scripts/browse.ts`).
  *
  * Limitation: with two paginations of one listing on a page (above and below it), after a remount the first one
  * mounted takes the place, whichever was clicked.

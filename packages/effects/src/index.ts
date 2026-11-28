@@ -1,5 +1,6 @@
 'use client';
 
+// prettier-ignore
 /**
  * `@figatellultimate/effects`: decorative effects for figatellultimate apps, their mechanics in `styles.css`
  * (`@figatellultimate/effects/styles.css`), every look a token for a theme to set.
@@ -10,20 +11,20 @@
  *     Hearts ──── a heart changing color every few seconds, cross-fading (a footer's "made with ❤️")
  *     Reveal ──── a footer revealed from under the page as it scrolls into view, where the page has the room
  *     Backdrop ── an image behind a section's content, faint, vignetted and faded in (a 404)
- *     siteThemeTransition ── the site theme's change as a blur (`SiteThemePicker`'s `transition`), its motion the theme's
+ *     siteThemeTransition ── site theme change as a blur (`SiteThemePicker`'s `transition`), motion from the theme
  *     styles.css ── positions, masks, motion; colors and sizes as tokens (--fig-glow-*, --fig-collector-color,
- *                   --fig-sparkles-*,
- *                   --fig-backdrop-*)
+ *                   --fig-sparkles-*, --fig-backdrop-*)
  *
  * Key design decisions:
- *     - Out of `@figatellultimate/ui`, a minimal design system, and out of the themes: effects are generic components, a
- *       theme only decides where they show and how they look (`@figatellultimate/themes/maquis.css`: dark theme only).
+ *     - Out of `@figatellultimate/ui`, a minimal design system, and out of the themes: effects are generic components,
+ *       a theme only decides where they show and how they look (`@figatellultimate/themes/maquis.css`: dark theme
+ *       only).
  *     - Framework-free (`React.lazy`, media queries): no `next/dynamic`, the same effects in any React app.
  *     - Decorative: hidden from assistive technologies, never catching a click, still or absent with
  *       `prefers-reduced-motion`.
  *
- * Invariants: see `effects.tsx`, `cursor-glow.tsx`, `sparkles.tsx`, `collector.tsx`, `hearts.tsx`, `reveal.tsx`, `backdrop.tsx`,
- * `site-theme-transition.ts` and `styles.test.ts`.
+ * Invariants: see `effects.tsx`, `cursor-glow.tsx`, `sparkles.tsx`, `collector.tsx`, `hearts.tsx`, `reveal.tsx`,
+ * `backdrop.tsx`, `site-theme-transition.ts` and `styles.test.ts`.
  */
 export { Backdrop, type BackdropImageProps } from './backdrop.js';
 export { Collector } from './collector.js';

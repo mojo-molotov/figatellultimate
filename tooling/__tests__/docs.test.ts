@@ -1,9 +1,10 @@
+// prettier-ignore
 /**
  * Documentation invariants: the code and the tests are the documentation, so its shape is checked like any other
  * invariant.
  *
  *     package sources ──> TypeScript program (parsed, bound, never type-checked)
- *         ├──> every module: a header comment
+ *         ├──> every module: a header comment (lines at most 120 columns; `// prettier-ignore` above ASCII diagrams)
  *         ├──> every export: a JSDoc
  *         ├──> every exported function: one `@param` per parameter, `@returns` unless it returns nothing
  *         └──> every public function (reachable from a package entry): shown in an `@example` of its module
@@ -149,18 +150,56 @@ const tagsOf = (doc: ts.JSDoc, name: string): readonly ts.JSDocTag[] =>
 const returnsNothing = (signature: ts.SignatureDeclaration): boolean =>
   signature.type !== undefined && /^(void|never|Promise<void>)$/.test(signature.type.getText());
 
+/** A module's opening header comment and whether `// prettier-ignore` immediately precedes it. */
+function headerOf(file: string): { readonly comment: string; readonly ignored: boolean } | undefined {
+  const afterDirectives = sourceOf(file)
+    .text.replace(/^#!.*\n/, '')
+    .replace(/^\s*['"]use client['"];?\s*/, '')
+    .trimStart();
+  const ignored = /^\/\/\s*prettier-ignore\r?\n/.test(afterDirectives);
+  const body = ignored ? afterDirectives.replace(/^\/\/\s*prettier-ignore\r?\n/, '').trimStart() : afterDirectives;
+  const match = /^\/\*[\s\S]*?\*\//.exec(body);
+
+  return match === null ? undefined : { comment: match[0], ignored };
+}
+
+/** Whether a module header contains an indented ASCII flow diagram. */
+const hasDiagram = (comment: string): boolean => /^ \* {4,}.*(?:──>|└─|├─|┌─)/m.test(comment);
+
+/** Maximum column width for module header lines (matches `printWidth` in `prettier.config.js`). */
+const HEADER_MAX_COLUMNS = 120;
+
 describe('documentation', () => {
   it('every module opens with a header comment', () => {
-    const missing = files.filter((file) => {
-      const text = sourceOf(file)
-        .text.replace(/^#!.*\n/, '')
-        .replace(/^\s*['"]use client['"];?\s*/, '')
-        .trimStart();
-
-      return !text.startsWith('/*');
-    });
+    const missing = files.filter((file) => headerOf(file) === undefined);
 
     expect(missing, `missing:\n${missing.join('\n')}`).toEqual([]);
+  });
+
+  it('every module header fits within 120 columns', () => {
+    const overflow = files.flatMap((file) => {
+      const header = headerOf(file);
+
+      if (header === undefined) return [];
+
+      return header.comment
+        .split(/\r?\n/)
+        .flatMap((line, index) =>
+          line.length > HEADER_MAX_COLUMNS ? [`${file}:${String(index + 1)} (${String(line.length)} cols)`] : [],
+        );
+    });
+
+    expect(overflow, `over ${String(HEADER_MAX_COLUMNS)} columns:\n${overflow.join('\n')}`).toEqual([]);
+  });
+
+  it('every module header with an ASCII diagram is preceded by // prettier-ignore', () => {
+    const unprotected = files.filter((file) => {
+      const header = headerOf(file);
+
+      return header !== undefined && hasDiagram(header.comment) && !header.ignored;
+    });
+
+    expect(unprotected, `missing // prettier-ignore:\n${unprotected.join('\n')}`).toEqual([]);
   });
 
   it('every export carries a JSDoc', () => {

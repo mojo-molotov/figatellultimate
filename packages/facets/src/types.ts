@@ -1,3 +1,4 @@
+// prettier-ignore
 /**
  * The faceted engine's types: what a collection declares, the selection state, the actions, the view, the URL adapter
  * and the reconciliation contract.

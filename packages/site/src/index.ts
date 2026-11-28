@@ -1,12 +1,15 @@
+// prettier-ignore
 /**
  * The site's helpers, pure and framework-free: metadata, sitemap, static params, locale links, navigation sections,
- * breadcrumbs, structured data, feeds, what the site exposes to LLMs (llms.txt) and what it offers agents (ARD). A framework adapter maps their results (`@figatellultimate/next16` for Next).
+ * breadcrumbs, structured data, feeds, what the site exposes to LLMs (llms.txt) and what it offers agents (ARD). A
+ * framework adapter maps their results (`@figatellultimate/next16` for Next).
  *
  * Architecture:
- *     generated modules (#figatellultimate/urls, #figatellultimate/navigation) ──> these helpers ──> neutral, frozen data
- *                                                                                                   └─> toNextMetadata, toNextSitemap…
+ *     generated modules (#figatellultimate/urls, …/navigation) ──> these helpers ──> neutral, frozen data
+ *                                                                                    └─> toNextMetadata, toNextSitemap…
  *
- *     index.ts            metadataOf, pageMetadataOf, sitemapOf, catchAllParamsOf, localeLinksOf, sectionOf, breadcrumbOf
+ *     index.ts            metadataOf, pageMetadataOf, sitemapOf, catchAllParamsOf, localeLinksOf, sectionOf,
+ *                         breadcrumbOf
  *     structured-data.ts  structuredDataOf, breadcrumbListOf, personOf, jsonLd
  *     feed.ts             rssOf
  *     llms.ts             llmsTxtOf, llmsFullOf, markdownUrlOf

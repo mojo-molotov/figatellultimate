@@ -7,8 +7,8 @@
  *     - `index.mdx` yields the folder URL in every collection; positions where it is forbidden are declared.
  *     - Reservations exclude entries from automatic mounting (a dedicated page serves them), still typed and
  *       accessible.
- *     - An unmounted collection (`mounted: false`) has no page at all: its entries are read through their getters
- *       only, e.g. a taxonomy's content (an author's long bio); nothing of it is in the URLs, the sitemap or the search.
+ *     - An unmounted collection (`mounted: false`) has no page at all: its entries are read through their getters only,
+ *       e.g. a taxonomy's content (an author's long bio); nothing of it is in the URLs, the sitemap or the search.
  *     - Metadata fields are named, never hard-coded: the site's metadata, sitemap, structured data and feeds read
  *       them.
  *     - Folder pages are declared per level, with an optional image per folder path.

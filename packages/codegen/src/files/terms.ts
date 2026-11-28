@@ -1,8 +1,7 @@
 /**
- * `terms/index`: term pages (`XTermPage`, `findXTermByUrl`, `xTermUrl`), their entries resolved from the light
- * indexes, and each term's own content when its taxonomy declares one (`content`: an entry of an unmounted
- * collection, keyed by term, in the page's locale). A module of its own: `#figatellultimate/taxonomies` stays pure data for
- * the client.
+ * `terms/index`: term pages (`XTermPage`, `findXTermByUrl`, `xTermUrl`), their entries resolved from the light indexes,
+ * and each term's own content when its taxonomy declares one (`content`: an entry of an unmounted collection, keyed by
+ * term, in the page's locale). A module of its own: `#figatellultimate/taxonomies` stays pure data for the client.
  *
  * Key design decision: a term's data is written once, on its first page; its further pages (`…/page/N`, by its
  * taxonomy's `perPage`) are listed with their own URLs and translations, and found as the term with their number,

@@ -1,9 +1,9 @@
 /**
  * The naming rule of segments and slugs: `^[a-z0-9][-a-z0-9]*$`, tested on the name as written.
  *
- * Key design decision: uppercase is rejected, never lowercased: the URL always matches the path exactly, and two
- * names differing only by case (which collide on a case-insensitive file system, as Windows') cannot exist. A leading `_` or `$` is
- * impossible, which leaves `$` free for a node's own fields in the message keys.
+ * Key design decision: uppercase is rejected, never lowercased: the URL always matches the path exactly, and two names
+ * differing only by case (which collide on a case-insensitive file system, as Windows') cannot exist. A leading `_` or
+ * `$` is impossible, which leaves `$` free for a node's own fields in the message keys.
  */
 /** Naming rule for every segment and slug. Tested on the name as is: uppercase is rejected. */
 const NAME_PATTERN = /^[a-z0-9][-a-z0-9]*$/;

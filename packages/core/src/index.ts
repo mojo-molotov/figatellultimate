@@ -1,15 +1,15 @@
 /**
- * The pure core of figatellultimate: locales, collection grammars, path parsing, URLs, the content's required message keys,
- * diagnostics, the ports of the delegated tools, and the `Result` type.
+ * The pure core of figatellultimate: locales, collection grammars, path parsing, URLs, the content's required message
+ * keys, diagnostics, the ports of the delegated tools, and the `Result` type.
  *
  * What it does: from declared locales and collections and a list of source paths (no file system), `analyze` gives
  * every valid entry descriptor and every diagnostic; `loadContent` lists the paths and joins the delegated tool's
  * documents through the ports. Everything else (reading files, frontmatter, schemas, MDX, watching) is delegated.
  *
  * Key design decisions:
- *     - figatellultimate is a DX layer, not a content engine: structure deduced from paths, actionable diagnostics, narrowed
- *       typed access, content-derived messages; generic content processing stays with a delegated tool, behind a
- *       port, replaceable.
+ *     - figatellultimate is a DX layer, not a content engine: structure deduced from paths, actionable diagnostics,
+ *       narrowed typed access, content-derived messages; generic content processing stays with a delegated tool, behind
+ *       a port, replaceable.
  *     - Pure: no I/O, no Node builtin, never reads `process`; imports no other figatellultimate package and has no
  *       dependency. Expected failures are values (`Result`, diagnostics), never exceptions.
  *     - One rule, one implementation: only `parseEntryPath` turns a path into segments, a key and a route, only the

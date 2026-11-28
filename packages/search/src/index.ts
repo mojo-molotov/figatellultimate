@@ -1,3 +1,4 @@
+// prettier-ignore
 /**
  * A headless local search client over the Pagefind bundles `figatellultimate search` writes, one per locale.
  *
@@ -18,8 +19,8 @@
  *       drops the result; a missing bundle is retried by the next query (it may have been built since).
  *     - A quiet time before searching, a newer query superseding the pending one (`null`): fewer requests while
  *       typing; skipped when only the options change.
- *     - Sorting is Pagefind's, on keys `figatellultimate search` indexes: applied to every result before any is loaded, so
- *       "see more" stays in order.
+ *     - Sorting is Pagefind's, on keys `figatellultimate search` indexes: applied to every result before any is loaded,
+ *       so "see more" stays in order.
  *     - An excerpt never starts with the result's title: a page's body usually opens with its heading, already shown.
  *     - No framework, no DOM or Node types, and Pagefind's package is never imported: the built `pagefind.js` is
  *       loaded at runtime, and checked field by field (an external contract).

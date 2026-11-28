@@ -1,3 +1,4 @@
+// prettier-ignore
 /**
  * The use-intl adapter: figatellultimate's generated messages type the keys and ICU arguments, use-intl formats.
  *
@@ -7,8 +8,8 @@
  *     createTranslator / useTranslations ──typed by Register──> use-intl's translator, returned as is
  *
  * Key design decisions:
- *     - figatellultimate owns the message schema and its types; the formatting runtime is delegated to an existing library,
- *       through this thin adapter, so that the library stays replaceable.
+ *     - figatellultimate owns the message schema and its types; the formatting runtime is delegated to an existing
+ *       library, through this thin adapter, so that the library stays replaceable.
  *     - use-intl is given untyped messages: it would otherwise derive its own key types from them, at a cost that
  *       grows with the messages. The generated lookup table types the calls instead, cheaply at any size.
  *     - A scope is a typed key path (`'content.blog'`), completed and checked; a typo does not compile.

@@ -1,15 +1,16 @@
+// prettier-ignore
 /**
  * Package roles: the single source of the boundary rules, enforced twice (ESLint for editor feedback,
  * dependency-cruiser as a whole-graph guard in CI), on shipped code only (tests may wire several adapters together).
  *
  * Every package declares its role in its `package.json`: `{ "figatellultimate": { "role": "core" } }`.
  *
- *     role       may import                                   must not import                                       runs on
- *     ────────   ──────────────────────────────────────────   ───────────────────────────────────────────────────   ───────────────────
- *     core       its own files, allow-listed pure deps        any other @figatellultimate package, Node, process   anywhere (ES2022)
- *     runtime    core, runtime                                adapter, tooling, Node, process                       browser, edge, workers
- *     adapter    core, runtime, its integration target        tooling, other adapters                               depends on the target
- *     tooling    everything                                   (nothing)                                             Node ≥ 24
+ *     role     may import                                  must not import                             runs on
+ *     ───────  ──────────────────────────────────────────  ──────────────────────────────────────────  ───────────────
+ *     core     own files, allow-listed pure deps           other @figatellultimate pkg, Node, process  anywhere (ES22)
+ *     runtime  core, runtime                               adapter, tooling, Node, process             browser, edge
+ *     adapter  core, runtime, its integration target       tooling, other adapters                     target runtime
+ *     tooling  everything                                  (nothing)                                   Node ≥ 24
  *
  * Inside `@figatellultimate/core`, folders are layers, lowest first, each importing only those below it:
  *     shared ──> declarations ──> paths ──> messages ──> content ──> config.ts, index.ts

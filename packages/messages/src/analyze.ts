@@ -1,3 +1,4 @@
+// prettier-ignore
 /**
  * The message analysis: every locale's module against the keys the content requires and against the default
  * locale's reference, every ICU message parsed, and the reference modeled for the code generator.

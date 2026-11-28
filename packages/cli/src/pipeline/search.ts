@@ -1,6 +1,7 @@
 /**
- * `figatellultimate search`: after the framework's static build, the mounted entries of searchable collections read from
- * the built site and indexed per locale by `@figatellultimate/pagefind`, each with its title and date as sort keys.
+ * `figatellultimate search`: after the framework's static build, the mounted entries of searchable collections read
+ * from the built site and indexed per locale by `@figatellultimate/pagefind`, each with its title and date as sort
+ * keys.
  *
  * Invariants (`search-e2e.test.ts`, real Pagefind): only mounted, searchable entries; each page read from the first
  * built folder holding it (a route per base, each writing its own under an adapter); a missing page or one without

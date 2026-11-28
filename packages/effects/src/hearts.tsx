@@ -1,5 +1,6 @@
 'use client';
 
+// prettier-ignore
 /**
  * A heart that changes color every few seconds, cross-fading from one to the next: a footer's "made with ❤️".
  *

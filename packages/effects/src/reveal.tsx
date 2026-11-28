@@ -1,5 +1,6 @@
 'use client';
 
+// prettier-ignore
 /**
  * The footer revealed from under the page: while it scrolls into view, the page slides up like a curtain and the
  * footer seems to wait at the bottom of the screen, underneath. A scroll-driven animation (`styles.css`), played
