@@ -70,13 +70,13 @@ import { Effects, Reveal } from '@figatellultimate/effects';
 
 ## Themes
 
-`base.css` lays out the site: the text column, the article and its table of contents, the listings, the MDX typography, print. A theme over it sets its looks only. **maquis** lays dark glass over the previews, the code and the tables, and shows the effects in the dark theme. **paper** puts soft ink on a grey paper, the headings in a serif, an ink-blue accent, with no effect at all.
+`base.css` lays out the site: the text column, the article and its table of contents, the listings, the MDX typography, print. A theme over it sets its looks only. **maquis** lays dark glass over the previews, the code and the tables, and shows the effects in the dark theme. **calanque** pairs a deep ocean-navy bar, elevated white cards on a subtle grained canvas in light mode, and a navy night in dark mode, with no effect at all.
 
 ```tsx
 import '@figatellultimate/ui/styles.css';
 import '@figatellultimate/effects/styles.css';
 import '@figatellultimate/themes/base.css';
-import '@figatellultimate/themes/paper.css';
+import '@figatellultimate/themes/calanque.css';
 ```
 
-Several themes can be loaded together: `<html data-site-theme="paper">` picks one. Without that attribute, a theme loaded alone applies. This site loads both, and its footer lets the reader choose with `SiteThemePicker`, the change blurred for a transition by `siteThemeTransition` of `@figatellultimate/effects`.
+Several themes can be loaded together: `<html data-site-theme="calanque">` picks one. Without that attribute, a theme loaded alone applies. This site loads both, and its footer lets the reader choose with `SiteThemePicker`, the change blurred for a transition by `siteThemeTransition` of `@figatellultimate/effects`.

@@ -72,13 +72,13 @@ import { Effects, Reveal } from '@figatellultimate/effects';
 
 ## Les thèmes
 
-`base.css` met en page le site : la colonne du texte, l’article et son sommaire, les listes, la typographie du MDX, l’impression. Un thème par-dessus ne règle que son apparence. **maquis** pose du verre sombre sur les aperçus, le code et les tableaux, et montre les effets en thème sombre. **paper** met une encre douce sur un papier gris, les titres en serif, un accent bleu d’encre, sans aucun effet.
+`base.css` met en page le site : la colonne du texte, l’article et son sommaire, les listes, la typographie du MDX, l’impression. Un thème par-dessus ne règle que son apparence. **maquis** pose du verre sombre sur les aperçus, le code et les tableaux, et montre les effets en thème sombre. **calanque** associe une barre bleu marine profond, des cartes blanches élevées sur un fond à grain léger en thème clair, et une nuit bleu marine en thème sombre, sans aucun effet.
 
 ```tsx
 import '@figatellultimate/ui/styles.css';
 import '@figatellultimate/effects/styles.css';
 import '@figatellultimate/themes/base.css';
-import '@figatellultimate/themes/paper.css';
+import '@figatellultimate/themes/calanque.css';
 ```
 
-Plusieurs thèmes peuvent être chargés ensemble : `<html data-site-theme="paper">` en choisit un. Sans cet attribut, un thème chargé seul s’applique. Ce site charge les deux, et son pied de page laisse le lecteur choisir avec `SiteThemePicker`, le changement flouté le temps d’une transition par `siteThemeTransition` de `@figatellultimate/effects`.
+Plusieurs thèmes peuvent être chargés ensemble : `<html data-site-theme="calanque">` en choisit un. Sans cet attribut, un thème chargé seul s’applique. Ce site charge les deux, et son pied de page laisse le lecteur choisir avec `SiteThemePicker`, le changement flouté le temps d’une transition par `siteThemeTransition` de `@figatellultimate/effects`.
