@@ -417,6 +417,12 @@ header > [data-slot='breadcrumb'] {
   justify-content: flex-end;
 }
 
+/* Category pages (`/blog/academy`, …): align their top `<h1>` with `/blog`, `/docs` and listing pages (no default
+   browser `0.67em` top margin). */
+main[data-folder] > h1 {
+  margin-block-start: 0;
+}
+
 /* A category's previews, compact: a narrower image, one line of title and of description. A listing's cards keep
    their size; the tags and the authors are side by side in both (below). */
 main[data-folder='category'] [data-slot='entry-card'] {
@@ -503,8 +509,8 @@ main:has(> [data-slot='section-list']) {
   column-gap: calc(var(--fig-space) * 2);
 }
 
-main:has(> [data-slot='section-list']) > [data-pagefind-body],
-main:has(> [data-slot='section-list']) > [data-pagefind-body] > [data-slot='mdx'],
+main:has(> [data-slot='section-list']) > :is([data-pagefind-body], [data-pagefind-ignore]),
+main:has(> [data-slot='section-list']) > :is([data-pagefind-body], [data-pagefind-ignore]) > [data-slot='mdx'],
 main:has(> [data-slot='section-list']) > [data-slot='section-list'] {
   display: contents;
 }
