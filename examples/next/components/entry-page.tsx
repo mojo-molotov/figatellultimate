@@ -14,13 +14,13 @@ import { navigationOf } from '#figatellultimate/navigation';
 import { metadataFields, urlOf, type UrlEntry } from '#figatellultimate/urls';
 
 import { site } from '../site';
-import { isExposed } from './llms';
+import { isExposed } from '../lib/llms';
 import { Body } from './mdx';
 import { PrintMargins } from './print-margins';
 import { PageCrumbs, SiteHeader } from './site-header';
 import { breadcrumbDataOf, StructuredDataScript } from './structured-data';
 import { Toc } from './toc';
-import { trailOf } from './trail';
+import { trailOf } from '../lib/trail';
 
 /** A mounted entry, as `findByUrl` finds it. */
 export type FoundEntry = Extract<UrlEntry, { kind: 'entry' }>;

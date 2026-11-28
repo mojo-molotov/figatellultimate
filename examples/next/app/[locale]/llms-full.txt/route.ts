@@ -5,7 +5,7 @@ import { getTranslations } from 'next-intl/server';
 
 import { locales } from '#figatellultimate/locales';
 
-import { exposedPagesOf } from '../../../components/llms';
+import { exposedPagesOf } from '../../../lib/llms';
 import { routing } from '../../../i18n/routing';
 import { site } from '../../../site';
 

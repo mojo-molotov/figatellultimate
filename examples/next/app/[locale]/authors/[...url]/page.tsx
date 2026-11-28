@@ -11,7 +11,7 @@ import { routeParamsOf } from '#figatellultimate/urls';
 
 import { AuthorPage, authorName } from '../../../../blog/author-page';
 import { PrintMargins } from '../../../../components/print-margins';
-import { pageAt } from '../../../../components/route-page';
+import { pageAt } from '../../../../lib/route-page';
 import { StructuredDataScript } from '../../../../components/structured-data';
 import { site } from '../../../../site';
 

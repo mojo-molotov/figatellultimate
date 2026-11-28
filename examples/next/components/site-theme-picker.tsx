@@ -9,7 +9,7 @@ import { siteThemeTransition } from '@figatellultimate/effects';
 import { SiteThemePicker as Picker, type SiteThemeSpoken } from '@figatellultimate/ui';
 import type { ReactNode } from 'react';
 
-import { SITE_THEMES, type SiteTheme } from './site-themes';
+import { SITE_THEMES, type SiteTheme } from '../lib/site-themes';
 
 /**
  * The picker, its texts formatted on the server.

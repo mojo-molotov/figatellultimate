@@ -26,7 +26,7 @@ import { useMemo, type ReactNode } from 'react';
 
 import { localeInfo, type Locale } from '#figatellultimate/locales';
 
-import { cardPriority } from '../components/priority';
+import { cardPriority } from '../lib/priority';
 import { PostCard, type SectionData } from './cards';
 import { loadFolderBatch } from './listing-index';
 import type { ListingLabels } from './listing-labels';

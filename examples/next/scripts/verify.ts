@@ -924,7 +924,7 @@ for (const url of ['/docs/cli', '/en/blog/empire/chronicles', '/'])
     `${url}: the messages are serialized in the page`,
   );
 
-// Both themes loaded, maquis by default until the visitor's choice (`components/site-themes.ts`); the footer picks.
+// Both themes loaded, maquis by default until the visitor's choice (`lib/site-themes.ts`); the footer picks.
 for (const url of ['/', '/en/docs/cli']) {
   const html = htmlOf(url) ?? '';
 
@@ -1193,7 +1193,7 @@ for (const item of mountedUrls) {
     'a local content image without its measured width and height',
   );
 
-  // The cards a desktop shows on arrival but a phone does not (`components/priority.ts`): each lazy image is preloaded
+  // The cards a desktop shows on arrival but a phone does not (`lib/priority.ts`): each lazy image is preloaded
   // for a desktop only, with its own `srcset` and `sizes`, so that the browser fetches it once.
   const attributeOf = (tag: string, name: string): string | undefined =>
     new RegExp(`\\s${name}="([^"]*)"`, 'i').exec(tag)?.[1];

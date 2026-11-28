@@ -10,7 +10,7 @@ import { navigationOf } from '#figatellultimate/navigation';
 import { routeParamsOf } from '#figatellultimate/urls';
 
 import { EntryPage, entryMetadata } from '../../../components/entry-page';
-import { pageAt } from '../../../components/route-page';
+import { pageAt } from '../../../lib/route-page';
 import { SectionPages } from '../../../components/section-pages';
 
 // The app has a route per base (`splitRoutes: true`): this one serves the pages, the blog, the landing pages and the

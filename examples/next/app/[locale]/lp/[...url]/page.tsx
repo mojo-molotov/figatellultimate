@@ -6,7 +6,7 @@ import type { ReactNode } from 'react';
 import { routeParamsOf } from '#figatellultimate/urls';
 
 import { EntryPage, entryMetadata } from '../../../../components/entry-page';
-import { pageAt } from '../../../../components/route-page';
+import { pageAt } from '../../../../lib/route-page';
 
 // Every landing page is prerendered; an unknown one renders the locale's 404 on demand.
 export const dynamicParams = true;

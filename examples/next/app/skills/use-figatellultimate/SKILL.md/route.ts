@@ -1,5 +1,5 @@
 /** The agent skill teaching figatellultimate, as the repository holds it: listed by the site's ARD catalog. */
-import { skillText } from '../../../../components/agents';
+import { skillText } from '../../../../lib/agents';
 
 export const dynamic = 'force-static';
 

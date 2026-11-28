@@ -6,7 +6,7 @@ import { hasLocale } from 'next-intl';
 
 import { mountedUrls, segmentsOf, urlOf } from '#figatellultimate/urls';
 
-import { exposedMarkdownOf } from '../../../../components/llms';
+import { exposedMarkdownOf } from '../../../../lib/llms';
 import { routing } from '../../../../i18n/routing';
 
 export const dynamic = 'force-static';

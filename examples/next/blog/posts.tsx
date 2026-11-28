@@ -28,7 +28,7 @@ import { useCallback, useMemo, type ReactNode } from 'react';
 
 import { localeInfo, type Locale } from '#figatellultimate/locales';
 
-import { cardPriority, type CardsPage } from '../components/priority';
+import { cardPriority, type CardsPage } from '../lib/priority';
 import { PostCard } from './cards';
 import { postsEngine, type PostItem } from './facets';
 import { loadListingIndex, loadListingBatch } from './listing-index';

@@ -13,7 +13,7 @@ import { BlogFolderPage, folderTitle } from '../../../../blog/folder-page';
 import { PostFooter } from '../../../../blog/post-footer';
 import { EntryPage, entryMetadata } from '../../../../components/entry-page';
 import { PrintMargins } from '../../../../components/print-margins';
-import { pageAt } from '../../../../components/route-page';
+import { pageAt } from '../../../../lib/route-page';
 import { breadcrumbDataOf, StructuredDataScript } from '../../../../components/structured-data';
 import { site } from '../../../../site';
 

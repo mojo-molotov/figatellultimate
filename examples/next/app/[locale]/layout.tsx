@@ -13,13 +13,13 @@ import { urlOf } from '#figatellultimate/urls';
 
 import { AppImages } from '../../components/images';
 import { AppLinks } from '../../components/links';
-import { SITE_THEMES } from '../../components/site-themes';
+import { SITE_THEMES } from '../../lib/site-themes';
 import { routing } from '../../i18n/routing';
 import { SiteFooter } from '../../components/site-footer';
 import { ListingPreload } from '../../blog/listing';
 
 // The minimal design system, the effects' mechanics, the themes' shared layout, then both themes, one picked by
-// `<html data-site-theme>` (`components/site-themes.ts`).
+// `<html data-site-theme>` (`lib/site-themes.ts`).
 import '@figatellultimate/ui/styles.css';
 import '@figatellultimate/effects/styles.css';
 import '@figatellultimate/themes/base.css';

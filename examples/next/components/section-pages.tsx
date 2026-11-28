@@ -9,7 +9,7 @@ import type { Locale } from '#figatellultimate/locales';
 import { navigationOf } from '#figatellultimate/navigation';
 import { findPageByUrl } from '#figatellultimate/pages';
 
-import { cardPriority } from './priority';
+import { cardPriority } from '../lib/priority';
 import { SectionList, type SectionListItem } from './section-list';
 
 /** How many cards a section reveals at a time on a phone (`section-list.tsx`). */

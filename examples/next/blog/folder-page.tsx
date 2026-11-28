@@ -12,7 +12,7 @@ import type { Locale } from '#figatellultimate/locales';
 import { pageSegment } from '#figatellultimate/urls';
 
 import { SiteHeader } from '../components/site-header';
-import { cardPriority, type CardsPage } from '../components/priority';
+import { cardPriority, type CardsPage } from '../lib/priority';
 import { PostCard } from './cards';
 import { FolderSections } from './folder-sections';
 import { Listing } from './listing';
