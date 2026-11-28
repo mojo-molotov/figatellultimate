@@ -1253,13 +1253,19 @@ for (const item of mountedUrls) {
 // HTML; the rest live in static JSON batches (`app/[locale]/section-batches/[...slug]/route.ts`) fetched on scroll.
 {
   const docs = htmlOf('/docs') ?? '';
+  const docsMain = /<main\b[^>]*>[\s\S]*?<\/main>/.exec(docs)?.[0] ?? '';
   const initialCards = [...docs.matchAll(/data-slot="entry-card"/g)].length;
+  const mainCards = [...docsMain.matchAll(/data-slot="entry-card"/g)].length;
   const batch1Path = join(app, 'fr', 'section-batches', 'docs', '1.body');
   const batch2Path = join(app, 'fr', 'section-batches', 'docs', '2.body');
   const batch1: unknown = existsSync(batch1Path) ? JSON.parse(readFileSync(batch1Path, 'utf8')) : [];
   const batch2: unknown = existsSync(batch2Path) ? JSON.parse(readFileSync(batch2Path, 'utf8')) : [];
 
   check(initialCards === 4, `/docs: expected 4 prerendered cards, found ${String(initialCards)}`);
+  check(
+    mainCards === 4,
+    `/docs: expected 4 cards directly inside <main> on first paint (not deferred behind Suspense), found ${String(mainCards)}`,
+  );
   check(docs.includes('data-slot="section-list"'), '/docs: missing section list wrapper');
   check(
     Array.isArray(batch1) && batch1.length === 4 && Array.isArray(batch2) && batch2.length > 0,

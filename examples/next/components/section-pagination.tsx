@@ -23,14 +23,13 @@ export interface SectionPaginationProps {
   readonly labels: ListingLabels['pagination'];
   readonly onPageChange: (page: number) => void;
   readonly onPrefetchPage: (page: number) => void;
-  readonly children: ReactNode;
 }
 
 /**
- * Wraps a section's list with desktop-only `PageSelect` (above) and `Pagination` (below).
+ * Desktop-only `PageSelect` (aligned with the page's heading via CSS Grid) and `Pagination` (below the list).
  *
- * @param props - Card count, batch size, locale, pagination labels, callbacks and the list content.
- * @returns The list framed by `PageSelect` and `Pagination` (hidden on phones by `base.css`).
+ * @param props - Card count, batch size, locale, pagination labels and callbacks.
+ * @returns `PageSelect` and `Pagination` (hidden on phones by `base.css`).
  */
 export function SectionPagination(props: SectionPaginationProps): ReactNode {
   return <NextUrlBoundary>{(url) => <SectionPaginationView {...props} url={url} />}</NextUrlBoundary>;
@@ -43,7 +42,6 @@ function SectionPaginationView({
   labels,
   onPageChange,
   onPrefetchPage,
-  children,
   url,
 }: SectionPaginationProps & { readonly url: UrlAdapter }): ReactNode {
   const keys = useMemo(() => Array.from({ length: totalCards }, (_, index) => String(index)), [totalCards]);
@@ -92,7 +90,6 @@ function SectionPaginationView({
         locale={locale}
         dir={dir}
       />
-      {children}
       <Pagination
         binding={binding}
         labels={{

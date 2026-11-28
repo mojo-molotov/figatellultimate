@@ -242,6 +242,7 @@ export function SectionList({
 
   return (
     <div data-slot="section-list">
+      {list}
       <Suspense fallback={null}>
         <SectionPagination
           totalCards={totalCards}
@@ -250,9 +251,7 @@ export function SectionList({
           labels={paginationLabels}
           onPageChange={handlePageChange}
           onPrefetchPage={handlePrefetchPage}
-        >
-          {list}
-        </SectionPagination>
+        />
       </Suspense>
     </div>
   );
