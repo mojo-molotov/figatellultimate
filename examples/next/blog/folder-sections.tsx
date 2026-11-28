@@ -1,28 +1,26 @@
 'use client';
 
 /**
- * A folder page's sections and its pagination, as a listing's: the compact one (a select) on the heading's line, the
- * full one (previous and next) below the sections. The blog's categories, or a category's subcategories with their
- * latest posts. Its landed page from the server (the HTML prerendered with them); the pages around it from its batches
- * (`<folder.batches>/pages/<n>`, `listing-index.ts`), loaded on idle, so that a page they hold is shown here at once,
- * only the address moving. `usePagedCollection` of `@figatellultimate/facets-react` does the orchestration, with no
- * index: a folder of folders has nothing to filter.
+ * A folder page's sections and its pagination: paginated on desktops (compact select on the heading's line, full
+ * pagination below) and revealed in batches on scroll on phones (`<= 36rem`, page 1), sharing the same prerendered HTML
+ * and static JSON batches (`<folder.batches>/pages/<n>`, `listing-index.ts`). A direct visit to `/page/2+` on a phone
+ * keeps pagination so the reader can reach earlier pages.
  *
  * Key design decisions:
  *     - The sections are data rendered alike on both sides (`SectionData`), rather than rendered on the server only,
- *       so that a batch can show a page the server never sent.
- *     - The pagination as a listing's: a select on the heading's line, at its end on a phone too, and previous and next
- *       below: on the last section's "see more" line on a desktop, under it on a phone (checked by
+ *       so that a batch can show a page the server never sent (on desktop pagination or mobile scroll).
+ *     - The pagination as a listing's on desktops: a select on the heading's line, and previous and next below (on the
+ *       last section's "see more" line on a desktop, under it on a phone when landed on `/page/2+`, checked by
  *       `scripts/browse.ts`).
  */
-import { batchPath, defineFacetedCollection, type Engine, type UrlAdapter } from '@figatellultimate/facets';
-import { PageSelect, Pagination, usePagedCollection } from '@figatellultimate/facets-react';
+import { batchPath, batchStart, defineFacetedCollection, type Engine, type UrlAdapter } from '@figatellultimate/facets';
+import { PageSelect, Pagination, usePagedCollection, useResponsiveBatches } from '@figatellultimate/facets-react';
 import { NextUrlBoundary } from '@figatellultimate/next16/facets';
 import { Collector } from '@figatellultimate/effects';
 import { EntryCard, type EntryCardLabels } from '@figatellultimate/ui';
 import { formatPrecompiled } from '@figatellultimate/use-intl/format';
 import NextLink from 'next/link';
-import { useMemo, type ReactNode } from 'react';
+import { useCallback, useMemo, type ReactNode } from 'react';
 
 import { localeInfo, type Locale } from '#figatellultimate/locales';
 
@@ -96,22 +94,70 @@ function SectionsView({
 }: FolderSectionsProps & { readonly url: UrlAdapter }): ReactNode {
   const engine = useMemo(() => enginesOf(paged.perPage), [paged.perPage]);
   const base = paged.batches;
-  const batchesOf = useMemo(
+  const scrollBatchUrls = useMemo(
+    () =>
+      paged.page === 1 && paged.pages > 1 && base !== undefined
+        ? Array.from({ length: paged.pages - 1 }, (_, index) => {
+            const page = index + 2;
+
+            return `${base}/${batchPath(batchStart(page)).join('/')}#${String(page)}`;
+          })
+        : [],
+    [base, paged.page, paged.pages],
+  );
+  const loadScrollPage = useCallback(
+    async (entry: string): Promise<readonly { readonly key: string; readonly section: SectionData }[]> => {
+      const hash = entry.lastIndexOf('#');
+      const batchUrl = entry.slice(0, hash);
+      const page = Number(entry.slice(hash + 1));
+      const batch = await loadFolderBatch(batchUrl);
+      const offset = (page - batchStart(page)) * paged.perPage;
+
+      return batch.keys.slice(offset, offset + paged.perPage).flatMap((key) => {
+        const section = batch.sections[key];
+
+        return section === undefined ? [] : [{ key, section }];
+      });
+    },
+    [paged.perPage],
+  );
+  const responsive = useResponsiveBatches({ batchUrls: scrollBatchUrls, load: loadScrollPage });
+  const scrollMode = responsive.phone && scrollBatchUrls.length > 0;
+  const pagedBatches = useMemo(
     () =>
       base === undefined
         ? undefined
         : { load: (from: number) => loadFolderBatch(`${base}/${batchPath(from).join('/')}`) },
     [base],
   );
-  const { binding, batches } = usePagedCollection({ engine, items: keys, paged, url, batches: batchesOf });
+  const { binding, batches } = usePagedCollection({
+    engine,
+    items: keys,
+    paged,
+    url,
+    batches: scrollMode ? undefined : pagedBatches,
+  });
+  const scrollItems = useMemo(() => {
+    if (!scrollMode) return undefined;
+
+    const initial = keys.flatMap((key) => {
+      const section = sections[key];
+
+      return section === undefined ? [] : [{ key, section }];
+    });
+
+    return [...initial, ...responsive.loadedScrollBatches.flat()];
+  }, [scrollMode, keys, sections, responsive.loadedScrollBatches]);
   const sectionOf = (key: string): SectionData | undefined =>
     sections[key] ?? batches.find((batch) => key in batch.sections)?.sections[key];
-  const shown = binding.view.keys.flatMap((key) => {
-    const section = sectionOf(key);
+  const shown =
+    scrollItems ??
+    binding.view.keys.flatMap((key) => {
+      const section = sectionOf(key);
 
-    return section === undefined ? [] : [{ key, section }];
-  });
-  const pagination = (
+      return section === undefined ? [] : [{ key, section }];
+    });
+  const pagination = scrollMode ? null : (
     <Pagination
       binding={binding}
       labels={{
@@ -127,22 +173,30 @@ function SectionsView({
       icons={PAGINATION_ICONS}
     />
   );
-  // As a listing's: the compact pagination on the heading's line, at its end (a phone's included), the full one below
-  // the sections.
+  const sentinel =
+    scrollMode && (responsive.hasMoreScroll || responsive.status === 'loading') ? (
+      <div ref={responsive.sentinelRef} data-slot="section-list-status" data-status={responsive.status} aria-hidden>
+        <span data-slot="section-list-spinner" />
+      </div>
+    ) : null;
+  // As a listing's: the compact pagination on the heading's line on desktops (and on phones landed on `/page/2+`),
+  // omitted in phone scroll mode.
   const withPageSelect = (heading: ReactNode): ReactNode => (
     <div data-slot="folder-heading">
       {heading}
-      <PageSelect
-        binding={binding}
-        labels={{
-          trigger: labels.jump,
-          current: (page, pages) => formatPrecompiled(labels.short, locale, { page, pages }),
-          spoken: (page, pages) => formatPrecompiled(labels.spoken, locale, { page, pages }),
-          page: (page) => formatPrecompiled(labels.page, locale, { page }),
-        }}
-        locale={locale}
-        dir={localeInfo[locale].dir}
-      />
+      {scrollMode ? null : (
+        <PageSelect
+          binding={binding}
+          labels={{
+            trigger: labels.jump,
+            current: (page, pages) => formatPrecompiled(labels.short, locale, { page, pages }),
+            spoken: (page, pages) => formatPrecompiled(labels.spoken, locale, { page, pages }),
+            page: (page) => formatPrecompiled(labels.page, locale, { page }),
+          }}
+          locale={locale}
+          dir={localeInfo[locale].dir}
+        />
+      )}
     </div>
   );
 
@@ -177,6 +231,7 @@ function SectionsView({
             </li>
           ))}
         </ul>
+        {sentinel}
         {pagination}
       </>
     );
@@ -211,8 +266,8 @@ function SectionsView({
               ))}
             </ol>
             {/* The last section ends the page: its "see more" and the full pagination on one line, the pagination at
-                its end (below it on a phone, the theme's). */}
-            {index === shown.length - 1 ? (
+                its end (below it on a phone landed on `/page/2+`, the theme's; omitted in phone scroll mode). */}
+            {index === shown.length - 1 && pagination !== null ? (
               <div data-slot="folder-end">
                 {/* The link on a line of its own, as in every section: the pagination beside it moves it not. */}
                 <div data-slot="folder-end-more">{more(section)}</div>
@@ -224,6 +279,7 @@ function SectionsView({
           </section>
         );
       })}
+      {sentinel}
     </>
   );
 }

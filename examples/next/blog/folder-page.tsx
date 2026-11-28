@@ -100,10 +100,12 @@ export async function BlogFolderPage({ folder }: { readonly folder: BlogFolder }
   // The page's subfolders, in the folders' order: each page is a fixed slice of it; the others from their batches.
   const subfolders = pageItems(folder.subfolders, folder.page, folder.perPage);
 
+  const scrollBatches = folder.page === 1 && folder.pages > 1 && folder.batches !== undefined;
+
   return (
     <>
       {header}
-      <main data-folder={folder.level ?? 'root'}>
+      <main data-folder={folder.level ?? 'root'} data-scroll-batches={scrollBatches ? '' : undefined}>
         <FolderSections
           level={folder.level}
           title={title}

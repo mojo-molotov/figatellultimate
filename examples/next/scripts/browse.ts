@@ -922,11 +922,13 @@ try {
       );
     }
 
-    // A category's pages as a listing's: the compact pagination on its first section's heading line, at its end, a
-    // phone's included; the full one on the last section's "see more" line at its end on a desktop, below it on a
-    // phone.
+    // A category's pages as a listing's: on a desktop, the compact pagination on its first section's heading line and
+    // the full one on the last section's "see more" line; on a phone, page 1 scroll-loads (below) while a direct visit
+    // to `/page/2` keeps pagination with the full one below "see more".
     {
-      await phone.goto(`${base}/blog/maquis`, { waitUntil: 'networkidle' });
+      const categoryUrl = revealed ? '/blog/maquis' : '/blog/maquis/page/2';
+
+      await phone.goto(`${base}${categoryUrl}`, { waitUntil: 'networkidle' });
       const placed = await phone.evaluate(() => {
         const row = document.querySelector('[data-slot="folder-heading"]')?.getBoundingClientRect();
         const heading = document.querySelector('[data-slot="folder-heading"] > h2')?.getBoundingClientRect();
@@ -962,7 +964,7 @@ try {
               bottomLine: pagination.top < more.bottom && pagination.bottom > more.top,
               bottomBelow: pagination.top >= more.bottom,
               bottomEnd: Math.round(end.right - pagination.right),
-              gaps: gaps.length > 1 && gaps.every((gap) => Math.abs(gap - (gaps[0] ?? 0)) < 1),
+              gaps: gaps.length === 1 || gaps.every((gap) => Math.abs(gap - (gaps[0] ?? 0)) < 1),
             };
       });
 
@@ -973,12 +975,13 @@ try {
           placed.bottomEnd === 0 &&
           placed.gaps &&
           (revealed ? placed.bottomLine : placed.bottomBelow),
-        `/blog/maquis on ${device}: its paginations not as expected (${JSON.stringify(placed)})`,
+        `${categoryUrl} on ${device}: its paginations not as expected (${JSON.stringify(placed)})`,
       );
     }
 
-    // The full pagination below the cards at the end of its line, on every screen: the blog's, an author's.
-    for (const url of ['/blog', '/authors/napoleon']) {
+    // The full pagination below the cards at the end of its line, on every screen: the blog's (page 2 on a phone,
+    // where page 1 scroll-loads), an author's.
+    for (const url of [revealed ? '/blog' : '/blog/page/2', '/authors/napoleon']) {
       await phone.goto(`${base}${url}`, { waitUntil: 'networkidle' });
       const gap = await phone.evaluate(() => {
         const pagination = [...document.querySelectorAll('main [data-slot="pagination"]')].at(-1);
@@ -1253,6 +1256,46 @@ try {
     }
 
     check(shown > 4, `/docs on a phone: expected more than 4 cards after scrolling, got ${String(shown)}`);
+
+    // The blog's root (`/blog`) and category pages (`/blog/maquis`), without filters or sorting, share the same
+    // mobile scroll-loading behavior: initial page 1 prerendered without pagination controls, remaining pages revealed
+    // incrementally on scroll.
+    for (const [url, selector, maxInitial, expectedTotal] of [
+      ['/blog', '[data-slot="folder-list"] [data-slot="entry-card"]', 4, 5],
+      ['/blog/maquis', '[data-slot="folder-section"]', 4, 7],
+    ] as const) {
+      await phone.goto(`${base}${url}`, { waitUntil: 'networkidle' });
+      const startCount = await phone.locator(selector).count();
+
+      check(
+        startCount > 0 && startCount <= maxInitial && startCount < expectedTotal,
+        `${url} on a phone: expected fewer than ${String(expectedTotal)} items before scrolling (at most ${String(maxInitial)}), got ${String(startCount)}`,
+      );
+      check(
+        (await phone.locator('main [data-slot="page-select-trigger"], main [data-slot="pagination"]').count()) === 0,
+        `${url} on a phone: pagination controls should be unmounted in scroll mode`,
+      );
+      let current = startCount;
+
+      while ((await phone.locator('[data-slot="section-list-status"]').count()) > 0) {
+        const before = current;
+
+        await phone.evaluate(() => {
+          window.scrollTo(0, document.documentElement.scrollHeight);
+        });
+        await phone.waitForFunction(([sel, prev]) => document.querySelectorAll(sel).length > prev, [
+          selector,
+          before,
+        ] as const);
+        current = await phone.locator(selector).count();
+      }
+
+      check(
+        current === expectedTotal,
+        `${url} on a phone: expected ${String(expectedTotal)} items after scrolling, got ${String(current)}`,
+      );
+    }
+
     await phone.close();
 
     const desktop = await browser.newPage({ viewport: { width: 1280, height: 900 } });

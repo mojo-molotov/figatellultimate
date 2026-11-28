@@ -532,7 +532,8 @@ main:has(> [data-slot='section-list']) > [data-slot='section-list'] > [data-slot
 }
 
 @media (max-width: 36rem) {
-  [data-slot='section-list'] > :is([data-slot='page-select-trigger'], [data-slot='pagination']) {
+  [data-slot='section-list'] > :is([data-slot='page-select-trigger'], [data-slot='pagination']),
+  main[data-scroll-batches] :is([data-slot='page-select-trigger'], [data-slot='pagination']) {
     display: none;
   }
 }
