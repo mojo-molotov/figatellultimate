@@ -257,6 +257,16 @@ describe('base.css', () => {
     ).toBe('margin-inline-start: auto;');
   });
 
+  it("hides a section's unrevealed cards on a phone only, leaving every card visible on a desktop", () => {
+    const phone = mediaOf(source)
+      .filter(({ condition }) => condition === '(max-width: 36rem)')
+      .map(({ body: block }) => block.replace(/\s+/g, ' '))
+      .join(' ');
+
+    expect(rules.filter((rule) => rule.selector.includes('data-paged-out'))).toHaveLength(1);
+    expect(phone).toContain("[data-slot='folder-list'] > [data-paged-out] { display: none; }");
+  });
+
   it("compacts a category's previews, a listing's cards keeping their size; tags and authors side by side in both", () => {
     // The folder pages' rules on cards: their size a category's alone, never a listing's.
     const cards = rules.filter(

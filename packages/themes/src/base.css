@@ -480,6 +480,14 @@ main[data-folder='category'] [data-slot='listing-cards'] {
   margin-block-start: calc(var(--fig-space) * 4);
 }
 
+/* A section's list revealed in batches on a phone (`/docs`): every card in the HTML for a desktop, the ones not
+   revealed yet hidden on a phone until the reader scrolls to them. */
+@media (max-width: 36rem) {
+  [data-slot='folder-list'] > [data-paged-out] {
+    display: none;
+  }
+}
+
 [data-slot='folder-section'] {
   margin-bottom: calc(var(--fig-space) * 4);
 }
