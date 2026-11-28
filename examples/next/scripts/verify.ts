@@ -925,12 +925,16 @@ for (const url of ['/docs/cli', '/en/blog/empire/chronicles', '/'])
     `${url}: the messages are serialized in the page`,
   );
 
-// Maquis loaded by default until the visitor's choice (`lib/site-themes.ts`); non-default themes served statically
-// on demand (`/themes/calanque.css`), preloaded on hover/focus and injected before first paint when remembered.
+// Maquis loaded by default via `:not([data-site-theme])` until the visitor's choice (`lib/site-themes.ts`); `<html>`
+// must not hardcode `data-site-theme`, otherwise switching locales re-renders `[locale]/layout.tsx` and resets the
+// visitor's chosen theme. Non-default themes are served statically on demand (`/themes/calanque.css`).
 for (const url of ['/', '/en/docs/cli']) {
   const html = htmlOf(url) ?? '';
 
-  check(/<html[^>]*data-site-theme="maquis"/.test(html), `${url}: no default site theme on <html>`);
+  check(
+    !/<html[^>]*data-site-theme=/.test(html),
+    `${url}: <html> must not hardcode data-site-theme (would reset theme on locale switch)`,
+  );
   check(html.includes('data-slot="site-theme"'), `${url}: no theme picker in the footer`);
   check(html.includes('/themes/'), `${url}: siteThemeScript missing lazy theme stylesheet prefix`);
 }
@@ -1185,7 +1189,7 @@ for (const item of mountedUrls) {
   );
 }
 
-// Images through `next/image` (`components/images.tsx`): the cards' covers and the authors' avatars resized, every
+// Images through `next/image` (`components/providers.tsx`): the cards' covers and the authors' avatars resized, every
 // local content image with its measured size (`rehypeImageSizes`), so that its room is reserved before it loads.
 {
   const imagesOf = (html: string, slot: string): string[] =>

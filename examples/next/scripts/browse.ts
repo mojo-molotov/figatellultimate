@@ -520,6 +520,31 @@ try {
     await context.close();
   }
 
+  // Switching locale preserves the visitor's chosen site theme (Calanque stays active when moving from `/docs` to
+  // `/en/docs`, never reset to Maquis by the `[locale]` layout re-rendering `<html>`).
+  {
+    const switched = await open('/docs');
+
+    await switched.locator('[data-slot="site-theme-option"][value="calanque"]').click();
+    await switched.waitForFunction(() => document.documentElement.dataset['siteTheme'] === 'calanque');
+    await switched.locator('[data-slot="locale-switcher"]').first().click();
+    await switched.locator('a[hreflang="en"]').first().click();
+    await switched.waitForURL('**/en/docs');
+    await switched.waitForTimeout(300);
+    const themeAfter = await switched.evaluate(() => ({
+      siteTheme: document.documentElement.dataset['siteTheme'],
+      current: document
+        .querySelector('[data-slot="site-theme-option"][value="calanque"]')
+        ?.hasAttribute('data-current'),
+    }));
+
+    check(
+      themeAfter.siteTheme === 'calanque' && themeAfter.current === true,
+      `/docs → /en/docs: site theme was not preserved across locale switch (${JSON.stringify(themeAfter)})`,
+    );
+    await switched.close();
+  }
+
   // What the site exposes to LLMs at its public URLs, through the proxy: each llms.txt, and a page's Markdown at its
   // URL with `.md` in either locale; a page left out has none.
   {

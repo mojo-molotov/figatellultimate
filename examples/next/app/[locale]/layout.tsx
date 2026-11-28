@@ -11,8 +11,8 @@ import type { ReactNode } from 'react';
 import { localeInfo, locales } from '#figatellultimate/locales';
 import { urlOf } from '#figatellultimate/urls';
 
-import { AppImages } from '../../components/images';
-import { AppLinks } from '../../components/links';
+import { AppProviders } from '../../components/providers';
+import { SectionPaginationPreload } from '../../components/section-pagination-preload';
 import { SITE_THEMES } from '../../lib/site-themes';
 import { routing } from '../../i18n/routing';
 import { SiteFooter } from '../../components/site-footer';
@@ -45,8 +45,10 @@ export default async function LocaleLayout(props: LayoutProps<'/[locale]'>): Pro
 
   return (
     // next-themes sets <html data-theme>, `tocScript` <html data-toc>, `siteThemeScript` <html data-site-theme>,
-    // before the first paint, hence the warning suppressed.
-    <html lang={locale} dir={localeInfo[locale].dir} data-site-theme={SITE_THEMES[0]} suppressHydrationWarning>
+    // before the first paint, hence the warning suppressed. `data-site-theme` is omitted here so switching locales
+    // (re-rendering this `[locale]` layout) never overwrites the visitor's chosen theme with the default; `maquis.css`
+    // already matches `:not([data-site-theme])` when no choice is stored or JavaScript is off.
+    <html lang={locale} dir={localeInfo[locale].dir} suppressHydrationWarning>
       <head>
         {/* A table of contents the visitor closed is closed from the first paint: it never slides shut on load. */}
         <script dangerouslySetInnerHTML={{ __html: tocScript() }} />
@@ -65,15 +67,14 @@ export default async function LocaleLayout(props: LayoutProps<'/[locale]'>): Pro
           enableSystem
           disableTransitionOnChange
         >
-          {/* Client-side navigations: this layout, and what it holds, stays mounted from page to page. */}
-          <AppLinks>
-            <AppImages>{props.children}</AppImages>
-          </AppLinks>
+          {/* Client-side navigations and next/image through a single UiProvider: the layout stays mounted. */}
+          <AppProviders>{props.children}</AppProviders>
           <SiteFooter locale={locale} />
           {/* The cursor glow and the margins' sparkles, loaded on desktops only. */}
           <Effects />
-          {/* The listing's code, loaded once the page is idle: a listing reached later shows at once. */}
+          {/* The listing's and section pagination's code, loaded on idle so client navigations paint on frame 1. */}
           <ListingPreload />
+          <SectionPaginationPreload />
         </ThemeProvider>
         {/* The real visitors' Core Web Vitals, sent to Vercel's Speed Insights; their visits, to Vercel's Web
             Analytics: both scripts exist on Vercel only. */}

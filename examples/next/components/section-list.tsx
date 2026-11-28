@@ -28,9 +28,10 @@ import type { Locale } from '#figatellultimate/locales';
 
 import type { ListingLabels } from '../blog/listing-labels';
 import type { SectionBatchItem } from '../lib/section-batches';
+import { loadSectionPagination } from './section-pagination-preload';
 
 const SectionPagination = lazy(async () => ({
-  default: (await import('./section-pagination')).SectionPagination,
+  default: (await loadSectionPagination()).SectionPagination,
 }));
 
 /** An item rendered on the server for the initial batch. */
@@ -123,16 +124,18 @@ export function SectionList({
           <span data-slot="section-list-spinner" />
         </div>
       ) : null}
-      <Suspense fallback={null}>
-        <SectionPagination
-          totalCards={totalCards}
-          batchSize={batchSize}
-          locale={locale}
-          labels={paginationLabels}
-          onPageChange={selectPage}
-          onPrefetchPage={prefetchPage}
-        />
-      </Suspense>
+      {phone ? null : (
+        <Suspense fallback={null}>
+          <SectionPagination
+            totalCards={totalCards}
+            batchSize={batchSize}
+            locale={locale}
+            labels={paginationLabels}
+            onPageChange={selectPage}
+            onPrefetchPage={prefetchPage}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
