@@ -25,6 +25,7 @@ export const schema = {
       site: _,
       maquis: _,
       calanque: _,
+      scandola: _,
     },
     footer: { nav: _, made: _, love: _ },
     pager: { nav: _, previous: _, next: _ },

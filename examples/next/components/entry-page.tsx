@@ -61,8 +61,9 @@ export async function EntryPage(props: {
   const { entry } = found;
   const currentUrl = props.pageUrl ?? entry.url;
   // The entry's body is what the search indexes; the header and the section's list stay out of it. Its
-  // breadcrumb rides along as Pagefind metadata: the search shows where each result sits.
+  // breadcrumb and optional cover image ride along as Pagefind metadata for rich search results.
   const trail = await trailOf(entry.locale, entry.url);
+  const cover = entry.data.featuredPictureUrl;
   const body = (
     <>
       <div
@@ -73,6 +74,9 @@ export async function EntryPage(props: {
             }
           : { 'data-pagefind-ignore': 'all' })}
       >
+        {indexed && cover !== undefined ? (
+          <span hidden data-pagefind-ignore="" data-pagefind-meta={`cover:${cover}`} />
+        ) : null}
         <Body code={entry.data.mdx} />
       </div>
       {/* Out of the indexed body: a section's page lists its pages, which are indexed on their own. */}

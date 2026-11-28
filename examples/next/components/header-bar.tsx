@@ -9,9 +9,10 @@ import { SearchDialog } from '@figatellultimate/search-react';
 import { usePagedLocaleLinks } from '@figatellultimate/next16/facets';
 import { parseTrail, type ListingLocales, type LocaleLink } from '@figatellultimate/site';
 import { LocaleSwitcher, Navbar, ThemeToggle, type NavigationNode, type ThemeToggleLabels } from '@figatellultimate/ui';
+import Image from 'next/image';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react';
 
 import { localeInfo, locales, type Locale } from '#figatellultimate/locales';
 
@@ -58,6 +59,25 @@ const nameOf = (code: string): string => {
   return known === undefined ? code : localeInfo[known].label;
 };
 
+/** Subscribes to wide-screen and site-theme changes so Scandola search cover thumbnails update reactively. */
+function subscribeSearchCovers(onChange: () => void): () => void {
+  const wide = window.matchMedia('(min-width: 64rem)');
+  const observer = new MutationObserver(onChange);
+
+  wide.addEventListener('change', onChange);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-site-theme'] });
+
+  return () => {
+    wide.removeEventListener('change', onChange);
+    observer.disconnect();
+  };
+}
+
+const getSearchCoversSnapshot = (): boolean =>
+  window.matchMedia('(min-width: 64rem)').matches && document.documentElement.dataset['siteTheme'] === 'scandola';
+
+const getSearchCoversServerSnapshot = (): boolean => false;
+
 /**
  * The client header: the navbar from the content (its sections' labels translated on the server), with the search
  * button, the locale switcher and the theme toggle.
@@ -84,11 +104,19 @@ export function HeaderBar(props: {
   // hydration keeps the server's attributes), and asks it for the other one.
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  // Cover thumbnails in search results are exclusive to Scandola when there is plenty of horizontal room (`>= 64rem`),
+  // so other themes and narrow viewports never render or fetch extra images.
+  const showSearchCovers = useSyncExternalStore(
+    subscribeSearchCovers,
+    getSearchCoversSnapshot,
+    getSearchCoversServerSnapshot,
+  );
 
   useEffect(() => {
     setMounted(true);
   }, []);
-  const search = useMemo(() => createSearch({ locale, collections: searchable }), [locale, searchable]);
+  // 6 results per batch divides evenly across 1, 2 and 3-column responsive search grids.
+  const search = useMemo(() => createSearch({ locale, collections: searchable, batch: 6 }), [locale, searchable]);
   const dir = localeInfo[locale].dir;
   const githubIcon = (
     <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" aria-hidden>
@@ -119,6 +147,18 @@ export function HeaderBar(props: {
         // Each result's breadcrumb, put on its page as Pagefind metadata; its collection when it has none.
         // Its steps, the chevrons the meta joined them with (`trail.ts`) left to the box, seen and not heard.
         trail={(result) => parseTrail(result.meta['breadcrumb'])}
+        // On Scandola with generous desktop width, show each result's featured cover image from Pagefind metadata.
+        media={
+          showSearchCovers
+            ? (result) => {
+                const cover = result.meta['cover'];
+
+                return cover === undefined ? undefined : (
+                  <Image src={cover} alt="" width={400} height={250} sizes="(min-width: 78rem) 380px, 420px" />
+                );
+              }
+            : undefined
+        }
         // The page being read: its own result is dimmed.
         current={url}
         // Each dated result shows its date, in the page's language.

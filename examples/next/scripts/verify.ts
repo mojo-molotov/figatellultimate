@@ -1385,6 +1385,34 @@ for (const item of mountedUrls) {
   );
 }
 
+// Site themes: every non-default theme stylesheet is statically emitted under `/themes/<name>.css` and offered by the
+// footer theme picker on prerendered pages.
+{
+  const home = htmlOf('/') ?? '';
+
+  for (const theme of ['maquis', 'calanque', 'scandola'] as const)
+    check(
+      home.includes(`data-slot="site-theme-option"`) && home.includes(`value="${theme}"`),
+      `/: footer theme picker missing option "${theme}"`,
+    );
+
+  for (const lazy of ['calanque', 'scandola'] as const) {
+    const file = join(import.meta.dirname, '..', `.next/server/app/themes/${lazy}.css.body`);
+    let css = '';
+
+    try {
+      css = readFileSync(file, 'utf8');
+    } catch {
+      // Missing prerendered route body, caught by the check below.
+    }
+
+    check(
+      css.includes(`[data-site-theme='${lazy}']`),
+      `/themes/${lazy}.css: static theme stylesheet missing or ungated`,
+    );
+  }
+}
+
 if (problems.length > 0) {
   console.error(`✖ ${String(problems.length)} problem(s):\n${problems.map((p) => `  - ${p}`).join('\n')}`);
   process.exitCode = 1;

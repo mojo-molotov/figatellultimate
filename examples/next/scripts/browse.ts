@@ -28,10 +28,18 @@ const check = (condition: boolean, problem: string): void => {
 const LISTING = '/blog/maquis/corsicamon';
 const perPage = findBlogFolderByUrl(LISTING)?.perPage ?? 0;
 const posts = blogIndex.filter((item) => item.locale === 'fr' && item.url.startsWith(`${LISTING}/`)).length;
-// The listing's last page, shorter than the others: going back from it makes the page taller.
-const last = Math.ceil(posts / perPage);
+// An author listing whose last page is shorter than a full page yet still taller than the viewport (scrollable):
+// going to/from it changes the page height while keeping the bottom pagination at the same screen position.
+const AUTHOR_LISTING = '/authors/igor';
+const authorPosts = blogIndex.filter((item) => item.locale === 'fr' && item.terms.authors.includes('igor')).length;
+const authorPerPage = 12;
+const authorLast = Math.ceil(authorPosts / authorPerPage);
 
 check(posts % perPage !== 0, `${LISTING}: its last page is full, so no page change alters the page's height`);
+check(
+  authorPosts % authorPerPage >= 3,
+  `${AUTHOR_LISTING}: its last page needs at least 3 posts to stay taller than the viewport`,
+);
 
 /** Where the page is scrolled, and where a slot's element sits on the screen. */
 /** A page as the build prerendered it, French unprefixed. */
@@ -87,8 +95,8 @@ try {
     [LISTING, 'pagination-next', 50],
     [`${LISTING}/page/3`, 'pagination-previous', 120],
     ['/blog/maquis', 'pagination-next', 120],
-    [`${LISTING}/page/${String(last)}`, 'pagination-previous', 0],
-    [`${LISTING}/page/${String(last - 1)}`, 'pagination-next', 0],
+    [`${AUTHOR_LISTING}/page/${String(authorLast)}`, 'pagination-previous', 0],
+    [`${AUTHOR_LISTING}/page/${String(authorLast - 1)}`, 'pagination-next', 0],
   ] as const) {
     const page = await open(url);
 
@@ -545,6 +553,59 @@ try {
     await switched.close();
   }
 
+  // Hovering another site theme on a fresh visit (when `<html data-site-theme>` starts unset) must never hijack the
+  // page before clicking, and reloading with a non-default theme remembered must block first paint until its lazy
+  // stylesheet loads (zero flash of the default theme).
+  {
+    const stable = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+
+    await stable.goto(`${base}/docs`, { waitUntil: 'networkidle' });
+    const accentBeforeHover = await stable.evaluate(() =>
+      getComputedStyle(document.documentElement).getPropertyValue('--fig-accent').trim(),
+    );
+
+    await stable.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await stable.locator('[data-slot="site-theme-option"][value="scandola"]').hover();
+    await stable.waitForTimeout(300);
+    const afterHover = await stable.evaluate(() => ({
+      siteTheme: document.documentElement.dataset['siteTheme'] ?? null,
+      accent: getComputedStyle(document.documentElement).getPropertyValue('--fig-accent').trim(),
+    }));
+
+    check(
+      afterHover.siteTheme === 'maquis' && afterHover.accent === accentBeforeHover,
+      `/docs: hovering scandola hijacked the active theme before clicking (${JSON.stringify({ accentBeforeHover, afterHover })})`,
+    );
+
+    await stable.locator('[data-slot="site-theme-option"][value="scandola"]').click();
+    await stable.waitForFunction(() => document.documentElement.dataset['siteTheme'] === 'scandola');
+    await stable.route('**/themes/*.css', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      await route.continue();
+    });
+    await stable.addInitScript(() => {
+      requestAnimationFrame(() => {
+        Reflect.set(
+          window,
+          '__firstPaintAccent',
+          getComputedStyle(document.documentElement).getPropertyValue('--fig-accent').trim(),
+        );
+      });
+    });
+    await stable.reload({ waitUntil: 'networkidle' });
+    await stable.waitForTimeout(100);
+    const firstPaintAccent: unknown = await stable.evaluate(() => Reflect.get(window, '__firstPaintAccent'));
+    const settledAccent = await stable.evaluate(() =>
+      getComputedStyle(document.documentElement).getPropertyValue('--fig-accent').trim(),
+    );
+
+    check(
+      firstPaintAccent === settledAccent && settledAccent !== accentBeforeHover,
+      `/docs reload on scandola: flashed wrong theme on first paint (${JSON.stringify({ firstPaintAccent, settledAccent, accentBeforeHover })})`,
+    );
+    await stable.close();
+  }
+
   // What the site exposes to LLMs at its public URLs, through the proxy: each llms.txt, and a page's Markdown at its
   // URL with `.md` in either locale; a page left out has none.
   {
@@ -749,8 +810,13 @@ try {
       onMore.focused && !onMore.selected,
       `/docs: arrowing down to "see more" left a result highlighted (${JSON.stringify(onMore)})`,
     );
+    const initialResults = await dialog.locator('[data-slot="search-box-result"]').count();
+
     await dialog.keyboard.press('Enter');
-    await dialog.waitForFunction(() => document.querySelectorAll('[data-slot="search-box-result"]').length > 5);
+    await dialog.waitForFunction(
+      (previous) => document.querySelectorAll('[data-slot="search-box-result"]').length > previous,
+      initialResults,
+    );
     check(
       new URL(dialog.url()).pathname === '/docs',
       `/docs: pressing Enter on "see more" navigated away (${dialog.url()})`,
@@ -845,6 +911,138 @@ try {
       darkCardPills !== undefined && darkCardPills.distinct,
       `/blog/maquis/corsicamon on calanque dark: tag/author pills blend into card background (${JSON.stringify(darkCardPills)})`,
     );
+    // Switching to Scandola loads `/themes/scandola.css`, expands listings into a multi-column adaptive grid of
+    // uniform cards, and keeps dark card pills contrasted against the card surface.
+    await dialog.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await dialog.locator('[data-slot="site-theme-option"][value="scandola"]').click();
+    await dialog.waitForFunction(() => document.documentElement.dataset['siteTheme'] === 'scandola');
+    const scandolaLayout = await dialog.evaluate(() => {
+      document.documentElement.dataset['theme'] = 'dark';
+      const main = document.querySelector('main');
+      const cards = [...document.querySelectorAll('[data-slot="listing-cards"] > li')];
+      const rects = cards.map((card) => card.getBoundingClientRect());
+      const first = rects[0];
+      const second = rects[1];
+      const card = document.querySelector('[data-slot="entry-card"]');
+      const tag = card?.querySelector('[data-slot="entry-card-tag"]');
+
+      if (
+        main === null ||
+        first === undefined ||
+        second === undefined ||
+        card === null ||
+        tag === null ||
+        tag === undefined
+      )
+        return undefined;
+
+      const rowSizes = new Map<number, number>();
+
+      for (const rect of rects) {
+        const key = [...rowSizes.keys()].find((top) => Math.abs(top - rect.top) < 5) ?? Math.round(rect.top);
+
+        rowSizes.set(key, (rowSizes.get(key) ?? 0) + 1);
+      }
+
+      const counts = [...rowSizes.values()];
+
+      return {
+        mainWidth: Math.round(main.getBoundingClientRect().width),
+        sameWidth: rects.every((rect) => Math.abs(rect.width - first.width) <= 2),
+        multiColumn: Math.abs(first.top - second.top) < 5,
+        balancedRows: counts.length >= 2 && counts.every((count) => count === counts[0]),
+        distinctTag: getComputedStyle(tag).backgroundColor !== getComputedStyle(card).backgroundColor,
+      };
+    });
+
+    check(
+      scandolaLayout !== undefined &&
+        scandolaLayout.mainWidth > 900 &&
+        scandolaLayout.sameWidth &&
+        scandolaLayout.multiColumn &&
+        scandolaLayout.balancedRows &&
+        scandolaLayout.distinctTag,
+      `/blog/maquis/corsicamon on scandola: fluid balanced grid or dark card pill contrast failed (${JSON.stringify(scandolaLayout)})`,
+    );
+    // On an article in Scandola, the table of contents docks on the right edge beside the full-width article and
+    // collapses cleanly without horizontal overflow.
+    await dialog.goto(`${base}/blog/maquis/chestnut-grove/harvest-that-delayed-work`, { waitUntil: 'networkidle' });
+    const scandolaArticleOpen = await dialog.evaluate(() => {
+      const main = document.querySelector('[data-layout="article"] > main')?.getBoundingClientRect();
+      const toc = document.querySelector('[data-slot="toc"]')?.getBoundingClientRect();
+      const toggle = document.querySelector('[data-slot="toc-toggle"]')?.getBoundingClientRect();
+
+      if (main === undefined || toc === undefined || toggle === undefined) return undefined;
+
+      return {
+        tocOnRight: toc.left >= main.right - 1 && Math.abs(toc.right - window.innerWidth) <= 2,
+        toggleOnInnerEdge: Math.abs(toggle.right - toc.left) <= 2,
+        mainWidth: Math.round(main.width),
+        noSideScroll: document.documentElement.scrollWidth <= window.innerWidth,
+      };
+    });
+
+    await dialog.locator('[data-slot="toc-toggle"]').click();
+    await dialog.waitForFunction(
+      () => document.querySelector('[data-slot="toc"]')?.getAttribute('data-open') === 'false',
+    );
+    await dialog.waitForTimeout(300);
+    const scandolaArticleClosed = await dialog.evaluate(() => {
+      const main = document.querySelector('[data-layout="article"] > main')?.getBoundingClientRect();
+      const toggle = document.querySelector('[data-slot="toc-toggle"]')?.getBoundingClientRect();
+
+      if (main === undefined || toggle === undefined) return undefined;
+
+      return {
+        mainWidth: Math.round(main.width),
+        toggleAtRightEdge: Math.abs(toggle.right - window.innerWidth) <= 2,
+        noSideScroll: document.documentElement.scrollWidth <= window.innerWidth,
+      };
+    });
+
+    check(
+      scandolaArticleOpen !== undefined &&
+        scandolaArticleClosed !== undefined &&
+        scandolaArticleOpen.tocOnRight &&
+        scandolaArticleOpen.toggleOnInnerEdge &&
+        scandolaArticleOpen.noSideScroll &&
+        scandolaArticleClosed.mainWidth > scandolaArticleOpen.mainWidth + 100 &&
+        scandolaArticleClosed.toggleAtRightEdge &&
+        scandolaArticleClosed.noSideScroll,
+      `article on scandola: right-docked table of contents or collapse check failed (${JSON.stringify({ scandolaArticleOpen, scandolaArticleClosed })})`,
+    );
+    // In Scandola's 3-column search gallery, all four arrow keys navigate between preview cards.
+    await dialog.getByRole('button', { name: 'Rechercher' }).click();
+    const scandolaInput = dialog.getByRole('combobox', { name: 'Termes de recherche' });
+
+    await scandolaInput.waitFor();
+    await scandolaInput.fill('figatellu');
+    await dialog.locator('[data-slot="search-box-result"]').first().waitFor();
+    await dialog.waitForTimeout(200);
+    const activeIndex = (): Promise<number> =>
+      dialog.evaluate(() =>
+        [...document.querySelectorAll('[data-slot="search-box-result"]')].findIndex(
+          (item) => item.getAttribute('aria-selected') === 'true',
+        ),
+      );
+    const step0 = await activeIndex();
+
+    await dialog.keyboard.press('ArrowRight');
+    const stepRight = await activeIndex();
+
+    await dialog.keyboard.press('ArrowDown');
+    const stepDown = await activeIndex();
+
+    await dialog.keyboard.press('ArrowUp');
+    const stepUp = await activeIndex();
+
+    await dialog.keyboard.press('ArrowLeft');
+    const stepLeft = await activeIndex();
+
+    check(
+      step0 === 0 && stepRight === 1 && stepDown === 4 && stepUp === 1 && stepLeft === 0,
+      `scandola search gallery: 4-way arrow navigation failed (${JSON.stringify({ step0, stepRight, stepDown, stepUp, stepLeft })})`,
+    );
     await dialog.close();
   }
 
@@ -856,7 +1054,14 @@ try {
     await code.goto(`${base}/docs/quick-start`, { waitUntil: 'load' });
     await code.addScriptTag({ path: createRequire(import.meta.url).resolve('axe-core/axe.min.js') });
 
-    for (const site of ['maquis', 'calanque'] as const) {
+    await code.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+
+    for (const site of ['maquis', 'calanque', 'scandola'] as const) {
+      if (site !== 'maquis') {
+        await code.locator(`[data-slot="site-theme-option"][value="${site}"]`).click();
+        await code.waitForFunction((name) => document.documentElement.dataset['siteTheme'] === name, site);
+      }
+
       for (const theme of ['light', 'dark'] as const) {
         const { checked, failing } = await code.evaluate(
           async ([siteTheme, colorTheme]) => {

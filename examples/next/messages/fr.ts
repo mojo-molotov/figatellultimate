@@ -218,6 +218,7 @@ const ui = {
     site: 'Thème du site',
     maquis: 'Maquis',
     calanque: 'Calanque',
+    scandola: 'Scandola',
   },
   footer: { nav: 'Plan du site', made: 'Made with', love: 'amour' },
   pager: { nav: 'Pages précédente et suivante', previous: 'Précédent', next: 'Suivant' },

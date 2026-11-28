@@ -228,6 +228,7 @@ const ui = {
     site: 'Site theme',
     maquis: 'Maquis',
     calanque: 'Calanque',
+    scandola: 'Scandola',
   },
   footer: { nav: 'Site map', made: 'Made with', love: 'love' },
   pager: { nav: 'Previous and next pages', previous: 'Previous', next: 'Next' },

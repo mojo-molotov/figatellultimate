@@ -66,7 +66,8 @@ export default defineConfig({
         metadata: { description: 'description' },
         preview: 2,
         // A page at a time, each one prerendered with its slice (`/page/N`): categories, subcategories, posts.
-        perPage: { root: 4, category: 2, subcategory: 5 },
+        // Page sizes (4, 2, 6) divide evenly across 1, 2, 3 and 4-column responsive grids without orphan cards.
+        perPage: { root: 4, category: 2, subcategory: 6 },
         // Each subcategory's index, every post a filter or a sort needs: `/listing/<category>/<subcategory>`.
         index: 'listing',
         images: {
@@ -138,14 +139,14 @@ export default defineConfig({
     ),
     // Authors carry data (pure data, never components) and a name and a short bio per locale; each has a page listing
     // their posts, in every locale where they wrote one, with their long bio when it is written (`authorBios`),
-    // ten posts a page (`/authors/igor/page/2`), each page prerendered with its slice only.
+    // twelve posts a page (`/authors/igor/page/2`, divisible by 1, 2, 3 and 4 columns), each page prerendered with its slice only.
     authors: defineTaxonomy(
       { igor: { avatar: '/authors/igor.jpeg' }, napoleon: { avatar: '/authors/napoleon.jpeg' } },
       {
         messages: ['name', 'bio'],
         // SEO: each author's page described by their short bio.
         // Each author's index, as a subcategory's: `/author-listing/<author>`.
-        pages: { base: 'authors', perPage: 10, metadata: { description: 'bio' }, index: 'author-listing' },
+        pages: { base: 'authors', perPage: 12, metadata: { description: 'bio' }, index: 'author-listing' },
         content: 'authorBios',
       },
     ),
