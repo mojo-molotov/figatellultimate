@@ -140,4 +140,4 @@ Hors de Next, `pagedHref` et `pagedSearch` de `@figatellultimate/facets` font pa
 
 ### Lots de sections adaptatifs
 
-Une page de section comme `/docs` peut découper ses cartes en lots JSON statiques avec `splitSectionBatches` et `pagedSectionsOf` de `@figatellultimate/site` (servies par `listingIndexRoute`), puis les consommer côté client avec `useResponsiveBatches` de `@figatellultimate/facets-react` : défilement progressif (`IntersectionObserver`) sur téléphone et pagination classique (`PageSelect` + `Pagination`) sur ordinateur, en partageant le même cache de lots et le même HTML prérendu.
+Une page de section comme `/docs` peut découper ses cartes en lots JSON statiques avec `splitSectionBatches` et `pagedSectionsOf` de `@figatellultimate/site` (servies par `listingIndexRoute`), puis les afficher avec `ResponsiveBatchList` et `BatchPagination` (ou les hooks `useResponsiveBatches` et `useBatchPagination`) de `@figatellultimate/facets-react` : défilement progressif (`IntersectionObserver`) sur téléphone et pagination classique (`PageSelect` + `Pagination`) sur ordinateur, en partageant le même cache de lots et le même HTML prérendu.
