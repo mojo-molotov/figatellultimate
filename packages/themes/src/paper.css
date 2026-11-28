@@ -24,17 +24,17 @@
 
 :root:where(:not([data-site-theme]), [data-site-theme='paper']) {
   --fig-heading-font: 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
-  --fig-fg: #1d2731;
-  --fig-bg: #f2f2f2;
-  --fig-surface: #e6eaed;
-  --fig-muted: #575757;
-  --fig-border: #d8dfe4;
-  --fig-accent: #0068a3;
+  --fig-fg: #0f1720;
+  --fig-bg: #eef1f4;
+  --fig-surface: #dfe5eb;
+  --fig-muted: #424b54;
+  --fig-border: #b8c4cf;
+  --fig-accent: #00609e;
   --fig-accent-fg: #ffffff;
-  --fig-mark-bg: #d4eaf7;
-  --fig-mark-fg: #1d2731;
+  --fig-mark-bg: #cde6f7;
+  --fig-mark-fg: #0f1720;
   --fig-radius: 0.5rem;
-  --fig-shadow: 0 2px 10px rgb(0 37 56 / 0.08);
+  --fig-shadow: 0 2px 10px rgb(0 37 56 / 0.1);
 }
 
 /* The deep ocean-navy night: the system's preference unless the page forces light, or forced dark. */
@@ -130,10 +130,10 @@
   background: #002538;
 }
 
-/* Elevated white rounded cards on the light grey canvas; elevated navy cards in dark mode. */
+/* Elevated white rounded cards with crisp borders on the light grey canvas; elevated navy cards in dark mode. */
 :root:where(:not([data-site-theme]), [data-site-theme='paper']) [data-slot='entry-card'] {
   background: #ffffff;
-  border-color: transparent;
+  border-color: var(--fig-border);
   box-shadow: var(--fig-shadow);
 }
 
