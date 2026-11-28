@@ -154,7 +154,15 @@ export function Navbar<K extends string>({
 
     if (element === null) return undefined;
 
-    const measure = (): void => {
+    let lastWidth = -1;
+    const measure = (force = false): void => {
+      // Only re-measure when the bar's width changes (or on font load): opening or closing the compact menu changes
+      // its height only, and toggling `data-measuring` hides the toggle (`display: none`), cancelling its transition.
+      const width = element.clientWidth;
+
+      if (!force && width === lastWidth) return;
+
+      lastWidth = width;
       element.dataset['measuring'] = '';
       const overflows = element.scrollWidth > element.clientWidth + 1;
 
@@ -162,13 +170,21 @@ export function Navbar<K extends string>({
       element.toggleAttribute('data-compact', overflows);
     };
 
-    measure();
-    const observer = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(measure);
+    measure(true);
+    const observer =
+      typeof ResizeObserver === 'undefined'
+        ? undefined
+        : new ResizeObserver(() => {
+            measure();
+          });
 
     observer?.observe(element);
 
     // Where the document knows its fonts (not every test environment does): measured again once they load.
-    if ('fonts' in document) void document.fonts.ready.then(measure);
+    if ('fonts' in document)
+      void document.fonts.ready.then(() => {
+        measure(true);
+      });
 
     return () => {
       observer?.disconnect();
