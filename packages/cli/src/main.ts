@@ -65,6 +65,31 @@ const BUG_TRACKER = 'https://github.com/mojo-molotov/figatellultimate/issues';
 
 const ms = (duration: number): string => `${duration.toFixed(0)} ms`;
 
+/** Formats a count with its English singular or plural noun (e.g. `1 file`, `3 files`). */
+const plural = (count: number, singular: string, many = `${singular}s`): string =>
+  `${String(count)} ${count === 1 ? singular : many}`;
+
+/** Prints the command's intro, loads its config, or reports an invalid config and exits with `EXIT.usage`. */
+async function withLoadedConfig(
+  ui: Ui,
+  command: Command,
+  cwd: string,
+  fresh: boolean,
+  run: (loaded: LoadedConfig) => Promise<number>,
+): Promise<number> {
+  ui.intro(`figatellultimate ${command.name}`);
+  const loaded = await loadConfig(command.config, cwd, fresh);
+
+  if (!loaded.ok) {
+    reportConfigProblem(ui, loaded.errors[0]);
+    ui.outro('Invalid configuration');
+
+    return EXIT.usage;
+  }
+
+  return run(loaded.value);
+}
+
 function version(): string {
   const manifest: unknown = createRequire(import.meta.url)('../package.json');
 
@@ -101,7 +126,7 @@ async function runAndReport(ui: Ui, loaded: LoadedConfig, command: Command, sign
 
   if (assembly.diagnostics.length + result.messageDiagnostics.length > 0) {
     const infos = counts.infos === 0 ? '' : `, ${String(counts.infos)} info`;
-    const title = `${String(counts.errors)} error${counts.errors === 1 ? '' : 's'}, ${String(counts.warnings)} warning${counts.warnings === 1 ? '' : 's'}${infos} in ${String(counts.files)} file${counts.files === 1 ? '' : 's'}`;
+    const title = `${plural(counts.errors, 'error')}, ${plural(counts.warnings, 'warning')}${infos} in ${plural(counts.files, 'file')}`;
     const messages = {
       diagnostics: result.messageDiagnostics,
       directory: loaded.config.messages?.directory ?? 'messages',
@@ -139,22 +164,14 @@ async function runAndReport(ui: Ui, loaded: LoadedConfig, command: Command, sign
 
 // One-shot commands read the config as it is on disk (fresh): a migration edits it, and callers embedding `main`
 // (tests, scripts) may run several commands in one process.
-async function runCommand(ui: Ui, command: Command, cwd: string): Promise<number> {
-  ui.intro(`figatellultimate ${command.name}`);
-  const loaded = await loadConfig(command.config, cwd, true);
+function runCommand(ui: Ui, command: Command, cwd: string): Promise<number> {
+  return withLoadedConfig(ui, command, cwd, true, async (loaded) => {
+    const failed = await runAndReport(ui, loaded, command);
 
-  if (!loaded.ok) {
-    reportConfigProblem(ui, loaded.errors[0]);
-    ui.outro('Invalid configuration');
+    ui.outro(failed ? ui.style.red('Done with errors') : ui.style.green('Done'));
 
-    return EXIT.usage;
-  }
-
-  const failed = await runAndReport(ui, loaded.value, command);
-
-  ui.outro(failed ? ui.style.red('Done with errors') : ui.style.green('Done'));
-
-  return failed ? EXIT.content : EXIT.ok;
+    return failed ? EXIT.content : EXIT.ok;
+  });
 }
 
 const SEARCH_ADVICE: Readonly<Record<SearchDiagnostic['code'], string>> = {
@@ -164,210 +181,190 @@ const SEARCH_ADVICE: Readonly<Record<SearchDiagnostic['code'], string>> = {
 };
 
 /** `figatellultimate search`: fails when the content has errors or a mounted entry cannot be indexed. */
-async function runSearchCommand(ui: Ui, command: Command, cwd: string): Promise<number> {
-  ui.intro('figatellultimate search');
-  const loaded = await loadConfig(command.config, cwd, true);
+function runSearchCommand(ui: Ui, command: Command, cwd: string): Promise<number> {
+  return withLoadedConfig(ui, command, cwd, true, async (loaded) => {
+    const options = command.search ?? { sites: ['.'], out: 'public/pagefind', localeFolders: false };
+    const phase = ui.phase('Indexing the built site');
+    const result = await runSearch({ config: loaded.config, directory: loaded.directory, cwd, ...options });
 
-  if (!loaded.ok) {
-    reportConfigProblem(ui, loaded.errors[0]);
-    ui.outro('Invalid configuration');
+    if (result.run.hasErrors) {
+      phase.failed('The content has errors: run figatellultimate check');
+      ui.outro(ui.style.red('Nothing indexed'));
 
-    return EXIT.usage;
-  }
+      return EXIT.content;
+    }
 
-  const options = command.search ?? { sites: ['.'], out: 'public/pagefind', localeFolders: false };
-  const phase = ui.phase('Indexing the built site');
-  const result = await runSearch({ config: loaded.value.config, directory: loaded.value.directory, cwd, ...options });
+    const locales = Object.entries(result.indexed ?? {});
+    const summary = [
+      ...locales.map(([locale, { pages, words }]) => `${locale}: ${String(pages)} pages, ${String(words)} words`),
+      ...(result.skipped > 0 ? [`${String(result.skipped)} not searchable`] : []),
+    ].join(' · ');
 
-  if (result.run.hasErrors) {
-    phase.failed('The content has errors: run figatellultimate check');
-    ui.outro(ui.style.red('Nothing indexed'));
+    if (result.diagnostics.length > 0) {
+      phase.failed(summary === '' ? 'Nothing indexed' : summary);
+      ui.block(
+        `${plural(result.diagnostics.length, 'page')} cannot be indexed`,
+        result.diagnostics.flatMap((d) => [
+          `${ui.style.red('✗')} ${d.url} ${ui.style.dim(`(${d.file})`)} ${d.code}${d.message === undefined ? '' : `: ${d.message}`}`,
+          `  ${ui.style.cyan('→')} ${SEARCH_ADVICE[d.code]}`,
+        ]),
+      );
+      ui.outro(ui.style.red('Done with errors'));
 
-    return EXIT.content;
-  }
+      return EXIT.content;
+    }
 
-  const locales = Object.entries(result.indexed ?? {});
-  const summary = [
-    ...locales.map(([locale, { pages, words }]) => `${locale}: ${String(pages)} pages, ${String(words)} words`),
-    ...(result.skipped > 0 ? [`${String(result.skipped)} not searchable`] : []),
-  ].join(' · ');
+    phase.done(summary === '' ? 'Nothing to index' : summary);
+    ui.outro(ui.style.green(`Done: ${options.out}/<locale>/pagefind.js`));
 
-  if (result.diagnostics.length > 0) {
-    phase.failed(summary === '' ? 'Nothing indexed' : summary);
-    const count = result.diagnostics.length;
-
-    ui.block(
-      `${String(count)} page${count === 1 ? '' : 's'} cannot be indexed`,
-      result.diagnostics.flatMap((d) => [
-        `${ui.style.red('✗')} ${d.url} ${ui.style.dim(`(${d.file})`)} ${d.code}${d.message === undefined ? '' : `: ${d.message}`}`,
-        `  ${ui.style.cyan('→')} ${SEARCH_ADVICE[d.code]}`,
-      ]),
-    );
-    ui.outro(ui.style.red('Done with errors'));
-
-    return EXIT.content;
-  }
-
-  phase.done(summary === '' ? 'Nothing to index' : summary);
-  ui.outro(ui.style.green(`Done: ${options.out}/<locale>/pagefind.js`));
-
-  return EXIT.ok;
+    return EXIT.ok;
+  });
 }
 
 /** `figatellultimate migrate`: the plan, then, with `--write`, the moves, the config and the redirects. */
-async function runMigrateCommand(ui: Ui, command: Command, cwd: string): Promise<number> {
-  ui.intro('figatellultimate migrate');
-  const loaded = await loadConfig(command.config, cwd, true);
+function runMigrateCommand(ui: Ui, command: Command, cwd: string): Promise<number> {
+  return withLoadedConfig(ui, command, cwd, true, async (loaded) => {
+    const migration = command.migration;
 
-  if (!loaded.ok) {
-    reportConfigProblem(ui, loaded.errors[0]);
-    ui.outro('Invalid configuration');
+    if (migration === undefined) return EXIT.usage;
 
-    return EXIT.usage;
-  }
+    const { target, write } = migration;
+    const what =
+      target.kind === 'default-locale' ? `default locale → ${target.locale}` : `locale notation → ${target.notation}`;
+    const phase = ui.phase(`Planning: ${what}`);
+    const result = await runMigrate({ loaded, target, write });
+    const { run, plan, moves } = result;
 
-  const migration = command.migration;
+    if (run.hasErrors) {
+      phase.failed('The content has errors: fix them first (figatellultimate check), nothing moved');
+      ui.outro(ui.style.red('Nothing migrated'));
 
-  if (migration === undefined) return EXIT.usage;
-
-  const { target, write } = migration;
-  const what =
-    target.kind === 'default-locale' ? `default locale → ${target.locale}` : `locale notation → ${target.notation}`;
-  const phase = ui.phase(`Planning: ${what}`);
-  const result = await runMigrate({ loaded: loaded.value, target, write });
-  const { run, plan, moves } = result;
-
-  if (run.hasErrors) {
-    phase.failed('The content has errors: fix them first (figatellultimate check), nothing moved');
-    ui.outro(ui.style.red('Nothing migrated'));
-
-    return EXIT.content;
-  }
-
-  if (plan === undefined) return EXIT.unexpected;
-
-  if (!plan.ok) {
-    phase.failed('The migration cannot be done');
-
-    for (const error of plan.errors) {
-      if (error.code === 'migration-unknown-locale') {
-        ui.error(`"${error.data.locale}" is not a declared locale (${error.data.locales.join(', ')}).`);
-
-        if (error.suggestions.length > 0)
-          ui.info(`${ui.style.cyan('→')} did you mean ${error.suggestions.join(' or ')}?`);
-      } else {
-        ui.error('The migrated content would have errors; nothing is moved:');
-        ui.block(
-          `${String(error.data.diagnostics.length)} problem(s) after the migration`,
-          reportLines(error.data.diagnostics, run.directories, ui.style),
-        );
-      }
+      return EXIT.content;
     }
 
-    ui.outro(ui.style.red('Nothing migrated'));
+    if (plan === undefined) return EXIT.unexpected;
 
-    return EXIT.content;
-  }
+    if (!plan.ok) {
+      phase.failed('The migration cannot be done');
 
-  if (plan.warnings.length > 0) {
-    phase.done('Nothing to do: the project already uses it');
-    ui.outro(ui.style.green('Done'));
+      for (const error of plan.errors) {
+        if (error.code === 'migration-unknown-locale') {
+          ui.error(`"${error.data.locale}" is not a declared locale (${error.data.locales.join(', ')}).`);
 
-    return EXIT.ok;
-  }
+          if (error.suggestions.length > 0)
+            ui.info(`${ui.style.cyan('→')} did you mean ${error.suggestions.join(' or ')}?`);
+        } else {
+          ui.error('The migrated content would have errors; nothing is moved:');
+          ui.block(
+            `${String(error.data.diagnostics.length)} problem(s) after the migration`,
+            reportLines(error.data.diagnostics, run.directories, ui.style),
+          );
+        }
+      }
 
-  const { redirects, reused } = plan.value;
+      ui.outro(ui.style.red('Nothing migrated'));
 
-  phase.done(
-    `${String(moves.length)} file${moves.length === 1 ? '' : 's'} to move · ${String(redirects.length)} URL${redirects.length === 1 ? '' : 's'} to redirect`,
-  );
-  ui.block(
-    'Moves',
-    moves.map((m) => `${m.from} ${ui.style.dim('→')} ${m.to}`),
-  );
-  const edit = result.config;
+      return EXIT.content;
+    }
 
-  if (edit !== undefined) {
-    ui.info(
-      edit.kind === 'edited'
-        ? `Config: defineLocales ${edit.property} → '${edit.value}'`
-        : `Config: set ${edit.property}: '${edit.value}' in defineLocales by hand (its value is not a literal).`,
-    );
-  }
+    if (plan.warnings.length > 0) {
+      phase.done('Nothing to do: the project already uses it');
+      ui.outro(ui.style.green('Done'));
 
-  if (redirects.length > 0)
+      return EXIT.ok;
+    }
+
+    const { redirects, reused } = plan.value;
+
+    phase.done(`${plural(moves.length, 'file')} to move · ${plural(redirects.length, 'URL')} to redirect`);
     ui.block(
-      'URLs that change (redirected)',
-      redirects.map((r) => `${r.from} ${ui.style.dim('→')} ${r.to}`),
+      'Moves',
+      moves.map((m) => `${m.from} ${ui.style.dim('→')} ${m.to}`),
     );
+    const edit = result.config;
 
-  if (reused.length > 0)
-    ui.block(
-      'Old URLs now used by another entry (not redirected)',
-      reused.map((url) => url),
-    );
-
-  if (result.appRoutes.length > 0) {
-    ui.warn(
-      'These app route folders are named after a locale: they assume which locale is unprefixed. Move or rename them by hand after the migration:',
-    );
-    ui.block('Locale route folders', [...result.appRoutes]);
-  }
-
-  if (result.invalidRedirects === true) {
-    ui.error('redirects.json is not a list of { from, to }: fix or remove it, nothing is moved.');
-    ui.outro(ui.style.red('Nothing migrated'));
-
-    return EXIT.content;
-  }
-
-  if (!write) {
-    ui.outro(`Plan only: run again with ${ui.style.bold('--write')} to apply it (all or nothing).`);
-
-    return EXIT.ok;
-  }
-
-  const applied = result.applied;
-
-  if (applied === undefined) return EXIT.unexpected;
-
-  if (!applied.ok) {
-    const failure = applied.failure;
-
-    if (failure.kind === 'target-exists') {
-      ui.error('These targets already exist; nothing is moved:');
-      ui.block('Existing files', [...failure.paths]);
-    } else {
-      ui.error(`A move failed (${failure.reason}).`);
+    if (edit !== undefined) {
       ui.info(
-        failure.restored
-          ? 'Every file was put back: nothing changed.'
-          : ui.style.red('Some files could not be put back: check the tree.'),
+        edit.kind === 'edited'
+          ? `Config: defineLocales ${edit.property} → '${edit.value}'`
+          : `Config: set ${edit.property}: '${edit.value}' in defineLocales by hand (its value is not a literal).`,
       );
     }
 
-    ui.outro(ui.style.red('Nothing migrated'));
+    if (redirects.length > 0)
+      ui.block(
+        'URLs that change (redirected)',
+        redirects.map((r) => `${r.from} ${ui.style.dim('→')} ${r.to}`),
+      );
 
-    return EXIT.content;
-  }
+    if (reused.length > 0)
+      ui.block(
+        'Old URLs now used by another entry (not redirected)',
+        reused.map((url) => url),
+      );
 
-  ui.phase('Moving files').done(
-    `${String(moves.length)} moved · ${String(applied.removed.length)} empty folder${applied.removed.length === 1 ? '' : 's'} removed`,
-  );
+    if (result.appRoutes.length > 0) {
+      ui.warn(
+        'These app route folders are named after a locale: they assume which locale is unprefixed. Move or rename them by hand after the migration:',
+      );
+      ui.block('Locale route folders', [...result.appRoutes]);
+    }
 
-  if (applied.redirectsFile !== undefined)
-    ui.info(
-      `Redirects written to ${applied.redirectsFile}, composed with the earlier ones (permanent; toNextRedirects in @figatellultimate/next16).`,
+    if (result.invalidRedirects === true) {
+      ui.error('redirects.json is not a list of { from, to }: fix or remove it, nothing is moved.');
+      ui.outro(ui.style.red('Nothing migrated'));
+
+      return EXIT.content;
+    }
+
+    if (!write) {
+      ui.outro(`Plan only: run again with ${ui.style.bold('--write')} to apply it (all or nothing).`);
+
+      return EXIT.ok;
+    }
+
+    const applied = result.applied;
+
+    if (applied === undefined) return EXIT.unexpected;
+
+    if (!applied.ok) {
+      const failure = applied.failure;
+
+      if (failure.kind === 'target-exists') {
+        ui.error('These targets already exist; nothing is moved:');
+        ui.block('Existing files', [...failure.paths]);
+      } else {
+        ui.error(`A move failed (${failure.reason}).`);
+        ui.info(
+          failure.restored
+            ? 'Every file was put back: nothing changed.'
+            : ui.style.red('Some files could not be put back: check the tree.'),
+        );
+      }
+
+      ui.outro(ui.style.red('Nothing migrated'));
+
+      return EXIT.content;
+    }
+
+    ui.phase('Moving files').done(
+      `${String(moves.length)} moved · ${plural(applied.removed.length, 'empty folder')} removed`,
     );
 
-  if (applied.leftovers.length > 0) {
-    ui.warn('These files are not entries and stayed where they were; move them if they belong to a moved entry:');
-    ui.block('Left in place', [...applied.leftovers]);
-  }
+    if (applied.redirectsFile !== undefined)
+      ui.info(
+        `Redirects written to ${applied.redirectsFile}, composed with the earlier ones (permanent; toNextRedirects in @figatellultimate/next16).`,
+      );
 
-  ui.outro(ui.style.green(`Migrated: run ${ui.style.bold('figatellultimate build')}`));
+    if (applied.leftovers.length > 0) {
+      ui.warn('These files are not entries and stayed where they were; move them if they belong to a moved entry:');
+      ui.block('Left in place', [...applied.leftovers]);
+    }
 
-  return EXIT.ok;
+    ui.outro(ui.style.green(`Migrated: run ${ui.style.bold('figatellultimate build')}`));
+
+    return EXIT.ok;
+  });
 }
 
 /**
@@ -413,97 +410,89 @@ function watchMessages(loaded: LoadedConfig, onChange: () => void): { close(): v
   }
 }
 
-async function runWatch(ui: Ui, command: Command, cwd: string, signal?: AbortSignal): Promise<number> {
-  ui.intro('figatellultimate watch');
-  const initial = await loadConfig(command.config, cwd);
+function runWatch(ui: Ui, command: Command, cwd: string, signal?: AbortSignal): Promise<number> {
+  return withLoadedConfig(ui, command, cwd, false, async (initial) => {
+    let loaded = initial;
+    let stopSource: (() => Promise<void>) | undefined;
+    let reload = false;
 
-  if (!initial.ok) {
-    reportConfigProblem(ui, initial.errors[0]);
-    ui.outro('Invalid configuration');
+    const watchSource = async (): Promise<boolean> => {
+      if (loaded.config.source.watch === undefined) {
+        ui.error('This content source cannot watch for changes.');
 
-    return EXIT.usage;
-  }
+        return false;
+      }
 
-  let loaded = initial.value;
-  let stopSource: (() => Promise<void>) | undefined;
-  let reload = false;
+      const watcher = await loaded.config.source.watch(() => {
+        runner.trigger();
+      });
 
-  const watchSource = async (): Promise<boolean> => {
-    if (loaded.config.source.watch === undefined) {
-      ui.error('This content source cannot watch for changes.');
+      stopSource = () => watcher.stop();
 
-      return false;
-    }
+      return true;
+    };
 
-    const watcher = await loaded.config.source.watch(() => {
+    // Serialized runs: a newer change aborts the stale run and starts a fresh one; a failing run keeps the last
+    // valid output.
+    const runner = createSerializedRunner(async (runSignal) => {
+      if (reload) {
+        reload = false;
+        const next = await loadConfig(command.config, cwd, true);
+
+        if (!next.ok) {
+          reportConfigProblem(ui, next.errors[0]);
+
+          return;
+        }
+
+        await stopSource?.();
+        loaded = next.value;
+        await watchSource();
+        ui.info('Configuration reloaded.');
+      }
+
+      try {
+        await runAndReport(ui, loaded, command, runSignal);
+      } catch (error) {
+        if (runSignal.aborted) {
+          ui.info(ui.style.dim('Superseded by a newer change.'));
+
+          return;
+        }
+
+        ui.error(`Run failed: ${error instanceof Error ? error.message : String(error)}`);
+      }
+
+      ui.info(ui.style.dim('Watching for changes… (Ctrl+C to stop)'));
+    });
+
+    const configWatcher = watchFile(loaded.path, () => {
+      reload = true;
+      runner.trigger();
+    });
+    const messagesWatcher = watchMessages(loaded, () => {
       runner.trigger();
     });
 
-    stopSource = () => watcher.stop();
+    runner.trigger();
 
-    return true;
-  };
+    if (!(await watchSource())) {
+      configWatcher.close();
+      messagesWatcher?.close();
+      await runner.idle();
 
-  // Serialized runs: a newer change aborts the stale run and starts a fresh one; a failing run keeps the last
-  // valid output.
-  const runner = createSerializedRunner(async (runSignal) => {
-    if (reload) {
-      reload = false;
-      const next = await loadConfig(command.config, cwd, true);
-
-      if (!next.ok) {
-        reportConfigProblem(ui, next.errors[0]);
-
-        return;
-      }
-
-      await stopSource?.();
-      loaded = next.value;
-      await watchSource();
-      ui.info('Configuration reloaded.');
+      return EXIT.usage;
     }
 
-    try {
-      await runAndReport(ui, loaded, command, runSignal);
-    } catch (error) {
-      if (runSignal.aborted) {
-        ui.info(ui.style.dim('Superseded by a newer change.'));
-
-        return;
-      }
-
-      ui.error(`Run failed: ${error instanceof Error ? error.message : String(error)}`);
-    }
-
-    ui.info(ui.style.dim('Watching for changes… (Ctrl+C to stop)'));
-  });
-
-  const configWatcher = watchFile(loaded.path, () => {
-    reload = true;
-    runner.trigger();
-  });
-  const messagesWatcher = watchMessages(loaded, () => {
-    runner.trigger();
-  });
-
-  runner.trigger();
-
-  if (!(await watchSource())) {
+    await untilStopped(signal);
     configWatcher.close();
     messagesWatcher?.close();
+    await stopSource?.();
     await runner.idle();
+    ui.outro('Stopped watching');
 
-    return EXIT.usage;
-  }
-
-  await untilStopped(signal);
-  configWatcher.close();
-  messagesWatcher?.close();
-  await stopSource?.();
-  await runner.idle();
-  ui.outro('Stopped watching');
-
-  return EXIT.ok;
+    return EXIT.ok;
+  });
 }
 
 /**
