@@ -511,7 +511,7 @@ try {
 
       return [
         color('[data-slot="site-theme-option"][value="maquis"]'),
-        color('[data-slot="site-theme-option"][value="paper"]'),
+        color('[data-slot="site-theme-option"][value="calanque"]'),
         getComputedStyle(probe).color,
       ];
     });
@@ -666,7 +666,7 @@ try {
     await code.goto(`${base}/docs/quick-start`, { waitUntil: 'load' });
     await code.addScriptTag({ path: createRequire(import.meta.url).resolve('axe-core/axe.min.js') });
 
-    for (const site of ['maquis', 'paper'] as const) {
+    for (const site of ['maquis', 'calanque'] as const) {
       for (const theme of ['light', 'dark'] as const) {
         const { checked, failing } = await code.evaluate(
           async ([siteTheme, colorTheme]) => {

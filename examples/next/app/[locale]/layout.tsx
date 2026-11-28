@@ -18,13 +18,12 @@ import { routing } from '../../i18n/routing';
 import { SiteFooter } from '../../components/site-footer';
 import { ListingPreload } from '../../blog/listing';
 
-// The minimal design system, the effects' mechanics, the themes' shared layout, then both themes, one picked by
-// `<html data-site-theme>` (`lib/site-themes.ts`).
+// The minimal design system, the effects' mechanics, the themes' shared layout, then the default theme only; non-default
+// themes (`/themes/<name>.css`) load lazily on hover/click or before first paint when remembered (`lib/site-themes.ts`).
 import '@figatellultimate/ui/styles.css';
 import '@figatellultimate/effects/styles.css';
 import '@figatellultimate/themes/base.css';
 import '@figatellultimate/themes/maquis.css';
-import '@figatellultimate/themes/paper.css';
 
 // One root layout per declared locale, prerendered. Unknown params are let through, as Next applies a layout's
 // `dynamicParams` to its children too: the catch-all route's unknown URLs reach their locale's 404
@@ -51,8 +50,8 @@ export default async function LocaleLayout(props: LayoutProps<'/[locale]'>): Pro
       <head>
         {/* A table of contents the visitor closed is closed from the first paint: it never slides shut on load. */}
         <script dangerouslySetInnerHTML={{ __html: tocScript() }} />
-        {/* The visitor's theme from the first paint: the page never flashes the default one. */}
-        <script dangerouslySetInnerHTML={{ __html: siteThemeScript(SITE_THEMES) }} />
+        {/* The visitor's theme from the first paint: injects its lazy stylesheet when non-default. */}
+        <script dangerouslySetInnerHTML={{ __html: siteThemeScript(SITE_THEMES, undefined, '/themes/') }} />
         {/* The blog's feed in this locale, for feed readers to find from any page. */}
         <link rel="alternate" type="application/rss+xml" href={urlOf(locale, ['feed.xml'])} />
         {/* The agentic resources the site offers (its agent skill), as ARD has agents look for them. */}

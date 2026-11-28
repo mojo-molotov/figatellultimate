@@ -5,7 +5,7 @@
  */
 
 /** The themes the site offers, the first one by default. */
-export const SITE_THEMES = ['maquis', 'paper'] as const;
+export const SITE_THEMES = ['maquis', 'calanque'] as const;
 
 /** A theme the site offers. */
 export type SiteTheme = (typeof SITE_THEMES)[number];

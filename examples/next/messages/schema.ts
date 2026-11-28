@@ -24,7 +24,7 @@ export const schema = {
       pick: { on: _, choose: _, unknown: _ },
       site: _,
       maquis: _,
-      paper: _,
+      calanque: _,
     },
     footer: { nav: _, made: _, love: _ },
     pager: { nav: _, previous: _, next: _ },

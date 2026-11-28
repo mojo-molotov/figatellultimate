@@ -227,7 +227,7 @@ const ui = {
     pick: { on: '{name} theme, current theme', choose: 'Switch to the {name} theme', unknown: '{name} theme' },
     site: 'Site theme',
     maquis: 'Maquis',
-    paper: 'Paper',
+    calanque: 'Calanque',
   },
   footer: { nav: 'Site map', made: 'Made with', love: 'love' },
   pager: { nav: 'Previous and next pages', previous: 'Previous', next: 'Next' },

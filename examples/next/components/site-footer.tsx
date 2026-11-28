@@ -48,8 +48,8 @@ export async function SiteFooter({ locale }: { readonly locale: Locale }): Promi
         </nav>
         <SiteThemePicker
           label={t('ui.theme.site')}
-          names={{ maquis: t('ui.theme.maquis'), paper: t('ui.theme.paper') }}
-          spoken={{ maquis: spokenOf(t('ui.theme.maquis')), paper: spokenOf(t('ui.theme.paper')) }}
+          names={{ maquis: t('ui.theme.maquis'), calanque: t('ui.theme.calanque') }}
+          spoken={{ maquis: spokenOf(t('ui.theme.maquis')), calanque: spokenOf(t('ui.theme.calanque')) }}
         />
         <p data-slot="site-footer-signature">
           {site.name} · {t('ui.footer.made')} <Hearts label={t('ui.footer.love')} />

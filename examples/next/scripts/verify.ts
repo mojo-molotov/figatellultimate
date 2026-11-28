@@ -925,12 +925,24 @@ for (const url of ['/docs/cli', '/en/blog/empire/chronicles', '/'])
     `${url}: the messages are serialized in the page`,
   );
 
-// Both themes loaded, maquis by default until the visitor's choice (`lib/site-themes.ts`); the footer picks.
+// Maquis loaded by default until the visitor's choice (`lib/site-themes.ts`); non-default themes served statically
+// on demand (`/themes/calanque.css`), preloaded on hover/focus and injected before first paint when remembered.
 for (const url of ['/', '/en/docs/cli']) {
   const html = htmlOf(url) ?? '';
 
   check(/<html[^>]*data-site-theme="maquis"/.test(html), `${url}: no default site theme on <html>`);
   check(html.includes('data-slot="site-theme"'), `${url}: no theme picker in the footer`);
+  check(html.includes('/themes/'), `${url}: siteThemeScript missing lazy theme stylesheet prefix`);
+}
+
+{
+  const calanqueRoute = join(app, 'themes', 'calanque.css.body');
+  const calanqueCss = existsSync(calanqueRoute) ? readFileSync(calanqueRoute, 'utf8') : '';
+
+  check(
+    calanqueCss.includes("[data-site-theme='calanque']"),
+    '/themes/calanque.css: missing lazy calanque theme stylesheet',
+  );
 }
 
 const noindex = mountedUrls.filter((item) => !item.indexed).map((item) => item.url);
