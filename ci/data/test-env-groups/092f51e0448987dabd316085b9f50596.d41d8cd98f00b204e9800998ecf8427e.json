@@ -1,0 +1,1 @@
+{"id":"092f51e0448987dabd316085b9f50596.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/shared/__tests__/suggest.test.ts#damerauLevenshtein distance(\"ab\", \"ba\") = 1","name":"distance(\"ab\", \"ba\") = 1","status":"passed","testResultsByEnv":{"linux-node-26":"132179a09ed76b44e98409dff537bfce"}}

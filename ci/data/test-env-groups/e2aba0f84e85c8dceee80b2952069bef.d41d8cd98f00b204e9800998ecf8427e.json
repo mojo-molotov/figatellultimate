@@ -1,0 +1,1 @@
+{"id":"e2aba0f84e85c8dceee80b2952069bef.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/declarations/__tests__/collection.test.ts#defineCollection: folderPages rejects metadata that is not an object","name":"rejects metadata that is not an object","status":"passed","testResultsByEnv":{"linux-node-26":"1a14cf3b1a96c9183bc95bb057a04b8e"}}

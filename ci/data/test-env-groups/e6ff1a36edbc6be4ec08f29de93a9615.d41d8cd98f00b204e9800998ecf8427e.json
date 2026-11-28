@@ -1,0 +1,1 @@
+{"id":"e6ff1a36edbc6be4ec08f29de93a9615.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/declarations/__tests__/collection.test.ts#defineCollection: searchable throws on a non-boolean","name":"throws on a non-boolean","status":"passed","testResultsByEnv":{"linux-node-26":"1fc3e1bcac615274f39814791af03732"}}

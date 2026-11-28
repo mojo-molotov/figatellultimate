@@ -1,0 +1,1 @@
+{"id":"1a33dd518adc8ca9f9064556c8b9e228.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/facets/src/__tests__/transitions.test.ts#transitions (keepReadingPosition) is pure: the input state is never mutated","name":"is pure: the input state is never mutated","status":"passed","testResultsByEnv":{"linux-node-26":"72c86594dc7c3ddab604981d8c69b63c"}}

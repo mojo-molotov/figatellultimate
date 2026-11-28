@@ -1,0 +1,1 @@
+{"id":"a06a7a44e2528ddd117db89cfb36bcfc.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/__tests__/config.test.ts#defineConfig throws InvalidConfigError on routes chosen by a string","name":"throws InvalidConfigError on routes chosen by a string","status":"passed","testResultsByEnv":{"linux-node-26":"84f8bfd8bd85109a738e3f0e67756048"}}

@@ -1,0 +1,1 @@
+{"id":"ed15ad0dbae32dc5f617b0081a06f40d.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/dismiss/src/__tests__/dismiss.test.ts#tapToClose never cancels a click without a press before it","name":"never cancels a click without a press before it","status":"passed","testResultsByEnv":{"linux-node-26":"4c63c3482ee9bf15523df64a392ccd44"}}

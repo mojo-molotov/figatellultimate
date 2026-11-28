@@ -1,0 +1,1 @@
+{"id":"aebf996f9c72d36074df9b12566c9873.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/__tests__/config.test.ts#defineConfig: messages throws InvalidConfigError on an empty folder","name":"throws InvalidConfigError on an empty folder","status":"passed","testResultsByEnv":{"linux-node-26":"bca2707b135533724f81773b3e4526af"}}

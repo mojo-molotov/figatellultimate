@@ -1,0 +1,1 @@
+{"id":"084c58ced91880169a264ca523ce9fa3.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/cli/src/input/__tests__/args.test.ts#parseCli an option missing its value is a usage error too","name":"an option missing its value is a usage error too","status":"passed","testResultsByEnv":{"linux-node-26":"acc24b9ad3acb67b74b127def93772dd"}}

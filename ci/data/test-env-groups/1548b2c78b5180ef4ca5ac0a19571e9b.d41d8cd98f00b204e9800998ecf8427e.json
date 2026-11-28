@@ -1,0 +1,1 @@
+{"id":"1548b2c78b5180ef4ca5ac0a19571e9b.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/declarations/__tests__/locales.test.ts#defineLocales throws InvalidLocalesError on an uppercase code","name":"throws InvalidLocalesError on an uppercase code","status":"passed","testResultsByEnv":{"linux-node-26":"345a0bb2df197b9c54c88de790d56d83"}}

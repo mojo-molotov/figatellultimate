@@ -1,0 +1,1 @@
+{"id":"8bde8a0eadf7893bf4cf520e1fb0e083.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/paths/__tests__/url.test.ts#createUrlBuilder throws InvalidUrlOptionsError on invalid options","name":"throws InvalidUrlOptionsError on invalid options","status":"passed","testResultsByEnv":{"linux-node-26":"ff0026a9341b0b0fe356369bc4d7b97b"}}

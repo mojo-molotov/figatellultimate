@@ -1,0 +1,1 @@
+{"id":"3d697a724ca62a874b7b9adc0a33e4ac.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/ui/src/__tests__/provider.test.tsx#UiProvider falls back to plain elements for omitted providers","name":"falls back to plain elements for omitted providers","status":"passed","testResultsByEnv":{"linux-node-26":"e18177b3b7aa9a1dfcd02acf4363906b"}}

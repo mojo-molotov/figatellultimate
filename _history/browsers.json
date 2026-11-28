@@ -1,0 +1,17 @@
+{
+  "family": "browsers",
+  "title": "Real browsers (weekly)",
+  "frequency": "weekly",
+  "published": "2026-11-24T18:22:45.926Z",
+  "counts": {
+    "passed": 878
+  },
+  "commit": {
+    "sha": "a9316b8",
+    "url": "https://github.com/mojo-molotov/figatellultimate/commit/a9316b85393ad78ed8c3fde70ec86ad0ac12936b"
+  },
+  "run": {
+    "number": "29",
+    "url": "https://github.com/mojo-molotov/figatellultimate/actions/runs/45458162255"
+  }
+}

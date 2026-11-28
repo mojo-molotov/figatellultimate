@@ -1,0 +1,1 @@
+{"id":"e87d5b23b432fafaf7444479489bd4c0.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/__tests__/config.test.ts#defineConfig throws InvalidConfigError on no locales","name":"throws InvalidConfigError on no locales","status":"passed","testResultsByEnv":{"linux-node-26":"34f4b94f5329c0dd53cbc6c628e15912"}}

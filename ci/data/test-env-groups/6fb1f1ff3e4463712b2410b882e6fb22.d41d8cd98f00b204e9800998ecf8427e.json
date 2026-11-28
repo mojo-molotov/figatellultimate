@@ -1,0 +1,1 @@
+{"id":"6fb1f1ff3e4463712b2410b882e6fb22.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/content-collections/src/__tests__/image-sizes.test.ts#rehypeImageSizes leaves a protocol-relative one as it is","name":"leaves a protocol-relative one as it is","status":"passed","testResultsByEnv":{"linux-node-26":"602116cb2d83b41b83e66757c36114f8"}}

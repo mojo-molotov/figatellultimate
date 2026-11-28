@@ -1,0 +1,1 @@
+{"id":"984425c5f7bdef57d5f73e1f13cf761f.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/fs-node/src/__tests__/path-lister.test.ts#PathLister: memory (reference) lists files only, never directories","name":"lists files only, never directories","status":"passed","testResultsByEnv":{"linux-node-26":"55f80bc1f36af1a269c85a925ffd6eb0"}}

@@ -1,0 +1,1 @@
+{"id":"1e593b53369ae78c6dbff7d4e2757d1e.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/declarations/__tests__/locales.test.ts#locale metadata throws InvalidLocalesError on an empty label","name":"throws InvalidLocalesError on an empty label","status":"passed","testResultsByEnv":{"linux-node-26":"6ef2f986e59019ca51e9f2ddd1d8aa8f"}}

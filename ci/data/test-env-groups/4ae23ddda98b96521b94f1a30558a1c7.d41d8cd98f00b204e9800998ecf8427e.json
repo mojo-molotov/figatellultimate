@@ -1,0 +1,1 @@
+{"id":"4ae23ddda98b96521b94f1a30558a1c7.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/__tests__/config.test.ts#defineConfig throws InvalidConfigError on no collection","name":"throws InvalidConfigError on no collection","status":"passed","testResultsByEnv":{"linux-node-26":"d7547ee47a7e4382a6238d81cbc73894"}}

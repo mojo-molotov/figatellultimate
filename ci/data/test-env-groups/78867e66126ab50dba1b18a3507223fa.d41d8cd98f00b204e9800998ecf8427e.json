@@ -1,0 +1,1 @@
+{"id":"78867e66126ab50dba1b18a3507223fa.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/declarations/__tests__/collection.test.ts#defineCollection: llms exposes a key outside the patterns as told","name":"exposes a key outside the patterns as told","status":"passed","testResultsByEnv":{"linux-node-26":"6ac1c68e21dd956b7f521529cdc9fe0c"}}

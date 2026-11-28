@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Load test</title>
+<style>
+:root { color-scheme: light dark; --ink: #1d1f21; --muted: #6a6f75; --rule: #c9ccd1; --link: #0b57d0; --passed: #1a7f37; --failed: #cf222e; --broken: #bc4c00; --skipped: #8c959f; --paper: #fbfbf8; }
+@media (prefers-color-scheme: dark) { :root { --ink: #d7dade; --muted: #8b9097; --rule: #3a3e44; --link: #7cacf8; --passed: #3fb950; --failed: #f85149; --broken: #db6d28; --skipped: #6e7681; --paper: #16181b; } }
+* { box-sizing: border-box; }
+body { margin: 0; padding: 32px 16px; background: var(--paper); color: var(--ink); font: 14px/1.6 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; }
+main { max-width: 1100px; margin: 0 auto; }
+h1 { font-size: 20px; font-weight: 600; margin: 0 0 16px; }
+h2 { font-size: 15px; margin: 28px 0 8px; }
+hr { border: 0; border-top: 1px solid var(--rule); margin: 12px 0; }
+a { color: var(--link); text-decoration: none; }
+a:hover, a:focus-visible { text-decoration: underline; }
+.scroll { overflow-x: auto; margin: 12px 0; }
+table { border-collapse: collapse; width: 100%; }
+th { text-align: left; font-weight: 600; color: var(--muted); padding: 4px 24px 4px 0; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+td { padding: 4px 24px 4px 0; vertical-align: top; white-space: nowrap; }
+.muted { color: var(--muted); }
+.count, .coverage { display: block; }
+.count::before { content: '●'; margin-right: 6px; }
+/* The coverage's mark: a half-filled circle, the dots' width, in grey (it is no test's status). */
+.coverage::before { content: '◑'; margin-right: 6px; color: var(--muted); }
+.count.passed::before { color: var(--passed); }
+.count.failed::before { color: var(--failed); }
+.count.broken::before { color: var(--broken); }
+.count.skipped::before { color: var(--skipped); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+ul { margin: 0; padding-left: 20px; }
+code { font: inherit; }
+footer p { margin: 0; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+<p><a href="../../">../</a> <span class="muted">Parent Directory</span></p>
+<h1>Load test: 2500 generated posts per locale</h1>
+<h2>Times</h2>
+<ul><li>figatellultimate build: 51.9 s</li><li>next typegen: 0.3 s</li><li>typecheck (tsc): 2.5 s</li><li>next build: 89.1 s</li><li>figatellultimate search: 20.8 s</li></ul>
+<h2>Sizes</h2>
+<ul><li>Content: 5507 blog files</li><li><code>.figatellultimate/</code>: 65212.2 kB</li><li>All client JavaScript (<code>.next/static</code>): 24 files, 857.1 kB</li><li>Search index (<code>public/pagefind</code>): 13329.1 kB</li></ul>
+<div class="scroll"><table><thead><tr><th>Page</th><th>HTML</th><th>HTML gzip</th><th>JS loaded by the page</th><th>JS gzip</th></tr></thead><tbody><tr><td><code>/</code></td><td>30.2 kB</td><td>6.8 kB</td><td>644.9 kB</td><td>203.1 kB</td></tr><tr><td><code>/blog</code></td><td>41.2 kB</td><td>8.2 kB</td><td>644.9 kB</td><td>203.1 kB</td></tr><tr><td><code>/blog/empire</code></td><td>52.1 kB</td><td>9.5 kB</td><td>644.9 kB</td><td>203.1 kB</td></tr><tr><td><code>/blog/empire/decrees</code></td><td>60.0 kB</td><td>10.3 kB</td><td>644.9 kB</td><td>203.1 kB</td></tr><tr><td><code>/authors/igor</code></td><td>82.3 kB</td><td>13.9 kB</td><td>644.9 kB</td><td>203.1 kB</td></tr><tr><td><code>/docs</code></td><td>57.2 kB</td><td>9.8 kB</td><td>644.9 kB</td><td>203.1 kB</td></tr><tr><td><code>/blog/empire/decrees/load-00000</code></td><td>50.5 kB</td><td>11.0 kB</td><td>644.9 kB</td><td>203.1 kB</td></tr></tbody></table></div>
+<h2>Navigation in Chromium (bytes on the wire, per step, prefetches included)</h2>
+<div class="scroll"><table><thead><tr><th>Step</th><th>HTML</th><th>RSC</th><th>JS</th><th>images</th><th>other</th><th>total</th></tr></thead><tbody><tr><td>open the home page</td><td>7.6 kB</td><td>19.2 kB (7)</td><td>208.7 kB</td><td>0.0 kB</td><td>10.8 kB</td><td><strong>246.2 kB</strong></td></tr><tr><td>go to the blog</td><td>0.0 kB</td><td>29.4 kB (10)</td><td>0.0 kB</td><td>154.8 kB</td><td>0.0 kB</td><td><strong>184.2 kB</strong></td></tr><tr><td>go to a category</td><td>0.0 kB</td><td>58.8 kB (16)</td><td>0.0 kB</td><td>181.5 kB</td><td>0.0 kB</td><td><strong>240.2 kB</strong></td></tr><tr><td>go to a subcategory</td><td>0.0 kB</td><td>15.3 kB (4)</td><td>14.4 kB</td><td>116.6 kB</td><td>0.0 kB</td><td><strong>146.3 kB</strong></td></tr><tr><td>page 2</td><td>0.0 kB</td><td>38.6 kB (10)</td><td>0.0 kB</td><td>230.5 kB</td><td>0.0 kB</td><td><strong>269.2 kB</strong></td></tr><tr><td>sort oldest first</td><td>0.0 kB</td><td>7.7 kB (2)</td><td>0.0 kB</td><td>0.0 kB</td><td>25.9 kB</td><td><strong>33.5 kB</strong></td></tr><tr><td>open a post</td><td>0.0 kB</td><td>0.0 kB (0)</td><td>4.6 kB</td><td>50.7 kB</td><td>0.0 kB</td><td><strong>55.3 kB</strong></td></tr><tr><td>back to the list</td><td>0.0 kB</td><td>0.0 kB (0)</td><td>0.0 kB</td><td>0.0 kB</td><td>0.0 kB</td><td><strong>0.0 kB</strong></td></tr><tr><td>an author page</td><td>0.0 kB</td><td>14.9 kB (4)</td><td>0.0 kB</td><td>540.4 kB</td><td>0.0 kB</td><td><strong>555.3 kB</strong></td></tr><tr><td>search &quot;migrations&quot;</td><td>0.0 kB</td><td>0.0 kB (0)</td><td>13.9 kB</td><td>0.0 kB</td><td>0.0 kB</td><td><strong>13.9 kB</strong></td></tr></tbody></table></div>
+<h2>Budgets</h2>
+<div class="scroll"><table><thead><tr><th>Budget</th><th>Measured</th><th>At most</th><th></th></tr></thead><tbody><tr><td>typecheck (s)</td><td>2.5</td><td>10</td><td>✓</td></tr><tr><td>JS gzip of / (kB)</td><td>203.1</td><td>240</td><td>✓</td></tr><tr><td>JS gzip of /blog (kB)</td><td>203.1</td><td>240</td><td>✓</td></tr><tr><td>JS gzip of /blog/empire (kB)</td><td>203.1</td><td>240</td><td>✓</td></tr><tr><td>JS gzip of /blog/empire/decrees (kB)</td><td>203.1</td><td>240</td><td>✓</td></tr><tr><td>JS gzip of /authors/igor (kB)</td><td>203.1</td><td>240</td><td>✓</td></tr><tr><td>JS gzip of /docs (kB)</td><td>203.1</td><td>240</td><td>✓</td></tr><tr><td>JS gzip of /blog/empire/decrees/load-00000 (kB)</td><td>203.1</td><td>240</td><td>✓</td></tr><tr><td>HTML gzip of / (kB)</td><td>6.8</td><td>12</td><td>✓</td></tr><tr><td>HTML gzip of /blog (kB)</td><td>8.2</td><td>12</td><td>✓</td></tr><tr><td>HTML gzip of /docs (kB)</td><td>9.8</td><td>12</td><td>✓</td></tr><tr><td>HTML gzip of a post (kB)</td><td>11.0</td><td>25</td><td>✓</td></tr><tr><td>HTML gzip of /blog/empire/decrees (kB)</td><td>10.3</td><td>14</td><td>✓</td></tr><tr><td>index gzip per listed post on /blog/empire/decrees (bytes)</td><td>39.1</td><td>120</td><td>✓</td></tr><tr><td>HTML gzip of /authors/igor (kB)</td><td>13.9</td><td>16</td><td>✓</td></tr><tr><td>index gzip per listed post on /authors/igor (bytes)</td><td>42.1</td><td>120</td><td>✓</td></tr><tr><td>opening a post (kB on the wire)</td><td>55.3</td><td>175</td><td>✓</td></tr></tbody></table></div>
+<hr>
+<footer><p>figatellultimate test reports · Bonaparte approves</p></footer>
+</main>
+</body>
+</html>

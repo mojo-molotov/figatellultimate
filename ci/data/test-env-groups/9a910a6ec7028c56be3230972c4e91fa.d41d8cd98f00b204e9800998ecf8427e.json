@@ -1,0 +1,1 @@
+{"id":"9a910a6ec7028c56be3230972c4e91fa.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/content/__tests__/term-pages.test.ts#defineTaxonomy: pages throws InvalidTaxonomyError on an empty base","name":"throws InvalidTaxonomyError on an empty base","status":"passed","testResultsByEnv":{"linux-node-26":"fd5967923f6c5e9594b5fc6f9791749f"}}

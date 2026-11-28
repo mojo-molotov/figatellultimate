@@ -1,0 +1,1 @@
+{"id":"aa9d48250fe3a9c06cd5a9eaf2dda36c.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/search/src/__tests__/search.test.ts#createSearch honours a custom base, without a double slash","name":"honours a custom base, without a double slash","status":"passed","testResultsByEnv":{"linux-node-26":"a3906f7541ffb84a5253d5b5c09ec4b7"}}

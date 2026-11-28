@@ -1,0 +1,1 @@
+{"id":"fc219a1089e7d001feaf25022f835ab4.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/__tests__/config.test.ts#defineConfig throws InvalidConfigError on an absolute output folder","name":"throws InvalidConfigError on an absolute output folder","status":"passed","testResultsByEnv":{"linux-node-26":"687eb8cad78ffe0eddc328fa8be2972c"}}

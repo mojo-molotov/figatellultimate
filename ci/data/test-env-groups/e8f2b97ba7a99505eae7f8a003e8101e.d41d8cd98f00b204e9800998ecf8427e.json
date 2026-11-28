@@ -1,0 +1,1 @@
+{"id":"e8f2b97ba7a99505eae7f8a003e8101e.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/__tests__/config.test.ts#defineConfig throws InvalidConfigError on an absolute public folder","name":"throws InvalidConfigError on an absolute public folder","status":"passed","testResultsByEnv":{"linux-node-26":"aea3bc2cc584bf962da4070b28f32dab"}}

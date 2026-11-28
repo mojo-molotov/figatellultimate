@@ -1,0 +1,1 @@
+{"id":"6a6d66b58ff567ed3af1babedcc90ed0.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/__tests__/config.test.ts#defineConfig throws InvalidConfigError on the same extension twice","name":"throws InvalidConfigError on the same extension twice","status":"passed","testResultsByEnv":{"linux-node-26":"4e05c17b5612e64cd281fdf9e427f9f6"}}

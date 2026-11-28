@@ -1,0 +1,1 @@
+{"id":"635332bc806aaf18c53f86a9eb4bd2f4.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/site/src/__tests__/site.test.ts#metadataOf is deterministic, with no state kept between calls","name":"is deterministic, with no state kept between calls","status":"passed","testResultsByEnv":{"linux-node-26":"ff973a262c066189dc5b11557b803e35"}}

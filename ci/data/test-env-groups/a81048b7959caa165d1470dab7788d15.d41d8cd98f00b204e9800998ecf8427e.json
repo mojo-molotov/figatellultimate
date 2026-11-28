@@ -1,0 +1,1 @@
+{"id":"a81048b7959caa165d1470dab7788d15.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/__tests__/config.test.ts#defineConfig throws InvalidConfigError on no extension at all","name":"throws InvalidConfigError on no extension at all","status":"passed","testResultsByEnv":{"linux-node-26":"af6540b3451180f3fa08352c4a4daaba"}}

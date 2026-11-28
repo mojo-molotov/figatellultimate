@@ -1,0 +1,1 @@
+{"id":"cfbea12d2d6a4ec5dce13106f17822ec.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/core/src/__tests__/config.test.ts#defineConfig throws InvalidConfigError on an extension in capitals","name":"throws InvalidConfigError on an extension in capitals","status":"passed","testResultsByEnv":{"linux-node-26":"e5e93de1b3c30b645d29a99dccb16582"}}

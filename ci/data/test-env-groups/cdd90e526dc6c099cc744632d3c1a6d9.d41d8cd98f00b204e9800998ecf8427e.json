@@ -1,0 +1,1 @@
+{"id":"cdd90e526dc6c099cc744632d3c1a6d9.d41d8cd98f00b204e9800998ecf8427e","fullName":"figatellultimate-monorepo:packages/content-collections/src/__tests__/llm-exclude.test.ts#rehypeLlmExclude leaves any other JSX element as it is","name":"leaves any other JSX element as it is","status":"passed","testResultsByEnv":{"linux-node-26":"408a598afa8941514bea366b752abc94"}}
